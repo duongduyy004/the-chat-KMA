@@ -51,6 +51,18 @@ Absolute Unity editor: `/home/duongduy/Unity/Hub/Editor/6000.3.22f1/Editor/Unity
 
    The final scoped command `git diff --check -- .superpowers/sdd/2026-08-24-running-minigames/task-3-report.md Assets/_Project/Scripts/Gameplay/Endurance Assets/Tests/EditMode/Gameplay/Running/EnduranceRulesTests.cs` produced no output and exit 0. The generated Endurance controller `.meta` was also scanned directly and contains no trailing whitespace. This report describes only the verified scoped result; it does not claim a broader repository-wide diff check.
 
+
+
+## Post-commit verification for `043dc83`
+
+Executed after commit `043dc83` on 2026-08-25, using the absolute Unity editor `/home/duongduy/Unity/Hub/Editor/6000.3.22f1/Editor/Unity`; all commands omitted `-quit`.
+
+- Endurance: XML `/tmp/TestResults-endurance-post-043dc83-20260824T200516Z.xml` — 9 total, 9 passed, 0 failed, 0 inconclusive. Log: `/tmp/Unity-endurance-post-043dc83-20260824T200516Z.log`. Unity reported exit code 0.
+- Running: XML `/tmp/TestResults-running-post-043dc83-20260824T200516Z.xml` — 23 total, 23 passed, 0 failed, 0 inconclusive. Log: `/tmp/Unity-running-post-043dc83-20260824T200516Z.log`. Unity reported exit code 0.
+- Foundation: XML `/tmp/TestResults-foundation-post-043dc83-20260824T200516Z.xml` — 30 total, 30 passed, 0 failed, 0 inconclusive. Log: `/tmp/Unity-foundation-post-043dc83-20260824T200516Z.log`. Unity reported exit code 0.
+
+The XML and log mtimes are 2026-08-25 03:05:31–03:05:55 +0700, after commit `043dc83`.
+
 ## Commit
 
 Corrective changes are committed on `master` with a focused message, and final `git status --short --branch` is clean.
