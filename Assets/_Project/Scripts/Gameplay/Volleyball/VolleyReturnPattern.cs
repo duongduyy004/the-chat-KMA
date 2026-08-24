@@ -1,4 +1,5 @@
 using System;
+using UnityEngine;
 
 namespace KMA.Gameplay
 {
@@ -26,6 +27,15 @@ namespace KMA.Gameplay
         public VolleyPhase SelectedPhase { get; private set; }
 
         public bool CanLaunch => HasSelectedTrajectory;
+
+        public bool TryLaunch(BallRig ball)
+        {
+            if (!HasSelectedTrajectory || !ball)
+                return false;
+
+            ball.Launch(LaunchDirection, LaunchForce, LaunchCurvature);
+            return true;
+        }
 
         public UnityEngine.Vector2 PredictLandingPoint(BallRig ball)
         {
@@ -63,5 +73,15 @@ namespace KMA.Gameplay
                 _ => VolleyTrajectory.AuthoredSpike
             };
         }
+
+        Vector2 LaunchDirection => SelectedPhase switch
+        {
+            VolleyPhase.Dig => new Vector2(0f, 1f),
+            VolleyPhase.Set => new Vector2(1f, 1.5f),
+            _ => new Vector2(1f, .75f)
+        };
+
+        float LaunchForce => SelectedPhase == VolleyPhase.Spike ? 8f : 5f;
+        float LaunchCurvature => SelectedPhase == VolleyPhase.Spike ? .15f : 0f;
     }
 }

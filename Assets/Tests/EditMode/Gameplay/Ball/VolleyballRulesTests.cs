@@ -25,6 +25,51 @@ namespace KMA.Tests.Gameplay.Ball
         }
 
         [Test]
+        public void Tick_AdvancesDefaultLifecycleOncePerFrame_AndStartsTimerInPlay()
+        {
+            var rules = new VolleyballRules();
+
+            rules.Tick(2f);
+            Assert.That(rules.Phase, Is.EqualTo(MinigamePhase.Countdown));
+            Assert.That(rules.Elapsed, Is.Zero);
+
+            rules.Tick(3f);
+            Assert.That(rules.Phase, Is.EqualTo(MinigamePhase.Play));
+            Assert.That(rules.Elapsed, Is.Zero);
+
+            rules.Tick(.25f);
+            Assert.That(rules.Elapsed, Is.EqualTo(.25f).Within(.0001f));
+        }
+
+        [Test]
+        public void BeginResolve_IsRejectedBeforePlay_AndAllowedInPlay()
+        {
+            var rules = new VolleyballRules();
+
+            Assert.That(rules.BeginResolve(), Is.False);
+            rules.Tick(2f);
+            Assert.That(rules.BeginResolve(), Is.False);
+            rules.Tick(3f);
+
+            Assert.That(rules.BeginResolve(), Is.True);
+            Assert.That(rules.Phase, Is.EqualTo(MinigamePhase.Resolve));
+        }
+
+        [Test]
+        public void TimerTimeout_ResolvesFromLivePlayTime()
+        {
+            var rules = new VolleyballRules();
+            rules.Tick(2f);
+            rules.Tick(3f);
+            rules.Tick(60f);
+
+            Assert.That(rules.Elapsed, Is.EqualTo(60f).Within(.0001f));
+            Assert.That(rules.Phase, Is.EqualTo(MinigamePhase.Resolve));
+            Assert.That(rules.BeginResolve(), Is.False);
+            Assert.That(rules.BuildResult().Pass, Is.False);
+        }
+
+        [Test]
         public void AuthoredReturnPattern_SelectsTrajectoryBeforeLaunch()
         {
             var pattern = VolleyReturnPattern.AuthoredDefault();
@@ -42,6 +87,26 @@ namespace KMA.Tests.Gameplay.Ball
         }
 
         [Test]
+        public void ContextualGesture_SelectsAndLaunchesAuthoredTrajectoryThroughBallRig()
+        {
+            var rules = new VolleyballRules();
+            var gameObject = new GameObject("volleyball-ball-test");
+            gameObject.AddComponent<Rigidbody2D>();
+            var rig = gameObject.AddComponent<BallRig>();
+            rules.Tick(2f);
+            rules.Tick(3f);
+
+            Assert.That(rules.TryLaunchSelected(rig), Is.False);
+            Assert.That(rig.Snapshot.IsInFlight, Is.False);
+
+            Assert.That(rules.TryResolveAndLaunch(rig, BallContext.ApexNearNet, new Vector2(1f, -1f), true, 1f), Is.True);
+            Assert.That(rig.Snapshot.IsInFlight, Is.True);
+            Assert.That(Vector2.Distance(rig.Body.velocity, new Vector2(1f, .75f).normalized * 8f), Is.LessThan(.0001f));
+
+            Object.DestroyImmediate(gameObject);
+        }
+
+        [Test]
         public void ComboWithoutFivePoints_DoesNotPass()
         {
             var rules = new VolleyballRules(targetScore: 5);
@@ -53,8 +118,13 @@ namespace KMA.Tests.Gameplay.Ball
         [Test]
         public void ObjectiveRequiresLeadAndTimeLimit()
         {
-            var tied = VolleyballRules.ForTest(playerScore: 5, opponentScore: 5, elapsed: 10f, combo: 0);
-            var late = VolleyballRules.ForTest(playerScore: 5, opponentScore: 0, elapsed: 60.01f, combo: 0);
+            var tied = new VolleyballRules();
+            tied.SetForTest(playerScore: 5, opponentScore: 5, combo: 0);
+            var late = new VolleyballRules();
+            late.SetForTest(playerScore: 5, opponentScore: 0, combo: 0);
+            late.Tick(2f);
+            late.Tick(3f);
+            late.Tick(60f);
 
             Assert.That(tied.BuildResult().Pass, Is.False);
             Assert.That(late.BuildResult().Pass, Is.False);

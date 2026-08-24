@@ -26,6 +26,7 @@ namespace KMA.Gameplay
         readonly int targetScore;
         readonly float timeLimit;
         readonly MinigameLifecycle lifecycle;
+        readonly VolleyReturnPattern returnPattern;
         int playerScore;
         int opponentScore;
         int totalTouches;
@@ -43,7 +44,8 @@ namespace KMA.Gameplay
 
             this.targetScore = targetScore;
             this.timeLimit = timeLimit;
-            this.lifecycle = lifecycle ?? new MinigameLifecycle(0f, 0f);
+            this.lifecycle = lifecycle ?? new MinigameLifecycle(2f, 3f);
+            returnPattern = VolleyReturnPattern.AuthoredDefault();
         }
 
         public int PlayerScore => playerScore;
@@ -100,8 +102,33 @@ namespace KMA.Gameplay
 
         public void Tick(float deltaTime)
         {
-            if (lifecycle.Phase == MinigamePhase.Play)
-                elapsed += Mathf.Max(0f, deltaTime);
+            bool wasPlay = lifecycle.Phase == MinigamePhase.Play;
+            lifecycle.Tick(Mathf.Max(0f, deltaTime));
+            if (!wasPlay || lifecycle.Phase != MinigamePhase.Play)
+                return;
+
+            elapsed += Mathf.Max(0f, deltaTime);
+            if (elapsed >= timeLimit)
+                lifecycle.BeginResolve();
+        }
+
+        public bool TryLaunchSelected(BallRig ball)
+        {
+            return lifecycle.Phase == MinigamePhase.Play && returnPattern.TryLaunch(ball);
+        }
+
+        public bool TryResolveAndLaunch(BallRig ball, BallContext context, Vector2 swipe, bool inReachZone, float timingAccuracy)
+        {
+            if (lifecycle.Phase != MinigamePhase.Play)
+                return false;
+
+            VolleyAction action = ResolveTouch(context, swipe, inReachZone, timingAccuracy);
+            if (action == VolleyAction.Invalid)
+                return false;
+
+            returnPattern.SelectTrajectory(action);
+            RecordTouch(timingAccuracy);
+            return returnPattern.TryLaunch(ball);
         }
 
         public bool BeginResolve() => lifecycle.BeginResolve();
@@ -114,17 +141,9 @@ namespace KMA.Gameplay
             longestCombo = this.combo;
         }
 
-        public static VolleyballRules ForTest(int playerScore, int opponentScore, float elapsed, int combo)
-        {
-            var value = new VolleyballRules();
-            value.SetForTest(playerScore, opponentScore, combo);
-            value.elapsed = Mathf.Max(0f, elapsed);
-            return value;
-        }
-
         public MinigameResult BuildResult()
         {
-            bool pass = playerScore >= targetScore && playerScore > opponentScore && elapsed <= timeLimit;
+            bool pass = playerScore >= targetScore && playerScore > opponentScore && elapsed < timeLimit;
             float accuracy = totalTouches == 0 ? 0f : 2f * accurateTouches / totalTouches;
             float efficiency = 1f - opponentScore / (float)targetScore;
             float mastery = Mathf.Clamp01(longestCombo / 10f);

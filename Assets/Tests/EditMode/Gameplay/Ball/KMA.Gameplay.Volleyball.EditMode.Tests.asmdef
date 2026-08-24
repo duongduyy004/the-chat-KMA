@@ -5,6 +5,7 @@
         "UnityEngine.TestRunner",
         "UnityEditor.TestRunner",
         "KMA.Gameplay",
+        "KMA.Gameplay.Ball",
         "KMA.Gameplay.Volleyball"
     ],
     "includePlatforms": [

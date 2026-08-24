@@ -15,13 +15,13 @@ namespace KMA.Gameplay
         Vector2 lastIntegratedVelocity;
         bool isInFlight;
 
-        public Rigidbody2D Body => body;
+        public Rigidbody2D Body => EnsureBody();
         public FlightProfile Profile => profile;
 
         public void SetProfile(FlightProfile value) => profile = value;
         public BallFlightSnapshot Snapshot => new BallFlightSnapshot(
-            body.position,
-            body.velocity,
+            Body.position,
+            Body.velocity,
             attachment != null,
             isInFlight,
             currentCurvature);
@@ -30,12 +30,19 @@ namespace KMA.Gameplay
 
         void Awake()
         {
+            EnsureBody();
+        }
+
+        Rigidbody2D EnsureBody()
+        {
             if (!body)
                 body = GetComponent<Rigidbody2D>();
+            return body;
         }
 
         public void AttachTo(Transform target)
         {
+            EnsureBody();
             attachment = target;
             currentCurvature = 0f;
             isInFlight = false;
@@ -48,6 +55,7 @@ namespace KMA.Gameplay
 
         public void Launch(Vector2 direction, float force, float curvature)
         {
+            EnsureBody();
             attachment = null;
             isInFlight = true;
             body.bodyType = RigidbodyType2D.Dynamic;
@@ -58,11 +66,11 @@ namespace KMA.Gameplay
             currentCurvature = curvature;
         }
 
-        public bool IsNearApex(float threshold) => Mathf.Abs(body.velocity.y) < threshold;
+        public bool IsNearApex(float threshold) => Mathf.Abs(Body.velocity.y) < threshold;
 
         public Vector2 PredictLandingPoint() => Ballistics.PredictGround(
-            body.position,
-            body.velocity,
+            Body.position,
+            Body.velocity,
             simulationGravity,
             ActiveProfile.GroundY,
             ActiveProfile.LinearDrag,
