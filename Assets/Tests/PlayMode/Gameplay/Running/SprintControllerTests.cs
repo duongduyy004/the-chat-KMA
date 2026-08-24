@@ -85,6 +85,23 @@ namespace KMA.Tests.Gameplay.Running
         }
 
         [UnityTest]
+        public IEnumerator LargeSimulationStep_ExpiresWindWindowBeforeLateCounterplay()
+        {
+            var controller = CreateSprintController(.8f);
+            controller.AdvanceToDistance(30f);
+            controller.Simulate(0f);
+            controller.Simulate(2.01f);
+
+            Assert.That(controller.WindWindowActive, Is.False);
+            Assert.That(controller.WindChallengeExpired, Is.True);
+            controller.OnLeftTap();
+            Assert.That(controller.WindChallengeCountered, Is.False);
+            Assert.That(controller.WindChallengeFailed, Is.False);
+            DestroyController(controller);
+            yield return null;
+        }
+
+        [UnityTest]
         public IEnumerator TimeLimit_EmitsOneFailureResultWithoutStaminaDepletion()
         {
             var controller = CreateSprintController(.8f);

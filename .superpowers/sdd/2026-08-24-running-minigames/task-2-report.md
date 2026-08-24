@@ -59,3 +59,20 @@ Absolute Unity editor: /home/duongduy/Unity/Hub/Editor/6000.3.22f1/Editor/Unity.
 - The reviewer requested Input System bindings, but this repository has no com.unity.inputsystem dependency and has activeInputHandler: 0; adding a new package/setup would expand scope. The fix uses the project’s existing named Input Manager action mechanism.
 - MinigameBase.Lifecycle now has a protected setter solely so the controller’s explicit test configuration can enter Play deterministically; runtime lifecycle transitions and Finish remain Foundation-controlled.
 - Unity regenerated ProjectSettings/SceneTemplateSettings.json during test/import; it was removed as unrelated before staging.
+
+## Follow-up review fix: large simulation-step overshoot
+
+The authored challenge update now checks the absolute expiry boundary before activation. A single Simulate call that overshoots both lead and duration marks WindWindowActive false, sets WindChallengeExpired, and closes counterplay before any late tap.
+
+Added regression: LargeSimulationStep_ExpiresWindWindowBeforeLateCounterplay, which cues at 30m, calls Simulate(2.01f), asserts inactive/expired, and verifies a late left tap does not counter or fail the challenge.
+
+Verification commands and XML counts:
+
+- /home/duongduy/Unity/Hub/Editor/6000.3.22f1/Editor/Unity -batchmode -projectPath . -runTests -testPlatform PlayMode -testFilter SprintControllerTests -testResults /tmp/TestResults-sprint-large-dt.xml -logFile /tmp/Unity-sprint-large-dt.log
+  - exit 0; XML 6 total, 6 passed, 0 failed, 0 inconclusive.
+- /home/duongduy/Unity/Hub/Editor/6000.3.22f1/Editor/Unity -batchmode -projectPath . -runTests -testPlatform EditMode -testFilter KMA.Tests.Gameplay.Running -testResults /tmp/TestResults-running-editmode-large-dt.xml -logFile /tmp/Unity-running-editmode-large-dt.log
+  - exit 0; XML 14 total, 14 passed, 0 failed, 0 inconclusive.
+- /home/duongduy/Unity/Hub/Editor/6000.3.22f1/Editor/Unity -batchmode -projectPath . -runTests -testPlatform EditMode -testFilter KMA.Tests.Gameplay.Common -testResults /tmp/TestResults-foundation-editmode-large-dt.xml -logFile /tmp/Unity-foundation-editmode-large-dt.log
+  - exit 0; XML 30 total, 30 passed, 0 failed, 0 inconclusive.
+
+All commands omitted -quit. Unity logs reported Test run completed. Exiting with code 0 (Ok). Run completed. git diff --check passed.

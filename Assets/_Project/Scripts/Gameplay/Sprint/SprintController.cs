@@ -133,17 +133,17 @@ namespace KMA.Gameplay
             if (WindCueVisible && !windChallengeResolved)
             {
                 challengeElapsed += dt;
-                if (!WindWindowActive)
-                {
-                    if (challengeElapsed >= challengePattern.WindCueLeadSeconds &&
-                        rules.Snapshot.Distance >= activeAt)
-                        WindWindowActive = true;
-                }
-                else if (challengeElapsed >= challengePattern.WindCueLeadSeconds + challengePattern.WindWindowDuration)
+                if (challengeElapsed >= challengePattern.WindCueLeadSeconds + challengePattern.WindWindowDuration)
                 {
                     WindWindowActive = false;
                     WindChallengeExpired = true;
                     windChallengeResolved = true;
+                }
+                else if (!WindWindowActive &&
+                    challengeElapsed >= challengePattern.WindCueLeadSeconds &&
+                    rules.Snapshot.Distance >= activeAt)
+                {
+                    WindWindowActive = true;
                 }
             }
         }
