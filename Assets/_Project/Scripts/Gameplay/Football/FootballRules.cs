@@ -34,19 +34,22 @@ namespace KMA.Gameplay
     {
         public FootballPhase(GKReaction reaction, TargetWidth targetWidth)
         {
+            var reactionModifier = reaction != GKReaction.Normal;
+            var targetModifier = targetWidth != TargetWidth.Normal;
+            if (reactionModifier == targetModifier)
+                throw new ArgumentException("FootballPhase requires exactly one difficulty modifier.");
+
             Reaction = reaction;
             TargetWidth = targetWidth;
-            ActiveModifier = reaction != GKReaction.Normal ?
+            ActiveModifier = reactionModifier ?
                 (reaction == GKReaction.Fast ? DifficultyModifier.FastKeeper : DifficultyModifier.SlowKeeper) :
-                targetWidth != TargetWidth.Normal ?
-                    (targetWidth == TargetWidth.Narrow ? DifficultyModifier.NarrowTarget : DifficultyModifier.WideTarget) :
-                    DifficultyModifier.Neutral;
+                (targetWidth == TargetWidth.Narrow ? DifficultyModifier.NarrowTarget : DifficultyModifier.WideTarget);
         }
 
         public GKReaction Reaction { get; }
         public TargetWidth TargetWidth { get; }
         public DifficultyModifier ActiveModifier { get; }
-        public int ActiveModifierCount => 1;
+        public int ActiveModifierCount => ActiveModifier == DifficultyModifier.Neutral ? 0 : 1;
     }
 
     public sealed class FootballRules
@@ -86,22 +89,21 @@ namespace KMA.Gameplay
             if (Phase != MinigamePhase.Play || kicks >= MaxKicks)
                 return false;
 
-            LastKeeperPattern = patternSet.Patterns[kicks];
-            LastShot = shot;
-            var goal = ResolveKick(LastKeeperPattern.Resolve(shot), shot.Placement, shot.Kind);
-            LastShot = shot;
-            return goal;
+            return ResolveAuthoredShot(shot, patternSet.Patterns[kicks]);
         }
 
-        public bool ResolveKick(bool goal, float placementAccuracy, ShotKind kind)
+        public bool ResolveAuthoredShot(FootballShot shot, GKPattern selectedPattern)
         {
-            if (Phase != MinigamePhase.Play || kicks >= MaxKicks)
+            if (Phase != MinigamePhase.Play || kicks >= MaxKicks ||
+                !ReferenceEquals(selectedPattern, patternSet.Patterns[kicks]))
                 return false;
 
+            LastKeeperPattern = selectedPattern;
+            var goal = selectedPattern.Resolve(shot);
             kicks++;
             if (goal) goals++;
-            accuracyTotal += Mathf.Clamp01(placementAccuracy);
-            LastShot = new FootballShot(placementAccuracy, 0f, 0f, kind);
+            accuracyTotal += Mathf.Clamp01(shot.Placement);
+            LastShot = shot;
             if (kicks == MaxKicks) lifecycle.BeginResolve();
             return goal;
         }

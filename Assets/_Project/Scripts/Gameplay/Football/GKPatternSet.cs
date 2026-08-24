@@ -25,8 +25,19 @@ namespace KMA.Gameplay
 
         public bool Resolve(FootballShot shot)
         {
-            var placementBeatsKeeper = Mathf.Abs(shot.Placement - KeeperPlacement) > Coverage;
-            var authoredCounterplay = shot.Kind == CounterShot && shot.Force >= MinimumForce &&
+            var coverage = Coverage;
+            var minimumForce = MinimumForce;
+            if (Phase.ActiveModifier == DifficultyModifier.NarrowTarget)
+                coverage -= .1f;
+            else if (Phase.ActiveModifier == DifficultyModifier.WideTarget)
+                coverage += .1f;
+            else if (Phase.ActiveModifier == DifficultyModifier.FastKeeper)
+                minimumForce += .1f;
+            else if (Phase.ActiveModifier == DifficultyModifier.SlowKeeper)
+                minimumForce -= .1f;
+
+            var placementBeatsKeeper = Mathf.Abs(shot.Placement - KeeperPlacement) > Mathf.Max(0f, coverage);
+            var authoredCounterplay = shot.Kind == CounterShot && shot.Force >= Mathf.Clamp01(minimumForce) &&
                 Mathf.Abs(shot.Spin) >= MinimumSpin;
             return placementBeatsKeeper && authoredCounterplay;
         }
