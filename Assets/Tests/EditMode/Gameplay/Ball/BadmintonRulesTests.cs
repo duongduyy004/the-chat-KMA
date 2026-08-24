@@ -83,5 +83,49 @@ namespace KMA.Tests.Gameplay.Ball
             Assert.That(rules.Phase, Is.EqualTo(MinigamePhase.Resolve));
             Assert.That(rules.BeginResolve(), Is.False);
         }
+
+        [Test]
+        public void ScoringBeforePlay_IsRejectedForBothPlayers()
+        {
+            var lifecycle = new MinigameLifecycle(2f, 3f);
+            var rules = new BadmintonRules(lifecycle);
+
+            Assert.That(rules.AwardPlayerPoint(), Is.False);
+            rules.AwardOpponentPoint();
+            Assert.That(rules.PlayerPoints, Is.Zero);
+            Assert.That(rules.OpponentPoints, Is.Zero);
+        }
+
+        [Test]
+        public void ScoringInPlay_MutatesTheCorrectSide()
+        {
+            var lifecycle = new MinigameLifecycle(2f, 3f);
+            var rules = new BadmintonRules(lifecycle);
+            lifecycle.Tick(2f);
+            lifecycle.Tick(3f);
+
+            Assert.That(rules.TryExchange(.8f, .85f), Is.True);
+            Assert.That(rules.AwardPlayerPoint(), Is.True);
+            rules.AwardOpponentPoint();
+            Assert.That(rules.PlayerPoints, Is.EqualTo(1));
+            Assert.That(rules.OpponentPoints, Is.EqualTo(1));
+        }
+
+        [Test]
+        public void ScoringAfterResolve_RejectsPendingPlayerAndOpponentPoints()
+        {
+            var lifecycle = new MinigameLifecycle(2f, 3f);
+            var rules = new BadmintonRules(lifecycle);
+            lifecycle.Tick(2f);
+            lifecycle.Tick(3f);
+            Assert.That(rules.TryExchange(.8f, .85f), Is.True);
+            Assert.That(rules.BeginResolve(), Is.True);
+
+            Assert.That(rules.AwardPlayerPoint(), Is.False);
+            rules.AwardOpponentPoint();
+            Assert.That(rules.PlayerPoints, Is.Zero);
+            Assert.That(rules.OpponentPoints, Is.Zero);
+            Assert.That(rules.BeginResolve(), Is.False);
+        }
     }
 }

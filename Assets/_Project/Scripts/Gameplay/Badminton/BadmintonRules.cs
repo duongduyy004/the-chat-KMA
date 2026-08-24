@@ -75,14 +75,20 @@ namespace KMA.Gameplay
 
         public bool AwardPlayerPoint()
         {
-            if (!canAwardPlayerPoint) return false;
+            if (Phase != MinigamePhase.Play || !canAwardPlayerPoint) return false;
             canAwardPlayerPoint = false;
             PlayerPoints++;
             rally = 0;
             return true;
         }
 
-        public void AwardOpponentPoint() { canAwardPlayerPoint = false; OpponentPoints++; rally = 0; }
+        public void AwardOpponentPoint()
+        {
+            if (Phase != MinigamePhase.Play) return;
+            canAwardPlayerPoint = false;
+            OpponentPoints++;
+            rally = 0;
+        }
 
         public void Tick(float deltaTime)
         {
@@ -91,10 +97,15 @@ namespace KMA.Gameplay
             lifecycle.Tick(dt);
             if (!wasPlay || Phase != MinigamePhase.Play) return;
             elapsed += dt;
-            if (elapsed >= timeLimit) lifecycle.BeginResolve();
+            if (elapsed >= timeLimit) BeginResolve();
         }
 
-        public bool BeginResolve() => lifecycle.BeginResolve();
+        public bool BeginResolve()
+        {
+            if (!lifecycle.BeginResolve()) return false;
+            canAwardPlayerPoint = false;
+            return true;
+        }
 
         public static BadmintonRules ForTest(int playerPoints, int opponentPoints, int rally)
         {
