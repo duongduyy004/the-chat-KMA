@@ -1,14 +1,18 @@
 using UnityEngine;
+using UnityEngine.InputSystem;
 
 namespace KMA.Gameplay
 {
     public sealed class SprintController : MinigameBase
     {
         [SerializeField] SprintChallengePattern challengePattern = new SprintChallengePattern();
+        [SerializeField] InputActionAsset inputActions;
         [SerializeField] string leftInputAction = "SprintLeft";
         [SerializeField] string rightInputAction = "SprintRight";
 
         SprintRules rules;
+        InputAction leftAction;
+        InputAction rightAction;
         float cueAt;
         float activeAt;
         float challengeElapsed;
@@ -20,6 +24,7 @@ namespace KMA.Gameplay
         public bool WindChallengeCountered { get; private set; }
         public bool WindChallengeFailed { get; private set; }
         public bool WindChallengeExpired { get; private set; }
+        public bool InputActionsReady => leftAction != null && rightAction != null;
         public Side ExpectedSide => rules == null ? Side.Left : rules.ExpectedSide;
         public SprintSnapshot Snapshot => rules == null ? default : rules.Snapshot;
         public MinigameResult LastResult { get; private set; }
@@ -32,18 +37,66 @@ namespace KMA.Gameplay
             base.Awake();
             rules = SprintRules.Default();
             ConfigureChallengePattern();
+            ConfigureInputActions();
         }
 
-        protected override void Update()
+        void OnEnable()
         {
-            base.Update();
-            if (Lifecycle.Phase != MinigamePhase.Play)
+            ConfigureInputActions();
+        }
+
+        void OnDisable()
+        {
+            UnsubscribeInputActions();
+        }
+
+        void OnDestroy()
+        {
+            UnsubscribeInputActions();
+        }
+
+        void ConfigureInputActions()
+        {
+            UnsubscribeInputActions();
+            if (inputActions == null)
                 return;
 
-            if (!string.IsNullOrEmpty(leftInputAction) && Input.GetButtonDown(leftInputAction))
+            leftAction = inputActions.FindAction(leftInputAction, false);
+            rightAction = inputActions.FindAction(rightInputAction, false);
+            if (leftAction == null || rightAction == null)
+                return;
+
+            leftAction.performed += OnLeftActionPerformed;
+            rightAction.performed += OnRightActionPerformed;
+            inputActions.Enable();
+        }
+
+        void UnsubscribeInputActions()
+        {
+            if (leftAction != null)
+                leftAction.performed -= OnLeftActionPerformed;
+            if (rightAction != null)
+                rightAction.performed -= OnRightActionPerformed;
+            leftAction = null;
+            rightAction = null;
+        }
+
+        void OnLeftActionPerformed(InputAction.CallbackContext context)
+        {
+            if (context.performed && Lifecycle.Phase == MinigamePhase.Play)
                 OnLeftTap();
-            if (!string.IsNullOrEmpty(rightInputAction) && Input.GetButtonDown(rightInputAction))
+        }
+
+        void OnRightActionPerformed(InputAction.CallbackContext context)
+        {
+            if (context.performed && Lifecycle.Phase == MinigamePhase.Play)
                 OnRightTap();
+        }
+
+        public void ConfigureInputForTest(InputActionAsset actions)
+        {
+            inputActions = actions;
+            ConfigureInputActions();
         }
 
         public void ConfigureForTest(float cueLeadSeconds)

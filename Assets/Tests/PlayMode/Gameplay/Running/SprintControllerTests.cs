@@ -1,5 +1,6 @@
 using System.Collections;
 using KMA.Gameplay;
+using UnityEngine.InputSystem;
 using NUnit.Framework;
 using UnityEngine;
 using UnityEngine.TestTools;
@@ -28,6 +29,28 @@ namespace KMA.Tests.Gameplay.Running
             DestroyController(controller);
             yield return null;
         }
+        [UnityTest]
+        public IEnumerator InputSystemAsset_BindsSprintActionsAndControllerResolvesThem()
+        {
+            var controller = CreateSprintController(.8f);
+            var asset = new InputActionAsset();
+            var map = asset.AddActionMap("Sprint");
+            var left = map.AddAction("SprintLeft", InputActionType.Button);
+            var right = map.AddAction("SprintRight", InputActionType.Button);
+            left.AddBinding("<Keyboard>/leftArrow");
+            right.AddBinding("<Keyboard>/rightArrow");
+
+            controller.ConfigureInputForTest(asset);
+
+            Assert.That(controller.InputActionsReady, Is.True);
+            Assert.That(controller.LeftInputAction, Is.EqualTo("SprintLeft"));
+            Assert.That(controller.RightInputAction, Is.EqualTo("SprintRight"));
+            Assert.That(left.bindings[0].path, Is.EqualTo("<Keyboard>/leftArrow"));
+            Assert.That(right.bindings[0].path, Is.EqualTo("<Keyboard>/rightArrow"));
+            DestroyController(controller);
+            yield return null;
+        }
+
 
         [UnityTest]
         public IEnumerator CorrectWindCounterplay_AllowsViableFinishAndEmitsOnePassResult()

@@ -100,6 +100,7 @@ MonoBehaviour:
     windWindowDuration: 1.2
   leftInputAction: SprintLeft
   rightInputAction: SprintRight
+  inputActions: {fileID: -944628639613478452, guid: 2d5e6f708192a3b4c5d6e7f8091a2b3c, type: 3}
 --- !u!1 &300000
 GameObject:
   m_ObjectHideFlags: 0

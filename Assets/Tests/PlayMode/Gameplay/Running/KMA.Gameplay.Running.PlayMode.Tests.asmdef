@@ -4,7 +4,8 @@
     "references": [
         "UnityEngine.TestRunner",
         "KMA.Gameplay",
-        "KMA.Gameplay.Sprint"
+        "KMA.Gameplay.Sprint",
+        "Unity.InputSystem"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],

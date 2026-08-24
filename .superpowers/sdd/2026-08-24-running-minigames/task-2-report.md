@@ -93,3 +93,20 @@ Verification:
   - exit 0; XML 30 total, 30 passed, 0 failed, 0 inconclusive.
 
 All commands omitted -quit. Unity logs reported Test run completed. Exiting with code 0 (Ok). Run completed. git diff --check passed.
+
+## Follow-up review fix: Unity Input System integration
+
+Runtime Sprint input now uses com.unity.inputsystem 1.20.0, which is the built-in package version for Unity 6000.3.22f1. ProjectSettings activeInputHandler is 1. SprintController subscribes to InputAction.performed for the authored SprintLeft and SprintRight actions, and MG_Sprint references Assets/_Project/Scripts/Gameplay/Sprint/SprintInputActions.inputactions. The authored asset binds leftArrow and rightArrow keyboard controls. The legacy SprintLeft/SprintRight entries were removed from InputManager.asset; public OnLeftTap/OnRightTap seams and all deterministic challenge behavior remain.
+
+Added InputSystemAsset_BindsSprintActionsAndControllerResolvesThem, verifying the named actions, controller readiness, and keyboard binding paths.
+
+Verification:
+
+- /home/duongduy/Unity/Hub/Editor/6000.3.22f1/Editor/Unity -batchmode -projectPath . -runTests -testPlatform PlayMode -testFilter SprintControllerTests -testResults /tmp/TestResults-sprint-inputsystem.xml -logFile /tmp/Unity-sprint-inputsystem.log
+  - exit 0; XML 8 total, 8 passed, 0 failed, 0 inconclusive.
+- /home/duongduy/Unity/Hub/Editor/6000.3.22f1/Editor/Unity -batchmode -projectPath . -runTests -testPlatform EditMode -testFilter KMA.Tests.Gameplay.Running -testResults /tmp/TestResults-running-editmode-inputsystem.xml -logFile /tmp/Unity-running-editmode-inputsystem.log
+  - exit 0; XML 14 total, 14 passed, 0 failed, 0 inconclusive.
+- /home/duongduy/Unity/Hub/Editor/6000.3.22f1/Editor/Unity -batchmode -projectPath . -runTests -testPlatform EditMode -testFilter KMA.Tests.Gameplay.Common -testResults /tmp/TestResults-foundation-editmode-inputsystem.xml -logFile /tmp/Unity-foundation-editmode-inputsystem.log
+  - exit 0; XML 30 total, 30 passed, 0 failed, 0 inconclusive.
+
+All commands omitted -quit and used the absolute Unity editor path. Unity logs reported Test run completed. Exiting with code 0 (Ok). Run completed. git diff --check passed. Only the untracked generated ProjectSettings/SceneTemplateSettings.json was removed.
