@@ -48,7 +48,7 @@ namespace KMA.Tests.Gameplay.Running
         [Test]
         public void ComboCannotPassWithoutCompletingAuthoredPrimaryObjective()
         {
-            var rules = EnduranceRules.ForTest(laps: 2, requiredLaps: 3, combo: 999, stamina: 100);
+            var rules = RulesWithAuthoredLaps(2, 3);
 
             Assert.That(rules.BuildResult().Pass, Is.False);
         }
@@ -81,10 +81,6 @@ namespace KMA.Tests.Gameplay.Running
                     b.Swipe(beat.Beat == BeatEvent.Jump ? SwipeDirection.Up : SwipeDirection.Down);
                 }
 
-                if (beat.EndsLap)
-                {
-
-                }
             }
 
             Assert.That(a.BuildResult().Pass, Is.EqualTo(b.BuildResult().Pass));
@@ -94,17 +90,38 @@ namespace KMA.Tests.Gameplay.Running
         [Test]
         public void NonTerminalAuthoredBeat_DoesNotAdvanceLapOrPass()
         {
-            var rules = EnduranceRules.ForTest(2, 3, 999, 100);
-            rules.AdvanceToPlayForTest();
+            var rules = RulesWithAuthoredLaps(2, 3);
             rules.Dispatch(new AuthoredBeat(BeatEvent.Tap));
             Assert.That(rules.Laps, Is.EqualTo(2));
             Assert.That(rules.BuildResult().Pass, Is.False);
         }
 
         [Test]
-        public void DirectLapCompletion_IsNotPublic()
+        public void ProductionFactoryCannotSetLapProgress()
         {
+            Assert.That(typeof(EnduranceRules).GetMethod("ForTest"), Is.Null);
             Assert.That(typeof(EnduranceRules).GetMethods().Any(method => method.Name == "CompleteLap" && method.IsPublic), Is.False);
+        }
+
+        [Test]
+        public void ControllerTicksTutorialCountdownAndPlayOncePerFrame()
+        {
+            var gameObject = new GameObject("endurance-lifecycle-test");
+            var controller = gameObject.AddComponent<EnduranceController>();
+            controller.ConfigureLifecycleForTest(2f, 3f, 1);
+
+            controller.Simulate(1f);
+            Assert.That(controller.Phase, Is.EqualTo(MinigamePhase.Tutorial));
+            controller.Simulate(1f);
+            Assert.That(controller.Phase, Is.EqualTo(MinigamePhase.Countdown));
+            controller.Simulate(2f);
+            Assert.That(controller.Phase, Is.EqualTo(MinigamePhase.Countdown));
+            controller.Simulate(1f);
+            Assert.That(controller.Phase, Is.EqualTo(MinigamePhase.Play));
+            controller.Simulate(1f);
+            Assert.That(controller.Phase, Is.EqualTo(MinigamePhase.Play));
+            Assert.That(controller.Rules.Elapsed, Is.EqualTo(2f));
+            Object.DestroyImmediate(gameObject);
         }
 
         [Test]
@@ -139,6 +156,15 @@ namespace KMA.Tests.Gameplay.Running
             Assert.That(emitted, Is.EqualTo(1));
             Assert.That(controller.LastResult, Is.Not.Null);
             Object.DestroyImmediate(gameObject);
+        }
+
+        static EnduranceRules RulesWithAuthoredLaps(int laps, int requiredLaps)
+        {
+            var rules = new EnduranceRules(requiredLaps);
+            rules.AdvanceToPlayForTest();
+            for (var index = 0; index < laps; index++)
+                rules.Dispatch(new AuthoredBeat(BeatEvent.Slide, endsLap: true));
+            return rules;
         }
 
         static (int Laps, MinigameResult Result) RunAuthoredPattern()

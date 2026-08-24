@@ -36,15 +36,6 @@ namespace KMA.Gameplay
             return value;
         }
 
-        public static EnduranceRules ForTest(int laps, int requiredLaps, int combo, float stamina)
-        {
-            var value = new EnduranceRules(requiredLaps) {
-                laps = Mathf.Max(0, laps), combo = Mathf.Max(0, combo),
-                stamina = Mathf.Clamp(stamina, 0f, DefaultStamina)
-            };
-            return value;
-        }
-
         public EnduranceInputMode Mode { get; private set; }
         public MinigamePhase Phase => lifecycle.Phase;
         public float Stamina => stamina;
@@ -59,14 +50,17 @@ namespace KMA.Gameplay
         public bool ObstacleCleared { get; private set; }
         public float Elapsed => elapsed;
 
-        public void Tick(float dt)
+        public void TickPlay(float dt)
         {
-            dt = Mathf.Max(0f, dt);
-            lifecycle.Tick(dt);
-            if (lifecycle.Phase == MinigamePhase.Play) elapsed += dt;
+            if (lifecycle.Phase == MinigamePhase.Play)
+                elapsed += Mathf.Max(0f, dt);
         }
 
-        public void AdvanceToPlayForTest() { Tick(0f); Tick(0f); }
+        public void AdvanceToPlayForTest()
+        {
+            lifecycle.Tick(0f);
+            lifecycle.Tick(0f);
+        }
         public bool BeginResolve() => lifecycle.BeginResolve();
 
         public void Dispatch(AuthoredBeat authoredBeat)
