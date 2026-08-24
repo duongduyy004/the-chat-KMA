@@ -20,21 +20,28 @@ namespace KMA.Tests.Gameplay.Ball
         }
 
         [Test]
-        public void PassRequiresAuthoredVector_AndLaunchUsesAuthoredToss()
+        public void AuthoredPass_GeneratesLaunchPattern_AndRejectsReplacement()
         {
             var rules = new BasketballRules(5, 30);
-            var pattern = AlleyOopPattern.AuthoredDefault();
             var gameObject = new GameObject("basketball-ball-test");
             gameObject.AddComponent<Rigidbody2D>();
             var ball = gameObject.AddComponent<BallRig>();
 
             Assert.That(rules.TryPass(ball, Vector2.zero), Is.False);
-            Assert.That(rules.TryPass(ball, new Vector2(1f, .5f)), Is.True);
+            var leftwardPass = new Vector2(-1f, .5f);
+            Assert.That(rules.TryPass(ball, leftwardPass), Is.True);
             Assert.That(rules.State, Is.EqualTo(BasketballState.Passing));
-            Assert.That(rules.TryLaunchAuthoredAlleyOop(ball, pattern), Is.True);
+            var generated = rules.AuthoredPattern;
+            Assert.That(generated, Is.Not.Null);
+            Assert.That(generated.PassVector, Is.EqualTo(leftwardPass));
+            var unrelatedReplacement = AlleyOopPattern.AuthoredDefault(Vector2.right);
+            Assert.That(rules.TryLaunchAlleyOop(ball, unrelatedReplacement), Is.False);
+            Assert.That(rules.State, Is.EqualTo(BasketballState.Passing));
+            Assert.That(rules.TryLaunchAlleyOop(ball), Is.True);
             Assert.That(rules.State, Is.EqualTo(BasketballState.AlleyOopFlight));
             Assert.That(ball.Snapshot.IsInFlight, Is.True);
-            Assert.That(ball.Body.linearVelocity, Is.EqualTo(pattern.LaunchVelocity).Using(Vector2Comparer.Instance));
+            Assert.That(ball.Body.linearVelocity, Is.EqualTo(generated.LaunchVelocity).Using(Vector2Comparer.Instance));
+            Assert.That(ball.Body.linearVelocity.x, Is.LessThan(0f));
 
             Object.DestroyImmediate(gameObject);
         }
@@ -66,15 +73,26 @@ namespace KMA.Tests.Gameplay.Ball
         [Test]
         public void ObjectiveAndScoring_RequireFiveAuthoredBaskets_NotComboShortcut()
         {
-            var rules = BasketballRules.ForTest(4, 8, 20);
+            var rules = new BasketballRules(5, 30);
+            var gameObject = new GameObject("basketball-objective-ball-test");
+            gameObject.AddComponent<Rigidbody2D>();
+            var ball = gameObject.AddComponent<BallRig>();
 
+            for (var basket = 0; basket < 4; basket++)
+                CompleteAuthoredBasket(rules, ball, new Vector2(-1f, .75f));
+
+            Assert.That(rules.Baskets, Is.EqualTo(4));
+            Assert.That(rules.Combo, Is.EqualTo(4));
             Assert.That(rules.BuildResult().Pass, Is.False);
 
-            rules = BasketballRules.ForTest(5, 5, 20);
+            CompleteAuthoredBasket(rules, ball, new Vector2(-1f, .75f));
             var result = rules.BuildResult();
 
+            Assert.That(rules.Baskets, Is.EqualTo(5));
             Assert.That(result.Pass, Is.True);
             Assert.That(result.Score, Is.GreaterThan(0f));
+
+            Object.DestroyImmediate(gameObject);
         }
 
         [Test]
@@ -92,13 +110,22 @@ namespace KMA.Tests.Gameplay.Ball
             gameObject.AddComponent<Rigidbody2D>();
             var ball = gameObject.AddComponent<BallRig>();
             Assert.That(rules.TryPass(ball, Vector2.right), Is.True);
-            Assert.That(rules.TryLaunchAuthoredAlleyOop(ball, AlleyOopPattern.AuthoredDefault()), Is.True);
+            Assert.That(rules.TryLaunchAlleyOop(ball), Is.True);
             Assert.That(rules.TapFinish(3f, 0f), Is.EqualTo(FinishJudge.Perfect));
             Assert.That(rules.State, Is.EqualTo(BasketballState.Resolved));
             Assert.That(rules.Phase, Is.EqualTo(MinigamePhase.Resolve));
             Assert.That(rules.BeginResolve(), Is.False);
 
             Object.DestroyImmediate(gameObject);
+        }
+
+        static void CompleteAuthoredBasket(BasketballRules rules, BallRig ball, Vector2 passVector)
+        {
+            Assert.That(rules.TryPass(ball, passVector), Is.True);
+            var authoredPattern = rules.AuthoredPattern;
+            Assert.That(rules.TryLaunchAlleyOop(ball), Is.True);
+            Assert.That(authoredPattern.IsApexWindow(3f, 0f), Is.True);
+            Assert.That(rules.TapFinish(3f, 0f), Is.EqualTo(FinishJudge.Perfect));
         }
 
         sealed class Vector2Comparer : IEqualityComparer<Vector2>

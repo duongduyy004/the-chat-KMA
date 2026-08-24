@@ -11,7 +11,6 @@ namespace KMA.Gameplay
         readonly int targetBaskets;
         readonly float timeLimit;
         readonly MinigameLifecycle lifecycle;
-        AlleyOopPattern pattern;
         int baskets, attempts, perfects, combo, bestCombo;
         float elapsed;
 
@@ -35,22 +34,13 @@ namespace KMA.Gameplay
         public float Elapsed => elapsed;
         public float ApexProgress { get; private set; }
         public bool PrimaryObjectiveComplete => baskets >= targetBaskets;
+        public AlleyOopPattern AuthoredPattern { get; private set; }
 
         public static BasketballRules InFlight(float apexMin, float apexMax, float velocityThreshold)
         {
             var value = new BasketballRules();
-            value.pattern = new AlleyOopPattern(Vector2.right, 8f, 0f, apexMin, apexMax, velocityThreshold);
+            value.AuthoredPattern = new AlleyOopPattern(Vector2.right, 8f, 0f, apexMin, apexMax, velocityThreshold);
             value.State = BasketballState.AlleyOopFlight;
-            return value;
-        }
-
-        public static BasketballRules ForTest(int baskets, int combo, float elapsed)
-        {
-            var value = new BasketballRules();
-            value.baskets = Mathf.Max(0, baskets);
-            value.combo = Mathf.Max(0, combo);
-            value.bestCombo = value.combo;
-            value.elapsed = Mathf.Max(0f, elapsed);
             return value;
         }
 
@@ -64,26 +54,31 @@ namespace KMA.Gameplay
         {
             if (!ball || Phase != MinigamePhase.Play || State != BasketballState.Holding || passVector.sqrMagnitude <= Mathf.Epsilon) return false;
             ball.AttachTo(ball.transform);
-            pattern = AlleyOopPattern.AuthoredDefault(passVector);
+            AuthoredPattern = AlleyOopPattern.AuthoredDefault(passVector);
             State = BasketballState.Passing;
             return true;
         }
 
-        public bool TryLaunchAuthoredAlleyOop(BallRig ball, AlleyOopPattern authoredPattern)
+        public bool TryLaunchAlleyOop(BallRig ball)
         {
-            if (!ball || authoredPattern == null || Phase != MinigamePhase.Play || State != BasketballState.Passing) return false;
-            pattern = authoredPattern;
-            if (!pattern.TryLaunch(ball)) return false;
+            if (!ball || AuthoredPattern == null || Phase != MinigamePhase.Play || State != BasketballState.Passing) return false;
+            if (!AuthoredPattern.TryLaunch(ball)) return false;
             State = BasketballState.AlleyOopFlight;
             ApexProgress = 0f;
             return true;
         }
 
+        public bool TryLaunchAlleyOop(BallRig ball, AlleyOopPattern candidate)
+        {
+            if (!ReferenceEquals(candidate, AuthoredPattern)) return false;
+            return TryLaunchAlleyOop(ball);
+        }
+
         public FinishJudge TapFinish(float ballY, float velocityY)
         {
             if (State != BasketballState.AlleyOopFlight || Phase != MinigamePhase.Play) return FinishJudge.Ignored;
-            FinishJudge judge = ballY < pattern.ApexMin || velocityY > pattern.VelocityThreshold ? FinishJudge.Early :
-                ballY > pattern.ApexMax || velocityY < -pattern.VelocityThreshold ? FinishJudge.Late : FinishJudge.Perfect;
+            FinishJudge judge = ballY < AuthoredPattern.ApexMin || velocityY > AuthoredPattern.VelocityThreshold ? FinishJudge.Early :
+                ballY > AuthoredPattern.ApexMax || velocityY < -AuthoredPattern.VelocityThreshold ? FinishJudge.Late : FinishJudge.Perfect;
             attempts++;
             if (judge == FinishJudge.Perfect)
             {

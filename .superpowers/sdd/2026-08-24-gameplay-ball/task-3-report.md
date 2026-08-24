@@ -6,7 +6,8 @@ Implemented Basketball authored pass -> alley-oop -> apex tap flow on current ma
 
 - `BasketballRules` owns the explicit `Holding`, `Passing`, `AlleyOopFlight`, and `Resolved` states.
 - `Hold` cannot select a toss, create a flight, or advance `ApexProgress`.
-- `AlleyOopPattern` supplies a deterministic authored launch and inclusive apex window with velocity threshold.
+- `AlleyOopPattern` is generated and stored by accepting the pass; launch consumes only that stored authored pattern.
+- A candidate replacement pattern is rejected, so a leftward pass cannot be replaced by an unrelated rightward launch.
 - Only a `Perfect` final tap awards a basket; early/late taps provide feedback and reset combo.
 - `PrimaryObjectiveComplete` requires the configured basket count, so combo alone cannot pass.
 - Resolution uses `MinigameLifecycle`; scoring uses `ScoreUtil`; launch uses `BallRig`/`Ballistics` through the existing `BallRig` contract.
@@ -34,9 +35,27 @@ From the XML `<test-run>` summary:
 - skipped: 0
 - result: `Passed`
 
-The 11 cases cover hold/no-apex, authored BallRig launch, six apex boundary cases, final tap/objective gating, combo-shortcut rejection/scoring, and lifecycle rejection/resolution.
+The 11 cases cover hold/no-apex, authored pass-generated BallRig launch, replacement rejection, six apex boundary cases, final tap/objective gating, five real authored pass/launch/apex-perfect-tap cycles, combo/mastery rejection, and lifecycle rejection/resolution.
 
 `git diff --check` passed. The log contains a non-fatal Unity licensing message (`Access token is unavailable; failed to update`) and an existing Volleyball test warning for deprecated `Rigidbody2D.velocity`; no Basketball test warning remains.
+
+## Review-fix verification
+
+Filtered Basketball command:
+
+```bash
+rtk proxy timeout 180s /home/duongduy/Unity/Hub/Editor/6000.3.22f1/Editor/Unity -batchmode -nographics -projectPath /home/duongduy/data/project/the-chat-KMA -runTests -testPlatform editmode -testFilter BasketballRulesTests -testResults /tmp/ball-task3-basketball-review.xml -logFile /tmp/ball-task3-basketball-review.log
+```
+
+Filtered XML: `/tmp/ball-task3-basketball-review.xml` — total 11, passed 11, failed 0, inconclusive 0, skipped 0, result `Passed`.
+
+Full relevant EditMode/Foundation command:
+
+```bash
+rtk proxy timeout 240s /home/duongduy/Unity/Hub/Editor/6000.3.22f1/Editor/Unity -batchmode -nographics -projectPath /home/duongduy/data/project/the-chat-KMA -runTests -testPlatform editmode -testResults /tmp/ball-task3-editmode-full.xml -logFile /tmp/ball-task3-editmode-full.log
+```
+
+Full XML: `/tmp/ball-task3-editmode-full.xml` — total 76, passed 76, failed 0, inconclusive 0, skipped 0, result `Passed`. This includes BasketballRulesTests, MinigameLifecycleContractTests, MinigameLifecycleTests, and ScoreUtilTests. The log is `/tmp/ball-task3-editmode-full.log`; both runs exited with code 0 and omitted `-quit`.
 
 ## Deviations and risks
 
