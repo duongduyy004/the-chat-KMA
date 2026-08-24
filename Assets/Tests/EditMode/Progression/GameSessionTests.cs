@@ -55,6 +55,29 @@ namespace KMA.Tests.Gameplay.Progression
         }
 
         [Test]
+        public void AcceptedResult_IsRetainedAsSnapshot_AndFailedResultCannotReplaceIt()
+        {
+            var session = new GameSession();
+            var accepted = new MinigameResult(true, 8f, Rank.A);
+
+            session.StartSubject(SubjectId.Sprint);
+            Assert.That(session.SubmitResult(SubjectId.Sprint, accepted), Is.EqualTo(SessionRoute.Map));
+
+            accepted.Pass = false;
+            accepted.Score = 1f;
+            accepted.Rank = Rank.F;
+
+            session.StartSubject(SubjectId.Sprint);
+            Assert.That(session.SubmitResult(SubjectId.Sprint, new MinigameResult(false, 10f, Rank.S)),
+                Is.EqualTo(SessionRoute.Punishment));
+
+            var bestResult = session.GetRecord(SubjectId.Sprint).BestResult;
+            Assert.That(bestResult.Pass, Is.True);
+            Assert.That(bestResult.Score, Is.EqualTo(8f));
+            Assert.That(bestResult.Rank, Is.EqualTo(Rank.A));
+        }
+
+        [Test]
         public void BonusScoreCannotOverrideFailedResult()
         {
             var session = new GameSession();

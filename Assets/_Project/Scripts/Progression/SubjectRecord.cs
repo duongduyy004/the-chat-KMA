@@ -9,18 +9,30 @@ namespace KMA.Gameplay
         public float BestScore { get; private set; }
         public Rank BestRank { get; private set; }
         public int FailedVisits { get; private set; }
+        public MinigameResult BestResult => bestResult == null ? null : Copy(bestResult);
+
+        MinigameResult bestResult;
 
         public void Accept(MinigameResult result)
         {
+            if (result == null || !result.Pass)
+            {
+                throw new ArgumentException("Only a passing result can be accepted.", nameof(result));
+            }
+
             bool hadResult = Passed;
             Passed = true;
             if (!hadResult || result.Score > BestScore)
             {
+                bestResult = Copy(result);
                 BestScore = result.Score;
                 BestRank = result.Rank;
             }
         }
 
         public void RecordFailedVisit() => FailedVisits++;
+
+        static MinigameResult Copy(MinigameResult result) =>
+            new MinigameResult(result.Pass, result.Score, result.Rank);
     }
 }
