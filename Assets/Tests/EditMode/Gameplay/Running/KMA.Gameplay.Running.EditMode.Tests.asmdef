@@ -5,7 +5,8 @@
         "UnityEngine.TestRunner",
         "UnityEditor.TestRunner",
         "KMA.Gameplay",
-        "KMA.Gameplay.Sprint"
+        "KMA.Gameplay.Sprint",
+        "KMA.Gameplay.Endurance"
     ],
     "includePlatforms": [
         "Editor"
