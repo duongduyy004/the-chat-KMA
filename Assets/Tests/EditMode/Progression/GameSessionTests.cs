@@ -7,6 +7,30 @@ namespace KMA.Tests.Gameplay.Progression
     public sealed class GameSessionTests
     {
         [Test]
+        public void StartSubject_RejectsWhileSubjectAttemptIsActive()
+        {
+            var session = new GameSession();
+            session.StartSubject(SubjectId.Sprint);
+
+            Assert.Throws<InvalidOperationException>(() => session.StartSubject(SubjectId.Endurance));
+        }
+
+        [Test]
+        public void StartSubject_CannotBypassPunishmentBeforeSecondFailure()
+        {
+            var session = new GameSession();
+            session.StartSubject(SubjectId.Sprint);
+            Assert.That(session.SubmitResult(SubjectId.Sprint, Failed()), Is.EqualTo(SessionRoute.Punishment));
+
+            Assert.Throws<InvalidOperationException>(() => session.StartSubject(SubjectId.Endurance));
+
+            Assert.That(session.CompletePunishment(), Is.EqualTo(SessionRoute.RetrySubject));
+            Assert.That(session.SubmitResult(SubjectId.Sprint, Failed()), Is.EqualTo(SessionRoute.Map));
+            Assert.That(session.Lives, Is.EqualTo(4));
+            Assert.That(session.GetRecord(SubjectId.Sprint).FailedVisits, Is.EqualTo(1));
+        }
+
+        [Test]
         public void FirstFail_RoutesPunishment_ThenSecondFailLosesLife()
         {
             var session = new GameSession();

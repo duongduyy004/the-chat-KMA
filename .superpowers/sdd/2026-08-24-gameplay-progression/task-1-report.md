@@ -65,3 +65,35 @@ The XML includes `KMA.Gameplay.Progression.EditMode.Tests.dll` with all 7 `GameS
 - The first post-implementation focused run returned exit 0 but XML total 0 because the new test folder had no assembly definition. The minimal Progression source and test asmdefs were added, then the exact focused command was rerun successfully with 7/7 tests.
 - Unity logs and XML are retained under `/tmp` at the paths above.
 - No RNG, shortcut, or Foundation contract changes were introduced.
+
+
+## Follow-up reviewer fix: active StartSubject rejection
+
+The prior implementation reset `active`, `visitAttempt`, and `awaitingPunishment` on every `StartSubject`. The fix rejects `StartSubject` whenever a subject attempt or authored punishment is active, before any session state can be reset.
+
+### RED regression
+
+```
+export KMA_UNITY_EDITOR=/home/duongduy/Unity/Hub/Editor/6000.3.22f1/Editor/Unity
+rtk proxy "$KMA_UNITY_EDITOR" -batchmode -projectPath . -runTests -testPlatform EditMode -testFilter GameSessionTests -testResults /tmp/TestResults-session-startsubject-red.xml -logFile /tmp/Unity-session-startsubject-red.log
+```
+
+Result: exit 2. XML counts: testcasecount/total 9, passed 7, failed 2, inconclusive 0, skipped 0. The two failures were the new active-attempt and punishment-pending rejection tests.
+
+### Focused Progression verification
+
+```
+export KMA_UNITY_EDITOR=/home/duongduy/Unity/Hub/Editor/6000.3.22f1/Editor/Unity
+rtk proxy "$KMA_UNITY_EDITOR" -batchmode -projectPath . -runTests -testPlatform EditMode -testFilter GameSessionTests -testResults /tmp/TestResults-session-green.xml -logFile /tmp/Unity-session-green.log
+```
+
+Result: exit 0, without `-quit`. XML counts: testcasecount/total 9, passed 9, failed 0, inconclusive 0, skipped 0, result Passed.
+
+### Full EditMode verification
+
+```
+export KMA_UNITY_EDITOR=/home/duongduy/Unity/Hub/Editor/6000.3.22f1/Editor/Unity
+rtk proxy "$KMA_UNITY_EDITOR" -batchmode -projectPath . -runTests -testPlatform EditMode -testResults /tmp/TestResults-editmode-full.xml -logFile /tmp/Unity-editmode-full.log
+```
+
+Result: exit 0, without `-quit`. XML counts: testcasecount/total 115, passed 115, failed 0, inconclusive 0, skipped 0, result Passed. The Progression assembly contributed all 9 `GameSessionTests`, including both new `StartSubject` regressions.

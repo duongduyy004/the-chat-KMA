@@ -38,6 +38,11 @@ namespace KMA.Gameplay
 
         public SessionRoute StartSubject(SubjectId id)
         {
+            if (active.HasValue)
+            {
+                throw new InvalidOperationException("A subject attempt is already active.");
+            }
+
             if (Lives <= 0)
             {
                 return SessionRoute.GameOver;
