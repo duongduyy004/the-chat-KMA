@@ -118,6 +118,7 @@ namespace KMA.Tests.Gameplay.Running
             QueueTouch(touchscreen, UnityEngine.InputSystem.TouchPhase.Moved, new Vector2(100f, 240f), new Vector2(0f, 140f));
             Assert.That(touchscreen.primaryTouch.phase.ReadValue(), Is.EqualTo(UnityEngine.InputSystem.TouchPhase.Moved));
             bridge.ProcessTouchSampleForTest(UnityEngine.InputSystem.TouchPhase.Moved, new Vector2(100f, 240f), new Vector2(0f, 140f), true);
+            bridge.ProcessTouchSampleForTest(UnityEngine.InputSystem.TouchPhase.Moved, new Vector2(100f, 400f), new Vector2(0f, 160f), true);
             QueueTouch(touchscreen, UnityEngine.InputSystem.TouchPhase.Ended, new Vector2(100f, 240f), Vector2.zero);
             bridge.ProcessTouchSampleForTest(UnityEngine.InputSystem.TouchPhase.Ended, new Vector2(100f, 240f), Vector2.zero, false);
             yield return null;

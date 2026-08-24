@@ -26,6 +26,7 @@ namespace KMA.Gameplay
         InputAction touchDeltaAction;
         Vector2 previousTouchPosition;
         bool touchTracking;
+        bool touchSwipeDispatched;
 
         public bool InputActionsReady => tapAction != null && holdAction != null && swipeUpAction != null && swipeDownAction != null && touchPositionAction != null && touchDeltaAction != null;
         public InputActionAsset InputActionsAsset => inputActions;
@@ -64,6 +65,7 @@ namespace KMA.Gameplay
             {
                 previousTouchPosition = position;
                 touchTracking = true;
+                touchSwipeDispatched = false;
                 return;
             }
 
@@ -81,6 +83,7 @@ namespace KMA.Gameplay
             {
                 touchTracking = false;
                 previousTouchPosition = default;
+                touchSwipeDispatched = false;
             }
         }
 
@@ -136,6 +139,7 @@ namespace KMA.Gameplay
             touchDeltaAction = null;
             touchTracking = false;
             previousTouchPosition = default;
+            touchSwipeDispatched = false;
         }
 
         void OnTapPerformed(InputAction.CallbackContext context)
@@ -163,9 +167,10 @@ namespace KMA.Gameplay
 
         void DispatchVerticalSwipe(Vector2 delta)
         {
-            if (Mathf.Abs(delta.y) < swipeThresholdPixels || Mathf.Abs(delta.y) <= Mathf.Abs(delta.x))
+            if (touchSwipeDispatched || Mathf.Abs(delta.y) < swipeThresholdPixels || Mathf.Abs(delta.y) <= Mathf.Abs(delta.x))
                 return;
 
+            touchSwipeDispatched = true;
             controller.Swipe(delta.y > 0f ? SwipeDirection.Up : SwipeDirection.Down);
         }
     }
