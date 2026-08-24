@@ -2,6 +2,8 @@
     "name": "KMA.Gameplay.EditMode.Tests",
     "rootNamespace": "KMA.Tests",
     "references": [
+        "UnityEngine.TestRunner",
+        "UnityEditor.TestRunner",
         "KMA.Gameplay"
     ],
     "includePlatforms": [
@@ -10,12 +12,13 @@
     "excludePlatforms": [],
     "allowUnsafeCode": false,
     "overrideReferences": true,
-    "precompiledReferences": [],
-    "autoReferenced": false,
-    "defineConstraints": [],
+    "precompiledReferences": [
+        "nunit.framework.dll"
+    ],
+    "autoReferenced": true,
+    "defineConstraints": [
+        "UNITY_INCLUDE_TESTS"
+    ],
     "versionDefines": [],
-    "noEngineReferences": false,
-    "optionalUnityReferences": [
-        "TestAssemblies"
-    ]
+    "noEngineReferences": false
 }

@@ -26,5 +26,35 @@ namespace KMA.Tests.Gameplay.Common
         [Test]
         public void Build_FailedResult_IgnoresBonuses() =>
             Assert.That(ScoreUtil.Build(false, 2, 1, 1).Score, Is.Zero);
+
+        [Test]
+        public void Build_NaNAccuracy_UsesFiniteNormalizedScore()
+        {
+            var result = ScoreUtil.Build(true, float.NaN, 1, 1);
+
+            Assert.That(result.Score, Is.EqualTo(8f));
+            Assert.That(result.Rank, Is.EqualTo(Rank.A));
+            Assert.That(result.Pass, Is.True);
+        }
+
+        [Test]
+        public void Build_PositiveInfinityEfficiency_UsesFiniteNormalizedScore()
+        {
+            var result = ScoreUtil.Build(true, 2, float.PositiveInfinity, 1);
+
+            Assert.That(result.Score, Is.EqualTo(8f));
+            Assert.That(result.Rank, Is.EqualTo(Rank.A));
+            Assert.That(result.Pass, Is.True);
+        }
+
+        [Test]
+        public void Build_NegativeInfinityMastery_UsesFiniteNormalizedScore()
+        {
+            var result = ScoreUtil.Build(true, 2, 1, float.NegativeInfinity);
+
+            Assert.That(result.Score, Is.EqualTo(8f));
+            Assert.That(result.Rank, Is.EqualTo(Rank.A));
+            Assert.That(result.Pass, Is.True);
+        }
     }
 }

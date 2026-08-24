@@ -14,10 +14,20 @@ namespace KMA.Gameplay
                 return new MinigameResult(false, 0, Rank.F);
             }
 
-            float raw = 6f + Mathf.Clamp(accuracy, 0, 2) +
-                Mathf.Clamp01(efficiency) + Mathf.Clamp01(mastery);
+            float raw = 6f + SanitizeComponent(accuracy, 0f, 2f) +
+                SanitizeComponent(efficiency, 0f, 1f) + SanitizeComponent(mastery, 0f, 1f);
             float rounded = Mathf.Round(Mathf.Clamp(raw, 0, 10) * 10f) / 10f;
             return new MinigameResult(true, rounded, ToRank(rounded));
+        }
+
+        private static float SanitizeComponent(float value, float min, float max)
+        {
+            if (float.IsNaN(value) || float.IsInfinity(value))
+            {
+                return 0f;
+            }
+
+            return Mathf.Clamp(value, min, max);
         }
     }
 }
