@@ -1,0 +1,21 @@
+{
+    "name": "KMA.Gameplay.EditMode.Tests",
+    "rootNamespace": "KMA.Tests",
+    "references": [
+        "KMA.Gameplay"
+    ],
+    "includePlatforms": [
+        "Editor"
+    ],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": true,
+    "precompiledReferences": [],
+    "autoReferenced": false,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false,
+    "optionalUnityReferences": [
+        "TestAssemblies"
+    ]
+}
