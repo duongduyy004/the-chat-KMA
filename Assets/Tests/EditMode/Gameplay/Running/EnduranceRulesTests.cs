@@ -101,6 +101,10 @@ namespace KMA.Tests.Gameplay.Running
         {
             Assert.That(typeof(EnduranceRules).GetMethod("ForTest"), Is.Null);
             Assert.That(typeof(EnduranceRules).GetMethods().Any(method => method.Name == "CompleteLap" && method.IsPublic), Is.False);
+            Assert.That(typeof(EnduranceController).GetMethod("ConfigureForTest"), Is.Null);
+            Assert.That(typeof(EnduranceController).GetMethod("ConfigureLifecycleForTest"), Is.Null);
+            Assert.That(typeof(EnduranceController).GetMethod("Simulate"), Is.Null);
+            Assert.That(typeof(EnduranceController).GetMethod("AdvanceToPlayForTest"), Is.Null);
         }
 
         [Test]

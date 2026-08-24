@@ -14,26 +14,26 @@ namespace KMA.Gameplay
             Rules = new EnduranceRules(3, Lifecycle);
         }
 
-        public void ConfigureForTest(int requiredLaps)
+        internal void ConfigureForTest(int requiredLaps)
         {
             ConfigureLifecycleForTest(0f, 0f, requiredLaps);
         }
 
-        public void ConfigureLifecycleForTest(float tutorialSeconds, float countdownSeconds, int requiredLaps)
+        internal void ConfigureLifecycleForTest(float tutorialSeconds, float countdownSeconds, int requiredLaps)
         {
             Lifecycle = new MinigameLifecycle(tutorialSeconds, countdownSeconds);
             Rules = new EnduranceRules(requiredLaps, Lifecycle);
             LastResult = null;
         }
 
-        public void Simulate(float dt)
+        internal void Simulate(float dt)
         {
             Lifecycle.Tick(Mathf.Max(0f, dt));
             if (Lifecycle.Phase == MinigamePhase.Play)
                 TickPlay(Mathf.Max(0f, dt));
         }
 
-        public void AdvanceToPlayForTest()
+        internal void AdvanceToPlayForTest()
         {
             Rules.AdvanceToPlayForTest();
         }

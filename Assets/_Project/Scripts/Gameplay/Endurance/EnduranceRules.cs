@@ -1,5 +1,7 @@
 using System;
+using System.Runtime.CompilerServices;
 using UnityEngine;
+[assembly: InternalsVisibleTo("KMA.Gameplay.Running.EditMode.Tests")]
 
 namespace KMA.Gameplay
 {
@@ -56,7 +58,7 @@ namespace KMA.Gameplay
                 elapsed += Mathf.Max(0f, dt);
         }
 
-        public void AdvanceToPlayForTest()
+        internal void AdvanceToPlayForTest()
         {
             lifecycle.Tick(0f);
             lifecycle.Tick(0f);

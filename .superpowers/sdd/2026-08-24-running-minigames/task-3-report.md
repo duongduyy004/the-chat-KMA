@@ -12,7 +12,7 @@
   - `MinigameBase.Update()` is the sole runtime lifecycle tick; `TickPlay` advances only Endurance’s gameplay clock.
   - Keeps authored inputs gated through Tutorial -> Countdown -> Play and result emission exactly once through `Finish`.
 - `Assets/Tests/EditMode/Gameplay/Running/EnduranceRulesTests.cs`
-  - Uses authored terminal events for test setup.
+  - Uses authored terminal events for test setup. Controller lifecycle/setup helpers are internal to the named test assembly, and reflection proves they are absent from the production public API.
   - Proves production has no `ForTest` or public `CompleteLap`, non-terminal beats cannot advance laps, all three required authored lap-end beats pass with deterministic nonzero score, and lifecycle timing is Tutorial at 1s, Countdown at 2s, Play at 5s.
 - `Assets/_Project/Scripts/Gameplay/Endurance/EnduranceController.cs.meta`
   - Retained as the Unity-generated metadata file; it contains no trailing whitespace.
@@ -31,19 +31,19 @@ Absolute Unity editor: `/home/duongduy/Unity/Hub/Editor/6000.3.22f1/Editor/Unity
 
 2. Corrected Endurance tests:
 
-   `rtk proxy "/home/duongduy/Unity/Hub/Editor/6000.3.22f1/Editor/Unity" -batchmode -projectPath . -runTests -testPlatform EditMode -testFilter EnduranceRulesTests -testResults /tmp/TestResults-endurance-review-green2.xml -logFile /tmp/Unity-endurance-review-green2.log`
+   `rtk proxy "/home/duongduy/Unity/Hub/Editor/6000.3.22f1/Editor/Unity" -batchmode -projectPath . -runTests -testPlatform EditMode -testFilter EnduranceRulesTests -testResults /tmp/TestResults-endurance-seams-green.xml -logFile /tmp/Unity-endurance-seams-green.log`
 
    Result: exit 0; XML 9 total, 9 passed, 0 failed, 0 inconclusive. Log reports `Test run completed. Exiting with code 0 (Ok). Run completed.`
 
 3. Running EditMode regression:
 
-   `rtk proxy "/home/duongduy/Unity/Hub/Editor/6000.3.22f1/Editor/Unity" -batchmode -projectPath . -runTests -testPlatform EditMode -testFilter KMA.Tests.Gameplay.Running -testResults /tmp/TestResults-running-review-final.xml -logFile /tmp/Unity-running-review-final.log`
+   `rtk proxy "/home/duongduy/Unity/Hub/Editor/6000.3.22f1/Editor/Unity" -batchmode -projectPath . -runTests -testPlatform EditMode -testFilter KMA.Tests.Gameplay.Running -testResults /tmp/TestResults-running-seams-final.xml -logFile /tmp/Unity-running-seams-final.log`
 
-   Result: exit 0; XML 22 total, 22 passed, 0 failed, 0 inconclusive. Log reports completion code 0.
+   Result: exit 0; XML 23 total, 23 passed, 0 failed, 0 inconclusive. Log reports completion code 0.
 
 4. Foundation Common EditMode regression:
 
-   `rtk proxy "/home/duongduy/Unity/Hub/Editor/6000.3.22f1/Editor/Unity" -batchmode -projectPath . -runTests -testPlatform EditMode -testFilter KMA.Tests.Gameplay.Common -testResults /tmp/TestResults-foundation-review-final.xml -logFile /tmp/Unity-foundation-review-final.log`
+   `rtk proxy "/home/duongduy/Unity/Hub/Editor/6000.3.22f1/Editor/Unity" -batchmode -projectPath . -runTests -testPlatform EditMode -testFilter KMA.Tests.Gameplay.Common -testResults /tmp/TestResults-foundation-seams-final.xml -logFile /tmp/Unity-foundation-seams-final.log`
 
    Result: exit 0; XML 30 total, 30 passed, 0 failed, 0 inconclusive. Log reports completion code 0.
 
