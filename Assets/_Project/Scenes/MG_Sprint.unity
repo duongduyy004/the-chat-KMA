@@ -98,6 +98,8 @@ MonoBehaviour:
     windActivationDistance: 30
     windCueLeadSeconds: 0.8
     windWindowDuration: 1.2
+  leftInputAction: SprintLeft
+  rightInputAction: SprintRight
 --- !u!1 &300000
 GameObject:
   m_ObjectHideFlags: 0

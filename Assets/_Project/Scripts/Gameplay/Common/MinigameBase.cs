@@ -5,7 +5,7 @@ namespace KMA.Gameplay
     public abstract class MinigameBase : MonoBehaviour
     {
         public event System.Action<MinigameResult> Completed;
-        protected MinigameLifecycle Lifecycle { get; private set; }
+        protected MinigameLifecycle Lifecycle { get; set; }
 
         protected virtual void Awake() => Lifecycle = new MinigameLifecycle(2f, 3f);
 
