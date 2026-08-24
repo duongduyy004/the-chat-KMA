@@ -2,7 +2,6 @@ namespace KMA.Gameplay
 {
     public readonly struct RhythmBeatEvaluator
     {
-        private const double BoundaryToleranceMs = 1e-9;
         private readonly double perfectMs;
         private readonly double goodMs;
 
@@ -15,8 +14,8 @@ namespace KMA.Gameplay
         public TimingJudge Judge(double inputDspTime, double beatDspTime)
         {
             double delta = System.Math.Abs(inputDspTime - beatDspTime) * 1000d;
-            return delta <= perfectMs + BoundaryToleranceMs ? TimingJudge.Perfect :
-                delta <= goodMs + BoundaryToleranceMs ? TimingJudge.Good : TimingJudge.Miss;
+            return delta <= perfectMs ? TimingJudge.Perfect :
+                delta <= goodMs ? TimingJudge.Good : TimingJudge.Miss;
         }
     }
 }
