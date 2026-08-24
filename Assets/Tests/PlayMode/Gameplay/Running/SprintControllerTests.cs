@@ -102,6 +102,32 @@ namespace KMA.Tests.Gameplay.Running
         }
 
         [UnityTest]
+        public IEnumerator CueCrossingInsideLargeStep_StartsTimerAtThresholdAndExpiresAfterAuthoredDuration()
+        {
+            var controller = CreateSprintController(.8f);
+            controller.AdvanceToDistance(29f);
+            controller.OnLeftTap();
+            controller.OnRightTap();
+
+            controller.Simulate(1f);
+            Assert.That(controller.WindCueVisible, Is.True);
+            Assert.That(controller.WindWindowActive, Is.False);
+            controller.Simulate(.39f);
+            Assert.That(controller.WindWindowActive, Is.False);
+            controller.Simulate(.02f);
+            Assert.That(controller.WindWindowActive, Is.True);
+            controller.Simulate(1.18f);
+            Assert.That(controller.WindWindowActive, Is.True);
+            controller.Simulate(.02f);
+            Assert.That(controller.WindWindowActive, Is.False);
+            Assert.That(controller.WindChallengeExpired, Is.True);
+            controller.OnLeftTap();
+            Assert.That(controller.WindChallengeCountered, Is.False);
+            DestroyController(controller);
+            yield return null;
+        }
+
+        [UnityTest]
         public IEnumerator TimeLimit_EmitsOneFailureResultWithoutStaminaDepletion()
         {
             var controller = CreateSprintController(.8f);

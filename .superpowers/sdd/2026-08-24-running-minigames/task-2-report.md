@@ -76,3 +76,20 @@ Verification commands and XML counts:
   - exit 0; XML 30 total, 30 passed, 0 failed, 0 inconclusive.
 
 All commands omitted -quit. Unity logs reported Test run completed. Exiting with code 0 (Ok). Run completed. git diff --check passed.
+
+## Follow-up review fix: cue-threshold crossing timing
+
+UpdateAuthoredChallenges now receives the pre-tick distance and computes the fraction of the simulation step before the authored 30m cue. Only the remaining post-crossing time advances the lead/window timer. This prevents a large step that crosses 30m late from expiring or activating the challenge as if the full step occurred after the cue.
+
+Added regression: CueCrossingInsideLargeStep_StartsTimerAtThresholdAndExpiresAfterAuthoredDuration. It advances from 29m with deterministic speed, crosses 30m in one 1.0s step, verifies the remaining lead before activation, verifies the active window remains open through the remaining authored duration, then verifies expiry and rejection of a late tap.
+
+Verification:
+
+- /home/duongduy/Unity/Hub/Editor/6000.3.22f1/Editor/Unity -batchmode -projectPath . -runTests -testPlatform PlayMode -testFilter SprintControllerTests -testResults /tmp/TestResults-sprint-crossing-green.xml -logFile /tmp/Unity-sprint-crossing-green.log
+  - exit 0; XML 7 total, 7 passed, 0 failed, 0 inconclusive.
+- /home/duongduy/Unity/Hub/Editor/6000.3.22f1/Editor/Unity -batchmode -projectPath . -runTests -testPlatform EditMode -testFilter KMA.Tests.Gameplay.Running -testResults /tmp/TestResults-running-editmode-crossing.xml -logFile /tmp/Unity-running-editmode-crossing.log
+  - exit 0; XML 14 total, 14 passed, 0 failed, 0 inconclusive.
+- /home/duongduy/Unity/Hub/Editor/6000.3.22f1/Editor/Unity -batchmode -projectPath . -runTests -testPlatform EditMode -testFilter KMA.Tests.Gameplay.Common -testResults /tmp/TestResults-foundation-editmode-crossing.xml -logFile /tmp/Unity-foundation-editmode-crossing.log
+  - exit 0; XML 30 total, 30 passed, 0 failed, 0 inconclusive.
+
+All commands omitted -quit. Unity logs reported Test run completed. Exiting with code 0 (Ok). Run completed. git diff --check passed.

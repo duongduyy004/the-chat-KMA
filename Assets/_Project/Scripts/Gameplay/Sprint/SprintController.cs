@@ -93,8 +93,9 @@ namespace KMA.Gameplay
 
         protected override void TickPlay(float dt)
         {
+            float distanceBefore = rules.Snapshot.Distance;
             rules.Tick(dt);
-            UpdateAuthoredChallenges(dt);
+            UpdateAuthoredChallenges(dt, distanceBefore);
             EvaluateTerminalOutcome();
         }
 
@@ -122,17 +123,24 @@ namespace KMA.Gameplay
             activeAt = challengePattern.WindActivationDistance;
         }
 
-        void UpdateAuthoredChallenges(float dt)
+        void UpdateAuthoredChallenges(float dt, float distanceBefore)
         {
-            if (!WindCueVisible && rules.Snapshot.Distance >= cueAt)
+            float distanceAfter = rules.Snapshot.Distance;
+            float timerDt = dt;
+            if (!WindCueVisible && distanceAfter >= cueAt)
             {
+                float distanceDelta = distanceAfter - distanceBefore;
+                float fractionBeforeCue = distanceDelta > 0f
+                    ? Mathf.Clamp01((cueAt - distanceBefore) / distanceDelta)
+                    : 0f;
                 WindCueVisible = true;
                 challengeElapsed = 0f;
+                timerDt = Mathf.Max(0f, dt * (1f - fractionBeforeCue));
             }
 
             if (WindCueVisible && !windChallengeResolved)
             {
-                challengeElapsed += dt;
+                challengeElapsed += timerDt;
                 if (challengeElapsed >= challengePattern.WindCueLeadSeconds + challengePattern.WindWindowDuration)
                 {
                     WindWindowActive = false;
