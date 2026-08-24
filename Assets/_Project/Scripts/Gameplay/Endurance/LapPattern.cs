@@ -35,5 +35,19 @@ namespace KMA.Gameplay
         });
 
         public AuthoredBeat[] Events => (AuthoredBeat[])events.Clone();
+
+        public AuthoredBeat EventAt(int index)
+        {
+            if (index < 0 || index >= events.Length)
+                throw new ArgumentOutOfRangeException(nameof(index));
+
+            return events[index];
+        }
+
+        public bool HasWarningAt(int index)
+        {
+            BeatEvent beat = EventAt(index).Beat;
+            return beat == BeatEvent.Jump || beat == BeatEvent.Slide;
+        }
     }
 }

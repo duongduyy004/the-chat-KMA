@@ -1,0 +1,180 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!29 &1
+SceneSettings:
+  m_ObjectHideFlags: 0
+  serializedVersion: 2
+  m_PVSData: {fileID: 0}
+  m_QueryMode: 0
+  m_Enabled: 1
+  m_AllowHDR: 1
+  m_AllowMSAA: 1
+  m_AllowDynamicResolution: 0
+--- !u!104 &2
+RenderSettings:
+  m_ObjectHideFlags: 0
+  serializedVersion: 12
+  m_Fog: 0
+  m_FogColor: {r: 0.5, g: 0.5, b: 0.5, a: 1}
+  m_FogMode: 3
+  m_FogDensity: 0.01
+  m_LinearFogStart: 0
+  m_LinearFogEnd: 300
+  m_AmbientSkyColor: {r: 0.212, g: 0.227, b: 0.259, a: 1}
+  m_AmbientEquatorColor: {r: 0.114, g: 0.133, b: 0.133, a: 1}
+  m_AmbientGroundColor: {r: 0.047, g: 0.047, b: 0.047, a: 1}
+  m_AmbientIntensity: 1
+  m_SkyboxMaterial: {fileID: 0}
+  m_HaloStrength: 0.5
+  m_FlareFadeSpeed: 3
+--- !u!1 &100000
+GameObject:
+  m_ObjectHideFlags: 0
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 100001}
+  - component: {fileID: 100002}
+  m_Layer: 0
+  m_Name: Main Camera
+  m_TagString: MainCamera
+  m_IsActive: 1
+--- !u!4 &100001
+Transform:
+  m_GameObject: {fileID: 100000}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 3, z: -10}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_Children: []
+--- !u!20 &100002
+Camera:
+  m_GameObject: {fileID: 100000}
+  m_Enabled: 1
+  serializedVersion: 2
+  m_ClearFlags: 1
+  m_BackGroundColor: {r: 0.05, g: 0.08, b: 0.12, a: 0}
+  m_projectionMatrixMode: 1
+  m_SensorSize: {x: 36, y: 24}
+  m_LensShift: {x: 0, y: 0}
+  m_FocalLength: 50
+  m_NormalizedViewPortRect: {x: 0, y: 0, width: 1, height: 1}
+  near clip plane: 0.3
+  far clip plane: 1000
+--- !u!1 &200000
+GameObject:
+  m_ObjectHideFlags: 0
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 200001}
+  - component: {fileID: 200002}
+  m_Layer: 0
+  m_Name: EnduranceController
+  m_TagString: Untagged
+  m_IsActive: 1
+--- !u!4 &200001
+Transform:
+  m_GameObject: {fileID: 200000}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_Children: []
+--- !u!114 &200002
+MonoBehaviour:
+  m_GameObject: {fileID: 200000}
+  m_Enabled: 1
+  m_Script: {fileID: 11500000, guid: bf4114553db184dc79b384f7d4acb569, type: 3}
+  m_Name:
+  m_EditorClassIdentifier:
+  rhythmOffsetMs: 0
+  beatsPerMinute: 120
+  obstacleCue: {fileID: 600001}
+  metronome: {fileID: 200003}
+--- !u!82 &200003
+AudioSource:
+  m_GameObject: {fileID: 200000}
+  m_Enabled: 1
+  serializedVersion: 4
+  OutputAudioMixerGroup: {fileID: 0}
+  m_audioClip: {fileID: 0}
+  m_PlayOnAwake: 0
+  m_Volume: 1
+  m_Pitch: 1
+  Loop: 0
+  Mute: 0
+  Spatialize: 0
+  SpatializePostEffects: 0
+  Priority: 128
+  DopplerLevel: 1
+  MinDistance: 1
+  MaxDistance: 500
+  Pan2D: 0
+  rolloffMode: 0
+  BypassEffects: 0
+  BypassListenerEffects: 0
+  BypassReverbZones: 0
+  rolloffCustomCurve: {serializedVersion: 2, m_Curve: []}
+  panLevelCustomCurve: {serializedVersion: 2, m_Curve: []}
+  spreadCustomCurve: {serializedVersion: 2, m_Curve: []}
+  reverbZoneMixCustomCurve: {serializedVersion: 2, m_Curve: []}
+--- !u!1 &300000
+GameObject:
+  m_ObjectHideFlags: 0
+  serializedVersion: 6
+  m_Component: []
+  m_Layer: 0
+  m_Name: Runner_Parallax
+  m_TagString: Untagged
+  m_IsActive: 1
+--- !u!1 &400000
+GameObject:
+  m_ObjectHideFlags: 0
+  serializedVersion: 6
+  m_Component: []
+  m_Layer: 0
+  m_Name: HUD
+  m_TagString: Untagged
+  m_IsActive: 1
+--- !u!1 &400001
+GameObject:
+  m_ObjectHideFlags: 0
+  serializedVersion: 6
+  m_Component: []
+  m_Layer: 0
+  m_Name: Beat
+  m_TagString: Untagged
+  m_IsActive: 1
+--- !u!1 &400002
+GameObject:
+  m_ObjectHideFlags: 0
+  serializedVersion: 6
+  m_Component: []
+  m_Layer: 0
+  m_Name: Stamina
+  m_TagString: Untagged
+  m_IsActive: 1
+--- !u!1 &400003
+GameObject:
+  m_ObjectHideFlags: 0
+  serializedVersion: 6
+  m_Component: []
+  m_Layer: 0
+  m_Name: Lap
+  m_TagString: Untagged
+  m_IsActive: 1
+--- !u!1 &600000
+GameObject:
+  m_ObjectHideFlags: 0
+  serializedVersion: 6
+  m_Component: []
+  m_Layer: 0
+  m_Name: ObstacleCue
+  m_TagString: Untagged
+  m_IsActive: 0
+--- !u!1 &700000
+GameObject:
+  m_ObjectHideFlags: 0
+  serializedVersion: 6
+  m_Component: []
+  m_Layer: 0
+  m_Name: FullScreenGameplayInput
+  m_TagString: Untagged
+  m_IsActive: 1
