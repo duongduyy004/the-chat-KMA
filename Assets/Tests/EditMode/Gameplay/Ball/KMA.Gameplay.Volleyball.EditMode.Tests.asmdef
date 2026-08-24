@@ -8,7 +8,8 @@
         "KMA.Gameplay.Ball",
         "KMA.Gameplay.Volleyball",
         "KMA.Gameplay.Basketball",
-        "KMA.Gameplay.PingPong"
+        "KMA.Gameplay.PingPong",
+        "KMA.Gameplay.Badminton"
     ],
     "includePlatforms": [
         "Editor"
