@@ -6,6 +6,25 @@ namespace KMA.Tests.Gameplay.Running
     public sealed class SprintRulesTests
     {
         [Test]
+        public void AuthoredSequence_StartsLeftAndInvalidInputDoesNotAdvanceIt()
+        {
+            var rules = SprintRules.Default();
+
+            Assert.That(rules.ExpectedSide, Is.EqualTo(Side.Left));
+            rules.Tap(Side.Right);
+            Assert.That(rules.ExpectedSide, Is.EqualTo(Side.Left));
+            Assert.That(rules.ValidTapRatio, Is.EqualTo(0f));
+
+            rules.Tap(Side.Left);
+            Assert.That(rules.ExpectedSide, Is.EqualTo(Side.Right));
+            rules.Tap(Side.Left);
+            Assert.That(rules.ExpectedSide, Is.EqualTo(Side.Right));
+            rules.Tap(Side.Right);
+            Assert.That(rules.ExpectedSide, Is.EqualTo(Side.Left));
+            Assert.That(rules.ValidTapRatio, Is.EqualTo(.5f).Within(.001f));
+        }
+
+        [Test]
         public void SameSideTap_GivesFortyPercentImpulse()
         {
             var rules = SprintRules.Default();
@@ -56,6 +75,54 @@ namespace KMA.Tests.Gameplay.Running
 
             Assert.That(rules.RivalProfiles, Is.EqualTo(profiles));
             Assert.That(rules.Snapshot.Distance, Is.EqualTo(0f));
+        }
+
+        [TestCase(0f, StaminaBand.Low)]
+        [TestCase(29.999f, StaminaBand.Low)]
+        [TestCase(30f, StaminaBand.Mid)]
+        [TestCase(69.999f, StaminaBand.Mid)]
+        [TestCase(70f, StaminaBand.High)]
+        [TestCase(100f, StaminaBand.High)]
+        public void StaminaBand_UsesExplicitDeterministicBoundaries(float stamina, StaminaBand expected)
+        {
+            Assert.That(SprintRules.ClassifyStamina(stamina), Is.EqualTo(expected));
+        }
+
+        [Test]
+        public void RivalProfiles_DetermineDeterministicRankAndDistance()
+        {
+            var fast = new SprintRules(rivalProfiles: new[]
+            {
+                new RivalPaceProfile("Fast", 100f, 100f)
+            });
+            var slow = new SprintRules(rivalProfiles: new[]
+            {
+                new RivalPaceProfile("Slow", 0f, 0f)
+            });
+            var repeat = new SprintRules(rivalProfiles: new[]
+            {
+                new RivalPaceProfile("Fast", 100f, 100f)
+            });
+
+            fast.Tap(Side.Left);
+            slow.Tap(Side.Left);
+            repeat.Tap(Side.Left);
+            fast.Tick(1f);
+            slow.Tick(1f);
+            repeat.Tick(1f);
+
+            Assert.That(fast.RivalDistances, Is.EqualTo(repeat.RivalDistances));
+            Assert.That(fast.Rank, Is.EqualTo(repeat.Rank));
+            Assert.That(fast.Rank, Is.GreaterThan(slow.Rank));
+            Assert.That(fast.RivalDistances[0], Is.GreaterThan(slow.RivalDistances[0]));
+        }
+
+        [Test]
+        public void StaminaIsEfficiencyOnly_AndDoesNotCreateAnotherPassGate()
+        {
+            var rules = SprintRules.ForTest(distance: 100f, elapsed: 13.9f, rank: 4, stamina: 0f);
+
+            Assert.That(rules.BuildResult().Pass, Is.True);
         }
 
         [Test]
