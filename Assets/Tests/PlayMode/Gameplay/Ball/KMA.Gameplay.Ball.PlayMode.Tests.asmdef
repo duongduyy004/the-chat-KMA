@@ -1,0 +1,22 @@
+{
+    "name": "KMA.Gameplay.Ball.PlayMode.Tests",
+    "rootNamespace": "KMA.Tests.Gameplay.Ball",
+    "references": [
+        "UnityEngine.TestRunner",
+        "KMA.Gameplay",
+        "KMA.Gameplay.Ball"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": true,
+    "precompiledReferences": [
+        "nunit.framework.dll"
+    ],
+    "autoReferenced": true,
+    "defineConstraints": [
+        "UNITY_INCLUDE_TESTS"
+    ],
+    "versionDefines": [],
+    "noEngineReferences": false
+}
