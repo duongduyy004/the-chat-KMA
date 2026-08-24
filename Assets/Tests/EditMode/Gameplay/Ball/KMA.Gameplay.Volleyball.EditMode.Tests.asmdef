@@ -6,7 +6,8 @@
         "UnityEditor.TestRunner",
         "KMA.Gameplay",
         "KMA.Gameplay.Ball",
-        "KMA.Gameplay.Volleyball"
+        "KMA.Gameplay.Volleyball",
+        "KMA.Gameplay.Basketball"
     ],
     "includePlatforms": [
         "Editor"
