@@ -20,8 +20,8 @@ namespace KMA.Gameplay
 
         protected void Finish(MinigameResult result)
         {
-            Lifecycle.BeginResolve();
-            Completed?.Invoke(result);
+            if (Lifecycle.BeginResolve())
+                Completed?.Invoke(result);
         }
     }
 }

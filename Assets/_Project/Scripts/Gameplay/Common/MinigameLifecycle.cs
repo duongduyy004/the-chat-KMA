@@ -29,6 +29,13 @@ namespace KMA.Gameplay
             }
         }
 
-        public void BeginResolve() => Phase = MinigamePhase.Resolve;
+        public bool BeginResolve()
+        {
+            if (Phase != MinigamePhase.Play)
+                return false;
+
+            Phase = MinigamePhase.Resolve;
+            return true;
+        }
     }
 }
