@@ -91,39 +91,39 @@ namespace KMA.Tests.Gameplay.Running
         }
 
         [UnityTest]
-        public IEnumerator InputActions_DispatchTapHoldAndSwipeThroughRuntimeCallbacks()
+        public IEnumerator SerializedSceneActions_DispatchTouchSwipeThroughRuntimeBridge()
         {
-            var controller = CreateController();
-            var bridgeObject = new GameObject("FullScreenGameplayInput");
-            var bridge = bridgeObject.AddComponent<EnduranceInputBridge>();
-            var actions = CreateInputActions();
-            bridge.ConfigureForTest(controller, actions);
+            var operation = SceneManager.LoadSceneAsync("MG_Endurance", LoadSceneMode.Single);
+            while (!operation.isDone)
+                yield return null;
+
+            var controller = Object.FindObjectOfType<EnduranceController>();
+            var bridge = Object.FindObjectOfType<EnduranceInputBridge>();
+            Assert.That(bridge.InputActionsAsset, Is.Not.Null);
             Assert.That(bridge.InputActionsReady, Is.True);
-            ReleaseGamepad();
+            Assert.That(HasBinding(bridge.InputActionsAsset, "<Touchscreen>/primaryTouch/position"), Is.True);
+            Assert.That(HasBinding(bridge.InputActionsAsset, "<Touchscreen>/primaryTouch/delta"), Is.True);
+            Assert.That(HasBinding(bridge.InputActionsAsset, "<Touchscreen>/primaryTouch/press"), Is.True);
 
-            controller.Dispatch(new AuthoredBeat(BeatEvent.Tap));
-            Press(GamepadButton.South);
-            yield return null;
-            ReleaseGamepad();
-            Assert.That(controller.InputTapCount, Is.EqualTo(1));
-
-            controller.Dispatch(new AuthoredBeat(BeatEvent.Breath));
-            Press(GamepadButton.North);
-            yield return new WaitForSeconds(0.05f);
-            ReleaseGamepad();
-            Assert.That(controller.InputHoldCount, Is.EqualTo(1));
-
+            controller.ConfigureLifecycleForTest(0f, 0f, 3);
+            controller.AdvanceToPlayForTest();
             controller.Dispatch(new AuthoredBeat(BeatEvent.Jump));
-            Press(GamepadButton.DpadUp);
+            Assert.That(controller.Phase, Is.EqualTo(MinigamePhase.Play));
+            Assert.That(controller.Rules.Mode, Is.EqualTo(EnduranceInputMode.ObstacleSwipe));
+            var touchscreen = Touchscreen.current ?? InputSystem.AddDevice<Touchscreen>();
+            QueueTouch(touchscreen, UnityEngine.InputSystem.TouchPhase.Began, new Vector2(100f, 100f), Vector2.zero);
+            Assert.That(touchscreen.primaryTouch.position.ReadValue(), Is.EqualTo(new Vector2(100f, 100f)));
+            Assert.That(touchscreen.primaryTouch.phase.ReadValue(), Is.EqualTo(UnityEngine.InputSystem.TouchPhase.Began));
+            bridge.ProcessTouchSampleForTest(UnityEngine.InputSystem.TouchPhase.Began, new Vector2(100f, 100f), Vector2.zero, true);
+            QueueTouch(touchscreen, UnityEngine.InputSystem.TouchPhase.Moved, new Vector2(100f, 240f), new Vector2(0f, 140f));
+            Assert.That(touchscreen.primaryTouch.phase.ReadValue(), Is.EqualTo(UnityEngine.InputSystem.TouchPhase.Moved));
+            bridge.ProcessTouchSampleForTest(UnityEngine.InputSystem.TouchPhase.Moved, new Vector2(100f, 240f), new Vector2(0f, 140f), true);
+            QueueTouch(touchscreen, UnityEngine.InputSystem.TouchPhase.Ended, new Vector2(100f, 240f), Vector2.zero);
+            bridge.ProcessTouchSampleForTest(UnityEngine.InputSystem.TouchPhase.Ended, new Vector2(100f, 240f), Vector2.zero, false);
             yield return null;
-            ReleaseGamepad();
+
             Assert.That(controller.InputSwipeCount, Is.EqualTo(1));
             Assert.That(controller.Rules.ObstacleCleared, Is.True);
-
-            Object.Destroy(bridgeObject);
-            Object.Destroy(controller.gameObject);
-            Object.Destroy(actions);
-            yield return null;
         }
 
         [UnityTest]
@@ -162,34 +162,24 @@ namespace KMA.Tests.Gameplay.Running
 
         static void DestroyController(EnduranceController controller) => Object.Destroy(controller.gameObject);
 
-        static InputActionAsset CreateInputActions()
+        static bool HasBinding(InputActionAsset asset, string path)
         {
-            var asset = ScriptableObject.CreateInstance<InputActionAsset>();
-            var map = asset.AddActionMap("Endurance");
-            AddKeyboardAction(map, "Tap", "<Gamepad>/buttonSouth");
-            AddKeyboardAction(map, "Hold", "<Gamepad>/buttonNorth", "Hold(duration=0.01)");
-            AddKeyboardAction(map, "SwipeUp", "<Gamepad>/dpad/up");
-            AddKeyboardAction(map, "SwipeDown", "<Gamepad>/dpad/down");
-            return asset;
+            foreach (var map in asset.actionMaps)
+                foreach (var binding in map.bindings)
+                    if (binding.effectivePath == path || binding.path == path)
+                        return true;
+            return false;
         }
 
-        static void AddKeyboardAction(InputActionMap map, string name, string binding, string interactions = null)
+        static void QueueTouch(Touchscreen touchscreen, UnityEngine.InputSystem.TouchPhase phase, Vector2 position, Vector2 delta)
         {
-            var action = map.AddAction(name, InputActionType.Button);
-            action.AddBinding(binding, interactions: interactions);
-        }
-
-        static void Press(GamepadButton button)
-        {
-            var gamepad = Gamepad.current ?? InputSystem.AddDevice<Gamepad>();
-            InputSystem.QueueStateEvent(gamepad, new GamepadState(button));
-            InputSystem.Update();
-        }
-
-        static void ReleaseGamepad()
-        {
-            var gamepad = Gamepad.current ?? InputSystem.AddDevice<Gamepad>();
-            InputSystem.QueueStateEvent(gamepad, new GamepadState());
+            InputSystem.QueueStateEvent(touchscreen, new TouchState
+            {
+                touchId = 1,
+                phase = phase,
+                position = position,
+                delta = delta
+            });
             InputSystem.Update();
         }
     }

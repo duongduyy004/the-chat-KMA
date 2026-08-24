@@ -258,3 +258,7 @@ MonoBehaviour:
   holdActionName: Hold
   swipeUpActionName: SwipeUp
   swipeDownActionName: SwipeDown
+  touchPressActionName: TouchPress
+  touchPositionActionName: TouchPosition
+  touchDeltaActionName: TouchDelta
+  swipeThresholdPixels: 80

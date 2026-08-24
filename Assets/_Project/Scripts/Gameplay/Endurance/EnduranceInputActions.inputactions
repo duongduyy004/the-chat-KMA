@@ -9,7 +9,10 @@
         { "name": "Tap", "type": "Button", "id": "11111111111111111111111111111111", "expectedControlType": "Button" },
         { "name": "Hold", "type": "Button", "id": "22222222222222222222222222222222", "expectedControlType": "Button" },
         { "name": "SwipeUp", "type": "Button", "id": "33333333333333333333333333333333", "expectedControlType": "Button" },
-        { "name": "SwipeDown", "type": "Button", "id": "44444444444444444444444444444444", "expectedControlType": "Button" }
+        { "name": "SwipeDown", "type": "Button", "id": "44444444444444444444444444444444", "expectedControlType": "Button" },
+        { "name": "TouchPress", "type": "Button", "id": "55555555555555555555555555555555", "expectedControlType": "Button" },
+        { "name": "TouchPosition", "type": "Value", "id": "66666666666666666666666666666666", "expectedControlType": "Vector2" },
+        { "name": "TouchDelta", "type": "PassThrough", "id": "77777777777777777777777777777777", "expectedControlType": "Vector2" }
       ],
       "bindings": [
         { "name": "", "id": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa", "path": "<Keyboard>/t", "interactions": "", "processors": "", "groups": "", "action": "Tap", "isComposite": false, "isPartOfComposite": false },
@@ -17,7 +20,10 @@
         { "name": "", "id": "cccccccccccccccccccccccccccccccc", "path": "<Keyboard>/h", "interactions": "Hold(duration=0.25)", "processors": "", "groups": "", "action": "Hold", "isComposite": false, "isPartOfComposite": false },
         { "name": "", "id": "dddddddddddddddddddddddddddddddd", "path": "<Touchscreen>/primaryTouch/press", "interactions": "Hold(duration=0.25)", "processors": "", "groups": "", "action": "Hold", "isComposite": false, "isPartOfComposite": false },
         { "name": "", "id": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee", "path": "<Keyboard>/upArrow", "interactions": "", "processors": "", "groups": "", "action": "SwipeUp", "isComposite": false, "isPartOfComposite": false },
-        { "name": "", "id": "ffffffffffffffffffffffffffffffff", "path": "<Keyboard>/downArrow", "interactions": "", "processors": "", "groups": "", "action": "SwipeDown", "isComposite": false, "isPartOfComposite": false }
+        { "name": "", "id": "ffffffffffffffffffffffffffffffff", "path": "<Keyboard>/downArrow", "interactions": "", "processors": "", "groups": "", "action": "SwipeDown", "isComposite": false, "isPartOfComposite": false },
+        { "name": "", "id": "12121212121212121212121212121212", "path": "<Touchscreen>/primaryTouch/press", "interactions": "", "processors": "", "groups": "", "action": "TouchPress", "isComposite": false, "isPartOfComposite": false },
+        { "name": "", "id": "13131313131313131313131313131313", "path": "<Touchscreen>/primaryTouch/position", "interactions": "", "processors": "", "groups": "", "action": "TouchPosition", "isComposite": false, "isPartOfComposite": false },
+        { "name": "", "id": "14141414141414141414141414141414", "path": "<Touchscreen>/primaryTouch/delta", "interactions": "", "processors": "", "groups": "", "action": "TouchDelta", "isComposite": false, "isPartOfComposite": false }
       ],
       "controlSchemes": []
     }
