@@ -11,10 +11,14 @@ namespace KMA.Gameplay
 
         Transform attachment;
         float currentCurvature;
+        Vector2 simulationGravity;
+        Vector2 lastIntegratedVelocity;
         bool isInFlight;
 
         public Rigidbody2D Body => body;
         public FlightProfile Profile => profile;
+
+        public void SetProfile(FlightProfile value) => profile = value;
         public BallFlightSnapshot Snapshot => new BallFlightSnapshot(
             body.position,
             body.velocity,
@@ -47,8 +51,9 @@ namespace KMA.Gameplay
             attachment = null;
             isInFlight = true;
             body.bodyType = RigidbodyType2D.Dynamic;
-            body.gravityScale = ActiveProfile.GravityScale;
-            body.drag = ActiveProfile.LinearDrag;
+            simulationGravity = Physics2D.gravity * ActiveProfile.GravityScale;
+            body.gravityScale = 0f;
+            body.drag = 0f;
             body.velocity = direction.normalized * force;
             currentCurvature = curvature;
         }
@@ -58,8 +63,11 @@ namespace KMA.Gameplay
         public Vector2 PredictLandingPoint() => Ballistics.PredictGround(
             body.position,
             body.velocity,
-            Physics2D.gravity.y * body.gravityScale,
-            ActiveProfile.GroundY);
+            simulationGravity,
+            ActiveProfile.GroundY,
+            ActiveProfile.LinearDrag,
+            currentCurvature,
+            Time.fixedDeltaTime);
 
         public Vector2 Bounce(Vector2 incomingVelocity, Vector2 surfaceNormal)
         {
@@ -75,10 +83,12 @@ namespace KMA.Gameplay
                 return;
             }
 
-            if (!isInFlight || body.velocity.sqrMagnitude <= Mathf.Epsilon || Mathf.Approximately(currentCurvature, 0f))
+            if (!isInFlight)
                 return;
 
-            body.AddForce(Vector2.Perpendicular(body.velocity.normalized) * currentCurvature);
+            lastIntegratedVelocity = Ballistics.AdvanceVelocity(
+                body.velocity, simulationGravity, currentCurvature, ActiveProfile.LinearDrag, Time.fixedDeltaTime);
+            body.velocity = lastIntegratedVelocity;
         }
 
         void OnCollisionEnter2D(Collision2D collision)
@@ -86,7 +96,7 @@ namespace KMA.Gameplay
             if (collision.contactCount > 0 && isInFlight)
             {
                 var contact = collision.GetContact(0);
-                body.velocity = Bounce(body.velocity, contact.normal);
+                body.velocity = Bounce(lastIntegratedVelocity, contact.normal);
             }
 
             Collided?.Invoke(collision);
@@ -116,6 +126,44 @@ namespace KMA.Gameplay
 
     public static class Ballistics
     {
+        public static Vector2 AdvanceVelocity(Vector2 velocity, Vector2 gravity, float curvature, float linearDrag, float deltaTime)
+        {
+            if (deltaTime <= 0f)
+                return velocity;
+
+            if (velocity.sqrMagnitude > Mathf.Epsilon && !Mathf.Approximately(curvature, 0f))
+                velocity += Vector2.Perpendicular(velocity.normalized) * curvature * deltaTime;
+
+            velocity += gravity * deltaTime;
+            float dragFactor = 1f / (1f + Mathf.Max(0f, linearDrag) * deltaTime);
+            return velocity * dragFactor;
+        }
+
+        public static Vector2 PredictGround(Vector2 position, Vector2 velocity, Vector2 gravity, float groundY, float linearDrag, float curvature, float deltaTime, int maxSteps = 10000)
+        {
+            if (deltaTime <= 0f || maxSteps <= 0)
+                return position;
+
+            var currentPosition = position;
+            var currentVelocity = velocity;
+            for (var step = 0; step < maxSteps; step++)
+            {
+                var nextVelocity = AdvanceVelocity(currentVelocity, gravity, curvature, linearDrag, deltaTime);
+                var nextPosition = currentPosition + nextVelocity * deltaTime;
+                if (nextPosition.y <= groundY && nextVelocity.y <= 0f)
+                {
+                    float denominator = currentPosition.y - nextPosition.y;
+                    float fraction = Mathf.Approximately(denominator, 0f) ? 1f : Mathf.Clamp01((currentPosition.y - groundY) / denominator);
+                    return new Vector2(Mathf.Lerp(currentPosition.x, nextPosition.x, fraction), groundY);
+                }
+
+                currentPosition = nextPosition;
+                currentVelocity = nextVelocity;
+            }
+
+            return position;
+        }
+
         public static Vector2 PredictGround(Vector2 position, Vector2 velocity, float gravity, float groundY)
         {
             if (Mathf.Approximately(gravity, 0f))

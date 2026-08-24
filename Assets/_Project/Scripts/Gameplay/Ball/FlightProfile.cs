@@ -14,5 +14,15 @@ namespace KMA.Gameplay
         public float LinearDrag => linearDrag;
         public float GroundY => groundY;
         public float BounceDamping => bounceDamping;
+
+        public static FlightProfile Create(float gravityScale, float linearDrag, float groundY, float bounceDamping)
+        {
+            var value = CreateInstance<FlightProfile>();
+            value.gravityScale = gravityScale;
+            value.linearDrag = linearDrag;
+            value.groundY = groundY;
+            value.bounceDamping = bounceDamping;
+            return value;
+        }
     }
 }

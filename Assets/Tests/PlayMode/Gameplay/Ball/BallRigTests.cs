@@ -77,29 +77,76 @@ namespace KMA.Tests.Gameplay.Ball
             Object.Destroy(rig.gameObject);
         }
 
-        [Test]
-        public void Bounce_ReflectsVelocityAndRaisesCollisionEvent()
+        [UnityTest]
+        public IEnumerator PhysicsCollision_EmitsAndReflectsWithDamping()
         {
-            var rig = BallTestFactory.Create();
-            var observed = false;
-            rig.Collided += collision => observed = collision != null;
+            var profile = FlightProfile.Create(1f, 0f, 0f, .5f);
+            var rig = BallTestFactory.Create(profile, true);
+            rig.transform.position = new Vector2(0f, 2f);
+            var floor = new GameObject("BallGround");
+            var floorCollider = floor.AddComponent<BoxCollider2D>();
+            floorCollider.size = new Vector2(10f, .2f);
+            floor.transform.position = new Vector2(0f, -.1f);
+            var collided = false;
+            rig.Collided += collision => collided = collision != null;
 
-            var incoming = new Vector2(2f, -4f);
-            var reflected = rig.Bounce(incoming, Vector2.up);
+            rig.Launch(Vector2.down, 5f, 0f);
+            for (var step = 0; step < 30 && !collided; step++)
+                yield return new WaitForFixedUpdate();
 
-            Assert.That(reflected, Is.EqualTo(new Vector2(2f, 4f)));
-            Assert.That(observed, Is.False, "A synthetic bounce must not pretend to be a Unity collision event.");
+            Assert.That(collided, Is.True);
+            Assert.That(rig.Body.velocity.y, Is.GreaterThan(0f));
+            Assert.That(rig.Body.velocity.y, Is.LessThan(5f));
 
-            Object.DestroyImmediate(rig.gameObject);
+            Object.Destroy(floor);
+            Object.Destroy(rig.gameObject);
+            Object.Destroy(profile);
+        }
+
+        [UnityTest]
+        public IEnumerator Launch_UsesConfiguredGravityDragCurvatureAcrossFixedSteps()
+        {
+            var profile = FlightProfile.Create(1f, .5f, -100f, 1f);
+            var rig = BallTestFactory.Create(profile, false);
+            rig.Body.position = new Vector2(0f, 10f);
+            rig.Launch(Vector2.right, 4f, .75f);
+            var expectedVelocity = new Vector2(4f, 0f);
+            var expectedPosition = rig.Body.position;
+            var deltaTime = Time.fixedDeltaTime;
+
+            for (var step = 0; step < 3; step++)
+            {
+                expectedVelocity = Ballistics.AdvanceVelocity(expectedVelocity, Physics2D.gravity, .75f, .5f, deltaTime);
+                expectedPosition += expectedVelocity * deltaTime;
+                yield return new WaitForFixedUpdate();
+                Assert.That(rig.Body.velocity.x, Is.EqualTo(expectedVelocity.x).Within(.001f));
+                Assert.That(rig.Body.velocity.y, Is.EqualTo(expectedVelocity.y).Within(.001f));
+                Assert.That(rig.Body.position.x, Is.EqualTo(expectedPosition.x).Within(.001f));
+                Assert.That(rig.Body.position.y, Is.EqualTo(expectedPosition.y).Within(.001f));
+            }
+
+            var predicted = rig.PredictLandingPoint();
+            var direct = Ballistics.PredictGround(rig.Body.position, rig.Body.velocity, Physics2D.gravity, -100f, .5f, .75f, deltaTime);
+            Assert.That(predicted.x, Is.EqualTo(direct.x).Within(.001f));
+            Assert.That(predicted.y, Is.EqualTo(direct.y).Within(.001f));
+
+            Object.Destroy(rig.gameObject);
+            Object.Destroy(profile);
         }
 
         static class BallTestFactory
         {
-            public static BallRig Create()
+            public static BallRig Create(FlightProfile profile = null, bool addCollider = false)
             {
                 var go = new GameObject("BallRigTest");
-                go.AddComponent<Rigidbody2D>();
-                return go.AddComponent<BallRig>();
+                var body = go.AddComponent<Rigidbody2D>();
+                body.collisionDetectionMode = CollisionDetectionMode2D.Continuous;
+                if (addCollider)
+                    go.AddComponent<CircleCollider2D>();
+                var rig = go.AddComponent<BallRig>();
+                if (profile)
+                    rig.SetProfile(profile);
+                return rig;
             }
         }
     }
