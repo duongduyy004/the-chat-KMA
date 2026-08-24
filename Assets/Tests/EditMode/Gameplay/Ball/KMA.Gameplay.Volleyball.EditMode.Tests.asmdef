@@ -9,7 +9,8 @@
         "KMA.Gameplay.Volleyball",
         "KMA.Gameplay.Basketball",
         "KMA.Gameplay.PingPong",
-        "KMA.Gameplay.Badminton"
+        "KMA.Gameplay.Badminton",
+        "KMA.Gameplay.Football"
     ],
     "includePlatforms": [
         "Editor"
