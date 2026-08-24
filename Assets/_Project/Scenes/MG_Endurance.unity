@@ -34,6 +34,7 @@ GameObject:
   m_Component:
   - component: {fileID: 100001}
   - component: {fileID: 100002}
+  - component: {fileID: 100003}
   m_Layer: 0
   m_Name: Main Camera
   m_TagString: MainCamera
@@ -59,6 +60,14 @@ Camera:
   m_NormalizedViewPortRect: {x: 0, y: 0, width: 1, height: 1}
   near clip plane: 0.3
   far clip plane: 1000
+--- !u!81 &100003
+AudioListener:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 100000}
+  m_Enabled: 1
 --- !u!1 &200000
 GameObject:
   m_ObjectHideFlags: 0
@@ -66,6 +75,7 @@ GameObject:
   m_Component:
   - component: {fileID: 200001}
   - component: {fileID: 200002}
+  - component: {fileID: 200003}
   m_Layer: 0
   m_Name: EnduranceController
   m_TagString: Untagged
@@ -86,7 +96,7 @@ MonoBehaviour:
   m_EditorClassIdentifier:
   rhythmOffsetMs: 0
   beatsPerMinute: 120
-  obstacleCue: {fileID: 600001}
+  obstacleCue: {fileID: 600000}
   metronome: {fileID: 200003}
 --- !u!82 &200003
 AudioSource:
@@ -119,62 +129,132 @@ AudioSource:
 GameObject:
   m_ObjectHideFlags: 0
   serializedVersion: 6
-  m_Component: []
+  m_Component:
+  - component: {fileID: 300001}
   m_Layer: 0
   m_Name: Runner_Parallax
   m_TagString: Untagged
   m_IsActive: 1
+--- !u!4 &300001
+Transform:
+  m_GameObject: {fileID: 300000}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_Children: []
 --- !u!1 &400000
 GameObject:
   m_ObjectHideFlags: 0
   serializedVersion: 6
-  m_Component: []
+  m_Component:
+  - component: {fileID: 400010}
   m_Layer: 0
   m_Name: HUD
   m_TagString: Untagged
   m_IsActive: 1
+--- !u!4 &400010
+Transform:
+  m_GameObject: {fileID: 400000}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_Children: []
 --- !u!1 &400001
 GameObject:
   m_ObjectHideFlags: 0
   serializedVersion: 6
-  m_Component: []
+  m_Component:
+  - component: {fileID: 400011}
   m_Layer: 0
   m_Name: Beat
   m_TagString: Untagged
   m_IsActive: 1
+--- !u!4 &400011
+Transform:
+  m_GameObject: {fileID: 400001}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_Children: []
 --- !u!1 &400002
 GameObject:
   m_ObjectHideFlags: 0
   serializedVersion: 6
-  m_Component: []
+  m_Component:
+  - component: {fileID: 400012}
   m_Layer: 0
   m_Name: Stamina
   m_TagString: Untagged
   m_IsActive: 1
+--- !u!4 &400012
+Transform:
+  m_GameObject: {fileID: 400002}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_Children: []
 --- !u!1 &400003
 GameObject:
   m_ObjectHideFlags: 0
   serializedVersion: 6
-  m_Component: []
+  m_Component:
+  - component: {fileID: 400013}
   m_Layer: 0
   m_Name: Lap
   m_TagString: Untagged
   m_IsActive: 1
+--- !u!4 &400013
+Transform:
+  m_GameObject: {fileID: 400003}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_Children: []
 --- !u!1 &600000
 GameObject:
   m_ObjectHideFlags: 0
   serializedVersion: 6
-  m_Component: []
+  m_Component:
+  - component: {fileID: 600001}
   m_Layer: 0
   m_Name: ObstacleCue
   m_TagString: Untagged
   m_IsActive: 0
+--- !u!4 &600001
+Transform:
+  m_GameObject: {fileID: 600000}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_Children: []
 --- !u!1 &700000
 GameObject:
   m_ObjectHideFlags: 0
   serializedVersion: 6
-  m_Component: []
+  m_Component:
+  - component: {fileID: 700001}
+  - component: {fileID: 700002}
   m_Layer: 0
   m_Name: FullScreenGameplayInput
   m_TagString: Untagged
   m_IsActive: 1
+--- !u!4 &700001
+Transform:
+  m_GameObject: {fileID: 700000}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_Children: []
+--- !u!114 &700002
+MonoBehaviour:
+  m_GameObject: {fileID: 700000}
+  m_Enabled: 1
+  m_Script: {fileID: 11500000, guid: e6f708192a3b4c5d6e7f8091a2b3c4d5, type: 3}
+  m_Name:
+  m_EditorClassIdentifier:
+  controller: {fileID: 200002}
+  inputActions: {fileID: -944628639613478452, guid: d5e6f708192a3b4c5d6e7f8091a2b3c4, type: 3}
+  tapActionName: Tap
+  holdActionName: Hold
+  swipeUpActionName: SwipeUp
+  swipeDownActionName: SwipeDown

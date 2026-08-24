@@ -2,7 +2,8 @@
     "name": "KMA.Gameplay.Endurance",
     "rootNamespace": "KMA.Gameplay",
     "references": [
-        "KMA.Gameplay"
+        "KMA.Gameplay",
+        "Unity.InputSystem"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],

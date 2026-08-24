@@ -1,0 +1,25 @@
+{
+  "version": 1,
+  "name": "EnduranceInputActions",
+  "maps": [
+    {
+      "name": "Endurance",
+      "id": "5a4b3c2d1e0f4a6b8c7d9e1f2a3b4c5d",
+      "actions": [
+        { "name": "Tap", "type": "Button", "id": "11111111111111111111111111111111", "expectedControlType": "Button" },
+        { "name": "Hold", "type": "Button", "id": "22222222222222222222222222222222", "expectedControlType": "Button" },
+        { "name": "SwipeUp", "type": "Button", "id": "33333333333333333333333333333333", "expectedControlType": "Button" },
+        { "name": "SwipeDown", "type": "Button", "id": "44444444444444444444444444444444", "expectedControlType": "Button" }
+      ],
+      "bindings": [
+        { "name": "", "id": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa", "path": "<Keyboard>/t", "interactions": "", "processors": "", "groups": "", "action": "Tap", "isComposite": false, "isPartOfComposite": false },
+        { "name": "", "id": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb", "path": "<Touchscreen>/primaryTouch/press", "interactions": "", "processors": "", "groups": "", "action": "Tap", "isComposite": false, "isPartOfComposite": false },
+        { "name": "", "id": "cccccccccccccccccccccccccccccccc", "path": "<Keyboard>/h", "interactions": "Hold(duration=0.25)", "processors": "", "groups": "", "action": "Hold", "isComposite": false, "isPartOfComposite": false },
+        { "name": "", "id": "dddddddddddddddddddddddddddddddd", "path": "<Touchscreen>/primaryTouch/press", "interactions": "Hold(duration=0.25)", "processors": "", "groups": "", "action": "Hold", "isComposite": false, "isPartOfComposite": false },
+        { "name": "", "id": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee", "path": "<Keyboard>/upArrow", "interactions": "", "processors": "", "groups": "", "action": "SwipeUp", "isComposite": false, "isPartOfComposite": false },
+        { "name": "", "id": "ffffffffffffffffffffffffffffffff", "path": "<Keyboard>/downArrow", "interactions": "", "processors": "", "groups": "", "action": "SwipeDown", "isComposite": false, "isPartOfComposite": false }
+      ],
+      "controlSchemes": []
+    }
+  ]
+}

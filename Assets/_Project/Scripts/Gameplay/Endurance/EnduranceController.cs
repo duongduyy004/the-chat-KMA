@@ -53,12 +53,23 @@ namespace KMA.Gameplay
         public double RhythmOffsetMs { get => rhythmOffsetMs; set => rhythmOffsetMs = value; }
         public bool ObstacleCueVisible => cueSchedule != null && cueSchedule.ObstacleCueVisible;
         public double BeatIntervalSeconds => 60d / Math.Max(1d, beatsPerMinute);
+        public AudioSource MetronomeAudioSource => metronome;
+        public bool DspClockScheduled => dspClockStarted;
+        public double MetronomeStartDspTime => songStartDspTime;
+        internal int InputTapCount { get; private set; }
+        internal int InputHoldCount { get; private set; }
+        internal int InputSwipeCount { get; private set; }
 
         protected override void Awake()
         {
             base.Awake();
             Rules = new EnduranceRules(3, Lifecycle);
             pattern = LapPattern.Default;
+            if (metronome == null)
+                metronome = GetComponent<AudioSource>();
+            if (metronome == null)
+                metronome = gameObject.AddComponent<AudioSource>();
+            EnsureMetronomeClip();
         }
 
         internal void ConfigureForTest(int requiredLaps)
@@ -100,6 +111,21 @@ namespace KMA.Gameplay
 
         public double CalibratedInputTime(double rawDspTime) => rawDspTime + rhythmOffsetMs / 1000d;
 
+        public double CurrentBeatDspTime
+        {
+            get
+            {
+                if (!dspClockStarted)
+                    return AudioSettings.dspTime;
+
+                double elapsed = Math.Max(0d, AudioSettings.dspTime - songStartDspTime);
+                int beat = Mathf.FloorToInt((float)(elapsed / BeatIntervalSeconds));
+                return songStartDspTime + beat * BeatIntervalSeconds;
+            }
+        }
+
+        public void TapAtCurrentBeat() => Tap(AudioSettings.dspTime, CurrentBeatDspTime);
+
         public void Dispatch(AuthoredBeat beat)
         {
             if (Phase == MinigamePhase.Play)
@@ -108,20 +134,29 @@ namespace KMA.Gameplay
 
         public void Tap(double inputDsp, double beatDsp)
         {
-            if (Phase == MinigamePhase.Play)
-                Rules.Tap(CalibratedInputTime(inputDsp), beatDsp);
+            if (Phase != MinigamePhase.Play)
+                return;
+
+            InputTapCount++;
+            Rules.Tap(CalibratedInputTime(inputDsp), beatDsp);
         }
 
         public void EndHold(float beatsHeld)
         {
-            if (Phase == MinigamePhase.Play)
-                Rules.EndHold(beatsHeld);
+            if (Phase != MinigamePhase.Play)
+                return;
+
+            InputHoldCount++;
+            Rules.EndHold(beatsHeld);
         }
 
         public void Swipe(SwipeDirection direction)
         {
-            if (Phase == MinigamePhase.Play)
-                Rules.Swipe(direction);
+            if (Phase != MinigamePhase.Play)
+                return;
+
+            InputSwipeCount++;
+            Rules.Swipe(direction);
         }
 
         public void Resolve()
@@ -145,7 +180,12 @@ namespace KMA.Gameplay
         {
             if (!dspClockStarted)
             {
-                songStartDspTime = AudioSettings.dspTime;
+                EnsureMetronomeAudioSource();
+                EnsureMetronomeClip();
+                songStartDspTime = AudioSettings.dspTime + 0.05d;
+                metronome.Stop();
+                metronome.loop = true;
+                metronome.PlayScheduled(songStartDspTime);
                 nextBeatIndex = 0;
                 dspClockStarted = true;
             }
@@ -192,10 +232,38 @@ namespace KMA.Gameplay
 
         void ResetDspSchedule()
         {
+            if (metronome != null)
+                metronome.Stop();
             dspClockStarted = false;
             nextBeatIndex = 0;
             cueSchedule = null;
             SetObstacleCueVisible(false);
+        }
+
+        void EnsureMetronomeClip()
+        {
+            if (metronome == null || metronome.clip != null)
+                return;
+
+            const int sampleRate = 48000;
+            const int sampleCount = sampleRate / 2;
+            var clip = AudioClip.Create("EnduranceMetronome", sampleCount, 1, sampleRate, false);
+            var samples = new float[sampleCount];
+            for (int i = 0; i < sampleCount; i++)
+            {
+                float envelope = Mathf.Clamp01(1f - i / (sampleRate * 0.08f));
+                samples[i] = Mathf.Sin(2f * Mathf.PI * 880f * i / sampleRate) * envelope * 0.18f;
+            }
+            clip.SetData(samples, 0);
+            metronome.clip = clip;
+        }
+
+        void EnsureMetronomeAudioSource()
+        {
+            if (metronome == null)
+                metronome = GetComponent<AudioSource>();
+            if (metronome == null)
+                metronome = gameObject.AddComponent<AudioSource>();
         }
     }
 }
