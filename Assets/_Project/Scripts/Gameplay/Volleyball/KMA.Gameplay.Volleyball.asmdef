@@ -1,0 +1,17 @@
+{
+    "name": "KMA.Gameplay.Volleyball",
+    "rootNamespace": "KMA.Gameplay",
+    "references": [
+        "KMA.Gameplay",
+        "KMA.Gameplay.Ball"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

@@ -1,0 +1,25 @@
+{
+    "name": "KMA.Gameplay.Volleyball.EditMode.Tests",
+    "rootNamespace": "KMA.Tests.Gameplay.Ball",
+    "references": [
+        "UnityEngine.TestRunner",
+        "UnityEditor.TestRunner",
+        "KMA.Gameplay",
+        "KMA.Gameplay.Volleyball"
+    ],
+    "includePlatforms": [
+        "Editor"
+    ],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": true,
+    "precompiledReferences": [
+        "nunit.framework.dll"
+    ],
+    "autoReferenced": true,
+    "defineConstraints": [
+        "UNITY_INCLUDE_TESTS"
+    ],
+    "versionDefines": [],
+    "noEngineReferences": false
+}
