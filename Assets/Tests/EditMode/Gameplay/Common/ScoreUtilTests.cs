@@ -42,8 +42,8 @@ namespace KMA.Tests.Gameplay.Common
         {
             var result = ScoreUtil.Build(true, 2, float.PositiveInfinity, 1);
 
-            Assert.That(result.Score, Is.EqualTo(8f));
-            Assert.That(result.Rank, Is.EqualTo(Rank.A));
+            Assert.That(result.Score, Is.EqualTo(9f));
+            Assert.That(result.Rank, Is.EqualTo(Rank.S));
             Assert.That(result.Pass, Is.True);
         }
 
@@ -52,8 +52,8 @@ namespace KMA.Tests.Gameplay.Common
         {
             var result = ScoreUtil.Build(true, 2, 1, float.NegativeInfinity);
 
-            Assert.That(result.Score, Is.EqualTo(8f));
-            Assert.That(result.Rank, Is.EqualTo(Rank.A));
+            Assert.That(result.Score, Is.EqualTo(9f));
+            Assert.That(result.Rank, Is.EqualTo(Rank.S));
             Assert.That(result.Pass, Is.True);
         }
     }
