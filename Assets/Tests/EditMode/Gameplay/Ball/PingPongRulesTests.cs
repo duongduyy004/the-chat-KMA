@@ -1,4 +1,3 @@
-using System.Collections.Generic;
 using KMA.Gameplay;
 using NUnit.Framework;
 using UnityEngine;
@@ -32,19 +31,20 @@ namespace KMA.Tests.Gameplay.Ball
         }
 
         [Test]
-        public void AuthoredReturnPattern_SelectsDeterministicExchangeAndLaunchesBallRig()
+        public void TryReturn_LaunchesPhysicalBallAtCappedSpeed()
         {
-            var pattern = ReturnPattern.AuthoredDefault();
-            var gameObject = new GameObject("ping-pong-ball-test");
+            var rules = new PingPongRules(10f, 12f);
+            var gameObject = new GameObject("ping-pong-capped-ball-test");
             gameObject.AddComponent<Rigidbody2D>();
             var ball = gameObject.AddComponent<BallRig>();
 
-            Assert.That(pattern.Exchanges.Count, Is.GreaterThanOrEqualTo(3));
-            Assert.That(pattern.IsPlacementValid(pattern.Exchanges[0]), Is.True);
-            Assert.That(pattern.TryLaunch(ball, 0), Is.True);
-            Assert.That(ball.Snapshot.IsInFlight, Is.True);
-            Assert.That(ball.Body.linearVelocity, Is.EqualTo(pattern.LaunchVelocity(0)).Using(Vector2Comparer.Instance));
+            for (var i = 0; i < 100; i++)
+            {
+                Assert.That(rules.TryReturn(ball, 1f, rules.AuthoredPattern.Exchanges[i % rules.AuthoredPattern.Exchanges.Count]), Is.True);
+                Assert.That(ball.Body.linearVelocity.magnitude, Is.LessThanOrEqualTo(12f));
+            }
 
+            Assert.That(ball.Body.linearVelocity.magnitude, Is.EqualTo(12f).Within(.0001f));
             Object.DestroyImmediate(gameObject);
         }
 
@@ -52,23 +52,29 @@ namespace KMA.Tests.Gameplay.Ball
         public void ScoringRequiresSuccessfulAuthoredReturns_AndOnlyPrimaryObjectivePasses()
         {
             var rules = new PingPongRules(10, 25);
+            var gameObject = new GameObject("ping-pong-scoring-ball-test");
+            gameObject.AddComponent<Rigidbody2D>();
+            var ball = gameObject.AddComponent<BallRig>();
+
+            Assert.That(rules.AwardPlayerPoint(), Is.False);
             for (var i = 0; i < 4; i++)
             {
-                rules.SuccessfulReturn(1f);
-                rules.AwardPlayerPoint();
+                Assert.That(rules.TryReturn(ball, 1f, rules.AuthoredPattern.Exchanges[i]), Is.True);
+                Assert.That(rules.AwardPlayerPoint(), Is.True);
             }
 
             Assert.That(rules.PlayerScore, Is.EqualTo(4));
             Assert.That(rules.PrimaryObjectiveComplete, Is.False);
             Assert.That(rules.BuildResult().Pass, Is.False);
 
-            rules.SuccessfulReturn(1f);
-            rules.AwardPlayerPoint();
+            Assert.That(rules.TryReturn(ball, 1f, rules.AuthoredPattern.Exchanges[0]), Is.True);
+            Assert.That(rules.AwardPlayerPoint(), Is.True);
 
             Assert.That(rules.PlayerScore, Is.EqualTo(5));
             Assert.That(rules.PrimaryObjectiveComplete, Is.True);
             Assert.That(rules.BuildResult().Pass, Is.True);
             Assert.That(rules.BuildResult().Score, Is.InRange(0f, 10f));
+            Object.DestroyImmediate(gameObject);
         }
 
         [Test]
@@ -84,11 +90,13 @@ namespace KMA.Tests.Gameplay.Ball
             lifecycle.Tick(2f);
             lifecycle.Tick(3f);
             Assert.That(rules.Phase, Is.EqualTo(MinigamePhase.Play));
+            Assert.That(rules.TryReturn(ball, .74f, rules.AuthoredPattern.Exchanges[0]), Is.False);
+            Assert.That(rules.TryReturn(ball, 1f, Vector2.zero), Is.False);
 
             for (var point = 0; point < 5; point++)
             {
                 Assert.That(rules.TryReturn(ball, 1f, rules.AuthoredPattern.Exchanges[point % rules.AuthoredPattern.Exchanges.Count]), Is.True);
-                rules.AwardPlayerPoint();
+                Assert.That(rules.AwardPlayerPoint(), Is.True);
             }
 
             Assert.That(rules.PrimaryObjectiveComplete, Is.True);
@@ -99,11 +107,5 @@ namespace KMA.Tests.Gameplay.Ball
             Object.DestroyImmediate(gameObject);
         }
 
-        sealed class Vector2Comparer : IEqualityComparer<Vector2>
-        {
-            public static readonly Vector2Comparer Instance = new Vector2Comparer();
-            public bool Equals(Vector2 left, Vector2 right) => Vector2.Distance(left, right) < .0001f;
-            public int GetHashCode(Vector2 value) => value.GetHashCode();
-        }
     }
 }

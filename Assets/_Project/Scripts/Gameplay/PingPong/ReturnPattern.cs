@@ -38,21 +38,23 @@ namespace KMA.Gameplay
             return false;
         }
 
-        public bool TryLaunch(BallRig ball, int exchangeIndex)
+        public bool TryLaunch(BallRig ball, int exchangeIndex, float launchSpeed)
         {
-            if (!ball || exchangeIndex < 0 || exchangeIndex >= AuthoredExchanges.Length)
+            if (!ball || exchangeIndex < 0 || exchangeIndex >= AuthoredExchanges.Length || launchSpeed <= 0f)
                 return false;
 
-            ball.Launch(AuthoredExchanges[exchangeIndex], LaunchForce, 0f);
+            ball.Launch(AuthoredExchanges[exchangeIndex], launchSpeed, 0f);
             return true;
         }
 
-        public Vector2 LaunchVelocity(int exchangeIndex)
+        public Vector2 LaunchVelocity(int exchangeIndex, float launchSpeed)
         {
+            if (launchSpeed <= 0f)
+                throw new ArgumentOutOfRangeException(nameof(launchSpeed));
             if (exchangeIndex < 0 || exchangeIndex >= AuthoredExchanges.Length)
                 throw new ArgumentOutOfRangeException(nameof(exchangeIndex));
 
-            return AuthoredExchanges[exchangeIndex].normalized * LaunchForce;
+            return AuthoredExchanges[exchangeIndex].normalized * launchSpeed;
         }
     }
 }

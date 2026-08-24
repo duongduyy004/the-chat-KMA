@@ -9,6 +9,7 @@ namespace KMA.Gameplay
         const int TargetScore = 5;
         const float ReturnSpeedMultiplier = 1.08f;
         const float DefaultTimeLimit = 60f;
+        const float AccurateTimingThreshold = .75f;
 
         readonly float initialSpeed;
         readonly float maxSpeed;
@@ -18,6 +19,7 @@ namespace KMA.Gameplay
         int rally;
         int longestRally;
         int returns;
+        bool canAwardPlayerPoint;
         float totalAccuracy;
         float elapsed;
 
@@ -67,25 +69,32 @@ namespace KMA.Gameplay
 
         public bool TryReturn(BallRig ball, float timingAccuracy, Vector2 placement)
         {
-            if (Phase != MinigamePhase.Play || !returnPattern.IsPlacementValid(placement))
+            if (Phase != MinigamePhase.Play || timingAccuracy < AccurateTimingThreshold || !returnPattern.IsPlacementValid(placement))
                 return false;
 
             var exchangeIndex = FindExchange(placement);
-            if (!returnPattern.TryLaunch(ball, exchangeIndex))
+            if (!returnPattern.TryLaunch(ball, exchangeIndex, BallSpeed))
                 return false;
 
             SuccessfulReturn(timingAccuracy);
+            canAwardPlayerPoint = true;
             return true;
         }
 
-        public void AwardPlayerPoint()
+        public bool AwardPlayerPoint()
         {
+            if (!canAwardPlayerPoint)
+                return false;
+
+            canAwardPlayerPoint = false;
             PlayerScore++;
             rally = 0;
+            return true;
         }
 
         public void AwardOpponentPoint()
         {
+            canAwardPlayerPoint = false;
             OpponentScore++;
             rally = 0;
         }
