@@ -6,6 +6,7 @@
         "KMA.Gameplay",
         "KMA.Gameplay.Progression",
         "KMA.Gameplay.Boss",
+        "KMA.Gameplay.Core",
         "Unity.InputSystem",
         "Unity.InputSystem.TestFramework"
     ],
