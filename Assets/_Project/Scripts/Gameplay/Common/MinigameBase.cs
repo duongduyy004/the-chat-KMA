@@ -6,6 +6,7 @@ namespace KMA.Gameplay
     {
         public event System.Action<MinigameResult> Completed;
         protected MinigameLifecycle Lifecycle { get; set; }
+        public MinigamePhase PresentationPhase => Lifecycle == null ? MinigamePhase.Tutorial : Lifecycle.Phase;
 
         protected virtual void Awake() => Lifecycle = new MinigameLifecycle(2f, 3f);
 
