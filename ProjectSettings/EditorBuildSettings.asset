@@ -8,5 +8,8 @@ EditorBuildSettings:
   - enabled: 1
     path: Assets/_Project/Scenes/MG_Endurance.unity
     guid: c3f4a5b6c7d84901a2b3c4d5e6f70819
+  - enabled: 1
+    path: Assets/_Project/Scenes/MG_Boss.unity
+    guid: a3c4d5e60718293a4b5c6d7e8f901234
   m_configObjects: {}
   m_UseUCBPForAssetBundles: 0

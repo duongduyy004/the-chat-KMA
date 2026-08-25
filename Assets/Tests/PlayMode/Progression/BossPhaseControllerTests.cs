@@ -4,6 +4,7 @@ using KMA.Gameplay;
 using KMA.Gameplay.Boss;
 using NUnit.Framework;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 using UnityEngine.TestTools;
 
 namespace KMA.Tests.Gameplay.Progression
@@ -11,91 +12,150 @@ namespace KMA.Tests.Gameplay.Progression
     public sealed class BossPhaseControllerTests
     {
         [UnityTest]
+        public IEnumerator SceneLoadsSerializedAssetAndRuntimeAdapters()
+        {
+            yield return LoadBoss();
+            var boss = UnityEngine.Object.FindFirstObjectByType<BossPhaseController>();
+
+            Assert.That(boss.SequenceAsset, Is.Not.Null);
+            Assert.That(boss.SequenceAsset.CreateRuntimeSequence().Current.Mechanic,
+                Is.EqualTo(ChallengeMechanic.TapMash));
+            Assert.That(boss.Session, Is.Not.Null);
+            Assert.That(boss.TapMashDetector, Is.Not.Null);
+            Assert.That(boss.RhythmHoldDetector, Is.Not.Null);
+            Assert.That(boss.AlternateTapDetector, Is.Not.Null);
+
+            yield return null;
+        }
+
+        [UnityTest]
         public IEnumerator LockedSession_CannotStartBoss()
         {
-            var boss = CreateBoss(new GameSession());
+            yield return LoadBoss();
+            var boss = UnityEngine.Object.FindFirstObjectByType<BossPhaseController>();
+            yield return WaitForPlay();
 
             Assert.Throws<InvalidOperationException>(() => boss.Begin());
 
-            DestroyBoss(boss);
             yield return null;
         }
 
         [UnityTest]
-        public IEnumerator BossRunsTapRhythmAlternateInOrder()
+        public IEnumerator ConfigureRejectsReorderedChallengeSequence()
         {
-            var boss = CreateBoss(UnlockedSession());
+            yield return LoadBoss();
+            var boss = UnityEngine.Object.FindFirstObjectByType<BossPhaseController>();
+            var reordered = new ChallengeSequence(new[]
+            {
+                new ChallengeStep(ChallengeMechanic.RhythmHold, 12f, 16f),
+                new ChallengeStep(ChallengeMechanic.TapMash, 10f, 40f),
+                new ChallengeStep(ChallengeMechanic.AlternateTap, 10f, 32f)
+            });
 
+            Assert.Throws<InvalidOperationException>(() =>
+                boss.Configure(UnlockedSession(), reordered, 35f));
+
+            var foreign = new ChallengeSequence(new[]
+            {
+                new ChallengeStep(ChallengeMechanic.TapMash, 1f, 1f),
+                new ChallengeStep(ChallengeMechanic.RhythmHold, 1f, 1f),
+                new ChallengeStep(ChallengeMechanic.AlternateTap, 1f, 1f)
+            });
+            Assert.Throws<InvalidOperationException>(() =>
+                boss.Configure(UnlockedSession(), foreign, 35f));
+
+            yield return null;
+        }
+
+        [UnityTest]
+        public IEnumerator BossConsumesEventsInCanonicalOrderAndWrongInputsDoNotAdvance()
+        {
+            yield return LoadBoss();
+            var boss = UnityEngine.Object.FindFirstObjectByType<BossPhaseController>();
+            boss.SetSession(UnlockedSession());
+            yield return WaitForPlay();
             boss.Begin();
+
+            boss.RhythmHoldDetector.SubmitHold(1f);
             Assert.That(boss.CurrentMechanic, Is.EqualTo(ChallengeMechanic.TapMash));
-            boss.CompleteCurrent();
+            for (var tap = 0; tap < 39; tap++)
+                boss.TapMashDetector.SubmitTap();
+            Assert.That(boss.CurrentProgress, Is.EqualTo(39f));
+            boss.TapMashDetector.SubmitTap();
             Assert.That(boss.CurrentMechanic, Is.EqualTo(ChallengeMechanic.RhythmHold));
-            boss.CompleteCurrent();
+
+            boss.RhythmHoldDetector.SubmitHold(.1f);
+            Assert.That(boss.CurrentProgress, Is.Zero);
+            for (var beat = 0; beat < 16; beat++)
+                boss.RhythmHoldDetector.SubmitHold(1f);
             Assert.That(boss.CurrentMechanic, Is.EqualTo(ChallengeMechanic.AlternateTap));
 
-            DestroyBoss(boss);
+            boss.AlternateTapDetector.SubmitTap(BossTapSide.Left);
+            boss.AlternateTapDetector.SubmitTap(BossTapSide.Left);
+            Assert.That(boss.CurrentProgress, Is.EqualTo(1f));
+
             yield return null;
         }
 
         [UnityTest]
-        public IEnumerator WrongPhaseCompletion_IsRejectedWithoutAdvancing()
+        public IEnumerator AuthoredPhaseDurationFailsBeforeTargetIsReached()
         {
-            var boss = CreateBoss(UnlockedSession());
+            yield return LoadBoss();
+            var boss = UnityEngine.Object.FindFirstObjectByType<BossPhaseController>();
+            boss.SetSession(UnlockedSession());
+            yield return WaitForPlay();
             boss.Begin();
 
-            Assert.Throws<InvalidOperationException>(
-                () => boss.CompleteCurrent(ChallengeMechanic.RhythmHold));
-            Assert.That(boss.CurrentMechanic, Is.EqualTo(ChallengeMechanic.TapMash));
+            yield return new WaitForSeconds(10.2f);
 
-            DestroyBoss(boss);
-            yield return null;
-        }
-
-        [UnityTest]
-        public IEnumerator CompletedSequence_ProducesOnePassingResult()
-        {
-            var boss = CreateBoss(UnlockedSession());
-            MinigameResult result = null;
-            var resultCount = 0;
-            boss.Resolved += value =>
-            {
-                result = value;
-                resultCount++;
-            };
-
-            boss.Begin();
-            boss.CompleteCurrent(ChallengeMechanic.TapMash);
-            boss.CompleteCurrent(ChallengeMechanic.RhythmHold);
-            boss.CompleteCurrent(ChallengeMechanic.AlternateTap);
-            yield return null;
-
-            Assert.That(resultCount, Is.EqualTo(1));
-            Assert.That(result, Is.Not.Null);
-            Assert.That(result.Pass, Is.True);
             Assert.That(boss.IsComplete, Is.True);
-            Assert.That(boss.IsRunning, Is.False);
-
-            DestroyBoss(boss);
+            Assert.That(boss.LastResult, Is.Not.Null);
+            Assert.That(boss.LastResult.Pass, Is.False);
             yield return null;
         }
 
         [UnityTest]
-        public IEnumerator Timeout_ProducesOneFailingResult()
+        public IEnumerator CompletionUsesFoundationLifecycleAndScoreUtilExactlyOnce()
         {
-            var boss = CreateBoss(UnlockedSession(), .001f);
-            MinigameResult result = null;
-            boss.Resolved += value => result = value;
-
+            yield return LoadBoss();
+            var boss = UnityEngine.Object.FindFirstObjectByType<BossPhaseController>();
+            boss.SetSession(UnlockedSession());
+            yield return WaitForPlay();
             boss.Begin();
-            yield return new WaitForSeconds(.02f);
 
-            Assert.That(result, Is.Not.Null);
-            Assert.That(result.Pass, Is.False);
-            Assert.That(boss.IsComplete, Is.True);
-            Assert.That(boss.IsRunning, Is.False);
-
-            DestroyBoss(boss);
+            for (var tap = 0; tap < 40; tap++)
+                boss.TapMashDetector.SubmitTap();
+            for (var beat = 0; beat < 16; beat++)
+                boss.RhythmHoldDetector.SubmitHold(1f);
+            for (var alternate = 0; alternate < 32; alternate++)
+                boss.AlternateTapDetector.SubmitTap(alternate % 2 == 0 ? BossTapSide.Left : BossTapSide.Right);
             yield return null;
+
+            Assert.That(typeof(BossPhaseController).IsSubclassOf(typeof(MinigameBase)), Is.True);
+            Assert.That(typeof(BossPhaseController).GetMethod("CompleteCurrent"), Is.Null);
+            Assert.That(boss.Phase, Is.EqualTo(MinigamePhase.Resolve));
+            Assert.That(boss.LastResult, Is.Not.Null);
+            Assert.That(boss.LastResult.Pass, Is.True);
+            Assert.That(boss.LastResult.Score, Is.EqualTo(10f));
+            Assert.That(boss.LastResult.Rank, Is.EqualTo(Rank.S));
+            Assert.That(boss.CompletionCount, Is.EqualTo(1));
+
+            yield return null;
+            Assert.That(boss.CompletionCount, Is.EqualTo(1));
+        }
+
+        static IEnumerator LoadBoss()
+        {
+            var operation = SceneManager.LoadSceneAsync("MG_Boss", LoadSceneMode.Single);
+            while (!operation.isDone)
+                yield return null;
+
+            yield return null;
+        }
+
+        static IEnumerator WaitForPlay()
+        {
+            yield return new WaitForSeconds(5.1f);
         }
 
         static GameSession UnlockedSession()
@@ -108,23 +168,6 @@ namespace KMA.Tests.Gameplay.Progression
             }
 
             return session;
-        }
-
-        static BossPhaseController CreateBoss(GameSession session)
-        {
-            return CreateBoss(session, 35f);
-        }
-
-        static BossPhaseController CreateBoss(GameSession session, float duration)
-        {
-            var value = new GameObject("Boss").AddComponent<BossPhaseController>();
-            value.Configure(session, ChallengeSequence.BossDefault(), duration);
-            return value;
-        }
-
-        static void DestroyBoss(BossPhaseController boss)
-        {
-            UnityEngine.Object.DestroyImmediate(boss.gameObject);
         }
     }
 }

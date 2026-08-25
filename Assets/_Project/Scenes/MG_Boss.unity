@@ -58,6 +58,9 @@ MonoBehaviour:
   m_EditorClassIdentifier:
   m_Script: {fileID: 11500000, guid: 8b2c3d4e5f60718293a4b5c6d7e8f901, type: 3}
   bossSequenceAsset: {fileID: 11400000, guid: f2b3c4d5e60718293a4b5c6d7e8f9012, type: 2}
+  tapMashDetector: {fileID: 310004}
+  rhythmHoldDetector: {fileID: 310005}
+  alternateTapDetector: {fileID: 310006}
   configuredDuration: 35
 --- !u!1 &200000
 GameObject:
@@ -98,53 +101,134 @@ Animator:
 GameObject:
   m_ObjectHideFlags: 0
   serializedVersion: 6
-  m_Component: []
+  m_Component:
+  - component: {fileID: 3000010}
   m_Layer: 0
   m_Name: PhaseHUD
   m_TagString: Untagged
   m_IsActive: 1
+--- !u!4 &3000010
+Transform:
+  m_GameObject: {fileID: 300000}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_Children: []
 --- !u!1 &300001
 GameObject:
   m_ObjectHideFlags: 0
   serializedVersion: 6
-  m_Component: []
+  m_Component:
+  - component: {fileID: 3000011}
   m_Layer: 0
   m_Name: Timer
   m_TagString: Untagged
   m_IsActive: 1
+--- !u!4 &3000011
+Transform:
+  m_GameObject: {fileID: 300001}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_Children: []
 --- !u!1 &300002
 GameObject:
   m_ObjectHideFlags: 0
   serializedVersion: 6
-  m_Component: []
+  m_Component:
+  - component: {fileID: 3000021}
   m_Layer: 0
   m_Name: CuePresenter
   m_TagString: Untagged
   m_IsActive: 1
+--- !u!4 &3000021
+Transform:
+  m_GameObject: {fileID: 300002}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_Children: []
 --- !u!1 &300003
 GameObject:
   m_ObjectHideFlags: 0
   serializedVersion: 6
-  m_Component: []
+  m_Component:
+  - component: {fileID: 3000031}
+  - component: {fileID: 310004}
   m_Layer: 0
   m_Name: TapMashDetectorAdapter
   m_TagString: Untagged
   m_IsActive: 1
+--- !u!4 &3000031
+Transform:
+  m_GameObject: {fileID: 300003}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_Children: []
+--- !u!114 &310004
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 300003}
+  m_Enabled: 1
+  m_EditorClassIdentifier:
+  m_Script: {fileID: 11500000, guid: b4c5d6e7f8091a2b3c4d5e6f708192a3, type: 3}
 --- !u!1 &300004
 GameObject:
   m_ObjectHideFlags: 0
   serializedVersion: 6
-  m_Component: []
+  m_Component:
+  - component: {fileID: 3000041}
+  - component: {fileID: 310005}
   m_Layer: 0
   m_Name: RhythmHoldDetectorAdapter
   m_TagString: Untagged
   m_IsActive: 1
+--- !u!4 &3000041
+Transform:
+  m_GameObject: {fileID: 300004}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_Children: []
+--- !u!114 &310005
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 300004}
+  m_Enabled: 1
+  m_EditorClassIdentifier:
+  m_Script: {fileID: 11500000, guid: c5d6e7f8091a2b3c4d5e6f708192a3b4, type: 3}
 --- !u!1 &300005
 GameObject:
   m_ObjectHideFlags: 0
   serializedVersion: 6
-  m_Component: []
+  m_Component:
+  - component: {fileID: 3000051}
+  - component: {fileID: 310006}
   m_Layer: 0
   m_Name: AlternateTapDetectorAdapter
   m_TagString: Untagged
   m_IsActive: 1
+--- !u!4 &3000051
+Transform:
+  m_GameObject: {fileID: 300005}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_Children: []
+--- !u!114 &310006
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 300005}
+  m_Enabled: 1
+  m_EditorClassIdentifier:
+  m_Script: {fileID: 11500000, guid: d6e7f8091a2b3c4d5e6f708192a3b4c5, type: 3}

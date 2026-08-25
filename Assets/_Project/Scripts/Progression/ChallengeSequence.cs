@@ -26,13 +26,27 @@ namespace KMA.Gameplay
         public event Action Completed;
 
         public ChallengeStep Current { get; private set; }
+        public float CurrentProgress { get; private set; }
         public bool IsComplete { get; private set; }
+        public int Count => steps.Length;
+
+        public ChallengeStep GetStep(int stepIndex)
+        {
+            if (stepIndex < 0 || stepIndex >= steps.Length)
+                throw new ArgumentOutOfRangeException(nameof(stepIndex));
+
+            return steps[stepIndex];
+        }
 
         public void ReportProgress(float value)
         {
             if (float.IsNaN(value) || float.IsInfinity(value))
                 throw new ArgumentOutOfRangeException(nameof(value));
-            if (IsComplete || value < Current.Target)
+            if (IsComplete)
+                return;
+
+            CurrentProgress = Math.Min(value, Current.Target);
+            if (value < Current.Target)
                 return;
 
             index++;
@@ -44,6 +58,7 @@ namespace KMA.Gameplay
             }
 
             Current = steps[index];
+            CurrentProgress = 0f;
         }
 
         public static ChallengeSequence BossDefault() => new ChallengeSequence(new[]
@@ -58,6 +73,7 @@ namespace KMA.Gameplay
             index = 0;
             IsComplete = false;
             Current = steps[0];
+            CurrentProgress = 0f;
         }
     }
 }
