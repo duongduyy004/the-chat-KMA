@@ -17,7 +17,7 @@
 | Progression 1 | First failure routes authored punishment, active starts are guarded, second failure loses life, and boss unlock derives from seven canonical records; final review PASS. |
 | Progression 2 | Punishment order/completion is authored, finite-safe, subject-bound, and one-shot; final review PASS. |
 | Progression 3 | Boss gate, runtime session handoff, real keyboard input, and fixed TapMash → RhythmHold → AlternateTap sequence are explicit; final review PASS. |
-| Progression 4 | End-to-end retry, life loss, seven passes, and boss flow are covered. |
+| Progression 4 | End-to-end retry, life loss, seven passes, and boss flow are covered; production routes now use persistent scene-loaded controller binding and authored build-enabled route scenes. |
 
 ## Current status
 
@@ -25,5 +25,5 @@
 - Progression Task 1: complete and reviewed PASS through commit `50ea483`.
 - Progression Task 2: complete and reviewed PASS through commit `68ee3d6`.
 - Progression Task 3: complete and reviewed PASS through commit `53456ab`.
-- Progression Task 4: complete; the authoritative `GameSession` flow, guarded route seam, live boss handoff, and boss-to-map handoff are covered by targeted EditMode/PlayMode verification (28 tests, 0 failures).
+- Progression Task 4: corrected on master; persistent SceneRouter binding, authored Map/Punishment/GameOver scenes, explicit Sprint/Endurance-only subject routes, and the live boss-to-map completion path are covered by `FullGameplayFlowTests` (5/5), `BossPhaseControllerTests` (10/10), `GameSessionTests` (9/9), and full EditMode (121/121).
 - Next: no remaining tasks in the 2026-08-24 progression/boss plan.

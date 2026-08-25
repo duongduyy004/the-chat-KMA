@@ -262,3 +262,38 @@ MonoBehaviour:
   touchPositionActionName: TouchPosition
   touchDeltaActionName: TouchDelta
   swipeThresholdPixels: 80
+--- !u!1 &900000
+GameObject:
+  m_ObjectHideFlags: 0
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 900001}
+  - component: {fileID: 900002}
+  m_Layer: 0
+  m_Name: SceneRouter
+  m_TagString: Untagged
+  m_IsActive: 1
+--- !u!4 &900001
+Transform:
+  m_GameObject: {fileID: 900000}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_Children: []
+--- !u!114 &900002
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_GameObject: {fileID: 900000}
+  m_Enabled: 1
+  m_Script: {fileID: 11500000, guid: 3912e3bbf8baef8cb98b7de4da857c43, type: 3}
+  m_Name:
+  m_EditorClassIdentifier:
+  punishmentScene: Punishment
+  mapScene: Map
+  gameOverScene: GameOver
+  bossScene: MG_Boss
+  subjectScenes:
+  - Subject: 0
+    SceneName: MG_Sprint
+  - Subject: 1
+    SceneName: MG_Endurance

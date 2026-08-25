@@ -85,39 +85,71 @@ namespace KMA.Gameplay.Core
             public string SceneName;
         }
 
-        [SerializeField] string punishmentScene;
-        [SerializeField] string mapScene;
-        [SerializeField] string gameOverScene;
+        static SceneRouter instance;
+
+        [SerializeField] string punishmentScene = "Punishment";
+        [SerializeField] string mapScene = "Map";
+        [SerializeField] string gameOverScene = "GameOver";
         [SerializeField] string bossScene = "MG_Boss";
-        [SerializeField] SubjectScene[] subjectScenes = Array.Empty<SubjectScene>();
+        [SerializeField] SubjectScene[] subjectScenes = DefaultSubjectScenes();
 
         readonly Dictionary<MinigameBase, Action<MinigameResult>> subjectCompletionHandlers =
             new Dictionary<MinigameBase, Action<MinigameResult>>();
-        BossPhaseController boundBoss;
-        Action<MinigameResult> bossCompletionHandler;
+        readonly Dictionary<BossPhaseController, Action<MinigameResult>> bossCompletionHandlers =
+            new Dictionary<BossPhaseController, Action<MinigameResult>>();
+        SubjectId? activeSubject;
+        bool awaitingSubjectScene;
+        bool awaitingBossScene;
         GameSession session;
         SessionRouteTransitioner transitioner;
 
+        public event Action<SceneRouteTransition> TransitionStarted;
+
+        public static SceneRouter Instance => instance;
         public GameSession Session => session;
         public bool IsTransitioning => transitioner != null && transitioner.IsTransitioning;
 
+        public static SceneRouter EnsurePersistentInstance()
+        {
+            if (instance != null)
+                return instance;
+
+            var existing = FindFirstObjectByType<SceneRouter>();
+            if (existing != null)
+                return existing;
+
+            return new GameObject(nameof(SceneRouter)).AddComponent<SceneRouter>();
+        }
+
         void Awake()
         {
+            if (instance != null && instance != this)
+            {
+                Destroy(gameObject);
+                return;
+            }
+
+            instance = this;
+            DontDestroyOnLoad(gameObject);
             session = new GameSession();
             transitioner = new SessionRouteTransitioner(session, this);
+            SceneManager.sceneLoaded += OnSceneLoaded;
         }
 
         void OnDestroy()
         {
-            foreach (var binding in subjectCompletionHandlers)
-                binding.Key.Completed -= binding.Value;
-            subjectCompletionHandlers.Clear();
-
-            if (boundBoss != null)
-                boundBoss.Completed -= bossCompletionHandler;
+            if (instance == this)
+                instance = null;
+            SceneManager.sceneLoaded -= OnSceneLoaded;
+            UnbindSubjects();
+            UnbindBosses();
         }
 
-        public bool StartSubject(SubjectId subject) => Route(session.StartSubject(subject), subject);
+        public bool StartSubject(SubjectId subject)
+        {
+            EnsureRouteIsConfigured(SessionRoute.Subject, subject);
+            return Route(session.StartSubject(subject), subject);
+        }
 
         public bool SubmitSubjectResult(SubjectId subject, MinigameResult result) =>
             Route(session.SubmitResult(subject, result), subject);
@@ -133,7 +165,7 @@ namespace KMA.Gameplay.Core
             if (controller == null)
                 throw new ArgumentNullException(nameof(controller));
             if (subjectCompletionHandlers.ContainsKey(controller))
-                throw new InvalidOperationException("The minigame controller is already bound.");
+                return;
 
             Action<MinigameResult> handler = result => SubmitSubjectResult(subject, result);
             subjectCompletionHandlers.Add(controller, handler);
@@ -144,28 +176,25 @@ namespace KMA.Gameplay.Core
         {
             if (controller == null)
                 throw new ArgumentNullException(nameof(controller));
-            if (boundBoss != null)
-                throw new InvalidOperationException("A boss controller is already bound.");
+            if (bossCompletionHandlers.ContainsKey(controller))
+                return;
 
-            boundBoss = controller;
-            bossCompletionHandler = _ => CompleteBoss();
-            boundBoss.Completed += bossCompletionHandler;
+            Action<MinigameResult> handler = _ => CompleteBoss();
+            bossCompletionHandlers.Add(controller, handler);
+            controller.Completed += handler;
         }
 
         public bool Route(SessionRoute route, SubjectId? subject = null)
         {
-            if (!TryResolveScene(route, subject, out var sceneName))
-                return false;
+            if (!TryGetSceneName(route, subject, out var sceneName))
+                throw new InvalidOperationException($"No loadable scene is configured for {route}" +
+                    (subject.HasValue ? $" ({subject.Value})." : "."));
 
+            PrepareSceneBinding(route, subject);
             return transitioner.TryRoute(route, subject, sceneName);
         }
 
-        public void Begin(SceneRouteTransition transition, Action onCompleted)
-        {
-            StartCoroutine(LoadGameplayScene(transition.SceneName, onCompleted));
-        }
-
-        bool TryResolveScene(SessionRoute route, SubjectId? subject, out string sceneName)
+        public bool TryGetSceneName(SessionRoute route, SubjectId? subject, out string sceneName)
         {
             sceneName = route switch
             {
@@ -178,18 +207,91 @@ namespace KMA.Gameplay.Core
             };
 
             if (string.IsNullOrWhiteSpace(sceneName))
-            {
-                Debug.LogError($"No scene is configured for {route}.", this);
                 return false;
+
+            return Application.CanStreamedLevelBeLoaded(sceneName);
+        }
+
+        public void Begin(SceneRouteTransition transition, Action onCompleted)
+        {
+            TransitionStarted?.Invoke(transition);
+            StartCoroutine(LoadGameplayScene(transition.SceneName, onCompleted));
+        }
+
+        void OnSceneLoaded(Scene scene, LoadSceneMode mode)
+        {
+            UnbindSubjects();
+            UnbindBosses();
+
+            if (awaitingSubjectScene && activeSubject.HasValue &&
+                string.Equals(scene.name, SceneFor(activeSubject), StringComparison.Ordinal))
+            {
+                foreach (var controller in FindObjectsByType<MinigameBase>(
+                    FindObjectsInactive.Exclude, FindObjectsSortMode.None))
+                {
+                    if (!(controller is BossPhaseController))
+                        BindSubject(controller, activeSubject.Value);
+                }
+                awaitingSubjectScene = false;
             }
 
-            if (!Application.CanStreamedLevelBeLoaded(sceneName))
+            if (awaitingBossScene && string.Equals(scene.name, bossScene, StringComparison.Ordinal))
             {
-                Debug.LogError($"Scene '{sceneName}' for {route} is not enabled in Build Settings.", this);
-                return false;
+                foreach (var boss in FindObjectsByType<BossPhaseController>(
+                    FindObjectsInactive.Exclude, FindObjectsSortMode.None))
+                {
+                    if (!ReferenceEquals(boss.Session, session))
+                        boss.SetSession(session);
+                    BindBoss(boss);
+                }
+                awaitingBossScene = false;
             }
+        }
 
-            return true;
+        void EnsureRouteIsConfigured(SessionRoute route, SubjectId? subject)
+        {
+            if (!TryGetSceneName(route, subject, out _))
+            {
+                throw new InvalidOperationException($"No loadable scene is configured for {route}" +
+                    (subject.HasValue ? $" ({subject.Value})." : "."));
+            }
+        }
+
+        void PrepareSceneBinding(SessionRoute route, SubjectId? subject)
+        {
+            switch (route)
+            {
+                case SessionRoute.Subject:
+                case SessionRoute.RetrySubject:
+                    activeSubject = subject;
+                    awaitingSubjectScene = true;
+                    awaitingBossScene = false;
+                    break;
+                case SessionRoute.Boss:
+                    awaitingSubjectScene = false;
+                    awaitingBossScene = true;
+                    break;
+                case SessionRoute.Map:
+                case SessionRoute.GameOver:
+                    activeSubject = null;
+                    awaitingSubjectScene = false;
+                    awaitingBossScene = false;
+                    break;
+            }
+        }
+
+        void UnbindSubjects()
+        {
+            foreach (var binding in subjectCompletionHandlers)
+                binding.Key.Completed -= binding.Value;
+            subjectCompletionHandlers.Clear();
+        }
+
+        void UnbindBosses()
+        {
+            foreach (var binding in bossCompletionHandlers)
+                binding.Key.Completed -= binding.Value;
+            bossCompletionHandlers.Clear();
         }
 
         string SceneFor(SubjectId? subject)
@@ -217,5 +319,11 @@ namespace KMA.Gameplay.Core
 
             onCompleted?.Invoke();
         }
+
+        static SubjectScene[] DefaultSubjectScenes() => new[]
+        {
+            new SubjectScene { Subject = SubjectId.Sprint, SceneName = "MG_Sprint" },
+            new SubjectScene { Subject = SubjectId.Endurance, SceneName = "MG_Endurance" }
+        };
     }
 }

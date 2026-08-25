@@ -6,6 +6,7 @@ using KMA.Gameplay.Boss;
 using KMA.Gameplay.Core;
 using NUnit.Framework;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 using UnityEngine.TestTools;
 
 namespace KMA.Tests.Gameplay.Progression
@@ -23,6 +24,11 @@ namespace KMA.Tests.Gameplay.Progression
             foreach (var gameObject in gameObjects)
                 UnityEngine.Object.DestroyImmediate(gameObject);
             gameObjects.Clear();
+            foreach (var router in UnityEngine.Object.FindObjectsByType<SceneRouter>(
+                FindObjectsInactive.Include, FindObjectsSortMode.None))
+            {
+                UnityEngine.Object.DestroyImmediate(router.gameObject);
+            }
             BossSceneSessionHandoff.ClearPendingSession();
         }
 
@@ -110,6 +116,108 @@ namespace KMA.Tests.Gameplay.Progression
             Assert.That(harness.Transitions, Has.Count.EqualTo(2));
             Assert.That(harness.Transitions[0].Route, Is.EqualTo(SessionRoute.Subject));
             Assert.That(harness.Transitions[1].Route, Is.EqualTo(SessionRoute.Map));
+        }
+
+        [Test]
+        public void RuntimeRouter_MapsEnabledProductionRoutes_AndRejectsUnsupportedSubjects()
+        {
+            var router = SceneRouter.EnsurePersistentInstance();
+
+            AssertRoute(router, SessionRoute.Map, null);
+            AssertRoute(router, SessionRoute.Punishment, SubjectId.Sprint);
+            AssertRoute(router, SessionRoute.GameOver, null);
+            AssertRoute(router, SessionRoute.Boss, null);
+            AssertRoute(router, SessionRoute.Subject, SubjectId.Sprint);
+            AssertRoute(router, SessionRoute.RetrySubject, SubjectId.Sprint);
+            AssertRoute(router, SessionRoute.Subject, SubjectId.Endurance);
+            AssertRoute(router, SessionRoute.RetrySubject, SubjectId.Endurance);
+
+            foreach (var subject in new[]
+            {
+                SubjectId.Volleyball,
+                SubjectId.Basketball,
+                SubjectId.PingPong,
+                SubjectId.Badminton,
+                SubjectId.Football
+            })
+            {
+                Assert.That(router.TryGetSceneName(SessionRoute.Subject, subject, out _), Is.False);
+                Assert.That(router.TryGetSceneName(SessionRoute.RetrySubject, subject, out _), Is.False);
+                Assert.Throws<InvalidOperationException>(() => router.StartSubject(subject));
+            }
+        }
+
+        [UnityTest]
+        public IEnumerator RuntimeRouter_AutoBindsRealSubjectAndBossCompletionEvents()
+        {
+            var router = SceneRouter.EnsurePersistentInstance();
+            var mapRouteCount = 0;
+            router.TransitionStarted += CountMapRoutes;
+
+            Assert.That(router.StartSubject(SubjectId.Sprint), Is.True);
+            yield return WaitForScene("MG_Sprint");
+
+            var sprint = UnityEngine.Object.FindFirstObjectByType<SprintController>();
+            Assert.That(sprint, Is.Not.Null);
+            sprint.ConfigureForTest(0f);
+            sprint.AdvanceToDistance(100f);
+            sprint.Simulate(0f);
+            yield return WaitForScene("Map");
+
+            Assert.That(router.Session.GetRecord(SubjectId.Sprint).Passed, Is.True);
+            Assert.That(mapRouteCount, Is.EqualTo(1));
+
+            foreach (SubjectId subject in Enum.GetValues(typeof(SubjectId)))
+            {
+                if (subject == SubjectId.Sprint)
+                    continue;
+                router.Session.StartSubject(subject);
+                router.Session.SubmitResult(subject, new MinigameResult(true, 6f, Rank.C));
+            }
+
+            Assert.That(router.Session.BossUnlocked, Is.True);
+            Assert.That(router.StartBoss(), Is.True);
+            yield return WaitForScene("MG_Boss");
+
+            var boss = UnityEngine.Object.FindFirstObjectByType<BossPhaseController>();
+            Assert.That(boss.Session, Is.SameAs(router.Session));
+            var bossCompletionCount = 0;
+            boss.Completed += _ => bossCompletionCount++;
+            yield return new WaitForSeconds(5.1f);
+            boss.Begin();
+            for (var tap = 0; tap < 40; tap++)
+                boss.TapMashDetector.SubmitTap();
+            for (var hold = 0; hold < 16; hold++)
+                boss.RhythmHoldDetector.SubmitHold(1f);
+            for (var alternate = 0; alternate < 32; alternate++)
+                boss.AlternateTapDetector.SubmitTap(alternate % 2 == 0 ? BossTapSide.Left : BossTapSide.Right);
+
+            yield return WaitForScene("Map");
+            yield return null;
+
+            Assert.That(bossCompletionCount, Is.EqualTo(1));
+            Assert.That(mapRouteCount, Is.EqualTo(2));
+            router.TransitionStarted -= CountMapRoutes;
+
+            void CountMapRoutes(SceneRouteTransition transition)
+            {
+                if (transition.Route == SessionRoute.Map)
+                    mapRouteCount++;
+            }
+        }
+
+        static void AssertRoute(SceneRouter router, SessionRoute route, SubjectId? subject)
+        {
+            Assert.That(router.TryGetSceneName(route, subject, out var sceneName), Is.True);
+            Assert.That(Application.CanStreamedLevelBeLoaded(sceneName), Is.True,
+                $"{route} must resolve to an enabled scene.");
+        }
+
+        static IEnumerator WaitForScene(string sceneName)
+        {
+            while (SceneManager.GetActiveScene().name != sceneName)
+                yield return null;
+            yield return null;
         }
 
         GameObject CreateGameObject(string name)
