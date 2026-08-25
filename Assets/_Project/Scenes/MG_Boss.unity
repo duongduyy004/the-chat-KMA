@@ -61,6 +61,7 @@ MonoBehaviour:
   tapMashDetector: {fileID: 310004}
   rhythmHoldDetector: {fileID: 310005}
   alternateTapDetector: {fileID: 310006}
+  runtimeInputSource: {fileID: 410002}
   configuredDuration: 35
 --- !u!1 &200000
 GameObject:
@@ -232,3 +233,61 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorClassIdentifier:
   m_Script: {fileID: 11500000, guid: d6e7f8091a2b3c4d5e6f708192a3b4c5, type: 3}
+--- !u!1 &410000
+GameObject:
+  m_ObjectHideFlags: 0
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 410001}
+  - component: {fileID: 410002}
+  m_Layer: 0
+  m_Name: BossRuntimeInput
+  m_TagString: Untagged
+  m_IsActive: 1
+--- !u!4 &410001
+Transform:
+  m_GameObject: {fileID: 410000}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_Children: []
+--- !u!114 &410002
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 410000}
+  m_Enabled: 1
+  m_EditorClassIdentifier:
+  m_Script: {fileID: 11500000, guid: f8091a2b3c4d5e6f708192a3b4c5d6e7, type: 3}
+  bossController: {fileID: 100002}
+--- !u!1 &420000
+GameObject:
+  m_ObjectHideFlags: 0
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 420001}
+  - component: {fileID: 420002}
+  m_Layer: 0
+  m_Name: BossSceneSessionHandoff
+  m_TagString: Untagged
+  m_IsActive: 1
+--- !u!4 &420001
+Transform:
+  m_GameObject: {fileID: 420000}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_Children: []
+--- !u!114 &420002
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 420000}
+  m_Enabled: 1
+  m_EditorClassIdentifier:
+  m_Script: {fileID: 11500000, guid: e7f8091a2b3c4d5e6f708192a3b4c5d6, type: 3}
+  seedCanonicalUnlockForStandaloneScene: 1

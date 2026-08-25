@@ -10,6 +10,7 @@ namespace KMA.Gameplay.Boss
         [SerializeField] BossTapMashDetectorAdapter tapMashDetector;
         [SerializeField] BossRhythmHoldDetectorAdapter rhythmHoldDetector;
         [SerializeField] BossAlternateTapDetectorAdapter alternateTapDetector;
+        [SerializeField] BossRuntimeInputSource runtimeInputSource;
         [SerializeField] float configuredDuration = 35f;
 
         ChallengeSequence sequence;
@@ -28,6 +29,7 @@ namespace KMA.Gameplay.Boss
         public BossTapMashDetectorAdapter TapMashDetector => tapMashDetector;
         public BossRhythmHoldDetectorAdapter RhythmHoldDetector => rhythmHoldDetector;
         public BossAlternateTapDetectorAdapter AlternateTapDetector => alternateTapDetector;
+        public BossRuntimeInputSource RuntimeInputSource => runtimeInputSource;
         public ChallengeStep Current => sequence == null ? default : sequence.Current;
         public ChallengeMechanic CurrentMechanic => Current.Mechanic;
         public float CurrentProgress => sequence == null ? 0f : sequence.CurrentProgress;
@@ -47,7 +49,8 @@ namespace KMA.Gameplay.Boss
         protected override void Awake()
         {
             base.Awake();
-            Session = new GameSession();
+            var handoff = FindFirstObjectByType<BossSceneSessionHandoff>();
+            Session = handoff == null ? new GameSession() : handoff.Session;
             try
             {
                 InitializeSequence();

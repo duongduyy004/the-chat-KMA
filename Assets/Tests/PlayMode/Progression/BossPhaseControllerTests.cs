@@ -24,7 +24,23 @@ namespace KMA.Tests.Gameplay.Progression
             Assert.That(boss.TapMashDetector, Is.Not.Null);
             Assert.That(boss.RhythmHoldDetector, Is.Not.Null);
             Assert.That(boss.AlternateTapDetector, Is.Not.Null);
+            Assert.That(boss.RuntimeInputSource, Is.Not.Null);
 
+            yield return null;
+        }
+
+        [UnityTest]
+        public IEnumerator SceneStartPath_UsesProductionSessionHandoff()
+        {
+            yield return LoadBoss();
+            var boss = UnityEngine.Object.FindFirstObjectByType<BossPhaseController>();
+
+            Assert.That(boss.Session, Is.Not.Null);
+            Assert.That(boss.Session.BossUnlocked, Is.True);
+
+            yield return WaitForPlay();
+            Assert.DoesNotThrow(() => boss.Begin());
+            Assert.That(boss.IsRunning, Is.True);
             yield return null;
         }
 
@@ -33,11 +49,46 @@ namespace KMA.Tests.Gameplay.Progression
         {
             yield return LoadBoss();
             var boss = UnityEngine.Object.FindFirstObjectByType<BossPhaseController>();
+            boss.SetSession(new GameSession());
             yield return WaitForPlay();
 
             Assert.Throws<InvalidOperationException>(() => boss.Begin());
 
             yield return null;
+        }
+
+        [UnityTest]
+        public IEnumerator SceneRuntimeInput_ProgressesAllPhasesThroughKeyboard()
+        {
+            yield return LoadBoss();
+            var boss = UnityEngine.Object.FindFirstObjectByType<BossPhaseController>();
+            yield return WaitForPlay();
+            boss.Begin();
+            var input = boss.RuntimeInputSource;
+
+            for (var tap = 0; tap < 40; tap++)
+            {
+                input.OnTapMashPressed();
+                yield return null;
+            }
+            Assert.That(boss.CurrentMechanic, Is.EqualTo(ChallengeMechanic.RhythmHold));
+
+            for (var beat = 0; beat < 16; beat++)
+            {
+                input.OnRhythmHoldReleased(.51f);
+                yield return null;
+            }
+            Assert.That(boss.CurrentMechanic, Is.EqualTo(ChallengeMechanic.AlternateTap));
+
+            for (var alternate = 0; alternate < 32; alternate++)
+            {
+                input.OnAlternateTapPressed(alternate % 2 == 0 ? BossTapSide.Left : BossTapSide.Right);
+                yield return null;
+            }
+            yield return null;
+
+            Assert.That(boss.IsComplete, Is.True);
+            Assert.That(boss.LastResult.Pass, Is.True);
         }
 
         [UnityTest]

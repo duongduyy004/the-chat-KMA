@@ -3,7 +3,8 @@
     "rootNamespace": "KMA.Gameplay.Boss",
     "references": [
         "KMA.Gameplay",
-        "KMA.Gameplay.Progression"
+        "KMA.Gameplay.Progression",
+        "Unity.InputSystem"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],
