@@ -22,3 +22,6 @@ TestResults*.xml
 
 ## SDD scratch ledgers
 .superpowers/sdd/
+
+## Local Git worktrees
+.worktrees/
