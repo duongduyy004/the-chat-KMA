@@ -33,6 +33,7 @@ namespace KMA.Gameplay
         public int Lives { get; private set; } = 5;
         public IReadOnlyDictionary<SubjectId, SubjectRecord> Records => records;
         public bool BossUnlocked => records.Values.All(record => record.Passed);
+        public SubjectId? PendingPunishmentSubject => awaitingPunishment && active.HasValue ? active : (SubjectId?)null;
 
         public SubjectRecord GetRecord(SubjectId id) => records[id];
 

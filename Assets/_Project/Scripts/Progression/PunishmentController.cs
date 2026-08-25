@@ -51,6 +51,10 @@ namespace KMA.Gameplay
             this.session = session ?? throw new ArgumentNullException(nameof(session));
             this.subject = subject;
             this.sequence = sequence ?? throw new ArgumentNullException(nameof(sequence));
+            if (!this.session.PendingPunishmentSubject.HasValue)
+                throw new InvalidOperationException("No punishment is active.");
+            if (this.session.PendingPunishmentSubject.Value != subject)
+                throw new InvalidOperationException("Punishment subject does not match the active session subject.");
             ConfigureDetectors();
             this.sequence.Completed += OnSequenceCompleted;
         }

@@ -15,9 +15,9 @@ namespace KMA.Gameplay
         {
             if (!Enum.IsDefined(typeof(ChallengeMechanic), mechanic))
                 throw new ArgumentOutOfRangeException(nameof(mechanic));
-            if (duration <= 0f)
+            if (duration <= 0f || float.IsNaN(duration) || float.IsInfinity(duration))
                 throw new ArgumentOutOfRangeException(nameof(duration));
-            if (target <= 0f)
+            if (target <= 0f || float.IsNaN(target) || float.IsInfinity(target))
                 throw new ArgumentOutOfRangeException(nameof(target));
 
             Mechanic = mechanic;

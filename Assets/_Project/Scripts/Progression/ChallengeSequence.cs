@@ -30,6 +30,8 @@ namespace KMA.Gameplay
 
         public void ReportProgress(float value)
         {
+            if (float.IsNaN(value) || float.IsInfinity(value))
+                throw new ArgumentOutOfRangeException(nameof(value));
             if (IsComplete || value < Current.Target)
                 return;
 

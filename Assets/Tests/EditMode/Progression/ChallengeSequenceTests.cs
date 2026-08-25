@@ -38,6 +38,35 @@ namespace KMA.Tests.Gameplay.Progression
                 () => new ChallengeStep(ChallengeMechanic.TapMash, 0, 1));
             Assert.Throws<ArgumentOutOfRangeException>(
                 () => new ChallengeStep(ChallengeMechanic.TapMash, 1, 0));
+            Assert.Throws<ArgumentOutOfRangeException>(
+                () => new ChallengeStep(ChallengeMechanic.TapMash, float.NaN, 1));
+            Assert.Throws<ArgumentOutOfRangeException>(
+                () => new ChallengeStep(ChallengeMechanic.TapMash, float.PositiveInfinity, 1));
+            Assert.Throws<ArgumentOutOfRangeException>(
+                () => new ChallengeStep(ChallengeMechanic.TapMash, 1, float.NegativeInfinity));
+            Assert.Throws<ArgumentOutOfRangeException>(
+                () => new ChallengeStep(ChallengeMechanic.TapMash, 1, float.NaN));
+        }
+
+        [Test]
+        public void NonFiniteProgress_CannotAdvanceOrCompletePunishment()
+        {
+            var session = new GameSession();
+            session.StartSubject(SubjectId.Sprint);
+            session.SubmitResult(SubjectId.Sprint, Failed());
+            var controller = new PunishmentController(session, SubjectId.Sprint,
+                new ChallengeSequence(new[] { new ChallengeStep(ChallengeMechanic.TapMash, 5, 1) }));
+
+            Assert.Throws<ArgumentOutOfRangeException>(() => controller.ReportDetectorProgress(float.NaN));
+            Assert.Throws<ArgumentOutOfRangeException>(() => controller.ReportDetectorProgress(float.PositiveInfinity));
+            Assert.Throws<ArgumentOutOfRangeException>(() => controller.ReportDetectorProgress(float.NegativeInfinity));
+
+            Assert.That(controller.IsComplete, Is.False);
+            Assert.That(controller.CurrentMechanic, Is.EqualTo(ChallengeMechanic.TapMash));
+            Assert.That(session.Lives, Is.EqualTo(5));
+            Assert.That(controller.CueVisible, Is.True);
+            controller.ReportDetectorProgress(1);
+            Assert.That(controller.IsComplete, Is.True);
         }
 
         [Test]
@@ -102,10 +131,13 @@ namespace KMA.Tests.Gameplay.Progression
             Assert.Throws<ArgumentNullException>(() => new PunishmentController(null, SubjectId.Sprint,
                 ChallengeSequence.BossDefault()));
             Assert.Throws<ArgumentNullException>(() => new PunishmentController(session, SubjectId.Sprint, null));
-            var controller = new PunishmentController(session, SubjectId.Sprint, ChallengeSequence.BossDefault());
-            controller.ReportDetectorProgress(40);
-            controller.ReportDetectorProgress(16);
-            Assert.Throws<InvalidOperationException>(() => controller.ReportDetectorProgress(32));
+            Assert.Throws<InvalidOperationException>(() => new PunishmentController(session, SubjectId.Sprint,
+                ChallengeSequence.BossDefault()));
+
+            session.StartSubject(SubjectId.Sprint);
+            session.SubmitResult(SubjectId.Sprint, Failed());
+            Assert.Throws<InvalidOperationException>(() => new PunishmentController(session, SubjectId.Football,
+                ChallengeSequence.BossDefault()));
         }
 
         static MinigameResult Failed() => new MinigameResult(false, 0, Rank.F);
