@@ -290,4 +290,3 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorClassIdentifier:
   m_Script: {fileID: 11500000, guid: e7f8091a2b3c4d5e6f708192a3b4c5d6, type: 3}
-  seedCanonicalUnlockForStandaloneScene: 1

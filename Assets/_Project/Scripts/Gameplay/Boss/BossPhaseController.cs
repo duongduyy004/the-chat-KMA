@@ -21,6 +21,7 @@ namespace KMA.Gameplay.Boss
         int totalInputs;
         int completedPhases;
         BossTapSide expectedSide;
+        BossSceneSessionHandoff sessionHandoff;
         bool running;
         bool terminalResolved;
 
@@ -49,8 +50,10 @@ namespace KMA.Gameplay.Boss
         protected override void Awake()
         {
             base.Awake();
-            var handoff = FindFirstObjectByType<BossSceneSessionHandoff>();
-            Session = handoff == null ? new GameSession() : handoff.Session;
+            sessionHandoff = FindFirstObjectByType<BossSceneSessionHandoff>();
+            Session = sessionHandoff == null ? new GameSession() : sessionHandoff.Session;
+            if (sessionHandoff != null)
+                sessionHandoff.SessionChanged += OnSessionChanged;
             try
             {
                 InitializeSequence();
@@ -63,7 +66,12 @@ namespace KMA.Gameplay.Boss
             }
         }
 
-        void OnDestroy() => UnsubscribeDetectors();
+        void OnDestroy()
+        {
+            UnsubscribeDetectors();
+            if (sessionHandoff != null)
+                sessionHandoff.SessionChanged -= OnSessionChanged;
+        }
 
         public void SetSession(GameSession configuredSession)
         {
@@ -72,8 +80,13 @@ namespace KMA.Gameplay.Boss
             if (running)
                 throw new InvalidOperationException("The boss phase is already running.");
 
-            Session = configuredSession;
+            if (sessionHandoff == null)
+                Session = configuredSession;
+            else
+                sessionHandoff.SetSession(configuredSession);
         }
+
+        void OnSessionChanged(GameSession configuredSession) => Session = configuredSession;
 
         public void Configure(GameSession configuredSession, BossSequenceAsset configuredAsset, float duration)
         {

@@ -4,13 +4,31 @@ using KMA.Gameplay;
 using KMA.Gameplay.Boss;
 using NUnit.Framework;
 using UnityEngine;
+using UnityEngine.InputSystem;
 using UnityEngine.SceneManagement;
 using UnityEngine.TestTools;
 
 namespace KMA.Tests.Gameplay.Progression
 {
-    public sealed class BossPhaseControllerTests
+    public sealed class BossPhaseControllerTests : InputTestFixture
     {
+        Keyboard testKeyboard;
+
+        public override void Setup()
+        {
+            base.Setup();
+            BossSceneSessionHandoff.ClearPendingSession();
+        }
+
+        public override void TearDown()
+        {
+            if (testKeyboard != null && testKeyboard.added)
+                InputSystem.RemoveDevice(testKeyboard);
+            testKeyboard = null;
+            BossSceneSessionHandoff.ClearPendingSession();
+            base.TearDown();
+        }
+
         [UnityTest]
         public IEnumerator SceneLoadsSerializedAssetAndRuntimeAdapters()
         {
@@ -36,9 +54,40 @@ namespace KMA.Tests.Gameplay.Progression
             var boss = UnityEngine.Object.FindFirstObjectByType<BossPhaseController>();
 
             Assert.That(boss.Session, Is.Not.Null);
-            Assert.That(boss.Session.BossUnlocked, Is.True);
+            Assert.That(boss.Session.BossUnlocked, Is.False);
 
+            yield return null;
+        }
+
+        [UnityTest]
+        public IEnumerator PendingUnlockedSession_IsResolvedAtSceneLoadAndCanBegin()
+        {
+            var unlocked = UnlockedSession();
+            BossSceneSessionHandoff.SetPendingSession(unlocked);
+
+            yield return LoadBoss();
+            var boss = UnityEngine.Object.FindFirstObjectByType<BossPhaseController>();
             yield return WaitForPlay();
+
+            Assert.That(boss.Session, Is.SameAs(unlocked));
+            Assert.DoesNotThrow(() => boss.Begin());
+            Assert.That(boss.IsRunning, Is.True);
+            yield return null;
+        }
+
+        [UnityTest]
+        public IEnumerator LateSessionHandoff_UpdatesControllerAndAllowsUnlockedBegin()
+        {
+            yield return LoadBoss();
+            var boss = UnityEngine.Object.FindFirstObjectByType<BossPhaseController>();
+            yield return WaitForPlay();
+
+            Assert.That(boss.Session.BossUnlocked, Is.False);
+            var unlocked = UnlockedSession();
+            BossSceneSessionHandoff.SetPendingSession(unlocked);
+            yield return null;
+
+            Assert.That(boss.Session, Is.SameAs(unlocked));
             Assert.DoesNotThrow(() => boss.Begin());
             Assert.That(boss.IsRunning, Is.True);
             yield return null;
@@ -49,7 +98,6 @@ namespace KMA.Tests.Gameplay.Progression
         {
             yield return LoadBoss();
             var boss = UnityEngine.Object.FindFirstObjectByType<BossPhaseController>();
-            boss.SetSession(new GameSession());
             yield return WaitForPlay();
 
             Assert.Throws<InvalidOperationException>(() => boss.Begin());
@@ -62,29 +110,26 @@ namespace KMA.Tests.Gameplay.Progression
         {
             yield return LoadBoss();
             var boss = UnityEngine.Object.FindFirstObjectByType<BossPhaseController>();
+            boss.SetSession(UnlockedSession());
             yield return WaitForPlay();
             boss.Begin();
-            var input = boss.RuntimeInputSource;
+            testKeyboard = InputSystem.AddDevice<Keyboard>();
+            boss.RuntimeInputSource.KeyboardDevice = testKeyboard;
+            Assert.That(boss.RuntimeInputSource.isActiveAndEnabled, Is.True);
+            Assert.That(boss.RuntimeInputSource.KeyboardDevice, Is.SameAs(testKeyboard));
 
-            for (var tap = 0; tap < 40; tap++)
-            {
-                input.OnTapMashPressed();
-                yield return null;
-            }
+            yield return PressKey(Key.Space);
+            Assert.That(boss.CurrentProgress, Is.EqualTo(1f));
+            for (var tap = 0; tap < 39; tap++)
+                yield return PressKey(Key.Space);
             Assert.That(boss.CurrentMechanic, Is.EqualTo(ChallengeMechanic.RhythmHold));
 
             for (var beat = 0; beat < 16; beat++)
-            {
-                input.OnRhythmHoldReleased(.51f);
-                yield return null;
-            }
+                yield return HoldKey(Key.H, .51f);
             Assert.That(boss.CurrentMechanic, Is.EqualTo(ChallengeMechanic.AlternateTap));
 
             for (var alternate = 0; alternate < 32; alternate++)
-            {
-                input.OnAlternateTapPressed(alternate % 2 == 0 ? BossTapSide.Left : BossTapSide.Right);
-                yield return null;
-            }
+                yield return PressKey(alternate % 2 == 0 ? Key.LeftArrow : Key.RightArrow);
             yield return null;
 
             Assert.That(boss.IsComplete, Is.True);
@@ -207,6 +252,27 @@ namespace KMA.Tests.Gameplay.Progression
         static IEnumerator WaitForPlay()
         {
             yield return new WaitForSeconds(5.1f);
+        }
+
+        IEnumerator PressKey(Key key)
+        {
+            Press(testKeyboard[key], queueEventOnly: true);
+            yield return null;
+            Assert.That(testKeyboard[key].isPressed, Is.True);
+            Release(testKeyboard[key], queueEventOnly: true);
+            yield return null;
+            Assert.That(testKeyboard[key].isPressed, Is.False);
+        }
+
+        IEnumerator HoldKey(Key key, float duration)
+        {
+            Press(testKeyboard[key], queueEventOnly: true);
+            yield return null;
+            Assert.That(testKeyboard[key].isPressed, Is.True);
+            yield return new WaitForSeconds(duration);
+            Release(testKeyboard[key], queueEventOnly: true);
+            yield return null;
+            Assert.That(testKeyboard[key].isPressed, Is.False);
         }
 
         static GameSession UnlockedSession()

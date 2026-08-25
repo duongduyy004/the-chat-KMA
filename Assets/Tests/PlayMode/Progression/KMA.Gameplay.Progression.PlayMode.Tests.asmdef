@@ -6,7 +6,8 @@
         "KMA.Gameplay",
         "KMA.Gameplay.Progression",
         "KMA.Gameplay.Boss",
-        "Unity.InputSystem"
+        "Unity.InputSystem",
+        "Unity.InputSystem.TestFramework"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],

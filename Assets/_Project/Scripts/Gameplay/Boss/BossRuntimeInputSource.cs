@@ -1,3 +1,4 @@
+using System.Linq;
 using UnityEngine;
 using UnityEngine.InputSystem;
 using KMA.Gameplay;
@@ -7,6 +8,7 @@ namespace KMA.Gameplay.Boss
     public sealed class BossRuntimeInputSource : MonoBehaviour
     {
         [SerializeField] BossPhaseController bossController;
+        [SerializeField] Keyboard keyboard;
 
         bool holdWasDown;
         bool spaceWasDown;
@@ -18,6 +20,21 @@ namespace KMA.Gameplay.Boss
             bossController.TapMashDetector != null &&
             bossController.RhythmHoldDetector != null &&
             bossController.AlternateTapDetector != null;
+
+        public Keyboard KeyboardDevice
+        {
+            get
+            {
+                if (keyboard != null && keyboard.added)
+                    return keyboard;
+
+                var currentKeyboard = Keyboard.current;
+                return currentKeyboard != null && currentKeyboard.added
+                    ? currentKeyboard
+                    : InputSystem.devices.OfType<Keyboard>().LastOrDefault();
+            }
+            set => keyboard = value;
+        }
 
         public void OnTapMashPressed() => bossController.TapMashDetector.SubmitTap();
 
@@ -31,9 +48,11 @@ namespace KMA.Gameplay.Boss
 
         void OnDisable() => InputSystem.onAfterUpdate -= PollInput;
 
+        void Update() => PollInput();
+
         void PollInput()
         {
-            var keyboard = Keyboard.current;
+            var keyboard = KeyboardDevice;
             if (keyboard == null || !IsWired || !bossController.IsRunning)
             {
                 holdWasDown = false;
