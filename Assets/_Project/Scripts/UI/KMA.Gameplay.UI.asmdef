@@ -1,0 +1,14 @@
+{
+    "name": "KMA.Gameplay.UI",
+    "rootNamespace": "KMA.Gameplay.UI",
+    "references": ["KMA.Gameplay", "KMA.Gameplay.Core", "KMA.Gameplay.Progression", "UnityEngine.UI"],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}
