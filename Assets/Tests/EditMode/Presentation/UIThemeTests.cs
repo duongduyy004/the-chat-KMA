@@ -43,9 +43,30 @@ namespace KMA.Tests.Presentation
                 Assert.That(font, Is.Not.Null, assetName);
                 var lookup = font.GetType().GetProperty("characterLookupTable", BindingFlags.Instance | BindingFlags.Public).GetValue(font) as IDictionary;
                 Assert.That(lookup, Is.Not.Null, $"{assetName} has no character lookup table");
-                foreach (var character in new[] { 'Đ', 'đ', 'ă', 'Ă', 'ộ', 'ơ', 'Ư', 'ứ' })
-                    Assert.That(ContainsCharacter(font, (uint)character, new HashSet<object>()), Is.True, $"{assetName} and its fallbacks are missing {character}");
+                var fallback = GetFallbacks(font);
+                Assert.That(fallback.Count, Is.GreaterThan(0), $"{assetName} has no serialized fallback chain");
+                var fallbackMode = fallback[0].GetType().GetProperty("atlasPopulationMode", BindingFlags.Instance | BindingFlags.Public).GetValue(fallback[0]);
+                Assert.That(fallbackMode.ToString(), Is.EqualTo("Dynamic"), "VietnameseFallback must remain Dynamic");
+                AssertRange(font, 0x1EA0, 0x1EF9, assetName);
+                AssertRange(font, 0x0110, 0x0111, assetName);
+                AssertRange(font, 0x01A0, 0x01B0, assetName);
             }
+        }
+
+        private static void AssertRange(object font, int first, int last, string assetName)
+        {
+            for (var codePoint = first; codePoint <= last; codePoint++)
+                Assert.That(ContainsCharacter(font, (uint)codePoint, new HashSet<object>()), Is.True, $"{assetName} and its fallbacks are missing U+{codePoint:X4}");
+        }
+
+        private static List<object> GetFallbacks(object font)
+        {
+            var result = new List<object>();
+            var fallbacks = font.GetType().GetProperty("fallbackFontAssetTable", BindingFlags.Instance | BindingFlags.Public).GetValue(font) as IEnumerable;
+            if (fallbacks != null)
+                foreach (var fallback in fallbacks)
+                    if (fallback != null) result.Add(fallback);
+            return result;
         }
 
         private static bool ContainsCharacter(object font, uint character, HashSet<object> visited)
