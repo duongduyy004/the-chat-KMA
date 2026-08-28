@@ -1,5 +1,6 @@
 using NUnit.Framework;
 using System.Collections;
+using System.Collections.Generic;
 using System.Reflection;
 using UnityEditor;
 using UnityEngine;
@@ -43,8 +44,27 @@ namespace KMA.Tests.Presentation
                 var lookup = font.GetType().GetProperty("characterLookupTable", BindingFlags.Instance | BindingFlags.Public).GetValue(font) as IDictionary;
                 Assert.That(lookup, Is.Not.Null, $"{assetName} has no character lookup table");
                 foreach (var character in new[] { 'Đ', 'đ', 'ă', 'Ă', 'ộ', 'ơ', 'Ư', 'ứ' })
-                    Assert.That(lookup.Contains((uint)character), Is.True, $"{assetName} is missing {character}");
+                    Assert.That(ContainsCharacter(font, (uint)character, new HashSet<object>()), Is.True, $"{assetName} and its fallbacks are missing {character}");
             }
+        }
+
+        private static bool ContainsCharacter(object font, uint character, HashSet<object> visited)
+        {
+            if (!visited.Add(font))
+                return false;
+            var type = font.GetType();
+            var lookup = type.GetProperty("characterLookupTable", BindingFlags.Instance | BindingFlags.Public).GetValue(font) as IDictionary;
+            if (lookup != null && lookup.Contains(character))
+                return true;
+            var fallbacks = type.GetProperty("fallbackFontAssetTable", BindingFlags.Instance | BindingFlags.Public).GetValue(font) as IEnumerable;
+            if (fallbacks == null)
+                return false;
+            foreach (var fallback in fallbacks)
+            {
+                if (fallback != null && ContainsCharacter(fallback, character, visited))
+                    return true;
+            }
+            return false;
         }
     }
 }

@@ -15,7 +15,7 @@ MonoBehaviour:
   success: {r: 0.5411765, g: 0.79607844, b: 0.53333336, a: 1}
   card: {r: 1, g: 1, b: 1, a: 1}
   muted: {r: 0.8862745, g: 0.9098039, b: 0.9411765, a: 1}
-  mutedForeground: {r: 0.2784314, g: 0.33333334, b: 0.36862746, a: 1}
+  mutedForeground: {r: 0.2784314, g: 0.33333334, b: 0.4117647, a: 1}
   border: {r: 0, g: 0, b: 0, a: 1}
   spacing: 8
   cornerRadius: 24
