@@ -1,4 +1,5 @@
 using System;
+using KMA.Gameplay.UI;
 using System.Runtime.CompilerServices;
 using UnityEngine;
 
@@ -168,6 +169,22 @@ namespace KMA.Gameplay
             Finish(LastResult);
         }
 
+        protected override MinigameHudState BuildHudState()
+        {
+            var rules = Rules;
+            return new MinigameHudState(
+                timeRemaining: Mathf.Max(0f, rules == null ? 0f : 90f - rules.Elapsed),
+                primary01: Mathf.Clamp01((rules == null ? 0f : rules.Stamina) / 100f),
+                primaryLabel: "STAMINA",
+                secondary01: rules == null ? 0f : rules.LapProgress,
+                secondaryLabel: "LAPS",
+                statusText: rules == null ? string.Empty : CurrentStatusText(rules));
+        }
+        string CurrentStatusText(EnduranceRules rules) =>
+            ObstacleCueVisible ? "OBSTACLE — SWIPE NOW" :
+            rules.Mode == EnduranceInputMode.BreathHold ? "HOLD TO BREATHE" :
+            rules.Mode == EnduranceInputMode.ObstacleSwipe ? "SWIPE TO CLEAR" :
+            "TAP TO THE BEAT";
         protected override void TickPlay(float dt)
         {
             Rules.TickPlay(dt);

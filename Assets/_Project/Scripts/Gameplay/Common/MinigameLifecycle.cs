@@ -1,3 +1,5 @@
+using System;
+
 namespace KMA.Gameplay
 {
     public sealed class MinigameLifecycle
@@ -7,6 +9,8 @@ namespace KMA.Gameplay
         float elapsed;
 
         public MinigamePhase Phase { get; private set; } = MinigamePhase.Tutorial;
+
+        public event Action<MinigamePhase> PhaseChanged;
 
         public MinigameLifecycle(float tutorialSeconds, float countdownSeconds)
         {
@@ -19,13 +23,17 @@ namespace KMA.Gameplay
             elapsed += dt;
             if (Phase == MinigamePhase.Tutorial && elapsed >= tutorialSeconds)
             {
+                var previousPhase = Phase;
                 Phase = MinigamePhase.Countdown;
                 elapsed = 0;
+                if (Phase != previousPhase) PhaseChanged?.Invoke(Phase);
             }
             else if (Phase == MinigamePhase.Countdown && elapsed >= countdownSeconds)
             {
+                var previousPhase = Phase;
                 Phase = MinigamePhase.Play;
                 elapsed = 0;
+                if (Phase != previousPhase) PhaseChanged?.Invoke(Phase);
             }
         }
 
@@ -34,7 +42,9 @@ namespace KMA.Gameplay
             if (Phase != MinigamePhase.Play)
                 return false;
 
+            var previousPhase = Phase;
             Phase = MinigamePhase.Resolve;
+            if (Phase != previousPhase) PhaseChanged?.Invoke(Phase);
             return true;
         }
     }

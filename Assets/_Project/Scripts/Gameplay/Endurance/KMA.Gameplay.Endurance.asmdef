@@ -3,6 +3,7 @@
     "rootNamespace": "KMA.Gameplay",
     "references": [
         "KMA.Gameplay",
+        "KMA.Gameplay.UI",
         "Unity.InputSystem"
     ],
     "includePlatforms": [],

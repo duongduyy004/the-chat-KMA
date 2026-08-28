@@ -1,3 +1,4 @@
+using KMA.Gameplay.UI;
 using UnityEngine;
 using UnityEngine.InputSystem;
 
@@ -144,6 +145,13 @@ namespace KMA.Gameplay
             return result;
         }
 
+        protected override MinigameHudState BuildHudState() => new MinigameHudState(
+            timeRemaining: Mathf.Max(0f, rules == null ? 0f : 14f - rules.Elapsed),
+            primary01: Mathf.Clamp01((rules == null ? 0f : rules.Stamina) / 100f),
+            primaryLabel: "STAMINA",
+            secondary01: Mathf.Clamp01((rules == null ? 0f : rules.Snapshot.Distance) / 100f),
+            secondaryLabel: "DISTANCE",
+            statusText: WindWindowActive ? "WIND — COUNTER NOW" : "TAP LEFT / RIGHT");
         protected override void TickPlay(float dt)
         {
             float distanceBefore = rules.Snapshot.Distance;

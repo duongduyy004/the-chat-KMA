@@ -1,7 +1,10 @@
 {
     "name": "KMA.Gameplay.UI",
     "rootNamespace": "KMA.Gameplay.UI",
-    "references": ["KMA.Gameplay", "KMA.Gameplay.Core", "KMA.Gameplay.Progression", "UnityEngine.UI"],
+    "references": [
+        "UnityEngine.UI",
+        "Unity.TextMeshPro"
+    ],
     "includePlatforms": [],
     "excludePlatforms": [],
     "allowUnsafeCode": false,
