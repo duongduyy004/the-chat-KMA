@@ -1,0 +1,27 @@
+{
+    "name": "KMA.Gameplay.UI.PlayMode.Tests",
+    "rootNamespace": "KMA.Tests.Presentation",
+    "references": [
+        "UnityEngine.TestRunner",
+        "KMA.Gameplay",
+        "KMA.Gameplay.Presentation",
+        "KMA.Gameplay.UI",
+        "KMA.Gameplay.Sprint",
+        "KMA.Gameplay.Endurance",
+        "Unity.TextMeshPro",
+        "UnityEngine.UI"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": true,
+    "precompiledReferences": [
+        "nunit.framework.dll"
+    ],
+    "autoReferenced": false,
+    "defineConstraints": [
+        "UNITY_INCLUDE_TESTS"
+    ],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

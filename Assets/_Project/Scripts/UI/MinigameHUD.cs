@@ -1,5 +1,6 @@
 using TMPro;
 using UnityEngine;
+using UnityEngine.Serialization;
 using UnityEngine.UI;
 
 namespace KMA.Gameplay.UI
@@ -9,11 +10,15 @@ namespace KMA.Gameplay.UI
         [SerializeField] MonoBehaviour minigameSource;
         [SerializeField] UITheme theme;
         [SerializeField] TMP_Text timeLabel;
-        [SerializeField] TMP_Text primaryLabel;
-        [SerializeField] TMP_Text secondaryLabel;
+        [FormerlySerializedAs("primaryLabel")]
+        [SerializeField] TMP_Text phaseLabel;
+        [FormerlySerializedAs("secondaryLabel")]
+        [SerializeField] TMP_Text scoreLabel;
         [SerializeField] TMP_Text statusLabel;
-        [SerializeField] Image primaryFill;
-        [SerializeField] Image secondaryFill;
+        [FormerlySerializedAs("secondaryFill")]
+        [SerializeField] Image progressFill;
+        [FormerlySerializedAs("primaryFill")]
+        [SerializeField] Image staminaFill;
 
         void Update()
         {
@@ -25,23 +30,23 @@ namespace KMA.Gameplay.UI
         {
             if (timeLabel != null)
                 timeLabel.text = Mathf.CeilToInt(Mathf.Max(0f, state.timeRemaining)).ToString();
-            if (primaryLabel != null)
-                primaryLabel.text = state.primaryLabel ?? string.Empty;
-            if (secondaryLabel != null)
-                secondaryLabel.text = state.secondaryLabel ?? string.Empty;
+            if (phaseLabel != null)
+                phaseLabel.text = state.phase ?? string.Empty;
+            if (scoreLabel != null)
+                scoreLabel.text = Mathf.RoundToInt(Mathf.Max(0f, state.score)).ToString();
             if (statusLabel != null)
                 statusLabel.text = state.statusText ?? string.Empty;
-            if (primaryFill != null)
+            if (progressFill != null)
             {
-                primaryFill.fillAmount = Mathf.Clamp01(state.primary01);
+                progressFill.fillAmount = Mathf.Clamp01(state.progress01);
                 if (theme != null)
-                    primaryFill.color = theme.Success;
+                    progressFill.color = theme.Accent;
             }
-            if (secondaryFill != null)
+            if (staminaFill != null)
             {
-                secondaryFill.fillAmount = Mathf.Clamp01(state.secondary01);
+                staminaFill.fillAmount = Mathf.Clamp01(state.stamina01);
                 if (theme != null)
-                    secondaryFill.color = theme.Accent;
+                    staminaFill.color = theme.Success;
             }
         }
     }

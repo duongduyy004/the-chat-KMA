@@ -173,11 +173,11 @@ namespace KMA.Gameplay
         {
             var rules = Rules;
             return new MinigameHudState(
+                phase: Phase.ToString(),
                 timeRemaining: Mathf.Max(0f, rules == null ? 0f : 90f - rules.Elapsed),
-                primary01: Mathf.Clamp01((rules == null ? 0f : rules.Stamina) / 100f),
-                primaryLabel: "STAMINA",
-                secondary01: rules == null ? 0f : rules.LapProgress,
-                secondaryLabel: "LAPS",
+                progress01: rules == null ? 0f : rules.LapProgress,
+                stamina01: Mathf.Clamp01((rules == null ? 0f : rules.Stamina) / 100f),
+                score: rules == null ? 0f : rules.BuildResult().Score,
                 statusText: rules == null ? string.Empty : CurrentStatusText(rules));
         }
         string CurrentStatusText(EnduranceRules rules) =>

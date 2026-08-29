@@ -146,11 +146,11 @@ namespace KMA.Gameplay
         }
 
         protected override MinigameHudState BuildHudState() => new MinigameHudState(
+            phase: Phase.ToString(),
             timeRemaining: Mathf.Max(0f, rules == null ? 0f : 14f - rules.Elapsed),
-            primary01: Mathf.Clamp01((rules == null ? 0f : rules.Stamina) / 100f),
-            primaryLabel: "STAMINA",
-            secondary01: Mathf.Clamp01((rules == null ? 0f : rules.Snapshot.Distance) / 100f),
-            secondaryLabel: "DISTANCE",
+            progress01: Mathf.Clamp01((rules == null ? 0f : rules.Snapshot.Distance) / 100f),
+            stamina01: Mathf.Clamp01((rules == null ? 0f : rules.Stamina) / 100f),
+            score: rules == null ? 0f : rules.BuildResult().Score,
             statusText: WindWindowActive ? "WIND — COUNTER NOW" : "TAP LEFT / RIGHT");
         protected override void TickPlay(float dt)
         {

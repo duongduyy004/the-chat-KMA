@@ -87,3 +87,6 @@ The latest verified suite passed `121` EditMode tests and `37` PlayMode tests.
 - [`docs/superpowers/plans/2026-08-24-running-minigames.md`](docs/superpowers/plans/2026-08-24-running-minigames.md) — Sprint and Endurance
 - [`docs/superpowers/plans/2026-08-24-ball-minigames.md`](docs/superpowers/plans/2026-08-24-ball-minigames.md) — five ball minigames
 - [`docs/superpowers/plans/2026-08-24-progression-boss.md`](docs/superpowers/plans/2026-08-24-progression-boss.md) — progression, Punishment, routing, and Boss
+
+
+codex resume 01a043ab-5c4b-7fd1-8943-e5255182871a

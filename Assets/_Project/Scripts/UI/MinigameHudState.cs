@@ -2,28 +2,34 @@ namespace KMA.Gameplay.UI
 {
     public readonly struct MinigameHudState
     {
-        public static readonly MinigameHudState Empty = new MinigameHudState(0f, 0f, string.Empty, 0f, string.Empty, string.Empty);
-
+        public readonly string phase;
         public readonly float timeRemaining;
-        public readonly float primary01;
-        public readonly string primaryLabel;
-        public readonly float secondary01;
-        public readonly string secondaryLabel;
+        public readonly float progress01;
+        public readonly float stamina01;
+        public readonly float score;
         public readonly string statusText;
 
+        public static MinigameHudState Empty => new MinigameHudState(
+            string.Empty,
+            0f,
+            0f,
+            0f,
+            0f,
+            string.Empty);
+
         public MinigameHudState(
+            string phase,
             float timeRemaining,
-            float primary01,
-            string primaryLabel,
-            float secondary01,
-            string secondaryLabel,
+            float progress01,
+            float stamina01,
+            float score,
             string statusText)
         {
+            this.phase = phase;
             this.timeRemaining = timeRemaining;
-            this.primary01 = primary01;
-            this.primaryLabel = primaryLabel;
-            this.secondary01 = secondary01;
-            this.secondaryLabel = secondaryLabel;
+            this.progress01 = progress01;
+            this.stamina01 = stamina01;
+            this.score = score;
             this.statusText = statusText;
         }
     }
