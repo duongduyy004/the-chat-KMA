@@ -29,3 +29,6 @@
 - Task 1: complete (commits 7e77489..676114d, review clean).
 - Task 2: complete (commits c505098..6a3214b, review clean after fixes, static re-review PASS, Unity not run in final review).
 - Task 3: BASE 6a3214b (`.superpowers/sdd/2026-08-28-s2-presentation-foundation/task-3-brief.md`).
+- Task 3: fix round 1/5 (3 P1 addressed: HUD scale, pressed shadow, TMP source/atlas; commit a73cc5c; scoped review found font tables still empty).
+- Task 3: fix round 2/5 (font table blocker addressed; commit 19d31f5; focused UIThemeTests 3/3 pass; PlayMode rerun emitted no result XML during Unity import).
+- Task 3: complete (commits c825684..19d31f5; static re-review conditions satisfied; remaining PlayMode limitation documented).
