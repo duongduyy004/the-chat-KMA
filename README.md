@@ -82,7 +82,7 @@ The latest verified suite passed `121` EditMode tests and `37` PlayMode tests.
 
 ### S2 presentation gate
 
-The S2 Sprint gate is verified with Unity `6000.3.23f1`: `SprintSceneShowsTutorialCountdownHudAndInputResponse` passed, covering the real `MG_Sprint` scene, tutorial, countdown, Play HUD refresh, and expected-side input response. The focused presentation suites also passed (`14` EditMode, `7` PlayMode); reports are `/tmp/s2-final-edit.xml` and `/tmp/s2-final-play-3.xml`. Android emulator installation and screenshot evidence remain pending and are not claimed here.
+The S2 Sprint gate is verified with Unity `6000.3.23f1`: `SprintSceneShowsTutorialCountdownHudAndInputResponse` passed against the real `MG_Sprint` scene, covering tutorial, countdown, Play HUD refresh, and expected-side input response. Full suites also pass (`135` EditMode, `45` PlayMode); reports are `/tmp/s2-full-edit-after-buildscript.xml` and `/tmp/s2-full-play.xml`. The final ARM64 APK hash is `76ecd68a46bf052db1b11f4a6e5a7b74fc77153ad68d9c9101c59ae0880b7a5f`. Emulator runtime evidence is provisional because the connected emulator is x86_64; its screenshot is [`docs/qa/s2-emulator-screenshot.png`](docs/qa/s2-emulator-screenshot.png).
 
 ## Design documents
 
