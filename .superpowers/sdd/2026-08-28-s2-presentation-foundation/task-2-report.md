@@ -22,6 +22,11 @@ The existing `KMA.Gameplay.UI` assembly referenced `KMA.Gameplay`, while `Miniga
 - The existing focused PlayMode test continues to exercise null-safe `RefreshFrom(MinigameHudState.Empty)`.
 - Final static checks found no old `primary01`/`secondary01` constructor consumers and no temporary `.orig` artifacts.
 
+## Final re-review correction
+
+- The PlayMode HUD test asmdef had a stale `KMA.Gameplay.Presentation` reference, but no project asmdef declares that assembly. The invalid reference was removed; all other existing test references and production architecture remain unchanged.
+- Static validation confirms every remaining project assembly reference in the test asmdef exists. Unity was not launched per the requested no-broad-Unity verification scope.
+
 ## Verification limitation
 
 Per the final instruction, Unity was not launched. No standalone `dotnet`, `csc`, or `mcs` compiler is installed in this environment, so the final review diff could not be compiled or executed here. The focused Unity results recorded by the previous implementation predate this contract correction and are not presented as current green evidence.
