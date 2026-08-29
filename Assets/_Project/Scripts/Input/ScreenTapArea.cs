@@ -11,29 +11,15 @@ namespace KMA.Input
 
         readonly HashSet<int> activePointerIds = new HashSet<int>();
 
-        void OnEnable()
-        {
-            if (router != null)
-                router.RegisterScreenTapArea();
-        }
-
         void OnDisable()
         {
-            if (router != null)
-                router.UnregisterScreenTapArea();
             activePointerIds.Clear();
         }
 
         public void Configure(GameplayInputRouter inputRouter, RectTransform area)
         {
-            if (router != null && isActiveAndEnabled)
-                router.UnregisterScreenTapArea();
-
             router = inputRouter;
             gameplayArea = area;
-
-            if (router != null && isActiveAndEnabled)
-                router.RegisterScreenTapArea();
         }
 
         public void OnPointerDown(PointerEventData eventData)
@@ -41,18 +27,24 @@ namespace KMA.Input
             if (!CanOwn(eventData) || !IsInsideGameplayArea(eventData))
                 return;
 
-            activePointerIds.Add(eventData.pointerId);
+            if (!activePointerIds.Add(eventData.pointerId))
+            {
+                eventData.Use();
+                return;
+            }
+
             eventData.Use();
             router.FeedPointerDown(eventData.position);
         }
 
         public void OnPointerUp(PointerEventData eventData)
         {
-            if (eventData == null || !activePointerIds.Remove(eventData.pointerId) || eventData.used)
+            if (eventData == null || !activePointerIds.Remove(eventData.pointerId))
                 return;
 
-            eventData.Use();
             router.FeedPointerUp(eventData.position);
+            if (!eventData.used)
+                eventData.Use();
         }
 
         public void OnDrag(PointerEventData eventData)
@@ -69,8 +61,8 @@ namespace KMA.Input
             if (eventData == null || eventData.used || router == null || gameplayArea == null)
                 return false;
 
-            GameObject pressedObject = eventData.pointerPressRaycast.gameObject;
-            return pressedObject == null || pressedObject == gameObject || pressedObject.transform.IsChildOf(transform);
+            GameObject currentObject = eventData.pointerCurrentRaycast.gameObject;
+            return currentObject == null || currentObject == gameObject;
         }
 
         bool IsInsideGameplayArea(PointerEventData eventData)
