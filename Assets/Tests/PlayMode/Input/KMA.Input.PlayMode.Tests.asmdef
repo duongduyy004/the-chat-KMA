@@ -1,0 +1,24 @@
+{
+    "name": "KMA.Input.PlayMode.Tests",
+    "rootNamespace": "KMA.Tests.Input",
+    "references": [
+        "UnityEngine.TestRunner",
+        "KMA.Input",
+        "Unity.InputSystem",
+        "Unity.InputSystem.TestFramework",
+        "UnityEngine.UI"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": true,
+    "precompiledReferences": [
+        "nunit.framework.dll"
+    ],
+    "autoReferenced": true,
+    "defineConstraints": [
+        "UNITY_INCLUDE_TESTS"
+    ],
+    "versionDefines": [],
+    "noEngineReferences": false
+}
