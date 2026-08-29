@@ -1,9 +1,12 @@
+using System.Collections;
 using System.Linq;
 using System.Reflection;
 using KMA.Gameplay.UI;
 using NUnit.Framework;
+using TMPro;
 using UnityEditor;
 using UnityEngine;
+using UnityEngine.TestTools;
 using UnityEngine.UI;
 
 namespace KMA.Tests.Presentation
@@ -15,6 +18,7 @@ namespace KMA.Tests.Presentation
         {
             var prefab = AssetDatabase.LoadAssetAtPath<GameObject>("Assets/_Project/Prefabs/UI/HUD_Minigame.prefab");
             Assert.That(prefab, Is.Not.Null);
+            Assert.That(prefab.transform.localScale, Is.EqualTo(Vector3.one));
 
             Assert.That(prefab.GetComponentsInChildren<Canvas>(true), Has.Length.EqualTo(1));
             var scaler = prefab.GetComponentInChildren<CanvasScaler>(true);
@@ -33,6 +37,41 @@ namespace KMA.Tests.Presentation
             Assert.That(prefab.GetComponentsInChildren<MonoBehaviour>(true)
                 .Any(component => component.GetType().GetMethod("OnGUI", BindingFlags.Instance | BindingFlags.NonPublic) != null), Is.False);
             AssertRequiredHudReferences(hud);
+        }
+
+        [UnityTest]
+        public IEnumerator HudPrefabInstantiatesWithVisibleScaleAndActiveText()
+        {
+            var prefab = AssetDatabase.LoadAssetAtPath<GameObject>("Assets/_Project/Prefabs/UI/HUD_Minigame.prefab");
+            Assert.That(prefab, Is.Not.Null);
+
+            var instance = Object.Instantiate(prefab);
+            try
+            {
+                Assert.That(instance.transform.localScale.x, Is.GreaterThan(0f));
+                Assert.That(instance.transform.localScale.y, Is.GreaterThan(0f));
+                Assert.That(instance.transform.localScale.z, Is.GreaterThan(0f));
+                var textComponents = instance.GetComponentsInChildren<TMP_Text>(true);
+                Assert.That(textComponents, Has.Length.GreaterThan(0));
+                foreach (var text in textComponents)
+                {
+                    Assert.That(text.isActiveAndEnabled, Is.True, text.name);
+                    Assert.That(text.font, Is.Not.Null, text.name);
+                }
+
+                var fitter = instance.GetComponentInChildren<SafeAreaFitter>(true);
+                Assert.That(fitter, Is.Not.Null);
+                fitter.Apply(new Rect(100f, 0f, 1720f, 1080f), new Vector2Int(1920, 1080));
+                var rect = (RectTransform)fitter.transform;
+                Assert.That(rect.offsetMin.x, Is.EqualTo(100f).Within(.01f));
+                Assert.That(rect.offsetMax.x, Is.EqualTo(-100f).Within(.01f));
+            }
+            finally
+            {
+                Object.Destroy(instance);
+            }
+
+            yield return null;
         }
 
         private static void AssertRequiredHudReferences(MinigameHUD hud)

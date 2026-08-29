@@ -1,4 +1,6 @@
 using System.Reflection;
+using System.Collections;
+using UnityEditor;
 using KMA.Gameplay.UI;
 using NUnit.Framework;
 using UnityEngine;
@@ -39,17 +41,48 @@ namespace KMA.Tests.Presentation
             var root = new GameObject("brutal-button", typeof(RectTransform));
             try
             {
+                var shadowObject = new GameObject("shadow", typeof(RectTransform));
+                shadowObject.transform.SetParent(root.transform, false);
+                var shadow = shadowObject.GetComponent<RectTransform>();
+                shadow.anchoredPosition = new Vector2(6f, -6f);
                 var button = root.AddComponent<BrutalButton>();
+                SetPrivateField(button, "shadow", shadow);
 
                 button.SetPressedForTest(true);
                 Assert.That(button.CurrentVisualOffset, Is.EqualTo(new Vector2(4f, -4f)));
+                Assert.That(shadow.anchoredPosition, Is.EqualTo(Vector2.zero));
 
                 button.SetPressedForTest(false);
                 Assert.That(button.CurrentVisualOffset, Is.EqualTo(Vector2.zero));
+                Assert.That(shadow.anchoredPosition, Is.EqualTo(new Vector2(6f, -6f)));
             }
             finally
             {
                 Object.DestroyImmediate(root);
+            }
+        }
+
+        [Test]
+        public void SharedFontAssetsExposeSourceAndAtlasTextures()
+        {
+            foreach (var assetName in new[] { "Baloo2-ExtraBold", "Nunito-Bold" })
+            {
+                var path = $"Assets/_Project/Fonts/{assetName}.asset";
+                var font = AssetDatabase.LoadMainAssetAtPath(path);
+                Assert.That(font, Is.Not.Null, path);
+
+                var source = font.GetType().GetProperty("sourceFontFile")?.GetValue(font);
+                Assert.That(source, Is.Not.Null, $"{assetName} source font");
+
+                var atlases = font.GetType().GetProperty("atlasTextures")?.GetValue(font) as IEnumerable;
+                Assert.That(atlases, Is.Not.Null, $"{assetName} atlas textures");
+                var atlasCount = 0;
+                foreach (var atlas in atlases)
+                {
+                    atlasCount++;
+                    Assert.That(atlas, Is.Not.Null, $"{assetName} atlas {atlasCount}");
+                }
+                Assert.That(atlasCount, Is.GreaterThan(0), $"{assetName} atlas count");
             }
         }
 

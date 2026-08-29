@@ -70,7 +70,7 @@ namespace KMA.Gameplay.UI
             if (visual != null)
                 visual.anchoredPosition = visualRestPosition + PressedOffset;
             if (shadow != null)
-                shadow.anchoredPosition = shadowRestPosition;
+                shadow.anchoredPosition = Vector2.zero;
         }
 
         void RestoreOverTime()
