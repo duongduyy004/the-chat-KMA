@@ -27,3 +27,5 @@
 - Task 1: fix round 1/5 (3 addressed, 0 open): dynamic Vietnamese fallback preserved, full requested Unicode ranges tested through the serialized chain, and deterministic sorted stable-text scanning enforced.
 - Task 1: fix round 1/5 (3 addressed, 0 open; commits c38bd80..676114d; scoped re-review 01a0492f-ac13-7dc2-921a-5ea6cedb3fe1 PASS).
 - Task 1: complete (commits 7e77489..676114d, review clean).
+- Task 2: complete (commits c505098..6a3214b, review clean after fixes, static re-review PASS, Unity not run in final review).
+- Task 3: BASE 6a3214b (`.superpowers/sdd/2026-08-28-s2-presentation-foundation/task-3-brief.md`).
