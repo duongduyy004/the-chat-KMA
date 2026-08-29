@@ -26,6 +26,9 @@ The existing `KMA.Gameplay.UI` assembly referenced `KMA.Gameplay`, while `Miniga
 
 Per the final instruction, Unity was not launched. No standalone `dotnet`, `csc`, or `mcs` compiler is installed in this environment, so the final review diff could not be compiled or executed here. The focused Unity results recorded by the previous implementation predate this contract correction and are not presented as current green evidence.
 
-## Workspace hygiene
+## Scope cleanup and verification
 
-No `.orig` or `.orig.meta` files remain. Pre-existing `README.md`, `ProjectSettings`, Task 1 resource changes, and unrelated generated files were preserved without modification by this review fix.
+- Re-review found that commit `3cd03e1` accidentally tracked a Codex resume marker in `README.md`, a Unity editor version upgrade, and three unrelated generated paths. The resume marker (and its blank separator) was removed, and `ProjectSettings/ProjectVersion.txt` was restored to its `3cd03e1^` parent version, Unity `6000.3.22f1`.
+- `Assets/_Project/Settings/UI/Resources.meta`, `ProjectSettings/PackageManagerSettings.asset`, and `ProjectSettings/SceneTemplateSettings.json` were removed from the Git index. They remain as local untracked files so no working-copy content is discarded.
+- No Task 1 or Task 2 source or test file was changed by this cleanup.
+- Verification consists of an inspected scoped diff, `git diff --check`, and final Git status inspection. Unity was not run.
