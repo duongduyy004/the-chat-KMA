@@ -15,6 +15,7 @@ namespace KMA.Tests.Presentation
         [UnityTest]
         public IEnumerator SprintDefaultsFlowFromTutorialThroughCountdownToPlayPresentation()
         {
+            PlayerPrefs.DeleteKey("KMA.tutorialSeen.Sprint");
             var prefab = AssetDatabase.LoadAssetAtPath<GameObject>(
                 "Assets/_Project/Prefabs/UI/PhaseOverlay.prefab");
             Assert.That(prefab, Is.Not.Null);

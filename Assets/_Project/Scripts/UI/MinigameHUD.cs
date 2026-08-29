@@ -20,6 +20,8 @@ namespace KMA.Gameplay.UI
         [FormerlySerializedAs("primaryFill")]
         [SerializeField] Image staminaFill;
 
+        public MinigameHudState LastState { get; private set; } = MinigameHudState.Empty;
+
         void Update()
         {
             if (minigameSource is IMinigameHudStateSource source)
@@ -28,6 +30,7 @@ namespace KMA.Gameplay.UI
 
         public void RefreshFrom(MinigameHudState state)
         {
+            LastState = state;
             if (timeLabel != null)
                 timeLabel.text = Mathf.CeilToInt(Mathf.Max(0f, state.timeRemaining)).ToString();
             if (phaseLabel != null)

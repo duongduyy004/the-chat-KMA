@@ -60,6 +60,8 @@ namespace KMA.Gameplay.UI
 
         public void Show(string newSubjectId, IReadOnlyList<TutorialStep> newSteps)
         {
+            if (seenStore == null)
+                seenStore = new PlayerPrefsTutorialSeenStore();
             subjectId = newSubjectId ?? string.Empty;
             steps.Clear();
             if (newSteps != null)

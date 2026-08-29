@@ -80,6 +80,10 @@ rtk proxy "$KMA_UNITY_EDITOR" -batchmode -projectPath . \
 
 The latest verified suite passed `121` EditMode tests and `37` PlayMode tests.
 
+### S2 presentation gate
+
+The S2 Sprint gate is verified with Unity `6000.3.23f1`: `SprintSceneShowsTutorialCountdownHudAndInputResponse` passed, covering the real `MG_Sprint` scene, tutorial, countdown, Play HUD refresh, and expected-side input response. The focused presentation suites also passed (`14` EditMode, `7` PlayMode); reports are `/tmp/s2-final-edit.xml` and `/tmp/s2-final-play-3.xml`. Android emulator installation and screenshot evidence remain pending and are not claimed here.
+
 ## Design documents
 
 - [`PLAN.md`](PLAN.md) — original gameplay specification
@@ -87,3 +91,6 @@ The latest verified suite passed `121` EditMode tests and `37` PlayMode tests.
 - [`docs/superpowers/plans/2026-08-24-running-minigames.md`](docs/superpowers/plans/2026-08-24-running-minigames.md) — Sprint and Endurance
 - [`docs/superpowers/plans/2026-08-24-ball-minigames.md`](docs/superpowers/plans/2026-08-24-ball-minigames.md) — five ball minigames
 - [`docs/superpowers/plans/2026-08-24-progression-boss.md`](docs/superpowers/plans/2026-08-24-progression-boss.md) — progression, Punishment, routing, and Boss
+
+codex resume, then select Continue (01a043ab-5c4b-7fd1-8943-e5255182871a)
+codex resume 01a043ab-5c4b-7fd1-8943-e5255182871a

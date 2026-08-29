@@ -1,4 +1,5 @@
 using KMA.Gameplay;
+using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
 
@@ -15,6 +16,7 @@ namespace KMA.Gameplay.UI
         [SerializeField] GameObject resolveRoot;
         [SerializeField] TMP_Text phaseLabel;
         [SerializeField] TMP_Text countdownLabel;
+        [SerializeField] MinigameBase minigameSource;
 
         MinigameBase source;
         bool subscribed;
@@ -28,14 +30,19 @@ namespace KMA.Gameplay.UI
         public void Bind(MinigameBase minigame)
         {
             Unsubscribe();
+            minigameSource = minigame;
             source = minigame;
             Subscribe();
+            ConfigureTutorial();
             ApplyPhase(source == null ? MinigamePhase.Tutorial : source.PresentationPhase);
         }
 
         void OnEnable()
         {
+            if (source == null && minigameSource != null)
+                source = minigameSource;
             Subscribe();
+            ConfigureTutorial();
             if (source != null)
                 ApplyPhase(source.PresentationPhase);
         }
@@ -72,7 +79,8 @@ namespace KMA.Gameplay.UI
             if (phase == MinigamePhase.Countdown)
                 countdownElapsed = 0f;
 
-            SetActive(tutorialRoot, phase == MinigamePhase.Tutorial);
+            SetActive(tutorialRoot, phase == MinigamePhase.Tutorial &&
+                (tutorialOverlay == null || tutorialOverlay.ShouldShow));
             SetActive(countdownRoot, phase == MinigamePhase.Countdown);
             SetActive(playRoot, phase == MinigamePhase.Play);
             SetActive(resolveRoot, phase == MinigamePhase.Resolve);
@@ -80,6 +88,21 @@ namespace KMA.Gameplay.UI
             if (phaseLabel != null)
                 phaseLabel.text = phase.ToString().ToUpperInvariant();
             RefreshCountdown();
+        }
+
+        void ConfigureTutorial()
+        {
+            if (tutorialOverlay == null || source == null)
+                return;
+
+            if (source.GetType().Name == "SprintController")
+            {
+                tutorialOverlay.Show("Sprint", new List<TutorialStep>
+                {
+                    new TutorialStep("LEFT / RIGHT", "Tap the side shown by the cue."),
+                    new TutorialStep("WIND CUE", "Counter the wind on the opposite side before the window closes.")
+                });
+            }
         }
 
         void RefreshCountdown()
