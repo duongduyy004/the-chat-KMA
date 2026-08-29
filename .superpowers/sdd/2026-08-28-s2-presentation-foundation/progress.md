@@ -34,3 +34,4 @@
 - Task 3: complete (commits c825684..19d31f5; static re-review conditions satisfied; remaining PlayMode limitation documented).
 - Task 4: BASE 49214ee (`.superpowers/sdd/2026-08-28-s2-presentation-foundation/task-4-brief.md`).
 - Task 4: implemented; focused TutorialOverlay EditMode 4/4 and PhaseFlow PlayMode 2/2 passed on Unity 6000.3.23f1; broad suites intentionally not run.
+- Task 4: complete (commit 10e88f7; focused EditMode 4/4 and PlayMode 2/2 pass; independent static review PASS; S2 Tasks 5/6 and S3/S4 intentionally not started).
