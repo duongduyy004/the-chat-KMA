@@ -1,9 +1,7 @@
 {
     "name": "KMA.Gameplay",
     "rootNamespace": "KMA.Gameplay",
-    "references": [
-        "KMA.Gameplay.UI"
-    ],
+    "references": [],
     "includePlatforms": [],
     "excludePlatforms": [],
     "allowUnsafeCode": false,

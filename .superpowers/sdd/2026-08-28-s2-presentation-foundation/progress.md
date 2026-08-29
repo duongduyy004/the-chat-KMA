@@ -32,3 +32,5 @@
 - Task 3: fix round 1/5 (3 P1 addressed: HUD scale, pressed shadow, TMP source/atlas; commit a73cc5c; scoped review found font tables still empty).
 - Task 3: fix round 2/5 (font table blocker addressed; commit 19d31f5; focused UIThemeTests 3/3 pass; PlayMode rerun emitted no result XML during Unity import).
 - Task 3: complete (commits c825684..19d31f5; static re-review conditions satisfied; remaining PlayMode limitation documented).
+- Task 4: BASE 49214ee (`.superpowers/sdd/2026-08-28-s2-presentation-foundation/task-4-brief.md`).
+- Task 4: implemented; focused TutorialOverlay EditMode 4/4 and PhaseFlow PlayMode 2/2 passed on Unity 6000.3.23f1; broad suites intentionally not run.

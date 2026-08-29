@@ -2,6 +2,7 @@
     "name": "KMA.Gameplay.UI",
     "rootNamespace": "KMA.Gameplay.UI",
     "references": [
+        "KMA.Gameplay",
         "UnityEngine.UI",
         "Unity.TextMeshPro"
     ],

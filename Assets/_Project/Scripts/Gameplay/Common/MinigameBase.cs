@@ -6,9 +6,24 @@ namespace KMA.Gameplay
     public abstract class MinigameBase : MonoBehaviour, IMinigameHudStateSource
     {
         public event System.Action<MinigameResult> Completed;
+        public event System.Action<MinigamePhase> PhaseChanged;
         [SerializeField] float tutorialSeconds = 2f;
         [SerializeField] float countdownSeconds = 3f;
-        protected MinigameLifecycle Lifecycle { get; set; }
+        MinigameLifecycle lifecycle;
+
+        protected MinigameLifecycle Lifecycle
+        {
+            get => lifecycle;
+            set
+            {
+                if (lifecycle != null)
+                    lifecycle.PhaseChanged -= RelayPhaseChanged;
+                lifecycle = value;
+                if (lifecycle != null)
+                    lifecycle.PhaseChanged += RelayPhaseChanged;
+            }
+        }
+
         public MinigamePhase PresentationPhase => Lifecycle == null ? MinigamePhase.Tutorial : Lifecycle.Phase;
 
         protected virtual void Awake() => Lifecycle = new MinigameLifecycle(tutorialSeconds, countdownSeconds);
@@ -23,6 +38,8 @@ namespace KMA.Gameplay
         public MinigameHudState ReadHudState() => BuildHudState();
         protected virtual MinigameHudState BuildHudState() => MinigameHudState.Empty;
         protected abstract void TickPlay(float dt);
+
+        void RelayPhaseChanged(MinigamePhase phase) => PhaseChanged?.Invoke(phase);
 
         protected void Finish(MinigameResult result)
         {
