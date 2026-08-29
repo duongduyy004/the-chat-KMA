@@ -1,0 +1,97 @@
+{
+  "version": 1,
+  "name": "KMA",
+  "maps": [
+    {
+      "name": "Sprint",
+      "id": "10000000000000000000000000000001",
+      "actions": [
+        { "name": "SprintLeft", "type": "Button", "id": "10000000000000000000000000000011", "expectedControlType": "Button" },
+        { "name": "SprintRight", "type": "Button", "id": "10000000000000000000000000000012", "expectedControlType": "Button" }
+      ],
+      "bindings": [
+        { "name": "", "id": "10000000000000000000000000000101", "path": "<Keyboard>/leftArrow", "interactions": "", "processors": "", "groups": "", "action": "SprintLeft", "isComposite": false, "isPartOfComposite": false },
+        { "name": "", "id": "10000000000000000000000000000102", "path": "<Touchscreen>/primaryTouch/press", "interactions": "", "processors": "", "groups": "", "action": "SprintLeft", "isComposite": false, "isPartOfComposite": false },
+        { "name": "", "id": "10000000000000000000000000000103", "path": "<Keyboard>/rightArrow", "interactions": "", "processors": "", "groups": "", "action": "SprintRight", "isComposite": false, "isPartOfComposite": false },
+        { "name": "", "id": "10000000000000000000000000000104", "path": "<Touchscreen>/primaryTouch/press", "interactions": "", "processors": "", "groups": "", "action": "SprintRight", "isComposite": false, "isPartOfComposite": false }
+      ]
+    },
+    {
+      "name": "Endurance",
+      "id": "20000000000000000000000000000001",
+      "actions": [
+        { "name": "Tap", "type": "Button", "id": "20000000000000000000000000000011", "expectedControlType": "Button" },
+        { "name": "Hold", "type": "Button", "id": "20000000000000000000000000000012", "expectedControlType": "Button" },
+        { "name": "SwipeUp", "type": "Button", "id": "20000000000000000000000000000013", "expectedControlType": "Button" },
+        { "name": "SwipeDown", "type": "Button", "id": "20000000000000000000000000000014", "expectedControlType": "Button" },
+        { "name": "TouchPosition", "type": "Value", "id": "20000000000000000000000000000015", "expectedControlType": "Vector2" }
+      ],
+      "bindings": [
+        { "name": "", "id": "20000000000000000000000000000101", "path": "<Keyboard>/t", "interactions": "", "processors": "", "groups": "", "action": "Tap", "isComposite": false, "isPartOfComposite": false },
+        { "name": "", "id": "20000000000000000000000000000102", "path": "<Touchscreen>/primaryTouch/press", "interactions": "", "processors": "", "groups": "", "action": "Tap", "isComposite": false, "isPartOfComposite": false },
+        { "name": "", "id": "20000000000000000000000000000103", "path": "<Keyboard>/h", "interactions": "Hold(duration=0.25)", "processors": "", "groups": "", "action": "Hold", "isComposite": false, "isPartOfComposite": false },
+        { "name": "", "id": "20000000000000000000000000000104", "path": "<Touchscreen>/primaryTouch/press", "interactions": "Hold(duration=0.25)", "processors": "", "groups": "", "action": "Hold", "isComposite": false, "isPartOfComposite": false },
+        { "name": "", "id": "20000000000000000000000000000105", "path": "<Keyboard>/upArrow", "interactions": "", "processors": "", "groups": "", "action": "SwipeUp", "isComposite": false, "isPartOfComposite": false },
+        { "name": "", "id": "20000000000000000000000000000106", "path": "<Keyboard>/downArrow", "interactions": "", "processors": "", "groups": "", "action": "SwipeDown", "isComposite": false, "isPartOfComposite": false },
+        { "name": "", "id": "20000000000000000000000000000107", "path": "<Touchscreen>/primaryTouch/position", "interactions": "", "processors": "", "groups": "", "action": "TouchPosition", "isComposite": false, "isPartOfComposite": false }
+      ]
+    },
+    {
+      "name": "Boss",
+      "id": "30000000000000000000000000000001",
+      "actions": [
+        { "name": "Tap", "type": "Button", "id": "30000000000000000000000000000011", "expectedControlType": "Button" },
+        { "name": "Hold", "type": "Button", "id": "30000000000000000000000000000012", "expectedControlType": "Button" },
+        { "name": "Left", "type": "Button", "id": "30000000000000000000000000000013", "expectedControlType": "Button" },
+        { "name": "Right", "type": "Button", "id": "30000000000000000000000000000014", "expectedControlType": "Button" }
+      ],
+      "bindings": [
+        { "name": "", "id": "30000000000000000000000000000101", "path": "<Keyboard>/space", "interactions": "", "processors": "", "groups": "", "action": "Tap", "isComposite": false, "isPartOfComposite": false },
+        { "name": "", "id": "30000000000000000000000000000102", "path": "<Touchscreen>/primaryTouch/press", "interactions": "", "processors": "", "groups": "", "action": "Tap", "isComposite": false, "isPartOfComposite": false },
+        { "name": "", "id": "30000000000000000000000000000103", "path": "<Keyboard>/h", "interactions": "Hold(duration=0.25)", "processors": "", "groups": "", "action": "Hold", "isComposite": false, "isPartOfComposite": false },
+        { "name": "", "id": "30000000000000000000000000000104", "path": "<Touchscreen>/primaryTouch/press", "interactions": "Hold(duration=0.25)", "processors": "", "groups": "", "action": "Hold", "isComposite": false, "isPartOfComposite": false },
+        { "name": "", "id": "30000000000000000000000000000105", "path": "<Keyboard>/leftArrow", "interactions": "", "processors": "", "groups": "", "action": "Left", "isComposite": false, "isPartOfComposite": false },
+        { "name": "", "id": "30000000000000000000000000000106", "path": "<Keyboard>/rightArrow", "interactions": "", "processors": "", "groups": "", "action": "Right", "isComposite": false, "isPartOfComposite": false }
+      ]
+    },
+    {
+      "name": "Punishment",
+      "id": "40000000000000000000000000000001",
+      "actions": [
+        { "name": "Tap", "type": "Button", "id": "40000000000000000000000000000011", "expectedControlType": "Button" },
+        { "name": "Hold", "type": "Button", "id": "40000000000000000000000000000012", "expectedControlType": "Button" },
+        { "name": "Left", "type": "Button", "id": "40000000000000000000000000000013", "expectedControlType": "Button" },
+        { "name": "Right", "type": "Button", "id": "40000000000000000000000000000014", "expectedControlType": "Button" }
+      ],
+      "bindings": [
+        { "name": "", "id": "40000000000000000000000000000101", "path": "<Keyboard>/space", "interactions": "", "processors": "", "groups": "", "action": "Tap", "isComposite": false, "isPartOfComposite": false },
+        { "name": "", "id": "40000000000000000000000000000102", "path": "<Touchscreen>/primaryTouch/press", "interactions": "", "processors": "", "groups": "", "action": "Tap", "isComposite": false, "isPartOfComposite": false },
+        { "name": "", "id": "40000000000000000000000000000103", "path": "<Keyboard>/h", "interactions": "Hold(duration=0.5)", "processors": "", "groups": "", "action": "Hold", "isComposite": false, "isPartOfComposite": false },
+        { "name": "", "id": "40000000000000000000000000000104", "path": "<Touchscreen>/primaryTouch/press", "interactions": "Hold(duration=0.5)", "processors": "", "groups": "", "action": "Hold", "isComposite": false, "isPartOfComposite": false },
+        { "name": "", "id": "40000000000000000000000000000105", "path": "<Keyboard>/leftArrow", "interactions": "", "processors": "", "groups": "", "action": "Left", "isComposite": false, "isPartOfComposite": false },
+        { "name": "", "id": "40000000000000000000000000000106", "path": "<Keyboard>/rightArrow", "interactions": "", "processors": "", "groups": "", "action": "Right", "isComposite": false, "isPartOfComposite": false }
+      ]
+    },
+    {
+      "name": "UI",
+      "id": "50000000000000000000000000000001",
+      "actions": [
+        { "name": "Navigate", "type": "Value", "id": "50000000000000000000000000000011", "expectedControlType": "Vector2" },
+        { "name": "Submit", "type": "Button", "id": "50000000000000000000000000000012", "expectedControlType": "Button" },
+        { "name": "Cancel", "type": "Button", "id": "50000000000000000000000000000013", "expectedControlType": "Button" },
+        { "name": "Pause", "type": "Button", "id": "50000000000000000000000000000014", "expectedControlType": "Button" }
+      ],
+      "bindings": [
+        { "name": "2D Vector", "id": "50000000000000000000000000000101", "path": "2DVector", "interactions": "", "processors": "", "groups": "", "action": "Navigate", "isComposite": true, "isPartOfComposite": false },
+        { "name": "up", "id": "50000000000000000000000000000102", "path": "<Keyboard>/upArrow", "interactions": "", "processors": "", "groups": "", "action": "Navigate", "isComposite": false, "isPartOfComposite": true },
+        { "name": "down", "id": "50000000000000000000000000000103", "path": "<Keyboard>/downArrow", "interactions": "", "processors": "", "groups": "", "action": "Navigate", "isComposite": false, "isPartOfComposite": true },
+        { "name": "left", "id": "50000000000000000000000000000104", "path": "<Keyboard>/leftArrow", "interactions": "", "processors": "", "groups": "", "action": "Navigate", "isComposite": false, "isPartOfComposite": true },
+        { "name": "right", "id": "50000000000000000000000000000105", "path": "<Keyboard>/rightArrow", "interactions": "", "processors": "", "groups": "", "action": "Navigate", "isComposite": false, "isPartOfComposite": true },
+        { "name": "", "id": "50000000000000000000000000000106", "path": "<Keyboard>/enter", "interactions": "", "processors": "", "groups": "", "action": "Submit", "isComposite": false, "isPartOfComposite": false },
+        { "name": "", "id": "50000000000000000000000000000107", "path": "<Keyboard>/escape", "interactions": "", "processors": "", "groups": "", "action": "Cancel", "isComposite": false, "isPartOfComposite": false },
+        { "name": "", "id": "50000000000000000000000000000108", "path": "<Keyboard>/p", "interactions": "", "processors": "", "groups": "", "action": "Pause", "isComposite": false, "isPartOfComposite": false }
+      ]
+    }
+  ],
+  "controlSchemes": []
+}
