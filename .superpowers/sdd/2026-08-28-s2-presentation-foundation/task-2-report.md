@@ -17,6 +17,7 @@ The existing `KMA.Gameplay.UI` assembly referenced `KMA.Gameplay`, while `Miniga
 
 - `MinigameLifecyclePresentationTests` now covers Tutorial → Countdown, Countdown → Play, and Play → Resolve notifications, asserting the first `BeginResolve()` is true, the duplicate is false, and Resolve is emitted exactly once.
 - The same EditMode fixture asserts the exact readonly six-field HUD contract, `Empty` property shape, and serialized `MinigameBase` defaults of `2f` and `3f`.
+- The `TestMinigameBase` fixture now calls `Initialize()` before phase assertions so EditMode coverage does not rely on implicit editor-time `Awake()` behavior.
 - The missing `KMA.Gameplay.UI` namespace import was restored so the fixture resolves `MinigameHudState` against its referenced assembly.
 - The existing focused PlayMode test continues to exercise null-safe `RefreshFrom(MinigameHudState.Empty)`.
 - Final static checks found no old `primary01`/`secondary01` constructor consumers and no temporary `.orig` artifacts.

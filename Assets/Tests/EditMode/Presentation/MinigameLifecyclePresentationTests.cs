@@ -63,6 +63,7 @@ namespace KMA.Tests.Presentation
             try
             {
                 var controller = gameObject.AddComponent<TestMinigameBase>();
+                controller.Initialize();
                 var tutorialField = typeof(MinigameBase).GetField("tutorialSeconds", BindingFlags.Instance | BindingFlags.NonPublic);
                 var countdownField = typeof(MinigameBase).GetField("countdownSeconds", BindingFlags.Instance | BindingFlags.NonPublic);
 
@@ -72,6 +73,7 @@ namespace KMA.Tests.Presentation
                 Assert.That(countdownField.IsDefined(typeof(SerializeField), false), Is.True);
                 Assert.That(tutorialField.GetValue(controller), Is.EqualTo(2f));
                 Assert.That(countdownField.GetValue(controller), Is.EqualTo(3f));
+                Assert.That(controller.ReadHudState().statusText, Is.EqualTo(string.Empty));
 
                 Assert.That(controller.CurrentPhase, Is.EqualTo(MinigamePhase.Tutorial));
                 controller.AdvanceLifecycle(2f);
@@ -88,6 +90,12 @@ namespace KMA.Tests.Presentation
         sealed class TestMinigameBase : MinigameBase
         {
             public MinigamePhase CurrentPhase => Lifecycle.Phase;
+
+            public void Initialize()
+            {
+                if (Lifecycle == null)
+                    Awake();
+            }
 
             public void AdvanceLifecycle(float deltaSeconds) => Lifecycle.Tick(deltaSeconds);
 
