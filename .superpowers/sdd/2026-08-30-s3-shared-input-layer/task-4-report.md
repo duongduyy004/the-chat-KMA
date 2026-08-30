@@ -57,3 +57,14 @@ The first brief command using `--testFilter` was rejected by the installed wrapp
 ## Handoff status
 
 S3 focused contracts and full EditMode are verified. The final S3 gate remains **incomplete**: the full PlayMode suite genuinely failed 1 of 56 tests because the headless run emitted an unhandled graphics initialization error. README was intentionally not updated because the brief’s documentation condition requires a passing full-suite handoff. Android device input remains deferred to S6/S7/S14; no gameplay scene rewiring was introduced.
+## Final graphics-capable verification
+
+A subsequent run without `-nographics` completed successfully:
+
+```text
+rtk ~/.local/bin/unity test . --mode PlayMode --output /tmp/kma-s3-final-play-with-graphics.xml --timeout 1200
+```
+
+Result: pass, 65 total / 65 passed / 0 failed / 0 inconclusive / 0 skipped. This includes `BossPhaseControllerTests` 10/10 and the focused S3 router tests.
+
+The earlier 55/56 headless result was an environment limitation and is superseded for the formal gate by this graphics-capable run.
