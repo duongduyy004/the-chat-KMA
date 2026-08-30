@@ -13,6 +13,7 @@ namespace KMA.Tests.Gameplay.Core
     {
         const string BootstrapScenePath = "Assets/_Project/Scenes/Bootstrap.unity";
         const string MenuSceneName = "Menu";
+        const string SprintSceneName = "MG_Sprint";
         const float SceneLoadTimeoutSeconds = 15f;
         static readonly string[] ExpectedBuildScenePaths =
         {
@@ -81,7 +82,8 @@ namespace KMA.Tests.Gameplay.Core
             SceneRouter router = SceneRouter.Instance;
             Assert.That(router.Session.Lives, Is.EqualTo(3));
 
-            router.Session.StartSubject(SubjectId.Sprint);
+            Assert.That(router.StartSubject(SubjectId.Sprint), Is.True);
+            yield return WaitForSceneAndCompletedTransition(router, SprintSceneName);
             Assert.That(router.SubmitSubjectResult(
                 SubjectId.Sprint, new MinigameResult(true, 0.9f, Rank.A)), Is.True);
 
@@ -89,6 +91,7 @@ namespace KMA.Tests.Gameplay.Core
             SubjectRecordData sprint = FindSubject(saved, SubjectId.Sprint);
             Assert.That(saved.lives, Is.EqualTo(3));
             Assert.That(sprint.passed, Is.True);
+            Assert.That(sprint.bestScore, Is.EqualTo(0.9f));
             Assert.That(sprint.bestRank, Is.EqualTo(Rank.A));
 
             yield return DestroyPersistentRuntime();
@@ -97,6 +100,8 @@ namespace KMA.Tests.Gameplay.Core
             AssertPersistentStartupGraph();
             Assert.That(GameManager.Instance.Session.Lives, Is.EqualTo(3));
             Assert.That(GameManager.Instance.Session.GetRecord(SubjectId.Sprint).Passed, Is.True);
+            Assert.That(GameManager.Instance.Session.GetRecord(SubjectId.Sprint).BestScore,
+                Is.EqualTo(0.9f));
             Assert.That(GameManager.Instance.Session.GetRecord(SubjectId.Sprint).BestRank, Is.EqualTo(Rank.A));
         }
 
@@ -111,7 +116,7 @@ namespace KMA.Tests.Gameplay.Core
             seeded.subjects[0].failedVisits = 4;
             seeded.bossUnlocked = true;
             seeded.gameCompleted = true;
-            seeded.tutorialSeen[2] = true;
+            seeded.tutorialSeen = new[] { true, false, true, false, true, false, true };
             seeded.settings.musicVol = 0.35f;
             seeded.settings.sfxVol = 0.65f;
             seeded.settings.vibration = false;
@@ -143,7 +148,12 @@ namespace KMA.Tests.Gameplay.Core
             SaveData restored = manager.SaveSystem.Load();
             Assert.That(restored.bossUnlocked, Is.False);
             Assert.That(restored.gameCompleted, Is.False);
-            Assert.That(restored.tutorialSeen[2], Is.True);
+            Assert.That(restored.tutorialSeen,
+                Is.EqualTo(new[] { true, false, true, false, true, false, true }));
+            Assert.That(restored.settings.musicVol, Is.EqualTo(0.35f));
+            Assert.That(restored.settings.sfxVol, Is.EqualTo(0.65f));
+            Assert.That(restored.settings.vibration, Is.False);
+            Assert.That(restored.settings.rhythmOffsetMs, Is.EqualTo(-24f));
             Assert.That(manager.Settings.musicVol, Is.EqualTo(0.35f));
             Assert.That(manager.Settings.sfxVol, Is.EqualTo(0.65f));
             Assert.That(manager.Settings.vibration, Is.False);
@@ -172,6 +182,18 @@ namespace KMA.Tests.Gameplay.Core
             {
                 Assert.That(Time.realtimeSinceStartup, Is.LessThan(deadline),
                     "Bootstrap did not enter Menu before the timeout.");
+                yield return null;
+            }
+        }
+
+        static IEnumerator WaitForSceneAndCompletedTransition(SceneRouter router, string sceneName)
+        {
+            float deadline = Time.realtimeSinceStartup + SceneLoadTimeoutSeconds;
+            while (!string.Equals(SceneManager.GetActiveScene().name, sceneName,
+                       System.StringComparison.Ordinal) || router.IsTransitioning)
+            {
+                Assert.That(Time.realtimeSinceStartup, Is.LessThan(deadline),
+                    $"Route to {sceneName} did not complete before the timeout.");
                 yield return null;
             }
         }
