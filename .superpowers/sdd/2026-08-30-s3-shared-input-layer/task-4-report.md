@@ -43,7 +43,9 @@ The first brief command using `--testFilter` was rejected by the installed wrapp
 
 ## Contract and scope checks
 
-- `rtk git diff --check -- Assets/_Project/Scripts/Input Assets/Tests/EditMode/Input Assets/Tests/PlayMode/Input Assets/_Project/Settings/Input`: clean.
+- Range-based metadata diff check: `rtk git diff --check d40d7fece920fe17a1ff1b564c507b5723ff526b HEAD -- Assets/Tests/EditMode/Input.meta Assets/Tests/EditMode/Input/KMA.Input.EditMode.Tests.asmdef.meta Assets/Tests/PlayMode/Input.meta Assets/Tests/PlayMode/Input/KMA.Input.PlayMode.Tests.asmdef.meta Assets/_Project/Scripts/Input.meta Assets/_Project/Scripts/Input/KMA.Input.asmdef.meta Assets/_Project/Settings/Input.meta Assets/_Project/Settings/Input/KMA.inputactions.meta`: exit 0, no output.
+- Metadata cleanup: trailing whitespace removed only from the six named S3-owned metadata files; missing `Assets/Tests/EditMode/Input.meta` and `Assets/_Project/Settings/Input.meta` were added.
+- Metadata commit: `dcd1dd010d2a037bdec9efe82abadd3143ce7c11` (`chore: complete S3 input metadata`).
 - `Assets/_Project/Settings/Input/KMA.inputactions` declares exactly: `Sprint`, `Endurance`, `Boss`, `Punishment`, `UI`.
 - Base comparison used: `d40d7fece920fe17a1ff1b564c507b5723ff526b` (`build: complete S2 Android verification`).
 - `rtk git diff --quiet d40d7fece920fe17a1ff1b564c507b5723ff526b -- Assets/_Project/Scripts/Progression/PunishmentController.cs Assets/_Project/Scripts/Gameplay/Sprint/SprintController.cs Assets/_Project/Scripts/Gameplay/Endurance/EnduranceInputBridge.cs Assets/_Project/Scripts/Gameplay/Endurance/EnduranceInputActions.inputactions Assets/_Project/Scripts/Gameplay/Sprint/SprintInputActions.inputactions`: exit 0; these protected controllers and legacy input assets are unchanged against the S3 base.
