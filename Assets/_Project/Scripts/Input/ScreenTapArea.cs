@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.EventSystems;
+using UnityEngine.UI;
 
 namespace KMA.Input
 {
@@ -62,7 +63,14 @@ namespace KMA.Input
                 return false;
 
             GameObject currentObject = eventData.pointerCurrentRaycast.gameObject;
-            return currentObject == null || currentObject == gameObject;
+            if (currentObject == null || currentObject == gameObject)
+                return true;
+
+            if (currentObject != gameplayArea.gameObject && !currentObject.transform.IsChildOf(gameplayArea))
+                return false;
+
+            Selectable selectable = currentObject.GetComponentInParent<Selectable>();
+            return selectable == null || !selectable.IsInteractable();
         }
 
         bool IsInsideGameplayArea(PointerEventData eventData)

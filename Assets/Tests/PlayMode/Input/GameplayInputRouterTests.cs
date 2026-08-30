@@ -2,6 +2,7 @@ using NUnit.Framework;
 using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.InputSystem;
+using UnityEngine.UI;
 using InputLayer = KMA.Input;
 
 namespace KMA.Tests.Input
@@ -89,6 +90,48 @@ namespace KMA.Tests.Input
 
             Assert.That(delivered, Is.EqualTo(0));
             Object.DestroyImmediate(uiControl);
+        }
+
+        [Test]
+        public void ChildGameplayRaycast_IsOwnedByParentHandler()
+        {
+            var detector = new InputLayer.TapMashInputDetector();
+            var delivered = 0;
+            detector.OnTap += () => delivered++;
+            Router.SetDetectors(detector, null, null, null, null);
+            var gameplayChild = new GameObject("GameplayChild", typeof(RectTransform));
+            gameplayChild.transform.SetParent(areaObject.transform, false);
+            var gameplayRect = (RectTransform)gameplayChild.transform;
+            gameplayRect.sizeDelta = new Vector2(1000f, 1000f);
+            Area.Configure(Router, gameplayRect);
+            var eventData = PointerAt(Vector2.zero, 1);
+            eventData.pointerCurrentRaycast = new RaycastResult { gameObject = gameplayChild };
+
+            Area.OnPointerDown(eventData);
+
+            Assert.That(delivered, Is.EqualTo(1));
+        }
+
+        [Test]
+        public void InteractableUiChild_IsNotOwnedByGameplayHierarchy()
+        {
+            var detector = new InputLayer.TapMashInputDetector();
+            var delivered = 0;
+            detector.OnTap += () => delivered++;
+            Router.SetDetectors(detector, null, null, null, null);
+            var gameplayChild = new GameObject("GameplayChild", typeof(RectTransform));
+            gameplayChild.transform.SetParent(areaObject.transform, false);
+            var gameplayRect = (RectTransform)gameplayChild.transform;
+            gameplayRect.sizeDelta = new Vector2(1000f, 1000f);
+            Area.Configure(Router, gameplayRect);
+            var buttonObject = new GameObject("GameplayButton", typeof(RectTransform), typeof(Button));
+            buttonObject.transform.SetParent(gameplayChild.transform, false);
+            var eventData = PointerAt(Vector2.zero, 1);
+            eventData.pointerCurrentRaycast = new RaycastResult { gameObject = buttonObject };
+
+            Area.OnPointerDown(eventData);
+
+            Assert.That(delivered, Is.EqualTo(0));
         }
 
         [Test]
