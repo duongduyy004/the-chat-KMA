@@ -106,7 +106,7 @@ namespace KMA.Gameplay
 
             if (data.version == SaveData.CurrentVersion)
             {
-                return data;
+                return IsCurrentVersionStructureValid(data) ? data : SaveData.CreateDefault();
             }
 
             SaveData defaults = SaveData.CreateDefault();
@@ -117,7 +117,7 @@ namespace KMA.Gameplay
                 subjects = MigrateSubjects(data.subjects, defaults.subjects),
                 bossUnlocked = data.bossUnlocked,
                 gameCompleted = data.gameCompleted,
-                tutorialSeen = data.tutorialSeen ?? defaults.tutorialSeen,
+                tutorialSeen = MigrateTutorialSeen(data.tutorialSeen, defaults.tutorialSeen.Length),
                 settings = data.settings ?? defaults.settings
             };
 
@@ -133,11 +133,15 @@ namespace KMA.Gameplay
 
             if (data.version < SaveData.CurrentVersion)
             {
-                return data.subjects != null;
+                return true;
             }
 
-            return data.subjects != null &&
-                   data.subjects.Length == Enum.GetValues(typeof(SubjectId)).Length &&
+            return IsCurrentVersionStructureValid(data);
+        }
+
+        private static bool IsCurrentVersionStructureValid(SaveData data)
+        {
+            return HasCompleteSubjectCoverage(data.subjects) &&
                    data.tutorialSeen != null &&
                    data.tutorialSeen.Length == Enum.GetValues(typeof(SubjectId)).Length &&
                    data.settings != null;
@@ -158,6 +162,45 @@ namespace KMA.Gameplay
             }
 
             return migrated;
+        }
+
+        private static bool[] MigrateTutorialSeen(bool[] tutorialSeen, int expectedLength)
+        {
+            var migrated = new bool[expectedLength];
+            if (tutorialSeen != null)
+            {
+                Array.Copy(tutorialSeen, migrated, Math.Min(tutorialSeen.Length, migrated.Length));
+            }
+
+            return migrated;
+        }
+
+        private static bool HasCompleteSubjectCoverage(SubjectRecordData[] subjects)
+        {
+            SubjectId[] subjectIds = (SubjectId[])Enum.GetValues(typeof(SubjectId));
+            if (subjects == null || subjects.Length != subjectIds.Length)
+            {
+                return false;
+            }
+
+            var seen = new bool[subjectIds.Length];
+            for (int i = 0; i < subjects.Length; i++)
+            {
+                if (subjects[i] == null)
+                {
+                    return false;
+                }
+
+                int index = Array.IndexOf(subjectIds, subjects[i].id);
+                if (index < 0 || seen[index])
+                {
+                    return false;
+                }
+
+                seen[index] = true;
+            }
+
+            return true;
         }
 
         private static SubjectRecordData FindSubject(SubjectRecordData[] subjects, SubjectId id)

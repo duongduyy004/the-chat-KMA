@@ -149,6 +149,77 @@ namespace KMA.Tests.Gameplay.Progression
         }
 
         [Test]
+        public void Load_CurrentVersionWithDuplicateSubjectIds_ReturnsDefaultData()
+        {
+            var invalidData = SaveData.CreateDefault();
+            invalidData.subjects[6].id = SubjectId.Sprint;
+
+            WriteRawSave(invalidData);
+
+            AssertDefaultData(saveSystem.Load());
+        }
+
+        [Test]
+        public void Load_CurrentVersionWithNullSubjectRecord_ReturnsDefaultData()
+        {
+            var invalidData = SaveData.CreateDefault();
+            invalidData.subjects[3] = null;
+
+            WriteRawSave(invalidData);
+
+            AssertDefaultData(saveSystem.Load());
+        }
+
+        [Test]
+        public void Load_CurrentVersionWithUndefinedSubjectId_ReturnsDefaultData()
+        {
+            var invalidData = SaveData.CreateDefault();
+            invalidData.subjects[2].id = (SubjectId)999;
+
+            WriteRawSave(invalidData);
+
+            AssertDefaultData(saveSystem.Load());
+        }
+
+        [Test]
+        public void Load_LegacyDataWithMissingSubjectsAndShortTutorials_MigratesToCompleteDefaults()
+        {
+            var legacyData = new SaveData
+            {
+                version = 0,
+                lives = 3,
+                subjects = null,
+                bossUnlocked = true,
+                gameCompleted = true,
+                tutorialSeen = new[] { true, false },
+                settings = null
+            };
+
+            WriteRawSave(legacyData);
+            SaveData actual = saveSystem.Load();
+
+            Assert.That(actual.version, Is.EqualTo(SaveData.CurrentVersion));
+            Assert.That(actual.lives, Is.EqualTo(3));
+            Assert.That(actual.subjects, Has.Length.EqualTo(7));
+            Assert.That(actual.subjects[0].id, Is.EqualTo(SubjectId.Sprint));
+            Assert.That(actual.subjects[0].passed, Is.False);
+            Assert.That(actual.bossUnlocked, Is.True);
+            Assert.That(actual.gameCompleted, Is.True);
+            Assert.That(actual.tutorialSeen, Has.Length.EqualTo(7));
+            Assert.That(actual.tutorialSeen[0], Is.True);
+            Assert.That(actual.tutorialSeen[1], Is.False);
+            for (int i = 2; i < actual.tutorialSeen.Length; i++)
+            {
+                Assert.That(actual.tutorialSeen[i], Is.False);
+            }
+
+            Assert.That(actual.settings.musicVol, Is.EqualTo(1f));
+            Assert.That(actual.settings.sfxVol, Is.EqualTo(1f));
+            Assert.That(actual.settings.vibration, Is.True);
+            Assert.That(actual.settings.rhythmOffsetMs, Is.EqualTo(0f));
+        }
+
+        [Test]
         public void Load_FutureVersion_ReturnsDefaultData()
         {
             var futureData = SaveData.CreateDefault();
@@ -225,8 +296,17 @@ namespace KMA.Tests.Gameplay.Progression
             Assert.That(data, Is.Not.Null);
             Assert.That(data.version, Is.EqualTo(SaveData.CurrentVersion));
             Assert.That(data.lives, Is.EqualTo(5));
-            Assert.That(data.subjects, Has.Length.EqualTo(7));
-            Assert.That(data.subjects[0].passed, Is.False);
+            SubjectId[] subjectIds = (SubjectId[])Enum.GetValues(typeof(SubjectId));
+            Assert.That(data.subjects, Has.Length.EqualTo(subjectIds.Length));
+            for (int i = 0; i < subjectIds.Length; i++)
+            {
+                Assert.That(data.subjects[i], Is.Not.Null);
+                Assert.That(data.subjects[i].id, Is.EqualTo(subjectIds[i]));
+                Assert.That(data.subjects[i].passed, Is.False);
+                Assert.That(data.subjects[i].bestScore, Is.EqualTo(0f));
+                Assert.That(data.subjects[i].bestRank, Is.EqualTo(Rank.F));
+                Assert.That(data.subjects[i].failedVisits, Is.EqualTo(0));
+            }
             Assert.That(data.bossUnlocked, Is.False);
             Assert.That(data.gameCompleted, Is.False);
             Assert.That(data.tutorialSeen, Has.Length.EqualTo(7));
@@ -235,6 +315,12 @@ namespace KMA.Tests.Gameplay.Progression
             Assert.That(data.settings.sfxVol, Is.EqualTo(1f));
             Assert.That(data.settings.vibration, Is.True);
             Assert.That(data.settings.rhythmOffsetMs, Is.EqualTo(0f));
+        }
+
+        private void WriteRawSave(SaveData data)
+        {
+            Directory.CreateDirectory(temporaryDirectory);
+            File.WriteAllText(saveSystem.SavePath, UnityEngine.JsonUtility.ToJson(data));
         }
     }
 }
