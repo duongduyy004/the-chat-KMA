@@ -7,6 +7,8 @@ namespace KMA.Gameplay
         public static Rank ToRank(float score) => score >= 9 ? Rank.S : score >= 8 ? Rank.A :
             score >= 7 ? Rank.B : score >= 6 ? Rank.C : score >= 5 ? Rank.D : Rank.F;
 
+        public static int ToStars(Rank rank) => rank >= Rank.A ? 3 : rank >= Rank.C ? 2 : rank == Rank.D ? 1 : 0;
+
         public static MinigameResult Build(bool pass, float accuracy, float efficiency, float mastery)
         {
             if (!pass)
