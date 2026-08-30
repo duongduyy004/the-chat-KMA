@@ -142,6 +142,30 @@ namespace KMA.Tests.Input
         }
 
         [Test]
+        public void DisabledUiChild_IsNotOwnedByGameplayHierarchy()
+        {
+            var detector = new InputLayer.TapMashInputDetector();
+            var delivered = 0;
+            detector.OnTap += () => delivered++;
+            Router.SetDetectors(detector, null, null, null, null);
+            var gameplayChild = new GameObject("GameplayChild", typeof(RectTransform));
+            gameplayChild.transform.SetParent(areaObject.transform, false);
+            var gameplayRect = (RectTransform)gameplayChild.transform;
+            gameplayRect.sizeDelta = new Vector2(1000f, 1000f);
+            Area.Configure(Router, gameplayRect);
+            var buttonObject = new GameObject("DisabledGameplayButton", typeof(RectTransform), typeof(Button));
+            buttonObject.transform.SetParent(gameplayChild.transform, false);
+            buttonObject.GetComponent<Button>().interactable = false;
+            var eventData = PointerAt(Vector2.zero, 1);
+            eventData.pointerCurrentRaycast = new RaycastResult { gameObject = buttonObject };
+
+            Area.OnPointerDown(eventData);
+
+            Assert.That(delivered, Is.EqualTo(0));
+            Object.DestroyImmediate(buttonObject);
+        }
+
+        [Test]
         public void OutsideGameplayArea_DoesNotReachGameplayDetector()
         {
             var detector = new InputLayer.TapMashInputDetector();
@@ -227,6 +251,28 @@ namespace KMA.Tests.Input
             Press(keyboard.rKey);
 
             Assert.That(deltaMs, Is.EqualTo(125d).Within(30d));
+        }
+
+        [Test]
+        public void KeyboardHold_IsCanceledBeforeDisableAndReconfigure()
+        {
+            var hold = new InputLayer.HoldInputDetector();
+            var holdEnds = 0;
+            hold.OnHoldEnd += _ => holdEnds++;
+            Router.SetDetectors(null, null, hold, null, null);
+            Router.ConfigureInputForTest(SharedActions(), "Endurance");
+            var keyboard = InputSystem.AddDevice<Keyboard>();
+
+            Press(keyboard.hKey);
+            Router.enabled = false;
+            Assert.That(holdEnds, Is.EqualTo(1));
+            Release(keyboard.hKey);
+
+            Router.enabled = true;
+            Press(keyboard.hKey);
+            Router.ConfigureInputForTest(SharedActions(), "Endurance");
+
+            Assert.That(holdEnds, Is.EqualTo(2));
         }
 
         [Test]
@@ -332,6 +378,8 @@ namespace KMA.Tests.Input
             Area.OnPointerDown(PointerAt(Vector2.zero, 7));
 
             Assert.That(judges, Is.EqualTo(1));
+            Router.enabled = false;
+            Assert.That(EnhancedTouchSupport.enabled, Is.False);
         }
 
         [Test]

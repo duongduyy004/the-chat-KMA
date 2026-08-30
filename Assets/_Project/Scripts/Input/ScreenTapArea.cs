@@ -1,7 +1,6 @@
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.EventSystems;
-using UnityEngine.InputSystem.EnhancedTouch;
 using UnityEngine.UI;
 
 namespace KMA.Input
@@ -12,26 +11,11 @@ namespace KMA.Input
         [SerializeField] RectTransform gameplayArea;
 
         readonly HashSet<int> activePointerIds = new HashSet<int>();
-        static int enhancedTouchAreaCount;
-        bool enhancedTouchEnabled;
-
-        void OnEnable()
-        {
-            EnhancedTouchSupport.Enable();
-            enhancedTouchEnabled = true;
-            enhancedTouchAreaCount++;
-        }
 
         void OnDisable()
         {
             router?.FlushPointerState();
             activePointerIds.Clear();
-            if (!enhancedTouchEnabled)
-                return;
-
-            enhancedTouchEnabled = false;
-            enhancedTouchAreaCount--;
-            EnhancedTouchSupport.Disable();
         }
 
         public void Configure(GameplayInputRouter inputRouter, RectTransform area)
@@ -80,14 +64,17 @@ namespace KMA.Input
                 return false;
 
             GameObject currentObject = eventData.pointerCurrentRaycast.gameObject;
+            GameObject ownershipObject = currentObject ?? gameObject;
+            if (ownershipObject.GetComponentInParent<Selectable>() != null)
+                return false;
+
             if (currentObject == null || currentObject == gameObject)
                 return true;
 
             if (currentObject != gameplayArea.gameObject && !currentObject.transform.IsChildOf(gameplayArea))
                 return false;
 
-            Selectable selectable = currentObject.GetComponentInParent<Selectable>();
-            return selectable == null || !selectable.IsInteractable();
+            return currentObject.GetComponentInParent<Selectable>() == null;
         }
 
         bool IsInsideGameplayArea(PointerEventData eventData)

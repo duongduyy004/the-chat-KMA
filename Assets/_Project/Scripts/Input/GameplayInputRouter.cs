@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.InputSystem;
+using UnityEngine.InputSystem.EnhancedTouch;
 
 namespace KMA.Input
 {
@@ -46,6 +47,7 @@ namespace KMA.Input
         int holdPointerId = NoPointer;
         int swipePointerId = NoPointer;
         bool subscribed;
+        bool keyboardHoldActive;
 
         public InputActionAsset InputActions => inputActions;
         public string SprintActionMapName => sprintActionMapName;
@@ -58,17 +60,24 @@ namespace KMA.Input
         public bool InputActionsReady => subscribed;
         internal bool AcceptsPointerEvents => isActiveAndEnabled;
 
-        void OnEnable() => ConfigureInputActions();
+        void OnEnable()
+        {
+            EnhancedTouchSupport.Enable();
+            ConfigureInputActions();
+        }
 
         void OnDisable()
         {
             FlushPointerState();
+            CancelKeyboardHold();
             UnsubscribeInputActions();
+            EnhancedTouchSupport.Disable();
         }
 
         void OnDestroy()
         {
             FlushPointerState();
+            CancelKeyboardHold();
             UnsubscribeInputActions();
         }
 
@@ -125,6 +134,7 @@ namespace KMA.Input
 
         void ConfigureInputActions()
         {
+            CancelKeyboardHold();
             UnsubscribeInputActions();
             ResolveActionMaps();
             if (!isActiveAndEnabled || inputActions == null || gameplayActionMap == null)
@@ -238,6 +248,7 @@ namespace KMA.Input
             if (!IsKeyboard(context))
                 return;
 
+            keyboardHoldActive = true;
             holdDetector?.FeedDown(Timestamp());
         }
 
@@ -246,6 +257,15 @@ namespace KMA.Input
             if (!IsKeyboard(context))
                 return;
 
+            CancelKeyboardHold();
+        }
+
+        void CancelKeyboardHold()
+        {
+            if (!keyboardHoldActive)
+                return;
+
+            keyboardHoldActive = false;
             holdDetector?.FeedUp(Timestamp());
         }
 
