@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.InputSystem;
 
@@ -5,6 +6,8 @@ namespace KMA.Input
 {
     public sealed class GameplayInputRouter : MonoBehaviour
     {
+        const int NoPointer = int.MinValue;
+
         [SerializeField] InputActionAsset inputActions;
         [SerializeField] InputActionReference tapAction;
         [SerializeField] InputActionReference holdAction;
@@ -18,6 +21,7 @@ namespace KMA.Input
         [SerializeField] string gameplayActionMapName = "Endurance";
         [SerializeField] double rhythmOffsetMs;
 
+        readonly Dictionary<int, PointerGestureState> pointerStates = new Dictionary<int, PointerGestureState>();
         TapMashInputDetector tapMashDetector;
         RhythmBeatInputDetector rhythmBeatDetector;
         HoldInputDetector holdDetector;
@@ -31,10 +35,16 @@ namespace KMA.Input
         InputActionMap gameplayActionMap;
         InputAction resolvedTapAction;
         InputAction resolvedHoldAction;
-        InputAction resolvedSwipeAction;
+        InputAction resolvedSwipeUpAction;
+        InputAction resolvedSwipeDownAction;
+        InputAction resolvedLeftAction;
+        InputAction resolvedRightAction;
+        InputAction resolvedSprintLeftAction;
+        InputAction resolvedSprintRightAction;
         InputAction resolvedRhythmAction;
         InputAction testRhythmAction;
-        bool keyboardHoldActive;
+        int holdPointerId = NoPointer;
+        int swipePointerId = NoPointer;
         bool subscribed;
 
         public InputActionAsset InputActions => inputActions;
@@ -46,12 +56,21 @@ namespace KMA.Input
         public double RhythmOffsetMs { get => rhythmOffsetMs; set => rhythmOffsetMs = value; }
         public double RhythmBeatDsp { get; set; }
         public bool InputActionsReady => subscribed;
+        internal bool AcceptsPointerEvents => isActiveAndEnabled;
 
         void OnEnable() => ConfigureInputActions();
 
-        void OnDisable() => UnsubscribeInputActions();
+        void OnDisable()
+        {
+            FlushPointerState();
+            UnsubscribeInputActions();
+        }
 
-        void OnDestroy() => UnsubscribeInputActions();
+        void OnDestroy()
+        {
+            FlushPointerState();
+            UnsubscribeInputActions();
+        }
 
         public void SetDetectors(
             TapMashInputDetector tapMash,
@@ -75,21 +94,34 @@ namespace KMA.Input
             ConfigureInputActions();
         }
 
-        internal void FeedPointerDown(Vector2 position) => FeedPointerDown(position, Timestamp());
+        internal void FeedPointerDown(int pointerId, Vector2 position) => FeedPointerDown(pointerId, position, Timestamp());
 
-        internal void FeedPointerMove(Vector2 position) => FeedPointerMove(position, Timestamp());
+        internal void FeedPointerMove(int pointerId, Vector2 position) => FeedPointerMove(pointerId, position, Timestamp());
 
-        internal void FeedPointerUp(Vector2 position) => FeedPointerUp(position, Timestamp());
+        internal void FeedPointerUp(int pointerId, Vector2 position) => FeedPointerUp(pointerId, position, Timestamp());
 
-        public void FeedPointerDownForTest(Vector2 position, double timestamp) => FeedPointerDown(position, timestamp);
+        public void FeedPointerDownForTest(Vector2 position, double timestamp) => FeedPointerDown(0, position, timestamp);
 
-        public void FeedPointerMoveForTest(Vector2 position, double timestamp) => FeedPointerMove(position, timestamp);
+        public void FeedPointerMoveForTest(Vector2 position, double timestamp) => FeedPointerMove(0, position, timestamp);
 
-        public void FeedPointerUpForTest(Vector2 position, double timestamp) => FeedPointerUp(position, timestamp);
+        public void FeedPointerUpForTest(Vector2 position, double timestamp) => FeedPointerUp(0, position, timestamp);
 
         public void FeedRhythmTap(double beatDsp) => FeedRhythmTap(AudioSettings.dspTime, beatDsp);
 
         public void FeedRhythmTapForTest(double inputDsp, double beatDsp) => FeedRhythmTap(inputDsp, beatDsp);
+
+        internal void FlushPointerState()
+        {
+            double timestamp = Timestamp();
+            if (holdPointerId != NoPointer)
+                holdDetector?.FeedUp(timestamp);
+            if (swipePointerId != NoPointer)
+                swipeDetector?.FeedEnd();
+
+            pointerStates.Clear();
+            holdPointerId = NoPointer;
+            swipePointerId = NoPointer;
+        }
 
         void ConfigureInputActions()
         {
@@ -100,7 +132,12 @@ namespace KMA.Input
 
             resolvedTapAction = ResolveAction(tapAction, "Tap");
             resolvedHoldAction = ResolveAction(holdAction, "Hold");
-            resolvedSwipeAction = ResolveAction(swipeAction, "SwipeUp");
+            resolvedSwipeUpAction = ResolveAction(swipeAction, "SwipeUp");
+            resolvedSwipeDownAction = ResolveAction(null, "SwipeDown");
+            resolvedLeftAction = ResolveAction(null, "Left");
+            resolvedRightAction = ResolveAction(null, "Right");
+            resolvedSprintLeftAction = ResolveAction(null, "SprintLeft");
+            resolvedSprintRightAction = ResolveAction(null, "SprintRight");
             resolvedRhythmAction = testRhythmAction ?? ResolveAction(rhythmAction, "Rhythm");
 
             Subscribe(resolvedTapAction, OnTapPerformed);
@@ -109,7 +146,12 @@ namespace KMA.Input
                 resolvedHoldAction.started += OnHoldStarted;
                 resolvedHoldAction.canceled += OnHoldCanceled;
             }
-            Subscribe(resolvedSwipeAction, OnSwipePerformed);
+            Subscribe(resolvedSwipeUpAction, OnSwipeUpPerformed);
+            Subscribe(resolvedSwipeDownAction, OnSwipeDownPerformed);
+            Subscribe(resolvedLeftAction, OnLeftPerformed);
+            Subscribe(resolvedRightAction, OnRightPerformed);
+            Subscribe(resolvedSprintLeftAction, OnSprintLeftPerformed);
+            Subscribe(resolvedSprintRightAction, OnSprintRightPerformed);
             Subscribe(resolvedRhythmAction, OnRhythmPerformed);
             EnableResolvedActions();
             subscribed = true;
@@ -139,7 +181,12 @@ namespace KMA.Input
         {
             Enable(resolvedTapAction);
             Enable(resolvedHoldAction);
-            Enable(resolvedSwipeAction);
+            Enable(resolvedSwipeUpAction);
+            Enable(resolvedSwipeDownAction);
+            Enable(resolvedLeftAction);
+            Enable(resolvedRightAction);
+            Enable(resolvedSprintLeftAction);
+            Enable(resolvedSprintRightAction);
             Enable(resolvedRhythmAction);
         }
 
@@ -151,18 +198,32 @@ namespace KMA.Input
                 resolvedHoldAction.started -= OnHoldStarted;
                 resolvedHoldAction.canceled -= OnHoldCanceled;
             }
-            Unsubscribe(resolvedSwipeAction, OnSwipePerformed);
+            Unsubscribe(resolvedSwipeUpAction, OnSwipeUpPerformed);
+            Unsubscribe(resolvedSwipeDownAction, OnSwipeDownPerformed);
+            Unsubscribe(resolvedLeftAction, OnLeftPerformed);
+            Unsubscribe(resolvedRightAction, OnRightPerformed);
+            Unsubscribe(resolvedSprintLeftAction, OnSprintLeftPerformed);
+            Unsubscribe(resolvedSprintRightAction, OnSprintRightPerformed);
             Unsubscribe(resolvedRhythmAction, OnRhythmPerformed);
             Disable(resolvedTapAction);
             Disable(resolvedHoldAction);
-            Disable(resolvedSwipeAction);
+            Disable(resolvedSwipeUpAction);
+            Disable(resolvedSwipeDownAction);
+            Disable(resolvedLeftAction);
+            Disable(resolvedRightAction);
+            Disable(resolvedSprintLeftAction);
+            Disable(resolvedSprintRightAction);
             Disable(resolvedRhythmAction);
             resolvedTapAction = null;
             resolvedHoldAction = null;
-            resolvedSwipeAction = null;
+            resolvedSwipeUpAction = null;
+            resolvedSwipeDownAction = null;
+            resolvedLeftAction = null;
+            resolvedRightAction = null;
+            resolvedSprintLeftAction = null;
+            resolvedSprintRightAction = null;
             resolvedRhythmAction = null;
             gameplayActionMap = null;
-            keyboardHoldActive = false;
             subscribed = false;
         }
 
@@ -177,28 +238,51 @@ namespace KMA.Input
             if (!IsKeyboard(context))
                 return;
 
-            keyboardHoldActive = true;
             holdDetector?.FeedDown(Timestamp());
         }
 
         void OnHoldCanceled(InputAction.CallbackContext context)
         {
-            if (!keyboardHoldActive || !IsKeyboard(context))
+            if (!IsKeyboard(context))
                 return;
 
-            keyboardHoldActive = false;
             holdDetector?.FeedUp(Timestamp());
         }
 
-        void OnSwipePerformed(InputAction.CallbackContext context)
+        void OnSwipeUpPerformed(InputAction.CallbackContext context)
         {
-            if (!context.performed || !IsKeyboard(context) || swipeDetector == null)
-                return;
+            if (context.performed && IsKeyboard(context))
+                FeedKeyboardSwipe(Vector2.up);
+        }
 
-            double timestamp = Timestamp();
-            swipeDetector.FeedSample(Vector2.zero, timestamp);
-            swipeDetector.FeedSample(SwipeVector(context.action.name), timestamp);
-            swipeDetector.FeedEnd();
+        void OnSwipeDownPerformed(InputAction.CallbackContext context)
+        {
+            if (context.performed && IsKeyboard(context))
+                FeedKeyboardSwipe(Vector2.down);
+        }
+
+        void OnLeftPerformed(InputAction.CallbackContext context)
+        {
+            if (context.performed && IsKeyboard(context))
+                FeedKeyboardSide(Side.Left);
+        }
+
+        void OnRightPerformed(InputAction.CallbackContext context)
+        {
+            if (context.performed && IsKeyboard(context))
+                FeedKeyboardSide(Side.Right);
+        }
+
+        void OnSprintLeftPerformed(InputAction.CallbackContext context)
+        {
+            if (context.performed && IsKeyboard(context))
+                alternateTapDetector?.FeedTap(Side.Left, Timestamp());
+        }
+
+        void OnSprintRightPerformed(InputAction.CallbackContext context)
+        {
+            if (context.performed && IsKeyboard(context))
+                alternateTapDetector?.FeedTap(Side.Right, Timestamp());
         }
 
         void OnRhythmPerformed(InputAction.CallbackContext context)
@@ -207,24 +291,72 @@ namespace KMA.Input
                 FeedRhythmTap(RhythmBeatDsp);
         }
 
-        void FeedPointerDown(Vector2 position, double timestamp)
+        void FeedKeyboardSide(Side side)
         {
-            tapMashDetector?.FeedTap(timestamp);
-            holdDetector?.FeedDown(timestamp);
-            alternateTapDetector?.FeedTap(position.x < Screen.width * .5f ? Side.Left : Side.Right, timestamp);
-            swipeDetector?.FeedSample(position, timestamp);
+            double timestamp = Timestamp();
+            alternateTapDetector?.FeedTap(side, timestamp);
+            FeedKeyboardSwipe(side == Side.Left ? Vector2.left : Vector2.right, timestamp);
         }
 
-        void FeedPointerMove(Vector2 position, double timestamp) => swipeDetector?.FeedSample(position, timestamp);
+        void FeedKeyboardSwipe(Vector2 direction) => FeedKeyboardSwipe(direction, Timestamp());
 
-        void FeedPointerUp(Vector2 position, double timestamp)
+        void FeedKeyboardSwipe(Vector2 direction, double timestamp)
         {
-            holdDetector?.FeedUp(timestamp);
             if (swipeDetector == null)
                 return;
 
-            swipeDetector.FeedSample(position, timestamp);
+            swipeDetector.FeedSample(Vector2.zero, timestamp);
+            swipeDetector.FeedSample(direction, timestamp);
             swipeDetector.FeedEnd();
+        }
+
+        void FeedPointerDown(int pointerId, Vector2 position, double timestamp)
+        {
+            if (!AcceptsPointerEvents || pointerStates.ContainsKey(pointerId))
+                return;
+
+            pointerStates.Add(pointerId, new PointerGestureState(position));
+            tapMashDetector?.FeedTap(timestamp);
+            alternateTapDetector?.FeedTap(position.x < Screen.width * .5f ? Side.Left : Side.Right, timestamp);
+            if (holdPointerId == NoPointer)
+            {
+                holdPointerId = pointerId;
+                holdDetector?.FeedDown(timestamp);
+            }
+            if (swipePointerId == NoPointer)
+            {
+                swipePointerId = pointerId;
+                swipeDetector?.FeedSample(position, timestamp);
+            }
+            if (rhythmBeatDetector != null)
+                FeedRhythmTap(AudioSettings.dspTime, RhythmBeatDsp);
+        }
+
+        void FeedPointerMove(int pointerId, Vector2 position, double timestamp)
+        {
+            if (!AcceptsPointerEvents || !pointerStates.ContainsKey(pointerId) || swipePointerId != pointerId)
+                return;
+
+            pointerStates[pointerId] = new PointerGestureState(position);
+            swipeDetector?.FeedSample(position, timestamp);
+        }
+
+        void FeedPointerUp(int pointerId, Vector2 position, double timestamp)
+        {
+            if (!pointerStates.Remove(pointerId))
+                return;
+
+            if (holdPointerId == pointerId)
+            {
+                holdDetector?.FeedUp(timestamp);
+                holdPointerId = NoPointer;
+            }
+            if (swipePointerId == pointerId)
+            {
+                swipeDetector?.FeedSample(position, timestamp);
+                swipeDetector?.FeedEnd();
+                swipePointerId = NoPointer;
+            }
         }
 
         void FeedRhythmTap(double inputDsp, double beatDsp)
@@ -258,17 +390,16 @@ namespace KMA.Input
 
         static bool IsKeyboard(InputAction.CallbackContext context) => context.control?.device is Keyboard;
 
-        static Vector2 SwipeVector(string actionName)
-        {
-            switch (actionName)
-            {
-                case "SwipeDown": return Vector2.down;
-                case "Left": return Vector2.left;
-                case "Right": return Vector2.right;
-                default: return Vector2.up;
-            }
-        }
-
         static double Timestamp() => Time.realtimeSinceStartupAsDouble;
+
+        readonly struct PointerGestureState
+        {
+            public PointerGestureState(Vector2 position)
+            {
+                Position = position;
+            }
+
+            public Vector2 Position { get; }
+        }
     }
 }

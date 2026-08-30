@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.EventSystems;
+using UnityEngine.InputSystem.EnhancedTouch;
 using UnityEngine.UI;
 
 namespace KMA.Input
@@ -11,10 +12,26 @@ namespace KMA.Input
         [SerializeField] RectTransform gameplayArea;
 
         readonly HashSet<int> activePointerIds = new HashSet<int>();
+        static int enhancedTouchAreaCount;
+        bool enhancedTouchEnabled;
+
+        void OnEnable()
+        {
+            EnhancedTouchSupport.Enable();
+            enhancedTouchEnabled = true;
+            enhancedTouchAreaCount++;
+        }
 
         void OnDisable()
         {
+            router?.FlushPointerState();
             activePointerIds.Clear();
+            if (!enhancedTouchEnabled)
+                return;
+
+            enhancedTouchEnabled = false;
+            enhancedTouchAreaCount--;
+            EnhancedTouchSupport.Disable();
         }
 
         public void Configure(GameplayInputRouter inputRouter, RectTransform area)
@@ -25,7 +42,7 @@ namespace KMA.Input
 
         public void OnPointerDown(PointerEventData eventData)
         {
-            if (!CanOwn(eventData) || !IsInsideGameplayArea(eventData))
+            if (!isActiveAndEnabled || !CanOwn(eventData) || !IsInsideGameplayArea(eventData))
                 return;
 
             if (!activePointerIds.Add(eventData.pointerId))
@@ -35,31 +52,31 @@ namespace KMA.Input
             }
 
             eventData.Use();
-            router.FeedPointerDown(eventData.position);
+            router.FeedPointerDown(eventData.pointerId, eventData.position);
         }
 
         public void OnPointerUp(PointerEventData eventData)
         {
-            if (eventData == null || !activePointerIds.Remove(eventData.pointerId))
+            if (!isActiveAndEnabled || eventData == null || !activePointerIds.Remove(eventData.pointerId))
                 return;
 
-            router.FeedPointerUp(eventData.position);
+            router.FeedPointerUp(eventData.pointerId, eventData.position);
             if (!eventData.used)
                 eventData.Use();
         }
 
         public void OnDrag(PointerEventData eventData)
         {
-            if (eventData == null || !activePointerIds.Contains(eventData.pointerId) || eventData.used)
+            if (!isActiveAndEnabled || eventData == null || !activePointerIds.Contains(eventData.pointerId) || eventData.used)
                 return;
 
             eventData.Use();
-            router.FeedPointerMove(eventData.position);
+            router.FeedPointerMove(eventData.pointerId, eventData.position);
         }
 
         bool CanOwn(PointerEventData eventData)
         {
-            if (eventData == null || eventData.used || router == null || gameplayArea == null)
+            if (eventData == null || eventData.used || router == null || !router.AcceptsPointerEvents || gameplayArea == null)
                 return false;
 
             GameObject currentObject = eventData.pointerCurrentRaycast.gameObject;

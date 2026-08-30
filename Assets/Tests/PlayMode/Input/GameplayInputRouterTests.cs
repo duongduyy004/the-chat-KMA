@@ -1,7 +1,10 @@
+using System.Collections.Generic;
+using System.IO;
 using NUnit.Framework;
 using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.InputSystem;
+using UnityEngine.InputSystem.EnhancedTouch;
 using UnityEngine.UI;
 using InputLayer = KMA.Input;
 
@@ -12,6 +15,7 @@ namespace KMA.Tests.Input
         GameObject eventSystemObject;
         GameObject routerObject;
         GameObject areaObject;
+        readonly List<InputActionAsset> temporaryAssets = new List<InputActionAsset>();
 
         public override void Setup()
         {
@@ -30,6 +34,9 @@ namespace KMA.Tests.Input
             Object.DestroyImmediate(areaObject);
             Object.DestroyImmediate(routerObject);
             Object.DestroyImmediate(eventSystemObject);
+            foreach (var asset in temporaryAssets)
+                Object.DestroyImmediate(asset);
+            temporaryAssets.Clear();
             base.TearDown();
         }
 
@@ -222,6 +229,157 @@ namespace KMA.Tests.Input
             Assert.That(deltaMs, Is.EqualTo(125d).Within(30d));
         }
 
+        [Test]
+        public void SharedSprintActions_RouteBothAlternateSides()
+        {
+            var detector = new InputLayer.AlternateTapInputDetector();
+            var validTaps = 0;
+            detector.OnValidTap += _ => validTaps++;
+            Router.SetDetectors(null, null, null, detector, null);
+            Router.ConfigureInputForTest(SharedActions(), "Sprint");
+            var keyboard = InputSystem.AddDevice<Keyboard>();
+
+            Press(keyboard.leftArrowKey);
+            Release(keyboard.leftArrowKey);
+            Press(keyboard.rightArrowKey);
+
+            Assert.That(validTaps, Is.EqualTo(2));
+        }
+
+        [Test]
+        public void SharedEnduranceActions_RouteTapHoldAndBothSwipes()
+        {
+            var taps = new InputLayer.TapMashInputDetector();
+            var hold = new InputLayer.HoldInputDetector();
+            var swipe = new InputLayer.SwipeInputDetector();
+            var tapCount = 0;
+            var holdStarts = 0;
+            var holdEnds = 0;
+            var swipeCount = 0;
+            taps.OnTap += () => tapCount++;
+            hold.OnHoldStart += () => holdStarts++;
+            hold.OnHoldEnd += _ => holdEnds++;
+            swipe.OnSwipe += _ => swipeCount++;
+            Router.SetDetectors(taps, null, hold, null, swipe);
+            Router.ConfigureInputForTest(SharedActions(), "Endurance");
+            var keyboard = InputSystem.AddDevice<Keyboard>();
+
+            Press(keyboard.tKey);
+            Release(keyboard.tKey);
+            Press(keyboard.hKey);
+            Release(keyboard.hKey);
+            Press(keyboard.upArrowKey);
+            Release(keyboard.upArrowKey);
+            Press(keyboard.downArrowKey);
+            Release(keyboard.downArrowKey);
+
+            Assert.That(tapCount, Is.EqualTo(1));
+            Assert.That(holdStarts, Is.EqualTo(1));
+            Assert.That(holdEnds, Is.EqualTo(1));
+            Assert.That(swipeCount, Is.EqualTo(2));
+        }
+
+        [TestCase("Boss")]
+        [TestCase("Punishment")]
+        public void SharedSideActionMaps_RouteTapHoldSwipeAndAlternate(string mapName)
+        {
+            var taps = new InputLayer.TapMashInputDetector();
+            var hold = new InputLayer.HoldInputDetector();
+            var alternate = new InputLayer.AlternateTapInputDetector();
+            var swipe = new InputLayer.SwipeInputDetector();
+            var tapCount = 0;
+            var holdStarts = 0;
+            var holdEnds = 0;
+            var alternateCount = 0;
+            var swipeCount = 0;
+            taps.OnTap += () => tapCount++;
+            hold.OnHoldStart += () => holdStarts++;
+            hold.OnHoldEnd += _ => holdEnds++;
+            alternate.OnValidTap += _ => alternateCount++;
+            swipe.OnSwipe += _ => swipeCount++;
+            Router.SetDetectors(taps, null, hold, alternate, swipe);
+            Router.ConfigureInputForTest(SharedActions(), mapName);
+            var keyboard = InputSystem.AddDevice<Keyboard>();
+
+            Press(keyboard.spaceKey);
+            Release(keyboard.spaceKey);
+            Press(keyboard.hKey);
+            Release(keyboard.hKey);
+            Press(keyboard.leftArrowKey);
+            Release(keyboard.leftArrowKey);
+            Press(keyboard.rightArrowKey);
+            Release(keyboard.rightArrowKey);
+
+            Assert.That(tapCount, Is.EqualTo(1));
+            Assert.That(holdStarts, Is.EqualTo(1));
+            Assert.That(holdEnds, Is.EqualTo(1));
+            Assert.That(alternateCount, Is.EqualTo(2));
+            Assert.That(swipeCount, Is.EqualTo(2));
+        }
+
+        [Test]
+        public void EnhancedTouchScreenTapArea_RoutesTouchRhythmAndEnforcesOwnership()
+        {
+            var detector = new InputLayer.RhythmBeatInputDetector();
+            var judges = 0;
+            detector.OnJudge += (_, _) => judges++;
+            Router.SetDetectors(null, detector, null, null, null);
+            Router.RhythmOffsetMs = 125d;
+            Router.RhythmBeatDsp = AudioSettings.dspTime - .125d;
+            InputSystem.AddDevice<Touchscreen>();
+
+            Assert.That(EnhancedTouchSupport.enabled, Is.True);
+            Area.OnPointerDown(PointerAt(Vector2.zero, 7));
+
+            Assert.That(judges, Is.EqualTo(1));
+        }
+
+        [Test]
+        public void DisableFlushesActiveGestureAndRejectsFurtherPointers()
+        {
+            var hold = new InputLayer.HoldInputDetector();
+            var swipe = new InputLayer.SwipeInputDetector();
+            var holdEnds = 0;
+            var swipes = 0;
+            hold.OnHoldEnd += _ => holdEnds++;
+            swipe.OnSwipe += _ => swipes++;
+            Router.SetDetectors(null, null, hold, null, swipe);
+
+            Area.OnPointerDown(PointerAt(Vector2.zero, 1));
+            Area.OnDrag(PointerAt(new Vector2(100f, 0f), 1));
+            Router.enabled = false;
+            Area.OnPointerDown(PointerAt(Vector2.zero, 2));
+            Area.OnPointerUp(PointerAt(Vector2.zero, 1));
+
+            Assert.That(holdEnds, Is.EqualTo(1));
+            Assert.That(swipes, Is.EqualTo(1));
+        }
+
+        [Test]
+        public void MultiPointerGestures_DoNotEndAnotherPointer()
+        {
+            var hold = new InputLayer.HoldInputDetector();
+            var swipe = new InputLayer.SwipeInputDetector();
+            var holdEnds = 0;
+            var swipes = 0;
+            hold.OnHoldEnd += _ => holdEnds++;
+            swipe.OnSwipe += _ => swipes++;
+            Router.SetDetectors(null, null, hold, null, swipe);
+
+            Area.OnPointerDown(PointerAt(Vector2.zero, 1));
+            Area.OnPointerDown(PointerAt(new Vector2(10f, 0f), 2));
+            Area.OnDrag(PointerAt(new Vector2(100f, 0f), 1));
+            Area.OnPointerUp(PointerAt(new Vector2(10f, 0f), 2));
+
+            Assert.That(holdEnds, Is.EqualTo(0));
+            Assert.That(swipes, Is.EqualTo(0));
+
+            Area.OnPointerUp(PointerAt(new Vector2(200f, 0f), 1));
+
+            Assert.That(holdEnds, Is.EqualTo(1));
+            Assert.That(swipes, Is.EqualTo(1));
+        }
+
         InputLayer.GameplayInputRouter Router => routerObject.GetComponent<InputLayer.GameplayInputRouter>();
         InputLayer.ScreenTapArea Area => areaObject.GetComponent<InputLayer.ScreenTapArea>();
 
@@ -232,6 +390,14 @@ namespace KMA.Tests.Input
                 position = position,
                 pointerId = pointerId
             };
+        }
+
+        InputActionAsset SharedActions()
+        {
+            var path = Path.Combine(Application.dataPath, "_Project", "Settings", "Input", "KMA.inputactions");
+            var asset = InputActionAsset.FromJson(File.ReadAllText(path));
+            temporaryAssets.Add(asset);
+            return asset;
         }
     }
 }
