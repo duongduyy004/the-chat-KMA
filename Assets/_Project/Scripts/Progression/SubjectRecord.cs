@@ -32,6 +32,28 @@ namespace KMA.Gameplay
 
         public void RecordFailedVisit() => FailedVisits++;
 
+        public static SubjectRecord FromData(SubjectRecordData data)
+        {
+            if (data == null)
+            {
+                throw new ArgumentNullException(nameof(data));
+            }
+
+            var record = new SubjectRecord
+            {
+                Passed = data.passed,
+                BestScore = data.bestScore,
+                BestRank = data.bestRank,
+                FailedVisits = data.failedVisits
+            };
+            if (record.Passed)
+            {
+                record.bestResult = new MinigameResult(true, record.BestScore, record.BestRank);
+            }
+
+            return record;
+        }
+
         static MinigameResult Copy(MinigameResult result) =>
             new MinigameResult(result.Pass, result.Score, result.Rank);
     }

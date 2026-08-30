@@ -37,6 +37,46 @@ namespace KMA.Gameplay
 
         public SubjectRecord GetRecord(SubjectId id) => records[id];
 
+        public SaveData ToSaveData()
+        {
+            var data = SaveData.CreateDefault();
+            data.lives = Lives;
+            data.bossUnlocked = BossUnlocked;
+
+            int index = 0;
+            foreach (SubjectId id in Enum.GetValues(typeof(SubjectId)))
+            {
+                SubjectRecord record = records[id];
+                data.subjects[index++] = new SubjectRecordData
+                {
+                    id = id,
+                    passed = record.Passed,
+                    bestScore = record.BestScore,
+                    bestRank = record.BestRank,
+                    failedVisits = record.FailedVisits
+                };
+            }
+
+            return data;
+        }
+
+        public void Restore(SaveData data)
+        {
+            if (data == null)
+            {
+                throw new ArgumentNullException(nameof(data));
+            }
+
+            Lives = Math.Max(0, Math.Min(5, data.lives));
+            foreach (SubjectId id in Enum.GetValues(typeof(SubjectId)))
+            {
+                SubjectRecordData recordData = FindRecordData(data.subjects, id);
+                records[id] = recordData == null ? new SubjectRecord() : SubjectRecord.FromData(recordData);
+            }
+
+            ClearActiveSubject();
+        }
+
         public SessionRoute StartSubject(SubjectId id)
         {
             if (active.HasValue)
@@ -108,6 +148,24 @@ namespace KMA.Gameplay
             active = null;
             visitAttempt = 1;
             awaitingPunishment = false;
+        }
+
+        static SubjectRecordData FindRecordData(SubjectRecordData[] subjectData, SubjectId id)
+        {
+            if (subjectData == null)
+            {
+                return null;
+            }
+
+            foreach (SubjectRecordData data in subjectData)
+            {
+                if (data != null && data.id == id)
+                {
+                    return data;
+                }
+            }
+
+            return null;
         }
     }
 }
