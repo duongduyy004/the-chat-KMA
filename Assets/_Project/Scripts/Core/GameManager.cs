@@ -4,8 +4,7 @@ using System.Runtime.CompilerServices;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 
-[assembly: InternalsVisibleTo("Assembly-CSharp")]
-[assembly: InternalsVisibleTo("KMA.Gameplay.Progression.PlayMode.Tests")]
+[assembly: InternalsVisibleTo("KMA.Gameplay.Core.PlayMode.Tests")]
 
 namespace KMA.Gameplay.Core
 {

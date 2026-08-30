@@ -38,6 +38,13 @@ namespace KMA.Tests.Gameplay.Progression
             restored.Restore(data);
 
             router.LoadSession(restored);
+            SceneRouteTransition transition = default;
+            int transitionCount = 0;
+            router.TransitionStarted += startedTransition =>
+            {
+                transition = startedTransition;
+                transitionCount++;
+            };
 
             Assert.That(router.Session, Is.SameAs(restored));
             Assert.That(router.TryGetSceneName(SessionRoute.Map, null, out string mapAfter), Is.True);
@@ -45,6 +52,9 @@ namespace KMA.Tests.Gameplay.Progression
                 Is.True);
             Assert.That(mapAfter, Is.EqualTo(mapBefore));
             Assert.That(sprintAfter, Is.EqualTo(sprintBefore));
+            Assert.That(router.Route(SessionRoute.Map), Is.True);
+            Assert.That(transitionCount, Is.EqualTo(1));
+            Assert.That(transition.Session, Is.SameAs(restored));
         }
 
         [Test]

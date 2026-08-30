@@ -1,8 +1,10 @@
 using System;
+using System.Collections;
 using KMA.Gameplay;
 using KMA.Gameplay.Core;
 using NUnit.Framework;
 using UnityEngine;
+using UnityEngine.TestTools;
 
 namespace KMA.Tests.Gameplay.Core
 {
@@ -138,7 +140,62 @@ namespace KMA.Tests.Gameplay.Core
         }
 
         [Test]
-        public void DuplicateManager_DoesNotInitializeOrLoadMenu()
+        public void SubjectCompleted_SavesExactlyOnce()
+        {
+            SceneRouter router = CreateRouter();
+            int saves = 0;
+            GameManager manager = CreateInitializedManager(router, _ => saves++);
+
+            router.Session.StartSubject(SubjectId.Sprint);
+            router.SubmitSubjectResult(SubjectId.Sprint, new MinigameResult(true, 0.9f, Rank.A));
+
+            Assert.That(manager.Session.GetRecord(SubjectId.Sprint).Passed, Is.True);
+            Assert.That(saves, Is.EqualTo(1));
+        }
+
+        [Test]
+        public void LifeLost_SavesExactlyOnce()
+        {
+            SceneRouter router = CreateRouter();
+            int saves = 0;
+            GameManager manager = CreateInitializedManager(router, _ => saves++);
+
+            router.Session.StartSubject(SubjectId.Sprint);
+            router.Session.SubmitResult(SubjectId.Sprint, new MinigameResult(false, 0f, Rank.F));
+            router.Session.CompletePunishment();
+            router.SubmitSubjectResult(SubjectId.Sprint, new MinigameResult(false, 0f, Rank.F));
+
+            Assert.That(manager.Session.Lives, Is.EqualTo(4));
+            Assert.That(saves, Is.EqualTo(1));
+        }
+
+        [Test]
+        public void UpdateSettings_SavesExactlyOnce()
+        {
+            SceneRouter router = CreateRouter();
+            int saves = 0;
+            SaveData saved = null;
+            GameManager manager = CreateInitializedManager(router, data =>
+            {
+                saves++;
+                saved = data;
+            });
+            var updated = new Settings
+            {
+                musicVol = 0.25f,
+                sfxVol = 0.5f,
+                vibration = false,
+                rhythmOffsetMs = -42f
+            };
+
+            manager.UpdateSettings(updated);
+
+            Assert.That(saves, Is.EqualTo(1));
+            Assert.That(saved.settings, Is.SameAs(updated));
+        }
+
+        [UnityTest]
+        public IEnumerator DuplicateManager_DoesNotInitializeOrLoadMenu()
         {
             SceneRouter router = CreateRouter();
             int menuLoads = 0;
@@ -153,6 +210,13 @@ namespace KMA.Tests.Gameplay.Core
             Assert.That(GameManager.Instance, Is.SameAs(first));
             Assert.That(duplicate.Session, Is.Null);
             Assert.That(menuLoads, Is.EqualTo(1));
+
+            yield return null;
+
+            GameManager[] managers = UnityEngine.Object.FindObjectsByType<GameManager>(
+                FindObjectsInactive.Include, FindObjectsSortMode.None);
+            Assert.That(managers, Has.Length.EqualTo(1));
+            Assert.That(managers[0], Is.SameAs(first));
         }
 
         static SceneRouter CreateRouter() =>
@@ -163,6 +227,14 @@ namespace KMA.Tests.Gameplay.Core
             var gameObject = new GameObject(name);
             gameObject.SetActive(false);
             return gameObject.AddComponent<GameManager>();
+        }
+
+        static GameManager CreateInitializedManager(SceneRouter router, Action<SaveData> save)
+        {
+            GameManager manager = CreateInactiveManager();
+            manager.ConfigureStartup(SaveData.CreateDefault, save, router, _ => { });
+            manager.gameObject.SetActive(true);
+            return manager;
         }
 
         sealed class RecordingSettingsService : MonoBehaviour, IGameSettingsService
