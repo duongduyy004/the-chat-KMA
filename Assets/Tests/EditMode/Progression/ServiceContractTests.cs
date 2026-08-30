@@ -134,6 +134,28 @@ namespace KMA.Tests.Gameplay.Progression
         }
 
         [Test]
+        public void Pool_UninitializedSerializedGetDoesNotInstantiateUntilExplicitInitialize()
+        {
+            Type poolDefinition = RequireCoreType("KMA.Gameplay.Core.Pool`1");
+            Type poolType = poolDefinition.MakeGenericType(typeof(Transform));
+            GameObject prefabObject = CreateObject("ServiceContractTests.SerializedPrefab");
+            GameObject parentObject = CreateObject("ServiceContractTests.SerializedParent");
+            object pool = Activator.CreateInstance(poolType);
+            SetField(pool, "prefab", prefabObject.transform);
+            SetField(pool, "prewarmCapacity", 2);
+            SetField(pool, "parent", parentObject.transform);
+
+            Assert.That(parentObject.transform.childCount, Is.EqualTo(0));
+            Assert.That(Invoke(pool, "Get"), Is.Null);
+            Assert.That(parentObject.transform.childCount, Is.EqualTo(0));
+
+            Invoke(pool, "Initialize");
+            Assert.That(parentObject.transform.childCount, Is.EqualTo(2));
+            Assert.That(Invoke(pool, "Get"), Is.Not.Null);
+            Assert.That(parentObject.transform.childCount, Is.EqualTo(2));
+        }
+
+        [Test]
         public void SubjectConfigs_ContainSevenEnumBackedAndThreeComingSoonAssets()
         {
             string[] assetGuids = AssetDatabase.FindAssets("t:SubjectConfig", new[] { SubjectFolder });
@@ -255,6 +277,14 @@ namespace KMA.Tests.Gameplay.Progression
                 BindingFlags.Static | BindingFlags.Public | BindingFlags.NonPublic);
             Assert.That(method, Is.Not.Null, $"Missing static method {type.FullName}.{methodName}");
             return (T)method.Invoke(null, arguments);
+        }
+
+        static void SetField(object target, string fieldName, object value)
+        {
+            FieldInfo field = target.GetType().GetField(fieldName,
+                BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
+            Assert.That(field, Is.Not.Null, $"Missing field {target.GetType().FullName}.{fieldName}");
+            field.SetValue(target, value);
         }
     }
 }

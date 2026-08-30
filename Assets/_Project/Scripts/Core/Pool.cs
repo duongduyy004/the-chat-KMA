@@ -27,10 +27,10 @@ namespace KMA.Gameplay.Core
             this.prefab = prefab;
             this.prewarmCapacity = Mathf.Max(1, prewarmCapacity);
             this.parent = parent;
-            Prewarm();
+            Initialize();
         }
 
-        public void Prewarm()
+        public void Initialize()
         {
             EnsureCollections();
             if (prefab == null)
@@ -46,9 +46,11 @@ namespace KMA.Gameplay.Core
             }
         }
 
+        public void Prewarm() => Initialize();
+
         public T Get()
         {
-            Prewarm();
+            EnsureCollections();
             while (available.Count > 0)
             {
                 T entry = available.Dequeue();
