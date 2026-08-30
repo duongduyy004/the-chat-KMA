@@ -104,6 +104,8 @@ namespace KMA.Gameplay.Core
         SessionRouteTransitioner transitioner;
 
         public event Action<SceneRouteTransition> TransitionStarted;
+        public event Action<SubjectId, MinigameResult> SubjectCompleted;
+        public event Action<int> LifeLost;
 
         public static SceneRouter Instance => instance;
         public GameSession Session => session;
@@ -151,8 +153,33 @@ namespace KMA.Gameplay.Core
             return Route(session.StartSubject(subject), subject);
         }
 
-        public bool SubmitSubjectResult(SubjectId subject, MinigameResult result) =>
-            Route(session.SubmitResult(subject, result), subject);
+        public void LoadSession(GameSession restoredSession)
+        {
+            if (restoredSession == null)
+                throw new ArgumentNullException(nameof(restoredSession));
+
+            UnbindSubjects();
+            UnbindBosses();
+            activeSubject = null;
+            awaitingSubjectScene = false;
+            awaitingBossScene = false;
+            session = restoredSession;
+            transitioner = new SessionRouteTransitioner(session, this);
+        }
+
+        public bool SubmitSubjectResult(SubjectId subject, MinigameResult result)
+        {
+            int livesBefore = session.Lives;
+            SessionRoute route = session.SubmitResult(subject, result);
+            bool routed = Route(route, subject);
+
+            if (result.Pass)
+                SubjectCompleted?.Invoke(subject, result);
+            else if (session.Lives < livesBefore)
+                LifeLost?.Invoke(session.Lives);
+
+            return routed;
+        }
 
         public bool CompletePunishment(SubjectId subject) => Route(session.CompletePunishment(), subject);
 
