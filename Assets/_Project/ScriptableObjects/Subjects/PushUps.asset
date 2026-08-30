@@ -1,0 +1,23 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9dcb792ef8d440b0b4c0aeec82ff5de6, type: 3}
+  m_Name: PushUps
+  m_EditorClassIdentifier:
+  subjectId: 0
+  displayName: Hít đất
+  icon: {fileID: 0}
+  color: {r: 0.55, g: 0.58, b: 0.65, a: 1}
+  goalText: Coming soon
+  timeLimit: 0
+  passThreshold: 0
+  unlocked: 0
+  comingSoon: 1

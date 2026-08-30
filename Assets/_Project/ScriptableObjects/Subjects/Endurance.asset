@@ -1,0 +1,23 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9dcb792ef8d440b0b4c0aeec82ff5de6, type: 3}
+  m_Name: Endurance
+  m_EditorClassIdentifier:
+  subjectId: 1
+  displayName: Chạy bền
+  icon: {fileID: 0}
+  color: {r: 0.1, g: 0.65, b: 0.75, a: 1}
+  goalText: Duy trì thể lực đến hết thời gian.
+  timeLimit: 90
+  passThreshold: 0.6
+  unlocked: 1
+  comingSoon: 0
