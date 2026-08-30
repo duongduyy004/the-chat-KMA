@@ -35,7 +35,9 @@ Full PlayMode:
 rtk ~/.local/bin/unity test . --mode PlayMode --output /tmp/kma-s3-task4-full-play.xml --timeout 2400 -- -nographics
 ```
 
-Result: fail, 56 total / 55 passed / 1 failed / 0 inconclusive / 0 skipped. The failed test is `KMA.Tests.Gameplay.Progression.BossPhaseControllerTests.AuthoredPhaseDurationFailsBeforeTargetIsReached`; its failure is the unhandled headless log `No graphic device is available to initialize the view.`
+XML evidence: `/tmp/kma-s3-task4-full-play.xml`.
+
+Result: this is a real failed suite, 56 total / 55 passed / 1 failed / 0 inconclusive / 0 skipped. The failed test node is `KMA.Tests.Gameplay.Progression.BossPhaseControllerTests.AuthoredPhaseDurationFailsBeforeTargetIsReached`; its failure is the unhandled headless graphics log `No graphic device is available to initialize the view.`
 
 The first brief command using `--testFilter` was rejected by the installed wrapper (`unknown option '--testFilter'`) before Unity ran. The supported equivalent is `--filter`, used above.
 
@@ -43,11 +45,12 @@ The first brief command using `--testFilter` was rejected by the installed wrapp
 
 - `rtk git diff --check -- Assets/_Project/Scripts/Input Assets/Tests/EditMode/Input Assets/Tests/PlayMode/Input Assets/_Project/Settings/Input`: clean.
 - `Assets/_Project/Settings/Input/KMA.inputactions` declares exactly: `Sprint`, `Endurance`, `Boss`, `Punishment`, `UI`.
+- Base comparison used: `d40d7fece920fe17a1ff1b564c507b5723ff526b` (`build: complete S2 Android verification`).
+- `rtk git diff --quiet d40d7fece920fe17a1ff1b564c507b5723ff526b -- Assets/_Project/Scripts/Progression/PunishmentController.cs Assets/_Project/Scripts/Gameplay/Sprint/SprintController.cs Assets/_Project/Scripts/Gameplay/Endurance/EnduranceInputBridge.cs Assets/_Project/Scripts/Gameplay/Endurance/EnduranceInputActions.inputactions Assets/_Project/Scripts/Gameplay/Sprint/SprintInputActions.inputactions`: exit 0; these protected controllers and legacy input assets are unchanged against the S3 base.
 - Existing `SprintInputActions.inputactions` and `EnduranceInputActions.inputactions` remain present and are still referenced by their legacy consumers.
-- `PunishmentController.cs`, `SprintController.cs`, and `EnduranceInputBridge.cs` have no diff from `HEAD`.
 - No scene changes were made by Task 4. The scene paths already dirty at task start remain outside the Task 4 scope.
 - Router evidence is covered by focused tests for single delivery, duplicate-pointer idempotence, UI/raycast exclusion, cleanup, and `RhythmOffsetMs` application.
 
 ## Handoff status
 
-S3 focused contracts and full EditMode are verified. The final S3 gate is **not complete** because the full PlayMode suite has one environment-sensitive headless graphics failure. README was intentionally not updated because the brief’s documentation condition requires a passing full-suite handoff. Android device input remains deferred to S6/S7/S14; no gameplay scene rewiring was introduced.
+S3 focused contracts and full EditMode are verified. The final S3 gate remains **incomplete**: the full PlayMode suite genuinely failed 1 of 56 tests because the headless run emitted an unhandled graphics initialization error. README was intentionally not updated because the brief’s documentation condition requires a passing full-suite handoff. Android device input remains deferred to S6/S7/S14; no gameplay scene rewiring was introduced.
