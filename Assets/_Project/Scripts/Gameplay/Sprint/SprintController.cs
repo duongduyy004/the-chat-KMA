@@ -1,4 +1,5 @@
 using KMA.Gameplay.UI;
+using KMA.Input;
 using UnityEngine;
 using UnityEngine.InputSystem;
 
@@ -8,6 +9,8 @@ namespace KMA.Gameplay
     {
         [SerializeField] SprintChallengePattern challengePattern = new SprintChallengePattern();
         [SerializeField] InputActionAsset inputActions;
+        [SerializeField] bool directInputEnabled = true;
+        [SerializeField] GameplayInputRouter inputRouter;
         [SerializeField] string leftInputAction = "SprintLeft";
         [SerializeField] string rightInputAction = "SprintRight";
 
@@ -19,13 +22,14 @@ namespace KMA.Gameplay
         float challengeElapsed;
         bool windChallengeResolved;
         bool terminalResolved;
+        bool inputRouterSubscribed;
 
         public bool WindCueVisible { get; private set; }
         public bool WindWindowActive { get; private set; }
         public bool WindChallengeCountered { get; private set; }
         public bool WindChallengeFailed { get; private set; }
         public bool WindChallengeExpired { get; private set; }
-        public bool InputActionsReady => leftAction != null && rightAction != null;
+        public bool InputActionsReady => directInputEnabled && leftAction != null && rightAction != null;
         public Side ExpectedSide => rules == null ? Side.Left : rules.ExpectedSide;
         public SprintSnapshot Snapshot => rules == null ? default : rules.Snapshot;
         public MinigameResult LastResult { get; private set; }
@@ -44,22 +48,25 @@ namespace KMA.Gameplay
         void OnEnable()
         {
             ConfigureInputActions();
+            SubscribeInputRouter();
         }
 
         void OnDisable()
         {
             UnsubscribeInputActions();
+            UnsubscribeInputRouter();
         }
 
         void OnDestroy()
         {
             UnsubscribeInputActions();
+            UnsubscribeInputRouter();
         }
 
         void ConfigureInputActions()
         {
             UnsubscribeInputActions();
-            if (inputActions == null)
+            if (!directInputEnabled || inputActions == null)
                 return;
 
             leftAction = inputActions.FindAction(leftInputAction, false);
@@ -98,6 +105,42 @@ namespace KMA.Gameplay
         {
             inputActions = actions;
             ConfigureInputActions();
+        }
+
+        public void ConfigureInputRouterForTest(GameplayInputRouter router)
+        {
+            UnsubscribeInputRouter();
+            inputRouter = router;
+            SubscribeInputRouter();
+        }
+
+        void SubscribeInputRouter()
+        {
+            if (inputRouter == null || inputRouterSubscribed)
+                return;
+
+            inputRouter.OnSprintValidTap += OnRouterSprintTap;
+            inputRouterSubscribed = true;
+        }
+
+        void UnsubscribeInputRouter()
+        {
+            if (!inputRouterSubscribed)
+                return;
+
+            inputRouter.OnSprintValidTap -= OnRouterSprintTap;
+            inputRouterSubscribed = false;
+        }
+
+        void OnRouterSprintTap(KMA.Input.Side side)
+        {
+            if (Lifecycle.Phase != MinigamePhase.Play)
+                return;
+
+            if (side == KMA.Input.Side.Left)
+                OnLeftTap();
+            else
+                OnRightTap();
         }
 
         public void ConfigureForTest(float cueLeadSeconds)

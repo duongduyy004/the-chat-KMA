@@ -35,24 +35,13 @@ namespace KMA.Tests.Gameplay.Running
         {
             var controller = controllerObject.AddComponent<KMA.Gameplay.SprintController>();
             controller.ConfigureForTest(.8f);
-            var detector = new KMA.Input.AlternateTapInputDetector();
-            var detectorValidEvents = 0;
-            detector.OnValidTap += side =>
-            {
-                detectorValidEvents++;
-                if (side == KMA.Input.Side.Left)
-                    controller.OnLeftTap();
-                else
-                    controller.OnRightTap();
-            };
-
             actions = new InputActionAsset();
             var map = actions.AddActionMap("Sprint");
             var left = map.AddAction("SprintLeft", InputActionType.Button, "<Keyboard>/leftArrow");
             var right = map.AddAction("SprintRight", InputActionType.Button, "<Keyboard>/rightArrow");
             var router = routerObject.AddComponent<KMA.Input.GameplayInputRouter>();
-            router.SetDetectors(null, null, null, detector, null);
-            router.ConfigureInputForTest(actions, "Sprint");
+            controller.ConfigureInputRouterForTest(router);
+            router.ConfigureSprintForTest(actions);
             keyboard = InputSystem.AddDevice<Keyboard>();
 
             var before = controller.Snapshot;
@@ -62,22 +51,18 @@ namespace KMA.Tests.Gameplay.Running
 
             Assert.That(afterLeft.Distance, Is.GreaterThan(before.Distance));
             Assert.That(controller.ExpectedSide, Is.EqualTo(KMA.Gameplay.Side.Right));
-            Assert.That(detectorValidEvents, Is.EqualTo(1));
             var speedBeforeWrongTap = controller.Snapshot.Speed;
 
             Tap(keyboard.leftArrowKey);
             Assert.That(controller.ExpectedSide, Is.EqualTo(KMA.Gameplay.Side.Right));
-            Assert.That(detectorValidEvents, Is.EqualTo(1));
             Assert.That(controller.Snapshot.Speed, Is.EqualTo(speedBeforeWrongTap));
 
             var speedBeforeRightTap = controller.Snapshot.Speed;
             Tap(keyboard.rightArrowKey);
-            Assert.That(detectorValidEvents, Is.EqualTo(2));
             Assert.That(controller.Snapshot.Speed, Is.EqualTo(speedBeforeRightTap + 18f));
             controller.Simulate(.1f);
             Assert.That(controller.ExpectedSide, Is.EqualTo(KMA.Gameplay.Side.Left));
             Assert.That(controller.Snapshot.Distance, Is.GreaterThan(afterLeft.Distance));
-            Assert.That(detectorValidEvents, Is.EqualTo(2));
             Assert.That(left.bindings[0].path, Is.EqualTo("<Keyboard>/leftArrow"));
             Assert.That(right.bindings[0].path, Is.EqualTo("<Keyboard>/rightArrow"));
         }

@@ -27,6 +27,7 @@ namespace KMA.Input
         RhythmBeatInputDetector rhythmBeatDetector;
         HoldInputDetector holdDetector;
         AlternateTapInputDetector alternateTapDetector;
+        AlternateTapInputDetector sprintTapDetector;
         SwipeInputDetector swipeDetector;
         InputActionMap sprintActionMap;
         InputActionMap enduranceActionMap;
@@ -47,6 +48,8 @@ namespace KMA.Input
         int holdPointerId = NoPointer;
         int swipePointerId = NoPointer;
         bool subscribed;
+        [SerializeField] bool sprintRoutingEnabled;
+        bool sprintTapSubscribed;
         bool keyboardHoldActive;
 
         public InputActionAsset InputActions => inputActions;
@@ -58,11 +61,13 @@ namespace KMA.Input
         public double RhythmOffsetMs { get => rhythmOffsetMs; set => rhythmOffsetMs = value; }
         public double RhythmBeatDsp { get; set; }
         public bool InputActionsReady => subscribed;
+        public event System.Action<Side> OnSprintValidTap;
         internal bool AcceptsPointerEvents => isActiveAndEnabled;
 
         void OnEnable()
         {
             EnhancedTouchSupport.Enable();
+            ConfigureSprintRouting();
             ConfigureInputActions();
         }
 
@@ -71,6 +76,7 @@ namespace KMA.Input
             FlushPointerState();
             CancelKeyboardHold();
             UnsubscribeInputActions();
+            UnsubscribeSprintRouting();
             EnhancedTouchSupport.Disable();
         }
 
@@ -79,6 +85,7 @@ namespace KMA.Input
             FlushPointerState();
             CancelKeyboardHold();
             UnsubscribeInputActions();
+            UnsubscribeSprintRouting();
         }
 
         public void SetDetectors(
@@ -100,6 +107,16 @@ namespace KMA.Input
             inputActions = actions;
             gameplayActionMapName = actionMapName;
             testRhythmAction = rhythm;
+            ConfigureInputActions();
+        }
+
+        public void ConfigureSprintForTest(InputActionAsset actions)
+        {
+            inputActions = actions;
+            gameplayActionMapName = sprintActionMapName;
+            testRhythmAction = null;
+            sprintRoutingEnabled = true;
+            ConfigureSprintRouting();
             ConfigureInputActions();
         }
 
@@ -146,8 +163,8 @@ namespace KMA.Input
             resolvedSwipeDownAction = ResolveAction(null, "SwipeDown");
             resolvedLeftAction = ResolveAction(null, "Left");
             resolvedRightAction = ResolveAction(null, "Right");
-            resolvedSprintLeftAction = ResolveAction(null, "SprintLeft");
-            resolvedSprintRightAction = ResolveAction(null, "SprintRight");
+            resolvedSprintLeftAction = sprintActionMap?.FindAction("SprintLeft", false);
+            resolvedSprintRightAction = sprintActionMap?.FindAction("SprintRight", false);
             resolvedRhythmAction = testRhythmAction ?? ResolveAction(rhythmAction, "Rhythm");
 
             Subscribe(resolvedTapAction, OnTapPerformed);
@@ -304,6 +321,33 @@ namespace KMA.Input
             if (context.performed && IsKeyboard(context))
                 alternateTapDetector?.FeedTap(Side.Right, Timestamp());
         }
+
+        void ConfigureSprintRouting()
+        {
+            if (!sprintRoutingEnabled)
+                return;
+
+            if (sprintTapDetector == null)
+                sprintTapDetector = new AlternateTapInputDetector();
+
+            alternateTapDetector = sprintTapDetector;
+            if (sprintTapSubscribed)
+                return;
+
+            sprintTapDetector.OnValidTap += DispatchSprintValidTap;
+            sprintTapSubscribed = true;
+        }
+
+        void UnsubscribeSprintRouting()
+        {
+            if (!sprintTapSubscribed)
+                return;
+
+            sprintTapDetector.OnValidTap -= DispatchSprintValidTap;
+            sprintTapSubscribed = false;
+        }
+
+        void DispatchSprintValidTap(Side side) => OnSprintValidTap?.Invoke(side);
 
         void OnRhythmPerformed(InputAction.CallbackContext context)
         {
