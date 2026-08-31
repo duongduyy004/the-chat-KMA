@@ -25,6 +25,7 @@ namespace KMA.Gameplay
         {
             if (controller == null)
                 controller = Object.FindFirstObjectByType<SprintController>();
+            CacheVisuals();
         }
 
         void OnEnable() => Refresh();
@@ -48,6 +49,28 @@ namespace KMA.Gameplay
             if (cadenceLabel != null) cadenceLabel.text = CadenceText;
             if (staminaFill != null) staminaFill.fillAmount = Mathf.Clamp01(snapshot.Stamina / 100f);
             if (distanceFill != null) distanceFill.fillAmount = Mathf.Clamp01(snapshot.Distance / 100f);
+        }
+
+        public bool HasBoundVisuals => timerLabel != null && staminaLabel != null && distanceLabel != null &&
+            rankLabel != null && cadenceLabel != null && staminaFill != null && distanceFill != null;
+
+        void CacheVisuals()
+        {
+            var hud = GameObject.Find("S2_HUD_Minigame");
+            if (hud == null)
+                return;
+
+            var root = hud.transform.Find("SafeAreaRoot");
+            if (root == null)
+                return;
+
+            timerLabel ??= root.Find("Timer")?.GetComponent<TMP_Text>();
+            staminaLabel ??= root.Find("Stamina")?.GetComponent<TMP_Text>();
+            distanceLabel ??= root.Find("Score")?.GetComponent<TMP_Text>();
+            rankLabel ??= root.Find("Phase")?.GetComponent<TMP_Text>();
+            cadenceLabel ??= root.Find("Status")?.GetComponent<TMP_Text>();
+            staminaFill ??= root.Find("Stamina/Fill")?.GetComponent<Image>();
+            distanceFill ??= root.Find("Progress/Fill")?.GetComponent<Image>();
         }
     }
 }
