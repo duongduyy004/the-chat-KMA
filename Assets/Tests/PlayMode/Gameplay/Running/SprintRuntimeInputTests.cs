@@ -1,7 +1,11 @@
+using System.Collections;
 using NUnit.Framework;
 using UnityEngine;
+using UnityEngine.EventSystems;
 using UnityEngine.InputSystem;
 using UnityEngine.InputSystem.Controls;
+using UnityEngine.SceneManagement;
+using UnityEngine.TestTools;
 
 namespace KMA.Tests.Gameplay.Running
 {
@@ -65,6 +69,63 @@ namespace KMA.Tests.Gameplay.Running
             Assert.That(controller.Snapshot.Distance, Is.GreaterThan(afterLeft.Distance));
             Assert.That(left.bindings[0].path, Is.EqualTo("<Keyboard>/leftArrow"));
             Assert.That(right.bindings[0].path, Is.EqualTo("<Keyboard>/rightArrow"));
+        }
+
+        [UnityTest]
+        public IEnumerator SprintScene_InputCanvasRoutesKeyboardAndScreenTapWithoutDuplicateControllerInput()
+        {
+            yield return SceneManager.LoadSceneAsync("MG_Sprint", LoadSceneMode.Single);
+            yield return null;
+            Canvas.ForceUpdateCanvases();
+
+            var inputCanvas = GameObject.Find("Input");
+            Assert.That(inputCanvas, Is.Not.Null);
+            var canvasRect = inputCanvas.GetComponent<RectTransform>();
+            var controller = Object.FindFirstObjectByType<KMA.Gameplay.SprintController>();
+            var router = Object.FindFirstObjectByType<KMA.Input.GameplayInputRouter>();
+            var eventSystem = Object.FindFirstObjectByType<EventSystem>();
+            var tapAreas = Object.FindObjectsByType<KMA.Input.ScreenTapArea>(
+                FindObjectsInactive.Exclude, FindObjectsSortMode.None);
+
+            Assert.That(canvasRect.localScale, Is.EqualTo(Vector3.one));
+            Assert.That(controller, Is.Not.Null);
+            Assert.That(controller.InputActionsReady, Is.False);
+            Assert.That(router, Is.Not.Null);
+            Assert.That(eventSystem, Is.Not.Null);
+            Assert.That(tapAreas, Has.Length.EqualTo(2));
+
+            foreach (var tapArea in tapAreas)
+            {
+                var areaRect = (RectTransform)tapArea.transform;
+                Assert.That(areaRect.lossyScale.x, Is.GreaterThan(0f));
+                Assert.That(areaRect.rect.width, Is.GreaterThan(0f));
+                Assert.That(areaRect.rect.height, Is.GreaterThan(0f));
+            }
+
+            controller.ConfigureForTest(.8f);
+            keyboard = InputSystem.AddDevice<Keyboard>();
+            float speedBeforeKeyboardAction = controller.Snapshot.Speed;
+            Tap(keyboard.leftArrowKey);
+            Assert.That(controller.Snapshot.Speed, Is.EqualTo(speedBeforeKeyboardAction + 18f));
+
+            var rightTapArea = System.Array.Find(tapAreas,
+                area => ((RectTransform)area.transform).anchorMin.x >= .5f);
+            Assert.That(rightTapArea, Is.Not.Null);
+            var rightTapRect = (RectTransform)rightTapArea.transform;
+            var screenPosition = new Vector2(Screen.width * .75f, Screen.height * .2f);
+            var pointer = new PointerEventData(eventSystem)
+            {
+                pointerId = 1001,
+                position = screenPosition,
+                button = PointerEventData.InputButton.Left,
+                pointerCurrentRaycast = new RaycastResult { gameObject = rightTapArea.gameObject }
+            };
+
+            float speedBeforeScreenTap = controller.Snapshot.Speed;
+            rightTapArea.OnPointerDown(pointer);
+            Assert.That(RectTransformUtility.RectangleContainsScreenPoint(rightTapRect, screenPosition), Is.True);
+            Assert.That(controller.Snapshot.Speed, Is.EqualTo(speedBeforeScreenTap + 18f));
+            rightTapArea.OnPointerUp(pointer);
         }
 
         static void Tap(KeyControl key)
