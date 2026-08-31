@@ -117,3 +117,43 @@ Static checks:
 ### Remaining concern
 
 The focused EventSystem integration contract could compile and start Unity batchmode, but the environment still produced no authoritative Unity Test Runner XML or case-level result. It is not reported as a passing runtime test.
+
+## Fix round 3
+
+### Addressed finding
+
+The shared `Sprint` map deliberately has no `<Touchscreen>/primaryTouch/press` binding for `SprintLeft` or `SprintRight`; it only exposes `TouchPosition`. `SprintScene_ScreenTapAreaIsOnlyTouchEntryPointAndRoutesOneImpulse` now encodes that design boundary:
+
+1. It queues a real synthetic `Touchscreen` `Began` event at the same lower-right screen position and calls `InputSystem.Update`; SprintRules speed must remain unchanged.
+2. It then raycasts and dispatches the matching pointer through the live `EventSystem`/`ScreenTapArea`; speed must increase by exactly one 18-point impulse.
+3. It queues the matching synthetic touch end and removes the test device in teardown.
+
+This fails if a direct Input System touch mapping starts delivering Sprint taps, or if the sole EventSystem pointer route delivers more than one controller impulse.
+
+### Commands and output
+
+1. Initial focused command:
+
+   `rtk /home/duongduy/Unity/Hub/Editor/6000.3.23f1/Editor/Unity -batchmode -projectPath . -runTests -testPlatform PlayMode -testResults /tmp/kma-s6-task2-fix3.xml -logFile /tmp/kma-s6-task2-fix3.log -testFilter "SprintRuntimeInputTests.SprintScene_ScreenTapAreaIsOnlyTouchEntryPointAndRoutesOneImpulse" -quit`
+
+   Result: compiler failure `CS0246` at `SprintRuntimeInputTests.cs:152`: `TouchState` was unresolved. The working project pattern imports `UnityEngine.InputSystem.LowLevel`; that import was added as the single correction.
+
+2. Focused rerun:
+
+   `rtk /home/duongduy/Unity/Hub/Editor/6000.3.23f1/Editor/Unity -batchmode -projectPath . -runTests -testPlatform PlayMode -testResults /tmp/kma-s6-task2-fix3-green.xml -logFile /tmp/kma-s6-task2-fix3-green.log -testFilter "SprintRuntimeInputTests.SprintScene_ScreenTapAreaIsOnlyTouchEntryPointAndRoutesOneImpulse" -quit`
+
+   Process exit code: `0`; stdout: empty. No `/tmp/kma-s6-task2-fix3-green.xml` was created. The log contains `Batchmode quit successfully invoked - shutting down!`, no compiler errors, and no Test Runner `test-suite`, `test-case`, pass, or fail records. It also contains `Licensing::Module Error: Access token is unavailable; failed to update` and `No .NET SDKs were found.`
+
+3. Static checks:
+
+   - `rtk git diff --check` — empty output, exit code 0.
+   - Static inspection confirms synthetic `Touchscreen` creation, `QueueTouch`/`InputSystem.Update`, an unchanged-speed assertion before pointer dispatch, EventSystem raycast/dispatch, and the exact one-impulse `+18f` assertion.
+   - Static action-map inspection confirms only Sprint `TouchPosition` is bound to `<Touchscreen>/primaryTouch/position`; `SprintLeft`/`SprintRight` remain keyboard-bound.
+
+### Implementation commit
+
+`51175e861b5400f8099c8f1cdaeaea0deecb83d6` (`test: enforce sprint touch entry boundary`)
+
+### Remaining concern
+
+The final focused contract compiles but cannot be reported as passing because the Unity CLI still emits no Test Runner XML or case-level result in this environment.
