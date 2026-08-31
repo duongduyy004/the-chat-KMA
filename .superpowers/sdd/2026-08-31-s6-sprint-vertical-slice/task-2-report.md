@@ -92,3 +92,28 @@ DONE_WITH_CONCERNS
 ### Remaining concern
 
 The Unity CLI continues to compile and exit successfully without producing authoritative Test Runner XML or executing visible test cases. The fix-round test is therefore statically reviewed and compiler-observed only, not recorded as a passing Unity test.
+
+## Fix round 2
+
+### Addressed finding
+
+`SprintScene_InputCanvasRoutesKeyboardAndScreenTapWithoutDuplicateControllerInput` no longer calls `ScreenTapArea.OnPointerDown` or `OnPointerUp` directly. It now creates a real `PointerEventData`, calls `EventSystem.RaycastAll` against the loaded `MG_Sprint` canvas, requires the raycast hit to be the right tap target, assigns that hit as `pointerCurrentRaycast`, and dispatches pointer down/up with `ExecuteEvents.pointerDownHandler` and `ExecuteEvents.pointerUpHandler`. The one-pointer-action assertion remains an exact `+18f` controller speed impulse.
+
+### Command and output
+
+`rtk /home/duongduy/Unity/Hub/Editor/6000.3.23f1/Editor/Unity -batchmode -projectPath . -runTests -testPlatform PlayMode -testResults /tmp/kma-s6-task2-fix2.xml -logFile /tmp/kma-s6-task2-fix2.log -testFilter "SprintRuntimeInputTests.SprintScene_InputCanvasRoutesKeyboardAndScreenTapWithoutDuplicateControllerInput" -quit`
+
+Process exit code: `0`; stdout: empty. `/tmp/kma-s6-task2-fix2.xml` was not created. The log contains `Batchmode quit successfully invoked - shutting down!` but no Test Runner `test-suite`, `test-case`, pass, or fail records. It also contains `Licensing::Module Error: Access token is unavailable; failed to update` and `No .NET SDKs were found.` No compiler error appears in the log.
+
+Static checks:
+
+- `rtk git diff --check` — empty output, exit code 0.
+- Static test inspection confirms `EventSystem.RaycastAll`, `ExecuteEvents.pointerDownHandler`, `ExecuteEvents.pointerUpHandler`, and the exact `speedBeforeScreenTap + 18f` assertion.
+
+### Implementation commit
+
+`71d1b2bc86d4eca41f1c6fdc37d45512d899cc1c` (`test: dispatch sprint taps through event system`)
+
+### Remaining concern
+
+The focused EventSystem integration contract could compile and start Unity batchmode, but the environment still produced no authoritative Unity Test Runner XML or case-level result. It is not reported as a passing runtime test.
