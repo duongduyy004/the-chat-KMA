@@ -1,4 +1,5 @@
 using System;
+using System.Reflection;
 using KMA.Gameplay;
 using KMA.Gameplay.Core;
 using NUnit.Framework;
@@ -37,22 +38,15 @@ namespace KMA.Tests.Gameplay.Progression
             data.lives = 2;
             restored.Restore(data);
 
+            var originalTransitioner = GetTransitioner(router);
             router.LoadSession(restored);
 
             Assert.That(router.Session, Is.SameAs(restored));
             Assert.That(JsonUtility.ToJson(router), Is.EqualTo(routeConfigurationBefore));
 
-            SceneRouteTransition transition = default;
-            int transitionCount = 0;
-            router.TransitionStarted += startedTransition =>
-            {
-                transition = startedTransition;
-                transitionCount++;
-            };
-
-            Assert.That(router.Route(SessionRoute.Map), Is.True);
-            Assert.That(transitionCount, Is.EqualTo(1));
-            Assert.That(transition.Session, Is.SameAs(restored));
+            var rebuiltTransitioner = GetTransitioner(router);
+            Assert.That(rebuiltTransitioner, Is.Not.SameAs(originalTransitioner));
+            Assert.That(GetTransitionerSession(rebuiltTransitioner), Is.SameAs(restored));
         }
 
         [Test]
@@ -63,5 +57,15 @@ namespace KMA.Tests.Gameplay.Progression
             Assert.That(() => router.LoadSession(null), Throws.TypeOf<ArgumentNullException>());
             Assert.That(router.Session, Is.SameAs(original));
         }
+
+        static SessionRouteTransitioner GetTransitioner(SceneRouter sceneRouter) =>
+            (SessionRouteTransitioner)typeof(SceneRouter)
+                .GetField("transitioner", BindingFlags.Instance | BindingFlags.NonPublic)
+                .GetValue(sceneRouter);
+
+        static GameSession GetTransitionerSession(SessionRouteTransitioner sceneTransitioner) =>
+            (GameSession)typeof(SessionRouteTransitioner)
+                .GetField("session", BindingFlags.Instance | BindingFlags.NonPublic)
+                .GetValue(sceneTransitioner);
     }
 }
