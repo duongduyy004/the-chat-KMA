@@ -153,6 +153,65 @@ namespace KMA.Tests.Gameplay.Running
             yield return null;
         }
 
+        [UnityTest]
+        public IEnumerator InputModes_MutateOnlyTheirMatchingRuleMetric()
+        {
+            var controller = CreateController();
+
+            controller.Dispatch(new AuthoredBeat(BeatEvent.Tap));
+            controller.Tap(10.1d, 10d);
+            int judgedAfterTap = controller.Rules.JudgedCount;
+            float staminaAfterTap = controller.Rules.Stamina;
+            controller.EndHold(1f);
+            controller.Swipe(SwipeDirection.Up);
+            Assert.That(controller.Rules.JudgedCount, Is.EqualTo(judgedAfterTap));
+            Assert.That(controller.Rules.Stamina, Is.EqualTo(staminaAfterTap));
+            Assert.That(controller.Rules.ObstacleCleared, Is.False);
+
+            controller.Dispatch(new AuthoredBeat(BeatEvent.Breath));
+            controller.Tap(10d, 10d);
+            controller.Swipe(SwipeDirection.Up);
+            controller.EndHold(1f);
+            Assert.That(controller.Rules.JudgedCount, Is.EqualTo(judgedAfterTap));
+            Assert.That(controller.Rules.Stamina, Is.EqualTo(100f));
+            Assert.That(controller.Rules.ObstacleCleared, Is.False);
+
+            controller.Dispatch(new AuthoredBeat(BeatEvent.Jump));
+            controller.Tap(10d, 10d);
+            controller.EndHold(1f);
+            controller.Swipe(SwipeDirection.Up);
+            Assert.That(controller.Rules.JudgedCount, Is.EqualTo(judgedAfterTap));
+            Assert.That(controller.Rules.Stamina, Is.EqualTo(100f));
+            Assert.That(controller.Rules.ObstacleCleared, Is.True);
+
+            DestroyController(controller);
+            yield return null;
+        }
+
+        [UnityTest]
+        public IEnumerator PausingDspClock_IsIdempotentAndResumesFromPausedBeat()
+        {
+            var controller = CreateController();
+            controller.Simulate(0f);
+            var metronome = controller.MetronomeAudioSource;
+            double pausedBeat = controller.CurrentBeatDspTime;
+
+            controller.SetPaused(true);
+            controller.SetPaused(true);
+            yield return new WaitForSecondsRealtime(.05f);
+
+            Assert.That(controller.CurrentBeatDspTime, Is.EqualTo(pausedBeat).Within(.000001d));
+            Assert.That(controller.MetronomeAudioSource, Is.SameAs(metronome));
+            Assert.That(controller.DspClockScheduled, Is.True);
+
+            controller.SetPaused(false);
+            controller.Simulate(0f);
+            Assert.That(controller.CurrentBeatDspTime, Is.EqualTo(pausedBeat).Within(controller.BeatIntervalSeconds));
+            Assert.That(controller.MetronomeAudioSource, Is.SameAs(metronome));
+
+            DestroyController(controller);
+        }
+
         static EnduranceController CreateController()
         {
             var controller = new GameObject("EnduranceController").AddComponent<EnduranceController>();

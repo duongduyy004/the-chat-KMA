@@ -213,6 +213,23 @@ namespace KMA.Tests.Input
             Assert.That(deltaMs, Is.EqualTo(125d).Within(.000001d));
         }
 
+        [TestCase(.08d, InputLayer.TimingJudge.Perfect)]
+        [TestCase(-.08d, InputLayer.TimingJudge.Perfect)]
+        [TestCase(.16d, InputLayer.TimingJudge.Good)]
+        [TestCase(-.16d, InputLayer.TimingJudge.Good)]
+        [TestCase(.1601d, InputLayer.TimingJudge.Miss)]
+        public void RoutedRhythmTap_PreservesDetectorWindowBoundaries(double inputDsp, InputLayer.TimingJudge expected)
+        {
+            var detector = new InputLayer.RhythmBeatInputDetector();
+            InputLayer.TimingJudge actual = InputLayer.TimingJudge.Miss;
+            detector.OnJudge += (judge, _) => actual = judge;
+            Router.SetDetectors(null, detector, null, null, null);
+
+            Router.FeedRhythmTapForTest(inputDsp, 0d);
+
+            Assert.That(actual, Is.EqualTo(expected));
+        }
+
         [Test]
         public void RouterLifecycle_SubscribesKeyboardTapExactlyOnce()
         {
