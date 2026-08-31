@@ -1,4 +1,5 @@
 using System.Collections;
+using System.Collections.Generic;
 using NUnit.Framework;
 using UnityEngine;
 using UnityEngine.EventSystems;
@@ -111,21 +112,23 @@ namespace KMA.Tests.Gameplay.Running
             var rightTapArea = System.Array.Find(tapAreas,
                 area => ((RectTransform)area.transform).anchorMin.x >= .5f);
             Assert.That(rightTapArea, Is.Not.Null);
-            var rightTapRect = (RectTransform)rightTapArea.transform;
             var screenPosition = new Vector2(Screen.width * .75f, Screen.height * .2f);
             var pointer = new PointerEventData(eventSystem)
             {
                 pointerId = 1001,
                 position = screenPosition,
-                button = PointerEventData.InputButton.Left,
-                pointerCurrentRaycast = new RaycastResult { gameObject = rightTapArea.gameObject }
+                button = PointerEventData.InputButton.Left
             };
+            var raycastResults = new List<RaycastResult>();
+            eventSystem.RaycastAll(pointer, raycastResults);
+            var tapHit = raycastResults.Find(result => result.gameObject == rightTapArea.gameObject);
 
             float speedBeforeScreenTap = controller.Snapshot.Speed;
-            rightTapArea.OnPointerDown(pointer);
-            Assert.That(RectTransformUtility.RectangleContainsScreenPoint(rightTapRect, screenPosition), Is.True);
+            Assert.That(tapHit.gameObject, Is.EqualTo(rightTapArea.gameObject));
+            pointer.pointerCurrentRaycast = tapHit;
+            ExecuteEvents.Execute(rightTapArea.gameObject, pointer, ExecuteEvents.pointerDownHandler);
             Assert.That(controller.Snapshot.Speed, Is.EqualTo(speedBeforeScreenTap + 18f));
-            rightTapArea.OnPointerUp(pointer);
+            ExecuteEvents.Execute(rightTapArea.gameObject, pointer, ExecuteEvents.pointerUpHandler);
         }
 
         static void Tap(KeyControl key)
