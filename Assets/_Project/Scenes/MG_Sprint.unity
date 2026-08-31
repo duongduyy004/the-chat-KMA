@@ -248,6 +248,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 910004}
+  - component: {fileID: 410000}
   m_Layer: 0
   m_Name: HUD
   m_TagString: Untagged
@@ -386,6 +387,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 910012}
+  - component: {fileID: 610000}
   m_Layer: 0
   m_Name: WindCue
   m_TagString: Untagged
@@ -1582,3 +1584,43 @@ SceneRoots:
   - {fileID: 1048084040}
   - {fileID: 692924606}
   - {fileID: 1421509092}
+--- !u!114 &410000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 400000}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: bc9580b1d67849e7880fdf129a7974c0, type: 3}
+  m_Name:
+  m_EditorClassIdentifier:
+  controller: {fileID: 200002}
+  timerLabel: {fileID: 0}
+  staminaLabel: {fileID: 0}
+  distanceLabel: {fileID: 0}
+  rankLabel: {fileID: 0}
+  cadenceLabel: {fileID: 0}
+  staminaFill: {fileID: 0}
+  distanceFill: {fileID: 0}
+--- !u!114 &610000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 600001}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 67a566a578494a43813f3455e2c402ce, type: 3}
+  m_Name:
+  m_EditorClassIdentifier:
+  controller: {fileID: 200002}
+  cueRoot: {fileID: 600001}
+  stateLabel: {fileID: 0}
+  cueImage: {fileID: 0}
+  cueColor: {r: 1, g: 1, b: 1, a: 1}
+  activeColor: {r: 1, g: 0.8, b: 0, a: 1}
+  successColor: {r: 0, g: 1, b: 0, a: 1}
+  failureColor: {r: 1, g: 0, b: 0, a: 1}

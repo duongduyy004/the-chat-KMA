@@ -19,10 +19,20 @@ namespace KMA.Tests.Presentation
             var controller = Object.FindFirstObjectByType<SprintController>();
             var hud = Object.FindFirstObjectByType<MinigameHUD>();
             var overlay = Object.FindFirstObjectByType<TutorialOverlay>();
+            var sprintHud = Object.FindFirstObjectByType<SprintHud>();
+            var windCue = Object.FindFirstObjectByType<SprintWindCue>();
             Assert.That(controller, Is.Not.Null);
             Assert.That(hud, Is.Not.Null);
+            Assert.That(sprintHud, Is.Not.Null);
+            Assert.That(windCue, Is.Not.Null);
             Assert.That(overlay, Is.Not.Null);
             Assert.That(overlay.ShouldShow, Is.True);
+            Assert.That(overlay.CurrentStep.Instruction, Is.EqualTo("Tap the shown side"));
+            overlay.Next();
+            Assert.That(overlay.CurrentStep.Instruction, Is.EqualTo("Counter the wind before the window closes"));
+            overlay.Skip();
+            Assert.That(overlay.ShouldShow, Is.False);
+            Assert.That(PlayerPrefs.GetInt("KMA.tutorialSeen.Sprint", 0), Is.EqualTo(1));
 
             yield return new WaitForSeconds(2.1f);
             Assert.That(controller.PresentationPhase, Is.EqualTo(MinigamePhase.Countdown));

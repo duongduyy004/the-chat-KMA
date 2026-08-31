@@ -99,8 +99,8 @@ namespace KMA.Gameplay.UI
             {
                 tutorialOverlay.Show("Sprint", new List<TutorialStep>
                 {
-                    new TutorialStep("LEFT / RIGHT", "Tap the side shown by the cue."),
-                    new TutorialStep("WIND CUE", "Counter the wind on the opposite side before the window closes.")
+                    new TutorialStep("LEFT / RIGHT", "Tap the shown side"),
+                    new TutorialStep("WIND CUE", "Counter the wind before the window closes")
                 });
             }
         }

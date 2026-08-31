@@ -36,6 +36,9 @@ namespace KMA.Gameplay
         public MinigamePhase Phase => Lifecycle == null ? MinigamePhase.Tutorial : Lifecycle.Phase;
         public string LeftInputAction => leftInputAction;
         public string RightInputAction => rightInputAction;
+        public int Rank => rules == null ? 1 : rules.Rank;
+        public string RankText => Rank == 1 ? "1st" : Rank == 2 ? "2nd" : Rank == 3 ? "3rd" : "4th";
+        public int CadenceCombo => rules == null ? 0 : Mathf.RoundToInt(rules.ValidTapRatio * rules.Snapshot.Elapsed);
 
         protected override void Awake()
         {
