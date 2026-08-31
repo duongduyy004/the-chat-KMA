@@ -82,6 +82,82 @@ namespace KMA.Tests.Presentation
             PlayerPrefs.DeleteKey(TutorialKey);
         }
 
+        [UnityTest]
+        public IEnumerator SprintPresentationRendersDedicatedHudMetricsAndWindStateTransitions()
+        {
+            yield return LoadSprint();
+
+            var scene = SceneManager.GetActiveScene();
+            var controller = SceneObjects<SprintController>(scene)[0];
+            var sprintHud = SceneObjects<SprintHud>(scene)[0];
+            var windCue = SceneObjects<SprintWindCue>(scene)[0];
+            var minigameHud = SceneObjects<MinigameHUD>(scene)[0];
+            var distance = FindNamed<TMP_Text>(scene, "SprintDistance");
+            var rank = FindNamed<TMP_Text>(scene, "SprintRank");
+            var cadence = FindNamed<TMP_Text>(scene, "SprintCadence");
+            var distanceFill = FindNamed<Image>(scene, "SprintDistanceFill");
+            var sharedScore = FindNamed<TMP_Text>(scene, "Score");
+            var sharedPhase = FindNamed<TMP_Text>(scene, "Phase");
+            var sharedStatus = FindNamed<TMP_Text>(scene, "Status");
+
+            Assert.That(sprintHud.HasBoundVisuals, Is.True);
+            Assert.That(distance, Is.Not.Null);
+            Assert.That(rank, Is.Not.Null);
+            Assert.That(cadence, Is.Not.Null);
+            Assert.That(distanceFill, Is.Not.Null);
+            Assert.That(sharedScore, Is.Not.Null);
+            Assert.That(distance, Is.Not.SameAs(sharedScore));
+            Assert.That(rank, Is.Not.SameAs(sharedPhase));
+            Assert.That(cadence, Is.Not.SameAs(sharedStatus));
+
+            controller.ConfigureForTest(.8f);
+            controller.AdvanceToDistance(42f);
+            sprintHud.Refresh();
+            minigameHud.RefreshFrom(controller.ReadHudState());
+
+            Assert.That(distance.text, Is.EqualTo("42 m"));
+            Assert.That(rank.text, Is.EqualTo("1st"));
+            Assert.That(cadence.text, Is.EqualTo("COMBO x0"));
+            Assert.That(distanceFill.fillAmount, Is.EqualTo(.42f).Within(.001f));
+            Assert.That(sharedScore.text, Is.EqualTo("0"));
+
+            var cueHost = GameObject.Find("WindCueHost");
+            Assert.That(cueHost, Is.Not.Null);
+            var cueState = cueHost.GetComponentInChildren<TMP_Text>(true);
+            var cueImage = cueHost.GetComponent<Image>();
+            Assert.That(cueState, Is.Not.Null);
+            Assert.That(cueImage, Is.Not.Null);
+            Assert.That(cueHost.GetComponentInParent<Canvas>(), Is.Not.Null);
+            Assert.That(cueHost.GetComponentInParent<SafeAreaFitter>(), Is.Not.Null);
+            Assert.That(windCue.gameObject.activeSelf, Is.True);
+
+            controller.AdvanceToDistance(30f);
+            controller.Simulate(0f);
+            windCue.Refresh();
+            Assert.That(cueHost.activeSelf, Is.True);
+            Assert.That(cueState.text, Is.EqualTo("WIND INCOMING"));
+            Assert.That(cueImage.color, Is.EqualTo(Color.white));
+
+            controller.Simulate(.8f);
+            windCue.Refresh();
+            Assert.That(cueState.text, Is.EqualTo("COUNTER THE WIND NOW"));
+            Assert.That(cueImage.color, Is.EqualTo(new Color(1f, .8f, 0f, 1f)));
+
+            controller.OnLeftTap();
+            windCue.Refresh();
+            Assert.That(cueState.text, Is.EqualTo("WIND COUNTERED"));
+            Assert.That(cueImage.color, Is.EqualTo(Color.green));
+
+            controller.ConfigureForTest(.8f);
+            controller.AdvanceToDistance(30f);
+            controller.Simulate(2.1f);
+            windCue.Refresh();
+            Assert.That(cueState.text, Is.EqualTo("WIND MISSED"));
+            Assert.That(cueImage.color, Is.EqualTo(Color.red));
+
+            yield return null;
+        }
+
         static IEnumerator LoadSprint()
         {
             yield return SceneManager.LoadSceneAsync(SceneName, LoadSceneMode.Single);

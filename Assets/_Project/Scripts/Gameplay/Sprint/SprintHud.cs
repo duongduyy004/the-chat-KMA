@@ -7,12 +7,10 @@ namespace KMA.Gameplay
     public sealed class SprintHud : MonoBehaviour
     {
         [SerializeField] SprintController controller;
-        [SerializeField] TMP_Text timerLabel;
-        [SerializeField] TMP_Text staminaLabel;
+        [SerializeField] Transform metricsRoot;
         [SerializeField] TMP_Text distanceLabel;
         [SerializeField] TMP_Text rankLabel;
         [SerializeField] TMP_Text cadenceLabel;
-        [SerializeField] Image staminaFill;
         [SerializeField] Image distanceFill;
 
         public string TimerText { get; private set; } = string.Empty;
@@ -42,17 +40,14 @@ namespace KMA.Gameplay
             DistanceText = $"{Mathf.RoundToInt(snapshot.Distance)} m";
             RankText = $"{controller.RankText}";
             CadenceText = $"COMBO x{controller.CadenceCombo}";
-            if (timerLabel != null) timerLabel.text = TimerText;
-            if (staminaLabel != null) staminaLabel.text = StaminaText;
             if (distanceLabel != null) distanceLabel.text = DistanceText;
             if (rankLabel != null) rankLabel.text = RankText;
             if (cadenceLabel != null) cadenceLabel.text = CadenceText;
-            if (staminaFill != null) staminaFill.fillAmount = Mathf.Clamp01(snapshot.Stamina / 100f);
             if (distanceFill != null) distanceFill.fillAmount = Mathf.Clamp01(snapshot.Distance / 100f);
         }
 
-        public bool HasBoundVisuals => timerLabel != null && staminaLabel != null && distanceLabel != null &&
-            rankLabel != null && cadenceLabel != null && staminaFill != null && distanceFill != null;
+        public bool HasBoundVisuals => metricsRoot != null && distanceLabel != null && rankLabel != null &&
+            cadenceLabel != null && distanceFill != null;
 
         void CacheVisuals()
         {
@@ -64,13 +59,14 @@ namespace KMA.Gameplay
             if (root == null)
                 return;
 
-            timerLabel ??= root.Find("Timer")?.GetComponent<TMP_Text>();
-            staminaLabel ??= root.Find("Stamina")?.GetComponent<TMP_Text>();
-            distanceLabel ??= root.Find("Score")?.GetComponent<TMP_Text>();
-            rankLabel ??= root.Find("Phase")?.GetComponent<TMP_Text>();
-            cadenceLabel ??= root.Find("Status")?.GetComponent<TMP_Text>();
-            staminaFill ??= root.Find("Stamina/Fill")?.GetComponent<Image>();
-            distanceFill ??= root.Find("Progress/Fill")?.GetComponent<Image>();
+            metricsRoot ??= root.Find("SprintMetrics");
+            if (metricsRoot == null)
+                return;
+
+            distanceLabel ??= metricsRoot.Find("SprintDistance")?.GetComponent<TMP_Text>();
+            rankLabel ??= metricsRoot.Find("SprintRank")?.GetComponent<TMP_Text>();
+            cadenceLabel ??= metricsRoot.Find("SprintCadence")?.GetComponent<TMP_Text>();
+            distanceFill ??= metricsRoot.Find("SprintDistanceFill")?.GetComponent<Image>();
         }
     }
 }

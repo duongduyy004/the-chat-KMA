@@ -41,7 +41,7 @@ namespace KMA.Gameplay
 
         void CacheVisuals()
         {
-            var host = transform.Find("WindCueHost");
+            var host = cueRoot == null ? transform.Find("WindCueHost") : cueRoot.transform;
             if (host != null)
             {
                 cueRoot ??= host.gameObject;
