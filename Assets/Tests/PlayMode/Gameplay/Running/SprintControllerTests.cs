@@ -68,6 +68,8 @@ namespace KMA.Tests.Gameplay.Running
             Assert.That(result.Pass, Is.True);
             Assert.That(completions, Is.EqualTo(1));
             Assert.That(controller.Phase, Is.EqualTo(MinigamePhase.Resolve));
+            controller.OnLeftTap();
+            controller.OnRightTap();
             controller.Simulate(1f);
             Assert.That(completions, Is.EqualTo(1));
             DestroyController(controller);

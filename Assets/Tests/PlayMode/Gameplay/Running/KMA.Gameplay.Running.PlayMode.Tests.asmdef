@@ -6,6 +6,7 @@
         "KMA.Gameplay",
         "KMA.Gameplay.Sprint",
         "KMA.Gameplay.Endurance",
+        "KMA.Input",
         "Unity.InputSystem"
     ],
     "includePlatforms": [],
