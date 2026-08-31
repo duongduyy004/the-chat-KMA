@@ -57,3 +57,38 @@ DONE_WITH_CONCERNS
 
 - No authoritative Unity Test Runner XML is available for the final correction. The final source/scene state has static validation only.
 - Unity reported a missing licensing access-token update, and the prior S6 runs consistently produced no Test Runner XML; the post-correction PlayMode attempt also encountered Unity's single-project lock. These are environment limitations, not a recorded test pass or fail.
+
+## Fix round 1
+
+### Addressed findings
+
+1. `MG_Sprint`'s `Input` Canvas root `RectTransform` now serializes `m_LocalScale: {x: 1, y: 1, z: 1}`. The existing landscape `CanvasScaler` (`1920x1080`) and lower-left/lower-right anchored tap rectangles are preserved.
+2. `SprintRuntimeInputTests` now contains `SprintScene_InputCanvasRoutesKeyboardAndScreenTapWithoutDuplicateControllerInput`. It loads `MG_Sprint`, forces canvas layout, asserts a live unit-scale canvas and two usable `ScreenTapArea` transforms, confirms the controller direct action path is disabled, verifies one left-arrow action adds exactly one 18-point impulse, and invokes the right scene tap area through the loaded `EventSystem` for a second exact one-impulse assertion.
+
+### Commands and output
+
+1. RED command before the scene correction:
+
+   `rtk /home/duongduy/Unity/Hub/Editor/6000.3.23f1/Editor/Unity -batchmode -projectPath . -runTests -testPlatform PlayMode -testResults /tmp/kma-s6-task2-fix1-red.xml -logFile /tmp/kma-s6-task2-fix1-red.log -testFilter "SprintRuntimeInputTests.SprintScene_InputCanvasRoutesKeyboardAndScreenTapWithoutDuplicateControllerInput" -quit`
+
+   Process exit code: `0`; stdout: empty. `/tmp/kma-s6-task2-fix1-red.xml` was not created. The log contains `Batchmode quit successfully invoked - shutting down!` but no `test-suite`, `test-case`, pass, or fail record, so the intended zero-scale assertion was not authoritatively executed.
+
+2. Focused rerun after the scene correction:
+
+   `rtk /home/duongduy/Unity/Hub/Editor/6000.3.23f1/Editor/Unity -batchmode -projectPath . -runTests -testPlatform PlayMode -testResults /tmp/kma-s6-task2-fix1-green.xml -logFile /tmp/kma-s6-task2-fix1-green.log -testFilter "SprintRuntimeInputTests.SprintScene_InputCanvasRoutesKeyboardAndScreenTapWithoutDuplicateControllerInput" -quit`
+
+   Process exit code: `0`; stdout: empty. `/tmp/kma-s6-task2-fix1-green.xml` was not created. The log again contains successful batchmode shutdown but no Test Runner cases or XML. Both logs report `Licensing::Module Error: Access token is unavailable; failed to update` and `No .NET SDKs were found.`
+
+3. Static checks:
+
+   - `rtk git diff --check` — empty output, exit code 0.
+   - Static scene inspection confirmed `Input` root scale `{x: 1, y: 1, z: 1}`, both child areas at unit scale, and the preserved `1920x1080` landscape scaler/left-right anchors.
+   - Self-review confirmed the new test’s exact `+18f` keyboard assertion detects an additional controller action subscriber, while its `ScreenTapArea.OnPointerDown` path verifies the loaded scene EventSystem route.
+
+### Implementation commit
+
+`86c8a6e5d66dc3a118c2fd7526fe74f6feaac0c6` (`fix: restore sprint tap canvas input`)
+
+### Remaining concern
+
+The Unity CLI continues to compile and exit successfully without producing authoritative Test Runner XML or executing visible test cases. The fix-round test is therefore statically reviewed and compiler-observed only, not recorded as a passing Unity test.
