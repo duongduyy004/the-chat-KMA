@@ -27,7 +27,7 @@ namespace KMA.Tests.Gameplay.Running
             ConnectDetectorBridge(controller, rhythm, hold, swipe);
 
             controller.Dispatch(new AuthoredBeat(BeatEvent.Tap));
-            rhythm.FeedTap(AudioSettings.dspTime + .1d, AudioSettings.dspTime);
+            rhythm.FeedTap(10.1d, 10d);
             int judgedAfterTap = controller.Rules.JudgedCount;
             float staminaAfterTap = controller.Rules.Stamina;
             hold.FeedDown(1d);
@@ -38,7 +38,7 @@ namespace KMA.Tests.Gameplay.Running
             Assert.That(controller.Rules.ObstacleCleared, Is.False);
 
             controller.Dispatch(new AuthoredBeat(BeatEvent.Breath));
-            rhythm.FeedTap(AudioSettings.dspTime, AudioSettings.dspTime);
+            rhythm.FeedTap(10d, 10d);
             FeedVerticalSwipe(swipe, 3d, 100f);
             hold.FeedDown(4d);
             hold.FeedUp(5d);
@@ -47,7 +47,7 @@ namespace KMA.Tests.Gameplay.Running
             Assert.That(controller.Rules.ObstacleCleared, Is.False);
 
             controller.Dispatch(new AuthoredBeat(BeatEvent.Jump));
-            rhythm.FeedTap(AudioSettings.dspTime, AudioSettings.dspTime);
+            rhythm.FeedTap(10d, 10d);
             hold.FeedDown(6d);
             hold.FeedUp(7d);
             FeedVerticalSwipe(swipe, 8d, 100f);
@@ -56,20 +56,33 @@ namespace KMA.Tests.Gameplay.Running
         }
 
         [Test]
-        public void RoutedRhythmTap_AppliesControllerOffsetOnceAndDoesNotMissObstacleBeat()
+        public void RoutedRhythmTap_AppliesCalibratedDetectorDeltaOnceAndDoesNotMissAtObstacleWarningOrActivation()
         {
             var controller = CreateController();
             controller.RhythmOffsetMs = 100d;
             var rhythm = new RhythmBeatInputDetector();
             ConnectDetectorBridge(controller, rhythm, new HoldInputDetector(), new SwipeInputDetector());
+            var router = gameObject.AddComponent<GameplayInputRouter>();
+            router.RhythmOffsetMs = controller.RhythmOffsetMs;
+            router.SetDetectors(null, rhythm, null, null, null);
+            controller.ConfigurePatternForTest(new LapPattern(new[]
+            {
+                new AuthoredBeat(BeatEvent.Tap),
+                new AuthoredBeat(BeatEvent.Tap),
+                new AuthoredBeat(BeatEvent.Tap),
+                new AuthoredBeat(BeatEvent.Jump)
+            }));
 
-            controller.Dispatch(new AuthoredBeat(BeatEvent.Tap));
-            rhythm.FeedTap(AudioSettings.dspTime, AudioSettings.dspTime);
+            controller.AdvanceToBeatForTest(1);
+            Assert.That(controller.ObstacleCueVisible, Is.True);
+            Assert.That(controller.Rules.Mode, Is.EqualTo(EnduranceInputMode.RhythmTap));
+            router.FeedRhythmTapForTest(10d, 10d);
             Assert.That(controller.Rules.GoodCount, Is.EqualTo(1));
             Assert.That(controller.Rules.MissCount, Is.EqualTo(0));
 
-            controller.Dispatch(new AuthoredBeat(BeatEvent.Jump));
-            rhythm.FeedTap(AudioSettings.dspTime, AudioSettings.dspTime);
+            controller.AdvanceToBeatForTest(3);
+            Assert.That(controller.Rules.Mode, Is.EqualTo(EnduranceInputMode.ObstacleSwipe));
+            router.FeedRhythmTapForTest(10d, 10d);
             Assert.That(controller.Rules.MissCount, Is.EqualTo(0));
         }
 
@@ -87,11 +100,13 @@ namespace KMA.Tests.Gameplay.Running
             hold.FeedUp(3d);
             hold.FeedUp(4d);
             Assert.That(hold.ChargeRatio, Is.EqualTo(1d));
+            Assert.That(controller.InputHoldCount, Is.EqualTo(1));
             Assert.That(controller.Rules.Stamina, Is.EqualTo(100f));
 
             controller.Dispatch(new AuthoredBeat(BeatEvent.Jump));
             FeedVerticalSwipe(swipe, 5d, 100f);
             swipe.FeedEnd();
+            Assert.That(controller.InputSwipeCount, Is.EqualTo(1));
             Assert.That(controller.Rules.ObstacleCleared, Is.True);
 
             controller.Dispatch(new AuthoredBeat(BeatEvent.Slide));

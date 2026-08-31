@@ -33,3 +33,10 @@ No Android device was required or used.
 ## Concern
 
 Run the two focused Unity commands from the task brief on a machine with Unity 6000.3.23f1 installed before relying on runtime test results.
+
+## Fix round 1
+
+- Added `EnduranceController.TapFromCalibratedDelta(double)` for the shared detector path; `EnduranceInputBridge` now consumes the router-published calibrated delta without applying `RhythmOffsetMs` a second time. Public `Tap(double,double)` remains unchanged.
+- Added obstacle warning/activation no-Miss coverage, observable hold/swipe duplicate-count assertions, and fixed detector timestamps in the bridge contract tests.
+- Added the `KMA.Input` production assembly reference required by the bridge detector seam.
+- Unity focused tests were not runnable in this environment; `git diff --check` remains clean.

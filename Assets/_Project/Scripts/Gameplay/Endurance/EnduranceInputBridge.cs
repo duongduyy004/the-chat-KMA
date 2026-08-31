@@ -179,8 +179,7 @@ namespace KMA.Gameplay
 
         void OnRhythmJudge(TimingJudge _, double deltaMs)
         {
-            double beatDsp = controller.CurrentBeatDspTime;
-            controller.Tap(beatDsp + deltaMs / 1000d, beatDsp);
+            controller.TapFromCalibratedDelta(deltaMs);
         }
 
         void OnHoldEnd(double _)

@@ -146,6 +146,18 @@ namespace KMA.Gameplay
             Rules.Tap(CalibratedInputTime(inputDsp), beatDsp);
         }
 
+        // Used by the shared detector path, whose router has already applied
+        // RhythmOffsetMs before publishing the judged delta.
+        internal void TapFromCalibratedDelta(double deltaMs)
+        {
+            if (Phase != MinigamePhase.Play)
+                return;
+
+            InputTapCount++;
+            double beatDsp = CurrentBeatDspTime;
+            Rules.Tap(beatDsp + deltaMs / 1000d, beatDsp);
+        }
+
         public void EndHold(float beatsHeld)
         {
             if (Phase != MinigamePhase.Play)
