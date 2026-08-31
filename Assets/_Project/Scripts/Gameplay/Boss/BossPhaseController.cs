@@ -4,7 +4,7 @@ using UnityEngine;
 
 namespace KMA.Gameplay.Boss
 {
-    public sealed class BossPhaseController : MinigameBase
+    public sealed class BossPhaseController : MinigameBase, IPauseAware
     {
         [SerializeField] BossSequenceAsset bossSequenceAsset;
         [SerializeField] BossTapMashDetectorAdapter tapMashDetector;
@@ -24,6 +24,13 @@ namespace KMA.Gameplay.Boss
         BossSceneSessionHandoff sessionHandoff;
         bool running;
         bool terminalResolved;
+        bool dspPaused;
+        double dspElapsed;
+        double dspStartTime;
+
+        public double CurrentBeatDspTime => dspPaused
+            ? dspStartTime + dspElapsed
+            : AudioSettings.dspTime;
 
         public BossSequenceAsset SequenceAsset => bossSequenceAsset;
         public GameSession Session { get; private set; }
@@ -128,8 +135,27 @@ namespace KMA.Gameplay.Boss
             sequence.Reset();
             ResetRuntimeState();
             running = true;
+            dspStartTime = AudioSettings.dspTime;
+            dspElapsed = 0d;
+            dspPaused = false;
             remainingSeconds = configuredDuration;
             remainingPhaseSeconds = sequence.Current.Duration;
+        }
+
+        public void SetPaused(bool paused)
+        {
+            if (paused == dspPaused)
+                return;
+            if (paused)
+            {
+                dspElapsed = Math.Max(0d, AudioSettings.dspTime - dspStartTime);
+                dspPaused = true;
+            }
+            else
+            {
+                dspStartTime = AudioSettings.dspTime - dspElapsed;
+                dspPaused = false;
+            }
         }
 
         protected override void TickPlay(float deltaTime)

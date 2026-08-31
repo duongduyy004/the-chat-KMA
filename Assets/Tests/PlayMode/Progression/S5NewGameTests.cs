@@ -56,5 +56,36 @@ namespace KMA.Tests.Gameplay.Progression
                 Object.DestroyImmediate(screen.gameObject);
             }
         }
+
+        [Test]
+        public void NewGame_RequiresExplicitConfirmation()
+        {
+            var screen = new GameObject("MainMenuScreen").AddComponent<MainMenuScreen>();
+            try
+            {
+                var calls = 0;
+                screen.NewGameRequested += () => calls++;
+                screen.NewGame();
+                Assert.That(screen.IsConfirmingNewGame, Is.True);
+                Assert.That(calls, Is.Zero);
+                screen.ConfirmNewGame();
+                Assert.That(calls, Is.EqualTo(1));
+            }
+            finally { Object.DestroyImmediate(screen.gameObject); }
+        }
+
+        [Test]
+        public void MapNode_UsesDerivedStarsAndComingSoonLock()
+        {
+            var node = new GameObject("MapNode").AddComponent<MapNodeView>();
+            try
+            {
+                node.Configure(SubjectId.Sprint, "Sprint", false, null, 5);
+                Assert.That(node.Stars, Is.Zero);
+                node.Configure(SubjectId.Sprint, "Sprint", true, null, 5);
+                Assert.That(node.IsComingSoon, Is.True);
+            }
+            finally { Object.DestroyImmediate(node.gameObject); }
+        }
     }
 }

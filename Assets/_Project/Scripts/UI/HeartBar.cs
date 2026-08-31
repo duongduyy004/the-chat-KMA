@@ -15,6 +15,8 @@ namespace KMA.Gameplay.UI
         public Color FilledColor => filledColor;
         public Color EmptyColor => emptyColor;
 
+        public void SetSlots(Image[] value) => slots = value ?? new Image[SlotCount];
+
         public void SetHearts(int hearts)
         {
             CurrentHearts = Mathf.Clamp(hearts, 0, SlotCount);

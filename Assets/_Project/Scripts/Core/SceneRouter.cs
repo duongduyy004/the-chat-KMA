@@ -189,6 +189,37 @@ namespace KMA.Gameplay.Core
 
         public bool StartBoss() => Route(SessionRoute.Boss, null);
 
+        public bool RouteToMenu()
+        {
+            if (IsTransitioning)
+                return false;
+            UnbindSubjects();
+            UnbindBosses();
+            UnbindResultPanel();
+            activeSubject = null;
+            awaitingSubjectScene = false;
+            awaitingBossScene = false;
+            SceneManager.LoadSceneAsync("Menu", LoadSceneMode.Single);
+            return true;
+        }
+
+        public bool RestartActiveSubject()
+        {
+            if (!activeSubject.HasValue || !session.ActiveSubject.HasValue)
+                return false;
+            var subject = activeSubject.Value;
+            session.AbandonActiveSubject();
+            return StartSubject(subject);
+        }
+
+        public bool ExitActiveSubjectToMap()
+        {
+            if (session.ActiveSubject.HasValue)
+                session.AbandonActiveSubject();
+            activeSubject = null;
+            return Route(SessionRoute.Map);
+        }
+
         public bool CompleteBoss() => Route(SessionRoute.Map, null);
 
         public void BindSubject(MinigameBase controller, SubjectId subject)
@@ -260,7 +291,16 @@ namespace KMA.Gameplay.Core
             if (string.IsNullOrWhiteSpace(sceneName))
                 return false;
 
-            return Application.CanStreamedLevelBeLoaded(sceneName);
+            if (Application.CanStreamedLevelBeLoaded(sceneName))
+                return true;
+#if UNITY_EDITOR
+            foreach (var buildScene in UnityEditor.EditorBuildSettings.scenes)
+                if (buildScene.enabled && string.Equals(
+                    System.IO.Path.GetFileNameWithoutExtension(buildScene.path), sceneName,
+                    StringComparison.Ordinal))
+                    return true;
+#endif
+            return false;
         }
 
         public void Begin(SceneRouteTransition transition, Action onCompleted)
@@ -400,7 +440,12 @@ namespace KMA.Gameplay.Core
         static SubjectScene[] DefaultSubjectScenes() => new[]
         {
             new SubjectScene { Subject = SubjectId.Sprint, SceneName = "MG_Sprint" },
-            new SubjectScene { Subject = SubjectId.Endurance, SceneName = "MG_Endurance" }
+            new SubjectScene { Subject = SubjectId.Endurance, SceneName = "MG_Endurance" },
+            new SubjectScene { Subject = SubjectId.Volleyball, SceneName = "MG_Volleyball" },
+            new SubjectScene { Subject = SubjectId.Basketball, SceneName = "MG_Basketball" },
+            new SubjectScene { Subject = SubjectId.PingPong, SceneName = "MG_PingPong" },
+            new SubjectScene { Subject = SubjectId.Badminton, SceneName = "MG_Badminton" },
+            new SubjectScene { Subject = SubjectId.Football, SceneName = "MG_Football" }
         };
     }
 }

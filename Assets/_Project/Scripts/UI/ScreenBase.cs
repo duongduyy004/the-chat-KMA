@@ -30,6 +30,8 @@ namespace KMA.Gameplay.UI
 
         void SetVisible(bool visible)
         {
+            if (gameObject.activeSelf != visible)
+                gameObject.SetActive(visible);
             if (canvasGroup == null)
                 return;
             canvasGroup.alpha = visible ? 1f : 0f;

@@ -5,7 +5,8 @@
         "UnityEngine.TestRunner",
         "KMA.Gameplay",
         "KMA.Gameplay.Progression",
-        "KMA.Gameplay.Core"
+        "KMA.Gameplay.Core",
+        "KMA.Gameplay.UI"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],

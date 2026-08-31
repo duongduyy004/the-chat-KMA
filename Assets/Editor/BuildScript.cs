@@ -14,6 +14,11 @@ namespace KMA.EditorTools
         public static void BuildAndroid()
         {
             var outputPath = ReadArgument("-buildOutput") ?? DefaultOutputPath;
+            var architecture = ReadArgument("-androidArchitecture");
+            if (string.Equals(architecture, "x86_64", StringComparison.OrdinalIgnoreCase))
+                PlayerSettings.Android.targetArchitectures = AndroidArchitecture.X86_64;
+            else if (string.Equals(architecture, "arm64", StringComparison.OrdinalIgnoreCase))
+                PlayerSettings.Android.targetArchitectures = AndroidArchitecture.ARM64;
             var fullPath = Path.GetFullPath(outputPath);
             var directory = Path.GetDirectoryName(fullPath);
             if (!string.IsNullOrEmpty(directory))

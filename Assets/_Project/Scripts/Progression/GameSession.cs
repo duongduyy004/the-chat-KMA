@@ -40,6 +40,7 @@ namespace KMA.Gameplay
         public IReadOnlyDictionary<SubjectId, SubjectRecord> Records => records;
         public bool BossUnlocked => records.Values.All(record => record.Passed);
         public SubjectId? PendingPunishmentSubject => awaitingPunishment && active.HasValue ? active : (SubjectId?)null;
+        public SubjectId? ActiveSubject => active;
 
         public SubjectRecord GetRecord(SubjectId id) => records[id];
 
@@ -125,6 +126,15 @@ namespace KMA.Gameplay
 
             awaitingPunishment = false;
             return SessionRoute.RetrySubject;
+        }
+
+        public SubjectId AbandonActiveSubject()
+        {
+            if (!active.HasValue)
+                throw new InvalidOperationException("No subject attempt is active.");
+            var subject = active.Value;
+            ClearActiveSubject();
+            return subject;
         }
 
         public SessionRoute SubmitResult(SubjectId id, MinigameResult result)
