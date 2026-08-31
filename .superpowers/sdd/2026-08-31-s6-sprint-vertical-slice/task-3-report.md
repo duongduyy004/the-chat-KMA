@@ -1,21 +1,36 @@
-# Task 3 fix round 1 report: Sprint HUD, wind cue, and tutorial
+# Task 3 fix round 2 report: Sprint HUD ownership and wind presentation
 
 Status: DONE_WITH_CONCERNS
 
-Implementation commit: `3643d99f66d159544711671ade40c8c658445284`
+Implementation commit: `93a95f37c5bf46d97b9781580e2dbf01cecfee48`
 
 ## Findings addressed
 
-- `SprintHud` now caches the authored `S2_HUD_Minigame/SafeAreaRoot` TMP labels and fill Images once in `Awake`; `HasBoundVisuals` is asserted by the presentation gate.
-- `SprintWindCue` now uses a separate scene-local `WindCueHost` with authored Image and TMP children, binds them in `Awake`, and never disables its own component host. Cue, active-window, countered, and missed states remain visual-only.
-- The HUD prefab root now owns `SafeAreaFitter`; its nested fitter is disabled so the added top-right `PausePanel` is inside the effective safe-area hierarchy without applying insets twice.
-- `LeftTap` and `RightTap` leave a center-bottom strip and each span at least 140 reference pixels at 1920x1080.
-- `SprintPresentationGateTests` now requires exactly one scene-local controller, Sprint HUD, wind cue, tutorial overlay, and PausePanel; checks all bindings, cue host visuals, Canvas/CanvasScaler, Pause safe-area/top-right placement, zone widths/gap, tutorial copy, and tutorial skip persistence after scene reload.
+### 1. Sprint-specific HUD ownership
+
+- `SprintHud` no longer writes the shared `Timer`, `Stamina`, `Score`, `Phase`, `Status`, or shared fills owned by `MinigameHUD`.
+- Sprint-only values are bound to the scene-local `SprintMetrics` hierarchy: `SprintDistance`, `SprintRank`, `SprintCadence`, and `SprintDistanceFill`.
+- `SprintPresentationGateTests` checks that the dedicated labels are distinct from `Score`, `Phase`, and `Status`, then drives a 42 m state and asserts the rendered values `42 m`, `1st`, `COMBO x0`, and distance fill `0.42`. It also refreshes `MinigameHUD` and asserts its shared score remains `0`.
+- `KMA.Gameplay.Sprint.asmdef` now explicitly references `Unity.TextMeshPro`, which is required by the Sprint presentation scripts.
+
+### 2. Canvas-safe wind visuals
+
+- `WindCueHost` is now a scene-local child of the HUD Canvas root (`692924607`), which owns the effective `SafeAreaFitter`; it is no longer under the world-space `FX` transform.
+- The host remains active as the `SprintWindCue` component owner. Only the authored visual child is toggled, so `Update` continues to process later wind transitions.
+- `SprintWindCue` accepts the serialized external host and binds its Image/TMP children from that host.
+- The presentation test requires the host Image/TMP bindings, Canvas parent, SafeAreaFitter parent, active component host, and visual state transitions: `WIND INCOMING`/white, `COUNTER THE WIND NOW`/yellow, `WIND COUNTERED`/green, and `WIND MISSED`/red.
+
+### 3. Existing presentation fixes preserved
+
+- Pause remains top-right inside the effective safe-area hierarchy.
+- Left and right input zones retain the center-bottom gap and 140 px minimum width at the 1920x1080 reference resolution.
+- Tutorial copy, skip behavior, and Sprint-specific PlayerPrefs persistence remain covered by the existing presentation gate.
 
 ## Verification
 
-- `git diff --check`: PASS.
-- Static scene checks: PASS (unique scene file IDs; exactly one cue host/state; expected safe-area fitter declarations; expected input anchors).
-- Unity Test Runner: NOT RUN by request. Unity/.NET availability and PlayMode execution remain unverified.
+- `git diff --cached --check`: PASS before the implementation commit.
+- `git diff --check`: PASS before the implementation commit.
+- Static scene checks: PASS. The scene contains unique serialized file IDs, one `SprintMetrics` hierarchy, one `WindCueHost`, HUD prefab additions for metric and wind roots, and no legacy SprintHud shared-label bindings.
+- Unity Test Runner: NOT RUN by request. Runtime compilation and PlayMode execution are therefore not claimed as passing in this report.
 
-Report-only commit follows the implementation commit and records its exact hash above.
+Report-only commit follows this implementation commit and records the exact implementation hash above.
