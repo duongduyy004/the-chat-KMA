@@ -88,3 +88,29 @@ The PlayMode test assembly gained its required `KMA.Input` reference so the requ
 ### Fix commit
 
 `16238fd1047876e2b7155e06ec3360831b31d76c` (`test: tighten sprint input contract review fixes`)
+
+## Review fix round 2
+
+### Changes
+
+- Removed the non-independent `controllerInputEvents` counter from `SprintRuntimeInputTests`.
+- The test now keeps `detectorValidEvents` as the detector observation and independently observes controller invocation through `SprintSnapshot.Speed`: the repeated-left action must leave speed unchanged, and the valid right action must add exactly one 18-point impulse. A duplicate controller forwarding fails the exact speed assertion.
+- The timestamp fix from round 1 is retained.
+
+### Rerun commands and exact output
+
+1. `rtk git diff --check`
+
+   Output: empty; exit code 0.
+
+2. `rtk /home/duongduy/Unity/Hub/Editor/6000.3.23f1/Editor/Unity -batchmode -projectPath . -runTests -testPlatform EditMode -testResults /tmp/kma-s6-task1-edit-fix.xml -logFile /tmp/kma-s6-task1-edit-fix.log -testFilter "AlternateTapInputDetectorTests" -quit`
+
+   Output: empty; exit code 0. The XML file was not created. Log evidence: `Batchmode quit successfully invoked - shutting down!`; no Test Runner `test-suite`, `test-case`, pass, or fail records. The log also reports `Licensing::Module Error: Access token is unavailable; failed to update` and `No .NET SDKs were found.`
+
+3. `rtk /home/duongduy/Unity/Hub/Editor/6000.3.23f1/Editor/Unity -batchmode -projectPath . -runTests -testPlatform PlayMode -testResults /tmp/kma-s6-task1-play-fix.xml -logFile /tmp/kma-s6-task1-play-fix.log -testFilter "SprintRuntimeInputTests|SprintControllerTests" -quit`
+
+   Output: empty; exit code 0. The XML file was not created. Log evidence: `Batchmode quit successfully invoked - shutting down!`; no Test Runner `test-suite`, `test-case`, pass, or fail records. The log contains the same licensing-token and missing-.NET-SDK messages.
+
+### Fix commit
+
+`62fbce83bcef65d591c2c7bf9ed7825eb8f77ccd` (`test: independently verify sprint input routing`)
