@@ -20,7 +20,7 @@ namespace KMA.Gameplay
         [SerializeField] int rivalIndex;
         [SerializeField] Transform visual;
         [SerializeField] Animator animator;
-        [SerializeField] float trackStartX = -9.6f;
+        [SerializeField] float trackStartX;
         [SerializeField] float trackLength = 19.2f;
 
         RivalPaceProfile profile;

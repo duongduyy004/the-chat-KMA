@@ -247,6 +247,64 @@ namespace KMA.Tests.Gameplay.Running
             Assert.That(largeFirst.x - largeSecond.x, Is.EqualTo(25.6f).Within(.001f));
         }
 
+        [UnityTest]
+        public IEnumerator SprintParallax_ArbitrarilyLargeScrollNormalizesAllOffscreenTilesAndKeepsCoverage()
+        {
+            yield return SceneManager.LoadSceneAsync("MG_Sprint", LoadSceneMode.Single);
+            yield return null;
+
+            var parallax = SceneObjects<SprintParallax>(SceneManager.GetActiveScene()).Single();
+            parallax.RefreshForTest(2000f);
+
+            for (var layer = 0; layer < parallax.LayerCount; layer++)
+            {
+                Assert.That(parallax.TryGetLayerTilePositions(layer, out var first, out var second), Is.True);
+                Assert.That(Mathf.Abs(first.x - second.x), Is.EqualTo(25.6f).Within(.001f));
+                Assert.That(Mathf.Min(first.x, second.x), Is.GreaterThan(-25.6f),
+                    $"layer {layer} must repeatedly recycle tiles past the offscreen boundary");
+                Assert.That(Mathf.Min(first.x, second.x), Is.LessThanOrEqualTo(0f),
+                    $"layer {layer} must cover the viewport origin from the left");
+                Assert.That(Mathf.Max(first.x, second.x), Is.GreaterThanOrEqualTo(0f),
+                    $"layer {layer} must cover the viewport origin from the right");
+            }
+        }
+
+        [UnityTest]
+        public IEnumerator SprintRivalAnimator_EvaluationPreservesEverySceneAssignedLaneRoot()
+        {
+            yield return SceneManager.LoadSceneAsync("MG_Sprint", LoadSceneMode.Single);
+            yield return null;
+
+            var expectedLaneY = new System.Collections.Generic.Dictionary<int, float>
+            {
+                { 1, 2.1f },
+                { 3, -.7f },
+                { 4, -2.1f }
+            };
+
+            var rivals = SceneObjects<RivalRunnerAI>(SceneManager.GetActiveScene());
+            foreach (var rival in rivals)
+            {
+                var expectedRootY = expectedLaneY[rival.Lane];
+                var expectedRootPosition = new Vector3(-9.6f, expectedRootY, 0f);
+                Assert.That(rival.transform.localPosition, Is.EqualTo(expectedRootPosition).Within(.001f));
+
+                var visual = rival.Sprite.transform;
+                Assert.That(visual, Is.Not.SameAs(rival.transform),
+                    "animation must target a child visual transform rather than the lane root");
+                Assert.That(visual.parent, Is.SameAs(rival.transform));
+
+                var animator = rival.Animator;
+                animator.Play("Burst", 0, .5f);
+                animator.Update(0f);
+
+                Assert.That(rival.transform.localPosition, Is.EqualTo(expectedRootPosition).Within(.001f),
+                    $"Animator evaluation must not overwrite lane {rival.Lane} placement");
+                Assert.That(visual.localPosition.y, Is.EqualTo(.22f).Within(.001f),
+                    "the burst clip must still visibly animate the child visual transform");
+            }
+        }
+
         [Test]
         public void RivalVisualBurstAtSeventyPercent_IsCosmeticAndDoesNotChangeRulesDistances()
         {
@@ -309,8 +367,9 @@ namespace KMA.Tests.Gameplay.Running
                 var clip = (AnimationClip)state.motion;
                 Assert.That(clip.length, Is.GreaterThan(0f), $"{expectedState} clip must have a duration.");
                 Assert.That(AnimationUtility.GetCurveBindings(clip).Any(binding =>
-                        binding.type == typeof(Transform) && binding.propertyName.StartsWith("m_Local")), Is.True,
-                    $"{expectedState} clip must animate the rival visual transform.");
+                        binding.type == typeof(Transform) && binding.path == "Visual" &&
+                        binding.propertyName.StartsWith("m_Local")), Is.True,
+                    $"{expectedState} clip must animate the child visual transform, never the lane root.");
             }
         }
 

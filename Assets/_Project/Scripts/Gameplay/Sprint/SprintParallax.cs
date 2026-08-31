@@ -35,7 +35,9 @@ namespace KMA.Gameplay
                 var delta = (distance - lastDistance) * scrollMultiplier;
                 first.localPosition += Vector3.left * delta;
                 second.localPosition += Vector3.left * delta;
-                RecycleLeftTile();
+                while (RecycleOffscreenTile())
+                {
+                }
                 lastDistance = distance;
             }
 
@@ -59,12 +61,19 @@ namespace KMA.Gameplay
                 return IsBound;
             }
 
-            void RecycleLeftTile()
+            bool RecycleOffscreenTile()
             {
                 if (first.localPosition.x <= -loopWidth && first.localPosition.x <= second.localPosition.x)
+                {
                     first.localPosition = new Vector3(second.localPosition.x + loopWidth, first.localPosition.y, first.localPosition.z);
+                    return true;
+                }
                 else if (second.localPosition.x <= -loopWidth && second.localPosition.x <= first.localPosition.x)
+                {
                     second.localPosition = new Vector3(first.localPosition.x + loopWidth, second.localPosition.y, second.localPosition.z);
+                    return true;
+                }
+                return false;
             }
         }
 
@@ -90,7 +99,7 @@ namespace KMA.Gameplay
 
         void Awake()
         {
-            if (controller == null) controller = Object.FindFirstObjectByType<SprintController>();
+            if (controller == null) controller = UnityEngine.Object.FindFirstObjectByType<SprintController>();
             if (layers == null) return;
             for (var i = 0; i < layers.Length; i++) layers[i]?.CacheOrigins();
         }
