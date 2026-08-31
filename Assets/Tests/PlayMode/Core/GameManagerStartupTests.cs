@@ -112,6 +112,29 @@ namespace KMA.Tests.Gameplay.Core
         }
 
         [Test]
+        public void PreparedSave_RebuildsRouterTransitionerWithRestoredSession()
+        {
+            SaveData prepared = SaveData.CreateDefault();
+            prepared.lives = 2;
+            SceneRouter router = CreateRouter();
+            GameManager manager = CreateInactiveManager();
+            manager.ConfigureStartup(() => prepared, _ => { }, router, _ => { });
+            SceneRouteTransition transition = default;
+            int transitionCount = 0;
+            router.TransitionStarted += startedTransition =>
+            {
+                transition = startedTransition;
+                transitionCount++;
+            };
+
+            manager.gameObject.SetActive(true);
+
+            Assert.That(router.Route(SessionRoute.Map), Is.True);
+            Assert.That(transitionCount, Is.EqualTo(1));
+            Assert.That(transition.Session, Is.SameAs(manager.Session));
+        }
+
+        [Test]
         public void ApplicationPauseTrue_SavesExactlyOnce()
         {
             SceneRouter router = CreateRouter();

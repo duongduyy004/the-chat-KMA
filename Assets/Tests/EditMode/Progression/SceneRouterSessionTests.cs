@@ -29,15 +29,19 @@ namespace KMA.Tests.Gameplay.Progression
         [Test]
         public void LoadSession_ReplacesSessionWithoutChangingRouteConfiguration()
         {
-            Assert.That(router.TryGetSceneName(SessionRoute.Map, null, out string mapBefore), Is.True);
-            Assert.That(router.TryGetSceneName(SessionRoute.Subject, SubjectId.Sprint, out string sprintBefore),
-                Is.True);
+            string routeConfigurationBefore = JsonUtility.ToJson(router);
+            Assert.That(routeConfigurationBefore, Does.Contain("\"mapScene\":\"Map\""));
+            Assert.That(routeConfigurationBefore, Does.Contain("MG_Sprint"));
             var restored = new GameSession();
             SaveData data = SaveData.CreateDefault();
             data.lives = 2;
             restored.Restore(data);
 
             router.LoadSession(restored);
+
+            Assert.That(router.Session, Is.SameAs(restored));
+            Assert.That(JsonUtility.ToJson(router), Is.EqualTo(routeConfigurationBefore));
+
             SceneRouteTransition transition = default;
             int transitionCount = 0;
             router.TransitionStarted += startedTransition =>
@@ -46,12 +50,6 @@ namespace KMA.Tests.Gameplay.Progression
                 transitionCount++;
             };
 
-            Assert.That(router.Session, Is.SameAs(restored));
-            Assert.That(router.TryGetSceneName(SessionRoute.Map, null, out string mapAfter), Is.True);
-            Assert.That(router.TryGetSceneName(SessionRoute.Subject, SubjectId.Sprint, out string sprintAfter),
-                Is.True);
-            Assert.That(mapAfter, Is.EqualTo(mapBefore));
-            Assert.That(sprintAfter, Is.EqualTo(sprintBefore));
             Assert.That(router.Route(SessionRoute.Map), Is.True);
             Assert.That(transitionCount, Is.EqualTo(1));
             Assert.That(transition.Session, Is.SameAs(restored));

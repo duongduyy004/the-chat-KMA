@@ -220,6 +220,42 @@ namespace KMA.Tests.Gameplay.Progression
         }
 
         [Test]
+        public void Load_ValidLegacyJsonWithOmittedVersionOneFields_UsesCurrentDefaults()
+        {
+            WriteRawJson("{\"version\":0,\"lives\":3,\"bossUnlocked\":true}");
+
+            SaveData actual = saveSystem.Load();
+
+            Assert.That(actual.version, Is.EqualTo(SaveData.CurrentVersion));
+            Assert.That(actual.lives, Is.EqualTo(3));
+            Assert.That(actual.subjects, Has.Length.EqualTo(7));
+            Assert.That(actual.bossUnlocked, Is.True);
+            Assert.That(actual.gameCompleted, Is.False);
+            Assert.That(actual.tutorialSeen, Has.Length.EqualTo(7));
+            Assert.That(actual.tutorialSeen, Is.All.False);
+            Assert.That(actual.settings.musicVol, Is.EqualTo(1f));
+            Assert.That(actual.settings.sfxVol, Is.EqualTo(1f));
+            Assert.That(actual.settings.vibration, Is.True);
+            Assert.That(actual.settings.rhythmOffsetMs, Is.EqualTo(0f));
+        }
+
+        [Test]
+        public void Load_EmptyLegacyObject_ReturnsDefaultData()
+        {
+            WriteRawJson("{}");
+
+            AssertDefaultData(saveSystem.Load());
+        }
+
+        [Test]
+        public void Load_UnknownLegacyShape_ReturnsDefaultData()
+        {
+            WriteRawJson("{\"legacyVersion\":0,\"lives\":1}");
+
+            AssertDefaultData(saveSystem.Load());
+        }
+
+        [Test]
         public void Load_FutureVersion_ReturnsDefaultData()
         {
             var futureData = SaveData.CreateDefault();
@@ -321,6 +357,12 @@ namespace KMA.Tests.Gameplay.Progression
         {
             Directory.CreateDirectory(temporaryDirectory);
             File.WriteAllText(saveSystem.SavePath, UnityEngine.JsonUtility.ToJson(data));
+        }
+
+        private void WriteRawJson(string json)
+        {
+            Directory.CreateDirectory(temporaryDirectory);
+            File.WriteAllText(saveSystem.SavePath, json);
         }
     }
 }

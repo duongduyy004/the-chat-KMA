@@ -11,6 +11,7 @@ namespace KMA.Gameplay
     {
         private const string SaveFileName = "save.json";
         private const string TemporaryFileName = "save.tmp";
+        private const int MissingLegacyInteger = int.MinValue;
 
         private readonly string saveDirectory;
         private readonly string temporaryPath;
@@ -50,12 +51,24 @@ namespace KMA.Gameplay
                 }
 
                 SaveData data = JsonUtility.FromJson<SaveData>(json);
+                if (data != null && data.version == 0)
+                {
+                    LegacyV0Data legacy = ParseLegacyV0(json);
+                    if (!legacy.HasRequiredFields)
+                    {
+                        return SaveData.CreateDefault();
+                    }
+
+                    data = legacy.ToSaveData();
+                }
+
                 if (!IsLoadable(data))
                 {
                     return SaveData.CreateDefault();
                 }
 
-                return Migrate(data);
+                SaveData migrated = Migrate(data);
+                return IsCurrentVersionStructureValid(migrated) ? migrated : SaveData.CreateDefault();
             }
             catch (Exception exception) when (exception is IOException || exception is UnauthorizedAccessException || exception is ArgumentException)
             {
@@ -121,7 +134,14 @@ namespace KMA.Gameplay
                 settings = data.settings ?? defaults.settings
             };
 
-            return migrated;
+            return IsCurrentVersionStructureValid(migrated) ? migrated : defaults;
+        }
+
+        private static LegacyV0Data ParseLegacyV0(string json)
+        {
+            var legacy = new LegacyV0Data();
+            JsonUtility.FromJsonOverwrite(json, legacy);
+            return legacy;
         }
 
         private static bool IsLoadable(SaveData data)
@@ -244,6 +264,30 @@ namespace KMA.Gameplay
             {
                 File.Delete(path);
             }
+        }
+
+        [Serializable]
+        private sealed class LegacyV0Data
+        {
+            public int version = MissingLegacyInteger;
+            public int lives = MissingLegacyInteger;
+            public SubjectRecordData[] subjects;
+            public bool bossUnlocked;
+            public bool gameCompleted;
+            public bool[] tutorialSeen;
+
+            public bool HasRequiredFields => version == 0 && lives != MissingLegacyInteger;
+
+            public SaveData ToSaveData() => new SaveData
+            {
+                version = version,
+                lives = lives,
+                subjects = subjects,
+                bossUnlocked = bossUnlocked,
+                gameCompleted = gameCompleted,
+                tutorialSeen = tutorialSeen,
+                settings = null
+            };
         }
     }
 }
