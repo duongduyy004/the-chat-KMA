@@ -39,16 +39,20 @@ namespace KMA.Tests.Input
         }
 
         [Test]
-        public void ValidAlternatingTaps_EmitExactlyOncePerTapAndPreserveSuppliedTimestamps()
+        public void Timestamps_AcceptArbitraryFiniteValuesAndRejectNonFiniteValues()
         {
             var detector = new KMA.Input.AlternateTapInputDetector();
-            var valid = new List<KMA.Input.Side>();
-            detector.OnValidTap += side => valid.Add(side);
+            var valid = 0;
+            var wrong = 0;
+            detector.OnValidTap += _ => valid++;
+            detector.OnWrongSide += () => wrong++;
 
             detector.FeedTap(KMA.Input.Side.Left, 9001d);
             detector.FeedTap(KMA.Input.Side.Right, -9001d);
+            detector.FeedTap(KMA.Input.Side.Left, double.NaN);
 
-            Assert.That(valid, Is.EqualTo(new[] { KMA.Input.Side.Left, KMA.Input.Side.Right }));
+            Assert.That(valid, Is.EqualTo(2));
+            Assert.That(wrong, Is.EqualTo(0));
             Assert.That(detector.ExpectedSide, Is.EqualTo(KMA.Input.Side.Left));
         }
     }

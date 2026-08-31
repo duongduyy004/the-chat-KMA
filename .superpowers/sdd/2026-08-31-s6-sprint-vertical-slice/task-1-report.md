@@ -62,3 +62,29 @@ The PlayMode test assembly gained its required `KMA.Input` reference so the requ
 
 - The installed Unity CLI can refresh/import/compile and exit successfully, but this environment does not provide authoritative test-result XML or Test Runner execution evidence for the requested focused suites.
 - Unity logs show a licensing token update error and missing .NET SDK for the build-server helper; these are environment limitations, not confirmed test failures.
+
+## Review fix round 1
+
+### Changes
+
+- `AlternateTapInputDetectorTests` now proves finite timestamps are accepted while a non-finite timestamp emits neither valid nor wrong-side events. The detector API exposes no timestamp callback, so the test asserts the observable timestamp-validation boundary rather than claiming to inspect an unexposed value.
+- `SprintRuntimeInputTests` now counts detector-valid and controller-forwarded events, snapshots speed before the repeated-left action, and asserts the wrong-side action leaves both counts and speed unchanged.
+- This report section records the covering reruns and final fix commit.
+
+### Rerun commands and output
+
+1. `rtk git diff --check`
+
+   Output: empty; exit code 0.
+
+2. `rtk /home/duongduy/Unity/Hub/Editor/6000.3.23f1/Editor/Unity -batchmode -projectPath . -runTests -testPlatform EditMode -testResults /tmp/kma-s6-task1-edit-fix.xml -logFile /tmp/kma-s6-task1-edit-fix.log -testFilter "AlternateTapInputDetectorTests" -quit`
+
+   Unity exited with code 0 after project refresh/compile. No test-result XML was created; the log contains `Batchmode quit successfully invoked - shutting down!` but no Test Runner `test-suite`, `test-case`, pass, or fail records. It also contains `Licensing::Module Error: Access token is unavailable; failed to update` and the missing .NET SDK build-server message.
+
+3. `rtk /home/duongduy/Unity/Hub/Editor/6000.3.23f1/Editor/Unity -batchmode -projectPath . -runTests -testPlatform PlayMode -testResults /tmp/kma-s6-task1-play-fix.xml -logFile /tmp/kma-s6-task1-play-fix.log -testFilter "SprintRuntimeInputTests|SprintControllerTests" -quit`
+
+   Unity exited with code 0 after project refresh/compile. No test-result XML was created and the log contains no Test Runner `test-suite`, `test-case`, pass, or fail records; the same licensing and missing .NET SDK messages are present.
+
+### Fix commit
+
+`16238fd1047876e2b7155e06ec3360831b31d76c` (`test: tighten sprint input contract review fixes`)
