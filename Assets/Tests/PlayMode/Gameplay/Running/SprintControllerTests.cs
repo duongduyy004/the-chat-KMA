@@ -190,15 +190,39 @@ namespace KMA.Tests.Gameplay.Running
                 Assert.That(profile, Is.Not.Null);
                 Assert.That(profile.OpeningSpeed, Is.GreaterThan(0f));
                 Assert.That(profile.SustainedSpeed, Is.GreaterThan(0f));
-                Assert.That(rivals[i].GetComponentInChildren<Renderer>(), Is.Not.Null);
-                Assert.That(rivals[i].GetComponentInChildren<Animator>(), Is.Not.Null);
+                var renderer = rivals[i].GetComponentInChildren<SpriteRenderer>();
+                Assert.That(renderer, Is.Not.Null);
+                Assert.That(renderer.sprite, Is.Not.Null);
+                var animator = rivals[i].GetComponentInChildren<Animator>();
+                Assert.That(animator, Is.Not.Null);
+                Assert.That(animator.runtimeAnimatorController, Is.Not.Null);
+                Assert.That(animator.HasState(0, Animator.StringToHash("Idle")), Is.True);
+                Assert.That(animator.HasState(0, Animator.StringToHash("Run")), Is.True);
+                Assert.That(animator.HasState(0, Animator.StringToHash("Burst")), Is.True);
+                Assert.That(animator.HasState(0, Animator.StringToHash("Stumble")), Is.True);
+                Assert.That(animator.HasState(0, Animator.StringToHash("Celebrate")), Is.True);
+                Assert.That(animator.HasState(0, Animator.StringToHash("Fail")), Is.True);
             }
+
+            var player = GameObject.Find("Player");
+            Assert.That(player, Is.Not.Null);
+            Assert.That(player.transform.position.x, Is.EqualTo(-2.88f).Within(.001f));
 
             var parallax = SceneObjects<SprintParallax>(scene);
             Assert.That(parallax.Length, Is.EqualTo(1));
             Assert.That(parallax[0].LayerCount, Is.EqualTo(3));
             Assert.That(parallax[0].BoundLayerCount, Is.EqualTo(3));
             Assert.That(parallax[0].CoveragePixels, Is.EqualTo(new Vector2(2560f, 1080f)));
+            for (var i = 0; i < parallax[0].LayerCount; i++)
+            {
+                Assert.That(parallax[0].GetLayerTileRendererCount(i), Is.EqualTo(2));
+                Assert.That(parallax[0].TryGetLayerTilePositions(i, out var first, out var second), Is.True);
+                Assert.That(Mathf.Abs(first.x - second.x), Is.EqualTo(25.6f).Within(.001f));
+            }
+
+            parallax[0].RefreshForTest(100f);
+            Assert.That(parallax[0].TryGetLayerTilePositions(0, out var firstAfter, out var secondAfter), Is.True);
+            Assert.That(Mathf.Abs(firstAfter.x - secondAfter.x), Is.EqualTo(25.6f).Within(.001f));
         }
 
         [Test]
@@ -214,10 +238,16 @@ namespace KMA.Tests.Gameplay.Running
             var rules = new SprintRules(rivalProfiles: new[] { profile.ToRuntime() });
             rules.Tick(1f);
             var before = rules.RivalDistances;
+            var rankBefore = rules.Rank;
+            var resultBefore = rules.BuildResult();
             runner.RefreshForTest(before[0], 70f, MinigamePhase.Play, null);
 
             Assert.That(runner.State, Is.EqualTo(RivalRunnerState.Burst));
             Assert.That(rules.RivalDistances, Is.EqualTo(before));
+            Assert.That(rules.Rank, Is.EqualTo(rankBefore));
+            var resultAfter = rules.BuildResult();
+            Assert.That(resultAfter.Pass, Is.EqualTo(resultBefore.Pass));
+            Assert.That(resultAfter.Score, Is.EqualTo(resultBefore.Score));
             Object.DestroyImmediate(runner.gameObject);
             Object.DestroyImmediate(profile);
         }

@@ -31,6 +31,8 @@ namespace KMA.Gameplay
         public int RivalIndex => rivalIndex;
         public RivalRunnerState State { get; private set; }
         public float VisualProgress01 { get; private set; }
+        public Animator Animator => animator;
+        public SpriteRenderer Sprite => visual == null ? null : visual.GetComponent<SpriteRenderer>();
 
         static readonly int RunHash = Animator.StringToHash("Run");
         static readonly int BurstHash = Animator.StringToHash("Burst");
@@ -38,6 +40,8 @@ namespace KMA.Gameplay
         static readonly int CelebrateHash = Animator.StringToHash("Celebrate");
         static readonly int FailHash = Animator.StringToHash("Fail");
         static readonly int IdleHash = Animator.StringToHash("Idle");
+        RivalRunnerState lastPlayedState;
+        bool hasPlayedState;
 
         void Awake()
         {
@@ -93,7 +97,12 @@ namespace KMA.Gameplay
             else
                 State = RivalRunnerState.Run;
 
-            if (animator != null) animator.Play(StateHash(State), 0, 0f);
+            if (animator != null && (!hasPlayedState || lastPlayedState != State))
+            {
+                animator.Play(StateHash(State), 0, 0f);
+                lastPlayedState = State;
+                hasPlayedState = true;
+            }
         }
 
         static int StateHash(RivalRunnerState state) => state switch
