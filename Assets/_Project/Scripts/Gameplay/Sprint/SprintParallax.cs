@@ -61,9 +61,9 @@ namespace KMA.Gameplay
 
             void RecycleLeftTile()
             {
-                if (first.localPosition.x <= second.localPosition.x - loopWidth)
+                if (first.localPosition.x <= -loopWidth && first.localPosition.x <= second.localPosition.x)
                     first.localPosition = new Vector3(second.localPosition.x + loopWidth, first.localPosition.y, first.localPosition.z);
-                else if (second.localPosition.x <= first.localPosition.x - loopWidth)
+                else if (second.localPosition.x <= -loopWidth && second.localPosition.x <= first.localPosition.x)
                     second.localPosition = new Vector3(first.localPosition.x + loopWidth, second.localPosition.y, second.localPosition.z);
             }
         }

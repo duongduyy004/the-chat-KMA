@@ -1,7 +1,10 @@
 using System.Collections;
+using System.Linq;
 using KMA.Gameplay;
 using UnityEngine.InputSystem;
 using NUnit.Framework;
+using UnityEditor;
+using UnityEditor.Animations;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.TestTools;
@@ -193,15 +196,14 @@ namespace KMA.Tests.Gameplay.Running
                 var renderer = rivals[i].GetComponentInChildren<SpriteRenderer>();
                 Assert.That(renderer, Is.Not.Null);
                 Assert.That(renderer.sprite, Is.Not.Null);
+                Assert.That(PrefabUtility.GetCorrespondingObjectFromSource(rivals[i].gameObject), Is.Not.Null,
+                    $"{rivals[i].name} must remain a RivalRunner prefab instance.");
+                Assert.That(PrefabUtility.GetPrefabAssetPathOfNearestInstanceRoot(rivals[i].gameObject),
+                    Is.EqualTo("Assets/_Project/Prefabs/Gameplay/RivalRunner.prefab"));
                 var animator = rivals[i].GetComponentInChildren<Animator>();
                 Assert.That(animator, Is.Not.Null);
                 Assert.That(animator.runtimeAnimatorController, Is.Not.Null);
-                Assert.That(animator.HasState(0, Animator.StringToHash("Idle")), Is.True);
-                Assert.That(animator.HasState(0, Animator.StringToHash("Run")), Is.True);
-                Assert.That(animator.HasState(0, Animator.StringToHash("Burst")), Is.True);
-                Assert.That(animator.HasState(0, Animator.StringToHash("Stumble")), Is.True);
-                Assert.That(animator.HasState(0, Animator.StringToHash("Celebrate")), Is.True);
-                Assert.That(animator.HasState(0, Animator.StringToHash("Fail")), Is.True);
+                AssertAnimatorStatesHaveAuthoredVisualMotions(animator);
             }
 
             var player = GameObject.Find("Player");
@@ -220,9 +222,29 @@ namespace KMA.Tests.Gameplay.Running
                 Assert.That(Mathf.Abs(first.x - second.x), Is.EqualTo(25.6f).Within(.001f));
             }
 
-            parallax[0].RefreshForTest(100f);
-            Assert.That(parallax[0].TryGetLayerTilePositions(0, out var firstAfter, out var secondAfter), Is.True);
-            Assert.That(Mathf.Abs(firstAfter.x - secondAfter.x), Is.EqualTo(25.6f).Within(.001f));
+        }
+
+        [UnityTest]
+        public IEnumerator SprintParallax_SmallScrollPreservesTilesAndLargeScrollRecyclesOnlyOffscreenTile()
+        {
+            yield return SceneManager.LoadSceneAsync("MG_Sprint", LoadSceneMode.Single);
+            yield return null;
+
+            var parallax = SceneObjects<SprintParallax>(SceneManager.GetActiveScene()).Single();
+            Assert.That(parallax.TryGetLayerTilePositions(0, out var initialFirst, out var initialSecond), Is.True);
+            Assert.That(initialFirst.x, Is.EqualTo(0f).Within(.001f));
+            Assert.That(initialSecond.x, Is.EqualTo(25.6f).Within(.001f));
+
+            parallax.RefreshForTest(10f);
+            Assert.That(parallax.TryGetLayerTilePositions(0, out var smallFirst, out var smallSecond), Is.True);
+            Assert.That(smallFirst.x, Is.EqualTo(-1.5f).Within(.001f), "small scroll must not recycle the left tile");
+            Assert.That(smallSecond.x, Is.EqualTo(24.1f).Within(.001f), "small scroll must move the right tile by the same delta");
+
+            parallax.RefreshForTest(200f);
+            Assert.That(parallax.TryGetLayerTilePositions(0, out var largeFirst, out var largeSecond), Is.True);
+            Assert.That(largeFirst.x, Is.EqualTo(21.2f).Within(.001f), "only the offscreen first tile may recycle after the threshold");
+            Assert.That(largeSecond.x, Is.EqualTo(-4.4f).Within(.001f), "the still-visible second tile must not recycle");
+            Assert.That(largeFirst.x - largeSecond.x, Is.EqualTo(25.6f).Within(.001f));
         }
 
         [Test]
@@ -270,6 +292,27 @@ namespace KMA.Tests.Gameplay.Running
         }
 
         static void DestroyController(SprintController controller) => Object.Destroy(controller.gameObject);
+
+        static void AssertAnimatorStatesHaveAuthoredVisualMotions(Animator animator)
+        {
+            var controller = animator.runtimeAnimatorController as AnimatorController;
+            Assert.That(controller, Is.Not.Null, "RivalRunner must use an authored AnimatorController asset.");
+
+            var states = controller.layers[0].stateMachine.states;
+            var expectedStates = new[] { "Idle", "Run", "Burst", "Stumble", "Celebrate", "Fail" };
+            Assert.That(states.Select(value => value.state.name), Is.EquivalentTo(expectedStates));
+
+            foreach (var expectedState in expectedStates)
+            {
+                var state = states.Single(value => value.state.name == expectedState).state;
+                Assert.That(state.motion, Is.TypeOf<AnimationClip>(), $"{expectedState} must use an AnimationClip.");
+                var clip = (AnimationClip)state.motion;
+                Assert.That(clip.length, Is.GreaterThan(0f), $"{expectedState} clip must have a duration.");
+                Assert.That(AnimationUtility.GetCurveBindings(clip).Any(binding =>
+                        binding.type == typeof(Transform) && binding.propertyName.StartsWith("m_Local")), Is.True,
+                    $"{expectedState} clip must animate the rival visual transform.");
+            }
+        }
 
         static T[] SceneObjects<T>(Scene scene) where T : Component
         {
