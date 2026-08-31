@@ -49,6 +49,9 @@ namespace KMA.Gameplay.Core
 
         void OnGUI()
         {
+            if (FindFirstObjectByType<Canvas>() != null)
+                return;
+
             if (titleStyle == null)
             {
                 titleStyle = CreateStyle(46, FontStyle.Bold);

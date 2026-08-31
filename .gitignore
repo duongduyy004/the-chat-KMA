@@ -25,3 +25,5 @@ TestResults*.xml
 
 ## Local Git worktrees
 .worktrees/
+
+.utmp
