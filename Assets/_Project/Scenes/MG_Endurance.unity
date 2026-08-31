@@ -162,8 +162,8 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: bf4114553db184dc79b384f7d4acb569, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
+  m_Name:
+  m_EditorClassIdentifier:
   tutorialSeconds: 2
   countdownSeconds: 3
   rhythmOffsetMs: 0
@@ -495,8 +495,8 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: e6f708192a3b4c5d6e7f8091a2b3c4d5, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
+  m_Name:
+  m_EditorClassIdentifier:
   controller: {fileID: 200002}
   inputActions: {fileID: -944628639613478452, guid: d5e6f708192a3b4c5d6e7f8091a2b3c4, type: 3}
   tapActionName: Tap
@@ -549,8 +549,8 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 3912e3bbf8baef8cb98b7de4da857c43, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
+  m_Name:
+  m_EditorClassIdentifier:
   punishmentScene: Punishment
   mapScene: Map
   gameOverScene: GameOver
@@ -607,7 +607,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 5f7201a12d95ffc409449d95f23cf332, type: 3}
-  m_Name: 
+  m_Name:
   m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.Text
   m_Material: {fileID: 0}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
@@ -649,7 +649,7 @@ PrefabInstance:
     m_Modifications:
     - target: {fileID: 25550418821537793, guid: 6a27ebbd3993f2763bf5abf89d2a3a7f, type: 3}
       propertyPath: m_sharedMaterial
-      value: 
+      value:
       objectReference: {fileID: -3440409880799864703, guid: 24d8cd5b176c4854c93c574607ca7149, type: 2}
     - target: {fileID: 1826129031935093688, guid: 6a27ebbd3993f2763bf5abf89d2a3a7f, type: 3}
       propertyPath: m_Pivot.x
@@ -745,19 +745,19 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 4329482365222914647, guid: 6a27ebbd3993f2763bf5abf89d2a3a7f, type: 3}
       propertyPath: m_sharedMaterial
-      value: 
+      value:
       objectReference: {fileID: -3440409880799864703, guid: 24d8cd5b176c4854c93c574607ca7149, type: 2}
     - target: {fileID: 4912840247775062589, guid: 6a27ebbd3993f2763bf5abf89d2a3a7f, type: 3}
       propertyPath: m_sharedMaterial
-      value: 
+      value:
       objectReference: {fileID: -3440409880799864703, guid: 24d8cd5b176c4854c93c574607ca7149, type: 2}
     - target: {fileID: 4976699079501136664, guid: 6a27ebbd3993f2763bf5abf89d2a3a7f, type: 3}
       propertyPath: m_sharedMaterial
-      value: 
+      value:
       objectReference: {fileID: 8988279213809304970, guid: 825d2fd02f90fde40975035766b806d9, type: 2}
     - target: {fileID: 6793395409915483302, guid: 6a27ebbd3993f2763bf5abf89d2a3a7f, type: 3}
       propertyPath: m_Camera
-      value: 
+      value:
       objectReference: {fileID: 1048084041}
     - target: {fileID: 6793395409915483302, guid: 6a27ebbd3993f2763bf5abf89d2a3a7f, type: 3}
       propertyPath: m_RenderMode
@@ -773,7 +773,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 8898141884819161311, guid: 6a27ebbd3993f2763bf5abf89d2a3a7f, type: 3}
       propertyPath: minigameSource
-      value: 
+      value:
       objectReference: {fileID: 200002}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
@@ -910,7 +910,7 @@ PrefabInstance:
     m_Modifications:
     - target: {fileID: 1399891845664232894, guid: 06deeb00cdab6f1fab411210713d5d1c, type: 3}
       propertyPath: minigameSource
-      value: 
+      value:
       objectReference: {fileID: 200002}
     - target: {fileID: 2895506505286144246, guid: 06deeb00cdab6f1fab411210713d5d1c, type: 3}
       propertyPath: m_Pivot.x
@@ -1096,7 +1096,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 4f231c4fb786f3946a6b90b886c48677, type: 3}
-  m_Name: 
+  m_Name:
   m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.EventSystems.StandaloneInputModule
   m_SendPointerHoverToParent: 1
   m_HorizontalAxis: Horizontal
@@ -1116,7 +1116,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 76c392e42b5098c458856cdf6ecaaaa1, type: 3}
-  m_Name: 
+  m_Name:
   m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.EventSystems.EventSystem
   m_FirstSelected: {fileID: 0}
   m_sendNavigationEvents: 1
@@ -1186,7 +1186,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 4e29b1a8efbd4b44bb3f3716e73f07ff, type: 3}
-  m_Name: 
+  m_Name:
   m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.Button
   m_Navigation:
     m_Mode: 3
@@ -1230,7 +1230,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: fe87c0e1cc204ed48ad3b37840f39efc, type: 3}
-  m_Name: 
+  m_Name:
   m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.Image
   m_Material: {fileID: 0}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
@@ -1268,7 +1268,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: be18687881a66d110af02f14aab96fbd, type: 3}
-  m_Name: 
+  m_Name:
   m_EditorClassIdentifier: KMA.Gameplay.UI::KMA.Gameplay.UI.PausePanel
 --- !u!1660057539 &9223372036854775807
 SceneRoots:
