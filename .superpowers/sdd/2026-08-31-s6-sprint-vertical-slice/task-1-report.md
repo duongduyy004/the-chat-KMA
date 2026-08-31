@@ -113,4 +113,28 @@ The PlayMode test assembly gained its required `KMA.Input` reference so the requ
 
 ### Fix commit
 
-`62fbce83bcef65d591c2c7bf9ed7825eb8f77ccd` (`test: independently verify sprint input routing`)
+`6eae3eb6d6e0e3d6d45a43dada359ef17be0819b` (`test: independently verify sprint input routing`)
+
+## Review fix round 3
+
+Traceability-only correction. The implementation commit containing the reviewed routing-test changes is:
+
+`6eae3eb6d6e0e3d6d45a43dada359ef17be0819b`
+
+The previous `62fbce83...` value was an intermediate pre-amend hash and is not the implementation commit. This round changes report text only; no test logic changed.
+
+### Verification evidence
+
+1. `rtk git show --stat --oneline 6eae3eb6d6e0e3d6d45a43dada359ef17be0819b`
+
+   Output: `6eae3eb test: independently verify sprint input routing`, with `task-1-report.md` and `SprintRuntimeInputTests.cs` listed; `29 insertions(+), 5 deletions(-)`.
+
+2. `rtk git rev-parse HEAD`
+
+   Output before this report-only commit: `6eae3eb6d6e0e3d6d45a43dada359ef17be0819b`.
+
+3. `rtk git diff --check`
+
+   Output: empty; exit code 0.
+
+This report-only commit is intentionally not named or embedded here to avoid a self-referential hash.
