@@ -3,6 +3,7 @@ using KMA.Gameplay;
 using UnityEngine.InputSystem;
 using NUnit.Framework;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 using UnityEngine.TestTools;
 
 namespace KMA.Tests.Gameplay.Running
@@ -168,6 +169,56 @@ namespace KMA.Tests.Gameplay.Running
             yield return null;
         }
 
+        [UnityTest]
+        public IEnumerator SprintScene_AuthorsThreeCosmeticRivalsAndThreeLayerParallax()
+        {
+            yield return SceneManager.LoadSceneAsync("MG_Sprint", LoadSceneMode.Single);
+            yield return null;
+
+            var scene = SceneManager.GetActiveScene();
+            var rivals = SceneObjects<RivalRunnerAI>(scene);
+            Assert.That(rivals.Length, Is.EqualTo(3));
+
+            var lanes = new[] { rivals[0].Lane, rivals[1].Lane, rivals[2].Lane };
+            System.Array.Sort(lanes);
+            Assert.That(lanes, Is.EqualTo(new[] { 1, 3, 4 }));
+            for (var i = 0; i < rivals.Length; i++)
+            {
+                Assert.That(rivals[i].Lane, Is.Not.EqualTo(2));
+                Assert.That(rivals[i].ProfileAsset, Is.Not.Null);
+                var profile = rivals[i].ProfileAsset.ToRuntime();
+                Assert.That(profile, Is.Not.Null);
+                Assert.That(profile.OpeningSpeed, Is.GreaterThan(0f));
+                Assert.That(profile.SustainedSpeed, Is.GreaterThan(0f));
+            }
+
+            var parallax = SceneObjects<SprintParallax>(scene);
+            Assert.That(parallax.Length, Is.EqualTo(1));
+            Assert.That(parallax[0].LayerCount, Is.EqualTo(3));
+            Assert.That(parallax[0].CoveragePixels, Is.EqualTo(new Vector2(2560f, 1080f)));
+        }
+
+        [Test]
+        public void RivalVisualBurstAtSeventyPercent_IsCosmeticAndDoesNotChangeRulesDistances()
+        {
+            var profile = ScriptableObject.CreateInstance<RivalPaceProfileAsset>();
+            profile.profileName = "Test";
+            profile.openingSpeed = 8f;
+            profile.sustainedSpeed = 7f;
+            var runner = new GameObject("Rival").AddComponent<RivalRunnerAI>();
+            runner.Configure(profile, 1, 0, null);
+
+            var rules = new SprintRules(rivalProfiles: new[] { profile.ToRuntime() });
+            rules.Tick(1f);
+            var before = rules.RivalDistances;
+            runner.RefreshForTest(before[0], 70f, MinigamePhase.Play, null);
+
+            Assert.That(runner.State, Is.EqualTo(RivalRunnerState.Burst));
+            Assert.That(rules.RivalDistances, Is.EqualTo(before));
+            Object.DestroyImmediate(runner.gameObject);
+            Object.DestroyImmediate(profile);
+        }
+
         static SprintController CreateActiveWindController()
         {
             var controller = CreateSprintController(.8f);
@@ -186,5 +237,14 @@ namespace KMA.Tests.Gameplay.Running
         }
 
         static void DestroyController(SprintController controller) => Object.Destroy(controller.gameObject);
+
+        static T[] SceneObjects<T>(Scene scene) where T : Component
+        {
+            var all = Object.FindObjectsByType<T>(FindObjectsInactive.Include, FindObjectsSortMode.None);
+            var matches = new System.Collections.Generic.List<T>();
+            for (var i = 0; i < all.Length; i++)
+                if (all[i].gameObject.scene == scene) matches.Add(all[i]);
+            return matches.ToArray();
+        }
     }
 }

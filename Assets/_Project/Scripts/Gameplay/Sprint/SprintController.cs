@@ -8,6 +8,7 @@ namespace KMA.Gameplay
     public sealed class SprintController : MinigameBase
     {
         [SerializeField] SprintChallengePattern challengePattern = new SprintChallengePattern();
+        [SerializeField] RivalPaceProfileAsset[] rivalProfiles;
         [SerializeField] InputActionAsset inputActions;
         [SerializeField] bool directInputEnabled = true;
         [SerializeField] GameplayInputRouter inputRouter;
@@ -39,11 +40,12 @@ namespace KMA.Gameplay
         public int Rank => rules == null ? 1 : rules.Rank;
         public string RankText => Rank == 1 ? "1st" : Rank == 2 ? "2nd" : Rank == 3 ? "3rd" : "4th";
         public int CadenceCombo => rules == null ? 0 : Mathf.RoundToInt(rules.ValidTapRatio * rules.Snapshot.Elapsed);
+        public float[] RivalDistances => rules == null ? System.Array.Empty<float>() : rules.RivalDistances;
 
         protected override void Awake()
         {
             base.Awake();
-            rules = SprintRules.Default();
+            rules = CreateRulesFromAuthoredProfiles();
             ConfigureChallengePattern();
             ConfigureInputActions();
         }
@@ -228,6 +230,17 @@ namespace KMA.Gameplay
         {
             cueAt = challengePattern.WindCueDistance;
             activeAt = challengePattern.WindActivationDistance;
+        }
+
+        SprintRules CreateRulesFromAuthoredProfiles()
+        {
+            if (rivalProfiles == null || rivalProfiles.Length == 0)
+                return SprintRules.Default();
+
+            var runtimeProfiles = new RivalPaceProfile[rivalProfiles.Length];
+            for (var i = 0; i < rivalProfiles.Length; i++)
+                runtimeProfiles[i] = rivalProfiles[i] == null ? null : rivalProfiles[i].ToRuntime();
+            return new SprintRules(14f, runtimeProfiles);
         }
 
         void UpdateAuthoredChallenges(float dt, float distanceBefore)
