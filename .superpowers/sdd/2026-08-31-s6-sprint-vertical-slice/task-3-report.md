@@ -1,25 +1,21 @@
-# Task 3 report: Sprint HUD, wind cue and tutorial
+# Task 3 fix round 1 report: Sprint HUD, wind cue, and tutorial
 
 Status: DONE_WITH_CONCERNS
 
-Implementation commit: `3c73dcf630beff0e70fab411a24727ffbb7edc8f`
+Implementation commit: `3643d99f66d159544711671ade40c8c658445284`
 
-## Implemented
+## Findings addressed
 
-- Added `SprintHud`, a read-only presentation binder that caches the Sprint controller in `Awake`, polls the controller state, and renders timer, stamina, distance, rank (`1st`–`4th`), cadence combo, and progress values without mutating rules.
-- Added `SprintWindCue` with visible, active-window, countered, and missed states. It only reads the controller wind flags and does not alter collision or timing state.
-- Updated Sprint tutorial copy to the required two-step content: `Tap the shown side` and `Counter the wind before the window closes`.
-- Added presentation assertions for scene-local HUD/cue objects, both tutorial steps, skip behavior, and Sprint-specific remembered state.
-- Wired HUD and cue components into `MG_Sprint`. Existing landscape CanvasScaler remains at 1920x1080; existing input zones are bottom anchored and substantially wider than the 140px minimum. Existing PausePanel remains top-right on the SafeAreaFitter-backed UI hierarchy.
+- `SprintHud` now caches the authored `S2_HUD_Minigame/SafeAreaRoot` TMP labels and fill Images once in `Awake`; `HasBoundVisuals` is asserted by the presentation gate.
+- `SprintWindCue` now uses a separate scene-local `WindCueHost` with authored Image and TMP children, binds them in `Awake`, and never disables its own component host. Cue, active-window, countered, and missed states remain visual-only.
+- The HUD prefab root now owns `SafeAreaFitter`; its nested fitter is disabled so the added top-right `PausePanel` is inside the effective safe-area hierarchy without applying insets twice.
+- `LeftTap` and `RightTap` leave a center-bottom strip and each span at least 140 reference pixels at 1920x1080.
+- `SprintPresentationGateTests` now requires exactly one scene-local controller, Sprint HUD, wind cue, tutorial overlay, and PausePanel; checks all bindings, cue host visuals, Canvas/CanvasScaler, Pause safe-area/top-right placement, zone widths/gap, tutorial copy, and tutorial skip persistence after scene reload.
 
 ## Verification
 
 - `git diff --check`: PASS.
-- Static scene component-list check: PASS.
-- Unity Test Runner: NOT RUN — no `unity-editor`, `Unity`, or `dotnet` executable is available in this environment.
-- The presentation test is therefore not independently green-verified in this environment. The test loads `MG_Sprint` and uses Unity PlayMode APIs when run under the project’s Unity test setup.
+- Static scene checks: PASS (unique scene file IDs; exactly one cue host/state; expected safe-area fitter declarations; expected input anchors).
+- Unity Test Runner: NOT RUN by request. Unity/.NET availability and PlayMode execution remain unverified.
 
-## Concerns
-
-- Because Unity is unavailable, serialized scene loading, C# compilation, and PlayMode execution remain unverified. Run `SprintPresentationGateTests` in Unity before merging further work.
-- HUD text/Image references are intentionally left null in the scene because the existing scene HUD objects contain no authored TMP/Image subfields to bind; the components still expose deterministic readouts and can be connected to authored labels in the editor.
+Report-only commit follows the implementation commit and records its exact hash above.
