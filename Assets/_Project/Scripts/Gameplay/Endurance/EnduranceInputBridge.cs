@@ -1,4 +1,5 @@
 using System;
+using KMA.Input;
 using UnityEngine;
 using UnityEngine.InputSystem;
 
@@ -24,6 +25,9 @@ namespace KMA.Gameplay
         InputAction touchPressAction;
         InputAction touchPositionAction;
         InputAction touchDeltaAction;
+        RhythmBeatInputDetector rhythmDetector;
+        HoldInputDetector holdDetector;
+        SwipeInputDetector swipeDetector;
         Vector2 previousTouchPosition;
         bool touchTracking;
         bool touchSwipeDispatched;
@@ -39,9 +43,17 @@ namespace KMA.Gameplay
 
         void OnEnable() => ConfigureInputActions();
 
-        void OnDisable() => UnsubscribeInputActions();
+        void OnDisable()
+        {
+            UnsubscribeInputActions();
+            UnsubscribeDetectors();
+        }
 
-        void OnDestroy() => UnsubscribeInputActions();
+        void OnDestroy()
+        {
+            UnsubscribeInputActions();
+            UnsubscribeDetectors();
+        }
 
         void Update()
         {
@@ -94,6 +106,19 @@ namespace KMA.Gameplay
             ConfigureInputActions();
         }
 
+        internal void ConfigureDetectorsForTest(EnduranceController target,
+            RhythmBeatInputDetector rhythm, HoldInputDetector hold, SwipeInputDetector swipe)
+        {
+            controller = target ?? throw new ArgumentNullException(nameof(target));
+            UnsubscribeDetectors();
+            rhythmDetector = rhythm ?? throw new ArgumentNullException(nameof(rhythm));
+            holdDetector = hold ?? throw new ArgumentNullException(nameof(hold));
+            swipeDetector = swipe ?? throw new ArgumentNullException(nameof(swipe));
+            rhythmDetector.OnJudge += OnRhythmJudge;
+            holdDetector.OnHoldEnd += OnHoldEnd;
+            swipeDetector.OnSwipe += OnSwipe;
+        }
+
         void ConfigureInputActions()
         {
             UnsubscribeInputActions();
@@ -140,6 +165,35 @@ namespace KMA.Gameplay
             touchTracking = false;
             previousTouchPosition = default;
             touchSwipeDispatched = false;
+        }
+
+        void UnsubscribeDetectors()
+        {
+            if (rhythmDetector != null) rhythmDetector.OnJudge -= OnRhythmJudge;
+            if (holdDetector != null) holdDetector.OnHoldEnd -= OnHoldEnd;
+            if (swipeDetector != null) swipeDetector.OnSwipe -= OnSwipe;
+            rhythmDetector = null;
+            holdDetector = null;
+            swipeDetector = null;
+        }
+
+        void OnRhythmJudge(TimingJudge _, double deltaMs)
+        {
+            double beatDsp = controller.CurrentBeatDspTime;
+            controller.Tap(beatDsp + deltaMs / 1000d, beatDsp);
+        }
+
+        void OnHoldEnd(double _)
+        {
+            controller.EndHold((float)holdDetector.ChargeRatio);
+        }
+
+        void OnSwipe(SwipeResult swipe)
+        {
+            if (swipe.Direction == KMA.Input.SwipeDirection.Up)
+                controller.Swipe(SwipeDirection.Up);
+            else if (swipe.Direction == KMA.Input.SwipeDirection.Down)
+                controller.Swipe(SwipeDirection.Down);
         }
 
         void OnTapPerformed(InputAction.CallbackContext context)

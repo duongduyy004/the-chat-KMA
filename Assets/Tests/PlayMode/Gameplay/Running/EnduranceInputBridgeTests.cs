@@ -27,7 +27,7 @@ namespace KMA.Tests.Gameplay.Running
             ConnectDetectorBridge(controller, rhythm, hold, swipe);
 
             controller.Dispatch(new AuthoredBeat(BeatEvent.Tap));
-            rhythm.FeedTap(AudioSettings.dspTime, AudioSettings.dspTime);
+            rhythm.FeedTap(AudioSettings.dspTime + .1d, AudioSettings.dspTime);
             int judgedAfterTap = controller.Rules.JudgedCount;
             float staminaAfterTap = controller.Rules.Stamina;
             hold.FeedDown(1d);
