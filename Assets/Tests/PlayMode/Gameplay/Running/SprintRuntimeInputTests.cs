@@ -5,6 +5,7 @@ using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.InputSystem;
 using UnityEngine.InputSystem.Controls;
+using UnityEngine.InputSystem.LowLevel;
 using UnityEngine.SceneManagement;
 using UnityEngine.TestTools;
 
@@ -16,6 +17,7 @@ namespace KMA.Tests.Gameplay.Running
         GameObject controllerObject;
         InputActionAsset actions;
         Keyboard keyboard;
+        Touchscreen touchscreen;
 
         [SetUp]
         public void Setup()
@@ -29,6 +31,8 @@ namespace KMA.Tests.Gameplay.Running
         {
             if (keyboard != null)
                 InputSystem.RemoveDevice(keyboard);
+            if (touchscreen != null)
+                InputSystem.RemoveDevice(touchscreen);
             Object.DestroyImmediate(controllerObject);
             Object.DestroyImmediate(routerObject);
             if (actions != null)
@@ -73,7 +77,7 @@ namespace KMA.Tests.Gameplay.Running
         }
 
         [UnityTest]
-        public IEnumerator SprintScene_InputCanvasRoutesKeyboardAndScreenTapWithoutDuplicateControllerInput()
+        public IEnumerator SprintScene_ScreenTapAreaIsOnlyTouchEntryPointAndRoutesOneImpulse()
         {
             yield return SceneManager.LoadSceneAsync("MG_Sprint", LoadSceneMode.Single);
             yield return null;
@@ -124,11 +128,15 @@ namespace KMA.Tests.Gameplay.Running
             var tapHit = raycastResults.Find(result => result.gameObject == rightTapArea.gameObject);
 
             float speedBeforeScreenTap = controller.Snapshot.Speed;
+            touchscreen = InputSystem.AddDevice<Touchscreen>();
+            QueueTouch(touchscreen, UnityEngine.InputSystem.TouchPhase.Began, screenPosition, Vector2.zero);
+            Assert.That(controller.Snapshot.Speed, Is.EqualTo(speedBeforeScreenTap));
             Assert.That(tapHit.gameObject, Is.EqualTo(rightTapArea.gameObject));
             pointer.pointerCurrentRaycast = tapHit;
             ExecuteEvents.Execute(rightTapArea.gameObject, pointer, ExecuteEvents.pointerDownHandler);
             Assert.That(controller.Snapshot.Speed, Is.EqualTo(speedBeforeScreenTap + 18f));
             ExecuteEvents.Execute(rightTapArea.gameObject, pointer, ExecuteEvents.pointerUpHandler);
+            QueueTouch(touchscreen, UnityEngine.InputSystem.TouchPhase.Ended, screenPosition, Vector2.zero);
         }
 
         static void Tap(KeyControl key)
@@ -136,6 +144,19 @@ namespace KMA.Tests.Gameplay.Running
             InputSystem.QueueDeltaStateEvent(key, 1f);
             InputSystem.Update();
             InputSystem.QueueDeltaStateEvent(key, 0f);
+            InputSystem.Update();
+        }
+
+        static void QueueTouch(Touchscreen touchscreen, UnityEngine.InputSystem.TouchPhase phase,
+            Vector2 position, Vector2 delta)
+        {
+            InputSystem.QueueStateEvent(touchscreen, new TouchState
+            {
+                touchId = 1,
+                phase = phase,
+                position = position,
+                delta = delta
+            });
             InputSystem.Update();
         }
     }
