@@ -97,6 +97,8 @@ namespace KMA.Gameplay.Core
             new Dictionary<MinigameBase, Action<MinigameResult>>();
         readonly Dictionary<BossPhaseController, Action<MinigameResult>> bossCompletionHandlers =
             new Dictionary<BossPhaseController, Action<MinigameResult>>();
+        IResultPreviewPanel pendingResultPanel;
+        Action<string> pendingResultPanelHandler;
         SubjectId? activeSubject;
         bool awaitingSubjectScene;
         bool awaitingBossScene;
@@ -145,6 +147,7 @@ namespace KMA.Gameplay.Core
             SceneManager.sceneLoaded -= OnSceneLoaded;
             UnbindSubjects();
             UnbindBosses();
+            UnbindResultPanel();
         }
 
         public bool StartSubject(SubjectId subject)
@@ -160,6 +163,7 @@ namespace KMA.Gameplay.Core
 
             UnbindSubjects();
             UnbindBosses();
+            UnbindResultPanel();
             activeSubject = null;
             awaitingSubjectScene = false;
             awaitingBossScene = false;
@@ -194,9 +198,29 @@ namespace KMA.Gameplay.Core
             if (subjectCompletionHandlers.ContainsKey(controller))
                 return;
 
-            Action<MinigameResult> handler = result => SubmitSubjectResult(subject, result);
+            Action<MinigameResult> handler = result => PreviewSubjectResult(subject, result);
             subjectCompletionHandlers.Add(controller, handler);
             controller.Completed += handler;
+        }
+
+        void PreviewSubjectResult(SubjectId subject, MinigameResult result)
+        {
+            SessionRoute previewRoute = session.PreviewRoute(subject, result);
+            var panel = FindResultPanel();
+            if (panel == null)
+                throw new InvalidOperationException("A ResultPanel is required to continue from a subject result.");
+
+            UnbindResultPanel();
+            Action<string> handler = _ =>
+            {
+                UnbindResultPanel();
+                SubmitSubjectResult(subject, result);
+            };
+
+            pendingResultPanel = panel;
+            pendingResultPanelHandler = handler;
+            panel.ActionRequested += handler;
+            panel.Show(result, previewRoute.ToString());
         }
 
         public void BindBoss(BossPhaseController controller)
@@ -253,25 +277,31 @@ namespace KMA.Gameplay.Core
             if (awaitingSubjectScene && activeSubject.HasValue &&
                 string.Equals(scene.name, SceneFor(activeSubject), StringComparison.Ordinal))
             {
+                var boundController = false;
                 foreach (var controller in FindObjectsByType<MinigameBase>(
                     FindObjectsInactive.Exclude, FindObjectsSortMode.None))
                 {
                     if (!(controller is BossPhaseController))
+                    {
                         BindSubject(controller, activeSubject.Value);
+                        boundController = true;
+                    }
                 }
-                awaitingSubjectScene = false;
+                awaitingSubjectScene = !boundController;
             }
 
             if (awaitingBossScene && string.Equals(scene.name, bossScene, StringComparison.Ordinal))
             {
+                var boundBoss = false;
                 foreach (var boss in FindObjectsByType<BossPhaseController>(
                     FindObjectsInactive.Exclude, FindObjectsSortMode.None))
                 {
                     if (!ReferenceEquals(boss.Session, session))
                         boss.SetSession(session);
                     BindBoss(boss);
+                    boundBoss = true;
                 }
-                awaitingBossScene = false;
+                awaitingBossScene = !boundBoss;
             }
         }
 
@@ -319,6 +349,26 @@ namespace KMA.Gameplay.Core
             foreach (var binding in bossCompletionHandlers)
                 binding.Key.Completed -= binding.Value;
             bossCompletionHandlers.Clear();
+        }
+
+        void UnbindResultPanel()
+        {
+            if (pendingResultPanel != null && pendingResultPanelHandler != null)
+                pendingResultPanel.ActionRequested -= pendingResultPanelHandler;
+            pendingResultPanel = null;
+            pendingResultPanelHandler = null;
+        }
+
+        static IResultPreviewPanel FindResultPanel()
+        {
+            foreach (var behaviour in FindObjectsByType<MonoBehaviour>(
+                FindObjectsInactive.Include, FindObjectsSortMode.None))
+            {
+                if (behaviour is IResultPreviewPanel panel)
+                    return panel;
+            }
+
+            return null;
         }
 
         string SceneFor(SubjectId? subject)

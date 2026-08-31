@@ -6,7 +6,7 @@ using UnityEngine.UI;
 
 namespace KMA.Gameplay.UI
 {
-    public sealed class ResultPanel : MonoBehaviour
+    public sealed class ResultPanel : MonoBehaviour, IResultPreviewPanel
     {
         [SerializeField] GameObject contentRoot;
         [SerializeField] UITheme theme;
@@ -19,6 +19,7 @@ namespace KMA.Gameplay.UI
 
         public MinigameResult CurrentResult { get; private set; }
         public string PreviewRoute { get; private set; } = string.Empty;
+        public bool HasContinued { get; private set; }
 
         void Awake()
         {
@@ -30,6 +31,7 @@ namespace KMA.Gameplay.UI
         {
             CurrentResult = result ?? throw new ArgumentNullException(nameof(result));
             PreviewRoute = previewRoute ?? string.Empty;
+            HasContinued = false;
 
             if (contentRoot != null)
                 contentRoot.SetActive(true);
@@ -47,8 +49,11 @@ namespace KMA.Gameplay.UI
 
         public void Continue()
         {
-            if (CurrentResult != null)
+            if (CurrentResult != null && !HasContinued)
+            {
+                HasContinued = true;
                 ActionRequested?.Invoke(PreviewRoute);
+            }
         }
     }
 }

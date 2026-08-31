@@ -1,0 +1,18 @@
+{
+    "name": "KMA.Gameplay.Shell",
+    "rootNamespace": "KMA.Gameplay.Shell",
+    "references": [
+        "KMA.Gameplay.Core",
+        "KMA.Gameplay.UI",
+        "KMA.Gameplay.Progression"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

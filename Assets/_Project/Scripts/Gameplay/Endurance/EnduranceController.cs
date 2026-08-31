@@ -35,7 +35,7 @@ namespace KMA.Gameplay
         }
     }
 
-    public sealed class EnduranceController : MinigameBase
+    public sealed class EnduranceController : MinigameBase, IPauseAware
     {
         [SerializeField] double rhythmOffsetMs;
         [SerializeField] double beatsPerMinute = 120d;
@@ -47,6 +47,8 @@ namespace KMA.Gameplay
         double songStartDspTime;
         int nextBeatIndex;
         bool dspClockStarted;
+        bool dspClockPaused;
+        double pausedElapsedSeconds;
 
         public EnduranceRules Rules { get; private set; }
         public MinigamePhase Phase => Lifecycle == null ? MinigamePhase.Tutorial : Lifecycle.Phase;
@@ -119,7 +121,9 @@ namespace KMA.Gameplay
                 if (!dspClockStarted)
                     return AudioSettings.dspTime;
 
-                double elapsed = Math.Max(0d, AudioSettings.dspTime - songStartDspTime);
+                double elapsed = dspClockPaused
+                    ? pausedElapsedSeconds
+                    : Math.Max(0d, AudioSettings.dspTime - songStartDspTime);
                 int beat = Mathf.FloorToInt((float)(elapsed / BeatIntervalSeconds));
                 return songStartDspTime + beat * BeatIntervalSeconds;
             }
@@ -195,6 +199,8 @@ namespace KMA.Gameplay
 
         void AdvanceDspSchedule()
         {
+            if (dspClockPaused)
+                return;
             if (!dspClockStarted)
             {
                 EnsureMetronomeAudioSource();
@@ -252,9 +258,36 @@ namespace KMA.Gameplay
             if (metronome != null)
                 metronome.Stop();
             dspClockStarted = false;
+            dspClockPaused = false;
+            pausedElapsedSeconds = 0d;
             nextBeatIndex = 0;
             cueSchedule = null;
             SetObstacleCueVisible(false);
+        }
+
+        public void SetPaused(bool paused)
+        {
+            if (!dspClockStarted)
+                return;
+            if (paused)
+            {
+                if (!dspClockPaused)
+                {
+                    pausedElapsedSeconds = Math.Max(0d, AudioSettings.dspTime - songStartDspTime);
+                    dspClockPaused = true;
+                    if (metronome != null)
+                        metronome.Pause();
+                }
+                return;
+            }
+
+            if (dspClockPaused)
+            {
+                songStartDspTime = AudioSettings.dspTime - pausedElapsedSeconds;
+                dspClockPaused = false;
+                if (metronome != null)
+                    metronome.UnPause();
+            }
         }
 
         void EnsureMetronomeClip()

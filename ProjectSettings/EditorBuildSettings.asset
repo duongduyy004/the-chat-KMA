@@ -29,5 +29,20 @@ EditorBuildSettings:
   - enabled: 1
     path: Assets/_Project/Scenes/GameOver.unity
     guid: f83a455733d84627b08d91f3d0cd3da5
+  - enabled: 1
+    path: Assets/_Project/Scenes/MG_Volleyball.unity
+    guid: d2a3ded3f6699851084431dd30d84462
+  - enabled: 1
+    path: Assets/_Project/Scenes/MG_Basketball.unity
+    guid: 0555d6166af89cc3882eb5956da84a4b
+  - enabled: 1
+    path: Assets/_Project/Scenes/MG_PingPong.unity
+    guid: d7412e2281724798c92644bef568e9f0
+  - enabled: 1
+    path: Assets/_Project/Scenes/MG_Badminton.unity
+    guid: d02c9b094ff86896aadce9394015a9f3
+  - enabled: 1
+    path: Assets/_Project/Scenes/MG_Football.unity
+    guid: 7ce886fb3329cafcca665694c27a709d
   m_configObjects: {}
   m_UseUCBPForAssetBundles: 0

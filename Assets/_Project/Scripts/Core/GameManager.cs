@@ -111,6 +111,15 @@ namespace KMA.Gameplay.Core
                 settingsServices.Remove(service);
         }
 
+        public void StartNewGame()
+        {
+            if (!initialized) throw new InvalidOperationException("GameManager has not initialized.");
+            session.ResetCampaign();
+            gameCompleted = false;
+            SaveCurrentState();
+            loadScene(MenuScene);
+        }
+
         public void UpdateSettings(Settings updatedSettings)
         {
             if (updatedSettings == null)

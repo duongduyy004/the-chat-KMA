@@ -14,6 +14,12 @@ namespace KMA.Gameplay
         Boss
     }
 
+    public interface IResultPreviewPanel
+    {
+        event Action<string> ActionRequested;
+        void Show(MinigameResult result, string previewRoute);
+    }
+
     public sealed class GameSession
     {
         readonly Dictionary<SubjectId, SubjectRecord> records =
@@ -36,6 +42,21 @@ namespace KMA.Gameplay
         public SubjectId? PendingPunishmentSubject => awaitingPunishment && active.HasValue ? active : (SubjectId?)null;
 
         public SubjectRecord GetRecord(SubjectId id) => records[id];
+
+        public void ResetCampaign()
+        {
+            Lives = 5;
+            foreach (SubjectId id in Enum.GetValues(typeof(SubjectId)))
+                records[id] = new SubjectRecord();
+            ClearActiveSubject();
+        }
+
+        public SessionRoute PreviewRoute(SubjectId id, MinigameResult result)
+        {
+            if (result == null) throw new ArgumentNullException(nameof(result));
+            RequireActive(id);
+            return RouteForResult(result);
+        }
 
         public SaveData ToSaveData()
         {
@@ -108,27 +129,36 @@ namespace KMA.Gameplay
 
         public SessionRoute SubmitResult(SubjectId id, MinigameResult result)
         {
+            if (result == null) throw new ArgumentNullException(nameof(result));
             RequireActive(id);
+
+            SessionRoute route = RouteForResult(result);
 
             if (result.Pass)
             {
                 records[id].Accept(result);
                 ClearActiveSubject();
-                return SessionRoute.Map;
+                return route;
             }
 
             if (visitAttempt == 1)
             {
                 visitAttempt = 2;
                 awaitingPunishment = true;
-                return SessionRoute.Punishment;
+                return route;
             }
 
             Lives--;
             records[id].RecordFailedVisit();
             ClearActiveSubject();
-            return Lives == 0 ? SessionRoute.GameOver : SessionRoute.Map;
+            return route;
         }
+
+        SessionRoute RouteForResult(MinigameResult result) => result.Pass
+            ? SessionRoute.Map
+            : visitAttempt == 1
+                ? SessionRoute.Punishment
+                : Lives <= 1 ? SessionRoute.GameOver : SessionRoute.Map;
 
         void RequireActive(SubjectId id)
         {

@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using KMA.Gameplay;
 using KMA.Gameplay.Boss;
 using KMA.Gameplay.Core;
+using KMA.Gameplay.UI;
 using NUnit.Framework;
 using UnityEngine;
 using UnityEngine.SceneManagement;
@@ -119,7 +120,7 @@ namespace KMA.Tests.Gameplay.Progression
         }
 
         [Test]
-        public void RuntimeRouter_MapsEnabledProductionRoutes_AndRejectsUnsupportedSubjects()
+        public void RuntimeRouter_MapsAllSevenProductionSubjects()
         {
             var router = SceneRouter.EnsurePersistentInstance();
 
@@ -141,9 +142,8 @@ namespace KMA.Tests.Gameplay.Progression
                 SubjectId.Football
             })
             {
-                Assert.That(router.TryGetSceneName(SessionRoute.Subject, subject, out _), Is.False);
-                Assert.That(router.TryGetSceneName(SessionRoute.RetrySubject, subject, out _), Is.False);
-                Assert.Throws<InvalidOperationException>(() => router.StartSubject(subject));
+                AssertRoute(router, SessionRoute.Subject, subject);
+                AssertRoute(router, SessionRoute.RetrySubject, subject);
             }
         }
 
@@ -162,6 +162,10 @@ namespace KMA.Tests.Gameplay.Progression
             sprint.ConfigureForTest(0f);
             sprint.AdvanceToDistance(100f);
             sprint.Simulate(0f);
+            var resultPanel = UnityEngine.Object.FindFirstObjectByType<ResultPanel>(FindObjectsInactive.Include);
+            Assert.That(resultPanel, Is.Not.Null);
+            Assert.That(resultPanel.CurrentResult.Pass, Is.True);
+            resultPanel.Continue();
             yield return WaitForScene("Map");
 
             Assert.That(router.Session.GetRecord(SubjectId.Sprint).Passed, Is.True);
