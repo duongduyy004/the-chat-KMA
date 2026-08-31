@@ -61,6 +61,7 @@ namespace KMA.Input
         public double RhythmOffsetMs { get => rhythmOffsetMs; set => rhythmOffsetMs = value; }
         public double RhythmBeatDsp { get; set; }
         public bool InputActionsReady => subscribed;
+        public event System.Action<Side> OnSprintTap;
         public event System.Action<Side> OnSprintValidTap;
         internal bool AcceptsPointerEvents => isActiveAndEnabled;
 
@@ -118,6 +119,12 @@ namespace KMA.Input
             sprintRoutingEnabled = true;
             ConfigureSprintRouting();
             ConfigureInputActions();
+        }
+
+        public void FeedSprintTapForTest(Side side, double timestamp)
+        {
+            ConfigureSprintRouting();
+            sprintTapDetector?.FeedTap(side, timestamp);
         }
 
         internal void FeedPointerDown(int pointerId, Vector2 position) => FeedPointerDown(pointerId, position, Timestamp());
@@ -335,6 +342,7 @@ namespace KMA.Input
                 return;
 
             sprintTapDetector.OnValidTap += DispatchSprintValidTap;
+            sprintTapDetector.OnWrongSideTap += DispatchSprintWrongSide;
             sprintTapSubscribed = true;
         }
 
@@ -344,10 +352,17 @@ namespace KMA.Input
                 return;
 
             sprintTapDetector.OnValidTap -= DispatchSprintValidTap;
+            sprintTapDetector.OnWrongSideTap -= DispatchSprintWrongSide;
             sprintTapSubscribed = false;
         }
 
-        void DispatchSprintValidTap(Side side) => OnSprintValidTap?.Invoke(side);
+        void DispatchSprintValidTap(Side side)
+        {
+            OnSprintTap?.Invoke(side);
+            OnSprintValidTap?.Invoke(side);
+        }
+
+        void DispatchSprintWrongSide(Side side) => OnSprintTap?.Invoke(side);
 
         void OnRhythmPerformed(InputAction.CallbackContext context)
         {

@@ -33,6 +33,7 @@ namespace KMA.Gameplay.UI
             PreviewRoute = previewRoute ?? string.Empty;
             HasContinued = false;
 
+            gameObject.SetActive(true);
             if (contentRoot != null)
                 contentRoot.SetActive(true);
             if (statusLabel != null)

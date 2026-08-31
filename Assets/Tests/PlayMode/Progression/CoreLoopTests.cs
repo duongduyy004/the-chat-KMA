@@ -38,5 +38,24 @@ namespace KMA.Tests.Gameplay.Progression
                 Object.DestroyImmediate(panel.gameObject);
             }
         }
+
+        [Test]
+        public void ResultPanel_ShowActivatesAnInactivePanelRoot()
+        {
+            var root = new GameObject("result-panel");
+            var panel = root.AddComponent<ResultPanel>();
+            try
+            {
+                root.SetActive(false);
+
+                panel.Show(new MinigameResult(true, 8f, Rank.A), "Map");
+
+                Assert.That(root.activeSelf, Is.True);
+            }
+            finally
+            {
+                Object.DestroyImmediate(root);
+            }
+        }
     }
 }

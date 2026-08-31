@@ -53,7 +53,7 @@ namespace KMA.Gameplay.UI
         void Awake()
         {
             if (seenStore == null)
-                seenStore = new PlayerPrefsTutorialSeenStore();
+                seenStore = new SaveDataTutorialSeenStore();
             WireButtons();
             Refresh();
         }
@@ -61,7 +61,7 @@ namespace KMA.Gameplay.UI
         public void Show(string newSubjectId, IReadOnlyList<TutorialStep> newSteps)
         {
             if (seenStore == null)
-                seenStore = new PlayerPrefsTutorialSeenStore();
+                seenStore = new SaveDataTutorialSeenStore();
             subjectId = newSubjectId ?? string.Empty;
             steps.Clear();
             if (newSteps != null)

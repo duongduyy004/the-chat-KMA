@@ -49,6 +49,11 @@ namespace KMA.Tests.Presentation
             Assert.That(overlay.ShouldShow, Is.False);
 
             var pause = pauses[0];
+            var player = GameObject.Find("Player");
+            Assert.That(player, Is.Not.Null);
+            var playerVisual = player.GetComponentInChildren<SpriteRenderer>();
+            Assert.That(playerVisual, Is.Not.Null, "Player needs a visible child SpriteRenderer.");
+            Assert.That(playerVisual.sprite, Is.Not.Null);
             var safeArea = pause.GetComponentInParent<SafeAreaFitter>();
             Assert.That(safeArea, Is.Not.Null, "Pause must be inside the safe-area hierarchy.");
             var pauseRect = pause.GetComponent<RectTransform>();
@@ -57,6 +62,11 @@ namespace KMA.Tests.Presentation
             Assert.That(pauseRect.pivot, Is.EqualTo(new Vector2(1f, 1f)));
             Assert.That(pauseRect.anchoredPosition.x, Is.LessThan(0f));
             Assert.That(pauseRect.anchoredPosition.y, Is.LessThan(0f));
+            pause.Open();
+            Assert.That(FindNamed<Button>(scene, "ResumeButton"), Is.Not.Null);
+            Assert.That(FindNamed<Button>(scene, "RestartButton"), Is.Not.Null);
+            Assert.That(FindNamed<Button>(scene, "ExitButton"), Is.Not.Null);
+            pause.Resume();
 
             var canvas = pause.GetComponentInParent<Canvas>();
             var scaler = canvas.GetComponent<CanvasScaler>();
@@ -121,12 +131,11 @@ namespace KMA.Tests.Presentation
             Assert.That(distanceFill.fillAmount, Is.EqualTo(.42f).Within(.001f));
             Assert.That(sharedScore.text, Is.EqualTo("0"));
 
-            var cueHost = GameObject.Find("WindCueHost");
-            Assert.That(cueHost, Is.Not.Null);
-            var cueState = cueHost.GetComponentInChildren<TMP_Text>(true);
-            var cueImage = cueHost.GetComponent<Image>();
-            Assert.That(cueState, Is.Not.Null);
+            var cueImage = FindNamed<Image>(scene, "WindCueHost");
             Assert.That(cueImage, Is.Not.Null);
+            var cueHost = cueImage.gameObject;
+            var cueState = cueHost.GetComponentInChildren<TMP_Text>(true);
+            Assert.That(cueState, Is.Not.Null);
             Assert.That(cueHost.GetComponentInParent<Canvas>(), Is.Not.Null);
             Assert.That(cueHost.GetComponentInParent<SafeAreaFitter>(), Is.Not.Null);
             Assert.That(windCue.gameObject.activeSelf, Is.True);

@@ -131,6 +131,33 @@ namespace KMA.Gameplay.Core
             SaveCurrentState();
         }
 
+        public bool HasSeenTutorial(SubjectId subject)
+        {
+            int index = (int)subject;
+            return tutorialSeen != null && index >= 0 && index < tutorialSeen.Length && tutorialSeen[index];
+        }
+
+        public void MarkTutorialSeen(SubjectId subject)
+        {
+            if (!initialized)
+                throw new InvalidOperationException("GameManager has not initialized.");
+            if (HasSeenTutorial(subject))
+                return;
+
+            int index = (int)subject;
+            int requiredLength = Enum.GetValues(typeof(SubjectId)).Length;
+            if (tutorialSeen == null || tutorialSeen.Length < requiredLength)
+            {
+                var resized = new bool[requiredLength];
+                if (tutorialSeen != null)
+                    Array.Copy(tutorialSeen, resized, tutorialSeen.Length);
+                tutorialSeen = resized;
+            }
+
+            tutorialSeen[index] = true;
+            SaveCurrentState();
+        }
+
         void ConfigureProductionStartup()
         {
             saveSystem = new SaveSystem();

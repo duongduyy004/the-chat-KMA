@@ -210,7 +210,7 @@ namespace KMA.Tests.Gameplay.Progression
             Assert.That(serializedQuotes.FindProperty("chill").arraySize, Is.GreaterThan(0));
             Assert.That(serializedQuotes.FindProperty("urgent").arraySize, Is.GreaterThan(0));
 
-            Type rivalType = RequireAssemblyCSharpType("KMA.Gameplay.RivalPaceProfileAsset");
+            Type rivalType = RequireLoadedType("KMA.Gameplay.RivalPaceProfileAsset");
             ScriptableObject rivalAsset = ScriptableObject.CreateInstance(rivalType);
             var serializedRival = new SerializedObject(rivalAsset);
             serializedRival.FindProperty("profileName").stringValue = "Test Rival";
@@ -252,6 +252,19 @@ namespace KMA.Tests.Gameplay.Progression
             Type type = Type.GetType($"{fullName}, Assembly-CSharp");
             Assert.That(type, Is.Not.Null, $"Missing production type {fullName}");
             return type;
+        }
+
+        static Type RequireLoadedType(string fullName)
+        {
+            foreach (Assembly assembly in AppDomain.CurrentDomain.GetAssemblies())
+            {
+                Type type = assembly.GetType(fullName);
+                if (type != null)
+                    return type;
+            }
+
+            Assert.Fail($"Missing production type {fullName}");
+            return null;
         }
 
         static object Invoke(object target, string methodName, params object[] arguments)

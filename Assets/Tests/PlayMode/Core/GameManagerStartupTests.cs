@@ -2,6 +2,7 @@ using System;
 using System.Collections;
 using KMA.Gameplay;
 using KMA.Gameplay.Core;
+using KMA.Gameplay.UI;
 using NUnit.Framework;
 using UnityEngine;
 using UnityEngine.TestTools;
@@ -215,6 +216,34 @@ namespace KMA.Tests.Gameplay.Core
 
             Assert.That(saves, Is.EqualTo(1));
             Assert.That(saved.settings, Is.SameAs(updated));
+        }
+
+        [Test]
+        public void SaveDataTutorialSeenStore_MarksSprintInTheAuthoritativeSave()
+        {
+            SceneRouter router = CreateRouter();
+            SaveData persisted = SaveData.CreateDefault();
+            var saves = 0;
+            GameManager manager = CreateInactiveManager();
+            manager.ConfigureStartup(
+                () => persisted,
+                data =>
+                {
+                    saves++;
+                    persisted = data;
+                },
+                router,
+                _ => { });
+            manager.gameObject.SetActive(true);
+            var fallback = new MemoryTutorialSeenStore();
+            var store = new SaveDataTutorialSeenStore(fallback);
+
+            store.MarkSeen(nameof(SubjectId.Sprint));
+
+            Assert.That(manager.HasSeenTutorial(SubjectId.Sprint), Is.True);
+            Assert.That(persisted.tutorialSeen[(int)SubjectId.Sprint], Is.True);
+            Assert.That(saves, Is.EqualTo(1));
+            Assert.That(fallback.HasSeen(nameof(SubjectId.Sprint)), Is.False);
         }
 
         [UnityTest]

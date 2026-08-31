@@ -24,6 +24,7 @@ namespace KMA.Gameplay
         bool windChallengeResolved;
         bool terminalResolved;
         bool inputRouterSubscribed;
+        int cadenceCombo;
 
         public bool WindCueVisible { get; private set; }
         public bool WindWindowActive { get; private set; }
@@ -39,7 +40,7 @@ namespace KMA.Gameplay
         public string RightInputAction => rightInputAction;
         public int Rank => rules == null ? 1 : rules.Rank;
         public string RankText => Rank == 1 ? "1st" : Rank == 2 ? "2nd" : Rank == 3 ? "3rd" : "4th";
-        public int CadenceCombo => rules == null ? 0 : Mathf.RoundToInt(rules.ValidTapRatio * rules.Snapshot.Elapsed);
+        public int CadenceCombo => cadenceCombo;
         public float[] RivalDistances => rules == null ? System.Array.Empty<float>() : rules.RivalDistances;
         public int RivalCount => rules == null ? 0 : rules.RivalCount;
         public float GetRivalDistance(int index) => rules == null ? 0f : rules.GetRivalDistance(index);
@@ -126,7 +127,7 @@ namespace KMA.Gameplay
             if (inputRouter == null || inputRouterSubscribed)
                 return;
 
-            inputRouter.OnSprintValidTap += OnRouterSprintTap;
+            inputRouter.OnSprintTap += OnRouterSprintTap;
             inputRouterSubscribed = true;
         }
 
@@ -135,7 +136,7 @@ namespace KMA.Gameplay
             if (!inputRouterSubscribed)
                 return;
 
-            inputRouter.OnSprintValidTap -= OnRouterSprintTap;
+            inputRouter.OnSprintTap -= OnRouterSprintTap;
             inputRouterSubscribed = false;
         }
 
@@ -167,6 +168,7 @@ namespace KMA.Gameplay
             windChallengeResolved = false;
             terminalResolved = false;
             challengeElapsed = 0f;
+            cadenceCombo = 0;
             LastResult = null;
         }
 
@@ -214,6 +216,7 @@ namespace KMA.Gameplay
         {
             Side expected = rules.ExpectedSide;
             rules.Tap(side);
+            cadenceCombo = side == expected ? cadenceCombo + 1 : 0;
             if (!WindWindowActive || windChallengeResolved)
                 return;
 

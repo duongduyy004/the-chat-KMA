@@ -12,6 +12,7 @@ namespace KMA.Input
     {
         public event Action<Side> OnValidTap;
         public event Action OnWrongSide;
+        public event Action<Side> OnWrongSideTap;
 
         public Side ExpectedSide { get; private set; } = Side.Left;
 
@@ -22,6 +23,7 @@ namespace KMA.Input
             if (side != ExpectedSide)
             {
                 OnWrongSide?.Invoke();
+                OnWrongSideTap?.Invoke(side);
                 return;
             }
 

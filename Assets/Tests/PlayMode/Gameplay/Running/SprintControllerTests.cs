@@ -332,6 +332,25 @@ namespace KMA.Tests.Gameplay.Running
             Object.DestroyImmediate(profile);
         }
 
+        [Test]
+        public void CadenceCombo_TracksConsecutiveValidTapsAndResetsOnWrongSide()
+        {
+            var controller = CreateSprintController(.8f);
+            try
+            {
+                controller.OnLeftTap();
+                controller.OnRightTap();
+                Assert.That(controller.CadenceCombo, Is.EqualTo(2));
+
+                controller.OnRightTap();
+                Assert.That(controller.CadenceCombo, Is.Zero);
+            }
+            finally
+            {
+                DestroyController(controller);
+            }
+        }
+
         static SprintController CreateActiveWindController()
         {
             var controller = CreateSprintController(.8f);

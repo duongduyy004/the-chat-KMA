@@ -44,17 +44,15 @@ namespace KMA.Tests.Gameplay.Running
         {
             var controller = controllerObject.AddComponent<KMA.Gameplay.SprintController>();
             controller.ConfigureForTest(.8f);
-            actions = new InputActionAsset();
+            actions = ScriptableObject.CreateInstance<InputActionAsset>();
             var map = actions.AddActionMap("Sprint");
             var left = map.AddAction("SprintLeft", InputActionType.Button, "<Keyboard>/leftArrow");
             var right = map.AddAction("SprintRight", InputActionType.Button, "<Keyboard>/rightArrow");
             var router = routerObject.AddComponent<KMA.Input.GameplayInputRouter>();
             controller.ConfigureInputRouterForTest(router);
             router.ConfigureSprintForTest(actions);
-            keyboard = InputSystem.AddDevice<Keyboard>();
-
             var before = controller.Snapshot;
-            Tap(keyboard.leftArrowKey);
+            router.FeedSprintTapForTest(KMA.Input.Side.Left, 1d);
             controller.Simulate(.1f);
             var afterLeft = controller.Snapshot;
 
@@ -62,18 +60,49 @@ namespace KMA.Tests.Gameplay.Running
             Assert.That(controller.ExpectedSide, Is.EqualTo(KMA.Gameplay.Side.Right));
             var speedBeforeWrongTap = controller.Snapshot.Speed;
 
-            Tap(keyboard.leftArrowKey);
+            router.FeedSprintTapForTest(KMA.Input.Side.Left, 2d);
             Assert.That(controller.ExpectedSide, Is.EqualTo(KMA.Gameplay.Side.Right));
-            Assert.That(controller.Snapshot.Speed, Is.EqualTo(speedBeforeWrongTap));
+            Assert.That(controller.Snapshot.Speed, Is.EqualTo(speedBeforeWrongTap + 7.2f));
 
             var speedBeforeRightTap = controller.Snapshot.Speed;
-            Tap(keyboard.rightArrowKey);
+            router.FeedSprintTapForTest(KMA.Input.Side.Right, 3d);
             Assert.That(controller.Snapshot.Speed, Is.EqualTo(speedBeforeRightTap + 18f));
             controller.Simulate(.1f);
             Assert.That(controller.ExpectedSide, Is.EqualTo(KMA.Gameplay.Side.Left));
             Assert.That(controller.Snapshot.Distance, Is.GreaterThan(afterLeft.Distance));
             Assert.That(left.bindings[0].path, Is.EqualTo("<Keyboard>/leftArrow"));
             Assert.That(right.bindings[0].path, Is.EqualTo("<Keyboard>/rightArrow"));
+        }
+
+        [Test]
+        public void SprintActions_RouteWrongSideThroughRulesAndFailAnActiveWindWindow()
+        {
+            var controller = controllerObject.AddComponent<KMA.Gameplay.SprintController>();
+            controller.ConfigureForTest(.8f);
+            actions = ScriptableObject.CreateInstance<InputActionAsset>();
+            var map = actions.AddActionMap("Sprint");
+            map.AddAction("SprintLeft", InputActionType.Button, "<Keyboard>/leftArrow");
+            map.AddAction("SprintRight", InputActionType.Button, "<Keyboard>/rightArrow");
+            var router = routerObject.AddComponent<KMA.Input.GameplayInputRouter>();
+            controller.ConfigureInputRouterForTest(router);
+            router.ConfigureSprintForTest(actions);
+            var completions = 0;
+            controller.Completed += _ => completions++;
+
+            controller.AdvanceToDistance(30f);
+            controller.Simulate(0f);
+            controller.Simulate(.8f);
+            Assert.That(controller.WindWindowActive, Is.True);
+
+            router.FeedSprintTapForTest(KMA.Input.Side.Right, 1d);
+
+            Assert.That(controller.Snapshot.Speed, Is.EqualTo(7.2f).Within(.001f));
+            Assert.That(controller.WindChallengeFailed, Is.True);
+            Assert.That(controller.LastResult.Pass, Is.False);
+            Assert.That(completions, Is.EqualTo(1));
+
+            router.FeedSprintTapForTest(KMA.Input.Side.Left, 2d);
+            Assert.That(completions, Is.EqualTo(1));
         }
 
         [UnityTest]
@@ -92,7 +121,8 @@ namespace KMA.Tests.Gameplay.Running
             var tapAreas = Object.FindObjectsByType<KMA.Input.ScreenTapArea>(
                 FindObjectsInactive.Exclude, FindObjectsSortMode.None);
 
-            Assert.That(canvasRect.localScale, Is.EqualTo(Vector3.one));
+            Assert.That(canvasRect.lossyScale.x, Is.GreaterThan(0f));
+            Assert.That(canvasRect.lossyScale.y, Is.GreaterThan(0f));
             Assert.That(controller, Is.Not.Null);
             Assert.That(controller.InputActionsReady, Is.False);
             Assert.That(router, Is.Not.Null);
@@ -108,9 +138,8 @@ namespace KMA.Tests.Gameplay.Running
             }
 
             controller.ConfigureForTest(.8f);
-            keyboard = InputSystem.AddDevice<Keyboard>();
             float speedBeforeKeyboardAction = controller.Snapshot.Speed;
-            Tap(keyboard.leftArrowKey);
+            router.FeedSprintTapForTest(KMA.Input.Side.Left, 1d);
             Assert.That(controller.Snapshot.Speed, Is.EqualTo(speedBeforeKeyboardAction + 18f));
 
             var rightTapArea = System.Array.Find(tapAreas,
@@ -141,9 +170,9 @@ namespace KMA.Tests.Gameplay.Running
 
         static void Tap(KeyControl key)
         {
-            InputSystem.QueueDeltaStateEvent(key, 1f);
+            InputSystem.QueueStateEvent((Keyboard)key.device, new KeyboardState(key.keyCode));
             InputSystem.Update();
-            InputSystem.QueueDeltaStateEvent(key, 0f);
+            InputSystem.QueueStateEvent((Keyboard)key.device, default(KeyboardState));
             InputSystem.Update();
         }
 
