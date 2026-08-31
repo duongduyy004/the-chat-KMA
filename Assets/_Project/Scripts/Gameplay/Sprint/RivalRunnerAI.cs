@@ -19,6 +19,7 @@ namespace KMA.Gameplay
         [SerializeField] int lane = 1;
         [SerializeField] int rivalIndex;
         [SerializeField] Transform visual;
+        [SerializeField] Animator animator;
         [SerializeField] float trackStartX = -9.6f;
         [SerializeField] float trackLength = 19.2f;
 
@@ -31,9 +32,17 @@ namespace KMA.Gameplay
         public RivalRunnerState State { get; private set; }
         public float VisualProgress01 { get; private set; }
 
+        static readonly int RunHash = Animator.StringToHash("Run");
+        static readonly int BurstHash = Animator.StringToHash("Burst");
+        static readonly int StumbleHash = Animator.StringToHash("Stumble");
+        static readonly int CelebrateHash = Animator.StringToHash("Celebrate");
+        static readonly int FailHash = Animator.StringToHash("Fail");
+        static readonly int IdleHash = Animator.StringToHash("Idle");
+
         void Awake()
         {
             if (visual == null) visual = transform;
+            if (animator == null) animator = GetComponentInChildren<Animator>();
             if (profileAsset != null) profile = profileAsset.ToRuntime();
             if (controller == null) controller = Object.FindFirstObjectByType<SprintController>();
         }
@@ -43,10 +52,9 @@ namespace KMA.Gameplay
             if (controller == null || rivalIndex < 0)
                 return;
 
-            var distances = controller.RivalDistances;
-            if (rivalIndex >= distances.Length)
+            if (rivalIndex >= controller.RivalCount)
                 return;
-            Refresh(distances[rivalIndex], controller.Snapshot.Distance, controller.Phase, controller.LastResult,
+            Refresh(controller.GetRivalDistance(rivalIndex), controller.Snapshot.Distance, controller.Phase, controller.LastResult,
                 controller.WindChallengeFailed || controller.WindChallengeExpired);
         }
 
@@ -58,6 +66,7 @@ namespace KMA.Gameplay
             rivalIndex = valueRivalIndex;
             controller = owner;
             if (visual == null) visual = transform;
+            if (animator == null) animator = GetComponentInChildren<Animator>();
         }
 
         public void RefreshForTest(float rivalDistance, float playerDistance, MinigamePhase phase, MinigameResult result) =>
@@ -83,6 +92,18 @@ namespace KMA.Gameplay
                 State = RivalRunnerState.Burst;
             else
                 State = RivalRunnerState.Run;
+
+            if (animator != null) animator.Play(StateHash(State), 0, 0f);
         }
+
+        static int StateHash(RivalRunnerState state) => state switch
+        {
+            RivalRunnerState.Run => RunHash,
+            RivalRunnerState.Burst => BurstHash,
+            RivalRunnerState.Stumble => StumbleHash,
+            RivalRunnerState.Celebrate => CelebrateHash,
+            RivalRunnerState.Fail => FailHash,
+            _ => IdleHash
+        };
     }
 }

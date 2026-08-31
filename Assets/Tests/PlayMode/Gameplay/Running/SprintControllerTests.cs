@@ -190,11 +190,14 @@ namespace KMA.Tests.Gameplay.Running
                 Assert.That(profile, Is.Not.Null);
                 Assert.That(profile.OpeningSpeed, Is.GreaterThan(0f));
                 Assert.That(profile.SustainedSpeed, Is.GreaterThan(0f));
+                Assert.That(rivals[i].GetComponentInChildren<Renderer>(), Is.Not.Null);
+                Assert.That(rivals[i].GetComponentInChildren<Animator>(), Is.Not.Null);
             }
 
             var parallax = SceneObjects<SprintParallax>(scene);
             Assert.That(parallax.Length, Is.EqualTo(1));
             Assert.That(parallax[0].LayerCount, Is.EqualTo(3));
+            Assert.That(parallax[0].BoundLayerCount, Is.EqualTo(3));
             Assert.That(parallax[0].CoveragePixels, Is.EqualTo(new Vector2(2560f, 1080f)));
         }
 

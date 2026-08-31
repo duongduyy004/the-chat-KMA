@@ -28,14 +28,23 @@ namespace KMA.Gameplay
                 var offset = Mathf.Repeat(distance * scrollMultiplier, loopWidth);
                 first.localPosition = firstOrigin + Vector3.left * offset;
                 second.localPosition = secondOrigin + Vector3.left * offset;
+
+                if (first.localPosition.x <= second.localPosition.x)
+                    first.localPosition = new Vector3(second.localPosition.x + loopWidth, first.localPosition.y, first.localPosition.z);
+                if (second.localPosition.x <= first.localPosition.x - loopWidth)
+                    second.localPosition = new Vector3(first.localPosition.x + loopWidth, second.localPosition.y, second.localPosition.z);
             }
+
+            public bool IsBound => first != null && second != null;
         }
 
         [SerializeField] SprintController controller;
         [SerializeField] Vector2 coveragePixels = new Vector2(2560f, 1080f);
         [SerializeField] Layer[] layers = Array.Empty<Layer>();
 
+
         public int LayerCount => layers == null ? 0 : layers.Length;
+        public int BoundLayerCount { get { var count = 0; if (layers == null) return 0; for (var i = 0; i < layers.Length; i++) if (layers[i] != null && layers[i].IsBound) count++; return count; } }
         public Vector2 CoveragePixels => coveragePixels;
 
         void Awake()

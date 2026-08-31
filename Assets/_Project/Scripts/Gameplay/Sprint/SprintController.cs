@@ -41,6 +41,8 @@ namespace KMA.Gameplay
         public string RankText => Rank == 1 ? "1st" : Rank == 2 ? "2nd" : Rank == 3 ? "3rd" : "4th";
         public int CadenceCombo => rules == null ? 0 : Mathf.RoundToInt(rules.ValidTapRatio * rules.Snapshot.Elapsed);
         public float[] RivalDistances => rules == null ? System.Array.Empty<float>() : rules.RivalDistances;
+        public int RivalCount => rules == null ? 0 : rules.RivalCount;
+        public float GetRivalDistance(int index) => rules == null ? 0f : rules.GetRivalDistance(index);
 
         protected override void Awake()
         {

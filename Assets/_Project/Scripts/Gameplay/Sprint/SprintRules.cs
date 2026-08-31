@@ -106,6 +106,8 @@ namespace KMA.Gameplay
         public StaminaBand StaminaBand => ClassifyStamina(stamina);
         public RivalPaceProfile[] RivalProfiles => (RivalPaceProfile[])rivalProfiles.Clone();
         public float[] RivalDistances => (float[])rivalDistances.Clone();
+        public int RivalCount => rivalDistances.Length;
+        public float GetRivalDistance(int index) => index < 0 || index >= rivalDistances.Length ? 0f : rivalDistances[index];
         public SprintSnapshot Snapshot => new SprintSnapshot(distance, speed, stamina, elapsed);
 
         public static StaminaBand ClassifyStamina(float value) =>
