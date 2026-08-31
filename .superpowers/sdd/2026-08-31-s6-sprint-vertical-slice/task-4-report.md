@@ -2,7 +2,7 @@
 
 ## Implementation
 
-- Commit: 6009955ff83a67dd80bc639f795fcc5b9c21700f
+- Commit: b43937b
 - Subject: feat: add sprint rivals and parallax presentation
 
 ## Static evidence
