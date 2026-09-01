@@ -41,6 +41,7 @@ namespace KMA.Gameplay
         [SerializeField] double beatsPerMinute = 120d;
         [SerializeField] GameObject obstacleCue;
         [SerializeField] AudioSource metronome;
+        [SerializeField] AudioClip metronomeClip;
 
         LapPattern pattern;
         EnduranceCueSchedule cueSchedule;
@@ -307,6 +308,13 @@ namespace KMA.Gameplay
             if (metronome == null || metronome.clip != null)
                 return;
 
+            if (metronomeClip != null)
+            {
+                metronome.clip = metronomeClip;
+                return;
+            }
+
+#if UNITY_INCLUDE_TESTS
             const int sampleRate = 48000;
             const int sampleCount = sampleRate / 2;
             var clip = AudioClip.Create("EnduranceMetronome", sampleCount, 1, sampleRate, false);
@@ -318,6 +326,7 @@ namespace KMA.Gameplay
             }
             clip.SetData(samples, 0);
             metronome.clip = clip;
+#endif
         }
 
         void EnsureMetronomeAudioSource()

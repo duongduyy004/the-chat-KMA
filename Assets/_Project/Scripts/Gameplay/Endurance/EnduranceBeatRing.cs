@@ -73,9 +73,9 @@ namespace KMA.Gameplay
                 inputBridge.RhythmJudged -= OnRhythmJudged;
         }
 
-        void OnRhythmJudged(TimingJudge judge)
+        void OnRhythmJudged(KMA.Input.TimingJudge judge)
         {
-            FeedbackText = judge == TimingJudge.Perfect ? "PERFECT" : judge == TimingJudge.Good ? "GOOD" : "MISS";
+            FeedbackText = judge == KMA.Input.TimingJudge.Perfect ? "PERFECT" : judge == KMA.Input.TimingJudge.Good ? "GOOD" : "MISS";
         }
     }
 }

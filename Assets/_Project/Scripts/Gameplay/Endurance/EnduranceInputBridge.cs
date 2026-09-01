@@ -18,7 +18,7 @@ namespace KMA.Gameplay
 
         public bool InputActionsReady => inputRouter != null && inputRouter.InputActionsReady;
         public InputActionAsset InputActionsAsset => inputActions;
-        public event Action<TimingJudge> RhythmJudged;
+        public event Action<KMA.Input.TimingJudge> RhythmJudged;
 
         void Awake()
         {

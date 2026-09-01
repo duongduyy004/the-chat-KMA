@@ -309,7 +309,8 @@ namespace KMA.Input
                 return;
 
             tapMashDetector?.FeedTap(Timestamp());
-            FeedRhythmTap(RhythmBeatDsp);
+            if (gameplayActionMap != null && gameplayActionMap.name == enduranceActionMapName)
+                FeedRhythmTap(RhythmBeatDsp);
         }
 
         void OnHoldStarted(InputAction.CallbackContext context)
@@ -411,7 +412,7 @@ namespace KMA.Input
 
         void OnRhythmPerformed(InputAction.CallbackContext context)
         {
-            if (context.performed && IsKeyboard(context))
+            if (context.performed && IsKeyboard(context) && gameplayActionMap != null && gameplayActionMap.name == enduranceActionMapName)
                 FeedRhythmTap(RhythmBeatDsp);
         }
 
@@ -452,7 +453,7 @@ namespace KMA.Input
                 swipePointerId = pointerId;
                 swipeDetector?.FeedSample(position, timestamp);
             }
-            if (rhythmBeatDetector != null)
+            if (rhythmBeatDetector != null && gameplayActionMap != null && gameplayActionMap.name == enduranceActionMapName)
                 FeedRhythmTap(AudioSettings.dspTime, RhythmBeatDsp);
         }
 
