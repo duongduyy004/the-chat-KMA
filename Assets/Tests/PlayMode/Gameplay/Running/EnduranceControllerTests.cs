@@ -144,6 +144,8 @@ namespace KMA.Tests.Gameplay.Running
             Assert.That(tapAreas, Has.Length.EqualTo(1), "Endurance must serialize one gameplay pointer surface.");
             var tapArea = tapAreas[0];
             Assert.That(tapArea.gameObject, Is.SameAs(inputSurface));
+            Assert.That(tapArea.GetComponent<Canvas>(), Is.Not.Null);
+            Assert.That(tapArea.GetComponent<UnityEngine.UI.GraphicRaycaster>(), Is.Not.Null);
             Assert.That(tapArea.GetComponent<UnityEngine.UI.Graphic>(), Is.Not.Null);
             Assert.That(tapArea.GetComponent<UnityEngine.UI.Graphic>().raycastTarget, Is.True);
             Assert.That(PrivateField<GameplayInputRouter>(tapArea, "router"), Is.SameAs(inputSurface.GetComponent<GameplayInputRouter>()));
