@@ -3,7 +3,8 @@
     "rootNamespace": "KMA.Gameplay",
     "references": [
         "KMA.Gameplay",
-        "KMA.Gameplay.Ball"
+        "KMA.Gameplay.Ball",
+        "KMA.Input"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],
