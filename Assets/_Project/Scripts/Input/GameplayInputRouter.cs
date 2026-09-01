@@ -305,8 +305,7 @@ namespace KMA.Input
 
         void OnTapPerformed(InputAction.CallbackContext context)
         {
-            if (context.performed && IsKeyboard(context))
-                tapMashDetector?.FeedTap(Timestamp());
+            if (context.performed && IsKeyboard(context)) { if (gameplayActionMap == enduranceActionMap && rhythmBeatDetector != null) FeedRhythmTap(AudioSettings.dspTime, RhythmBeatDsp); else tapMashDetector?.FeedTap(Timestamp()); }
         }
 
         void OnHoldStarted(InputAction.CallbackContext context)

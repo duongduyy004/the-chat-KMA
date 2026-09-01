@@ -128,12 +128,13 @@ namespace KMA.Gameplay
             }
         }
 
-        void OnRhythmJudge(KMA.Input.TimingJudge _, double deltaMs) => controller.TapFromCalibratedDelta(deltaMs);
+        void OnRhythmJudge(KMA.Input.TimingJudge _, double deltaMs) { if (controller != null && controller.Phase == MinigamePhase.Play && controller.Rules.Mode == EnduranceInputMode.RhythmTap) controller.TapFromCalibratedDelta(deltaMs); }
 
-        void OnHoldEnd(double duration) => controller.EndHold((float)(duration / controller.BeatIntervalSeconds));
+        void OnHoldEnd(double duration) { if (controller != null && controller.Phase == MinigamePhase.Play && controller.Rules.Mode == EnduranceInputMode.BreathHold) controller.EndHold((float)(duration / controller.BeatIntervalSeconds)); }
 
         void OnSwipe(SwipeResult swipe)
         {
+            if (controller == null || controller.Phase != MinigamePhase.Play || controller.Rules.Mode != EnduranceInputMode.ObstacleSwipe) return;
             if (swipe.Direction == KMA.Input.SwipeDirection.Up)
                 controller.Swipe(SwipeDirection.Up);
             else if (swipe.Direction == KMA.Input.SwipeDirection.Down)
