@@ -1,9 +1,11 @@
+using System.Collections;
 using System.Collections.Generic;
 using KMA.Gameplay;
 using KMA.Input;
 using NUnit.Framework;
 using UnityEngine;
 using UnityEngine.InputSystem;
+using UnityEngine.TestTools;
 
 namespace KMA.Tests.Gameplay.Ball
 {
@@ -67,6 +69,28 @@ namespace KMA.Tests.Gameplay.Ball
             Assert.That(launched.Curvature, Is.EqualTo(expectedCurvature).Within(.001f));
             Assert.That(Vector2.Distance(fixture.Ball.Snapshot.Velocity, launched.Velocity), Is.LessThan(.001f));
             Assert.That(fixture.Ball.Snapshot.Curvature, Is.EqualTo(launched.Curvature).Within(.001f));
+        }
+
+        [UnityTest]
+        public IEnumerator SubmitSwipe_KeepsSingleLaunchGuardClosedAfterBallPhysicsChangesVelocity()
+        {
+            var fixture = CreateFixture();
+            AdvanceControllerToPlay(fixture.Controller);
+            SetBallForContext(fixture, BallContext.Low);
+
+            fixture.Controller.SubmitSwipe(Vector2.down, inReachZone: true, timingAccuracy: 1f);
+            Vector2 launchVelocity = fixture.Ball.Snapshot.Velocity;
+
+            yield return new WaitForFixedUpdate();
+
+            Vector2 velocityAfterPhysicsTick = fixture.Ball.Snapshot.Velocity;
+            fixture.Controller.SubmitSwipe(Vector2.down, inReachZone: true, timingAccuracy: 1f);
+
+            Assert.That(Vector2.Distance(velocityAfterPhysicsTick, launchVelocity), Is.GreaterThan(.0001f));
+            Assert.That(fixture.Ball.Snapshot.IsInFlight, Is.True);
+            Assert.That(fixture.Rules.TotalTouches, Is.EqualTo(1));
+            Assert.That(fixture.Controller.SuccessfulLaunchCount, Is.EqualTo(1));
+            Assert.That(fixture.Ball.Snapshot.Velocity, Is.EqualTo(velocityAfterPhysicsTick));
         }
 
         [Test]
@@ -212,7 +236,28 @@ namespace KMA.Tests.Gameplay.Ball
             Assert.That(completions, Is.EqualTo(1));
         }
 
-        ControllerFixture CreateFixture()
+        [Test]
+        public void ConfigureForTest_WaitsForPresentationPlayBeforeCompletingPreResolvedRules()
+        {
+            var fixture = CreateFixture(preResolveRules: true);
+            var observedPhases = new List<MinigamePhase>();
+            var completions = 0;
+            fixture.Controller.PhaseChanged += observedPhases.Add;
+            fixture.Controller.Completed += _ => completions++;
+
+            fixture.Controller.SimulateForTest(2f);
+
+            Assert.That(fixture.Controller.PresentationPhase, Is.EqualTo(MinigamePhase.Countdown));
+            Assert.That(completions, Is.Zero);
+
+            fixture.Controller.SimulateForTest(3f);
+
+            Assert.That(observedPhases, Does.Contain(MinigamePhase.Play));
+            Assert.That(fixture.Controller.PresentationPhase, Is.EqualTo(MinigamePhase.Resolve));
+            Assert.That(completions, Is.EqualTo(1));
+        }
+
+        ControllerFixture CreateFixture(bool preResolveRules = false)
         {
             var controllerObject = new GameObject("VolleyballControllerTest");
             temporaryObjects.Add(controllerObject);
@@ -231,6 +276,12 @@ namespace KMA.Tests.Gameplay.Ball
             var detector = new SwipeInputDetector();
             router.SetDetectors(null, null, null, null, detector);
             var rules = new VolleyballRules(targetScore: 2, timeLimit: 60f);
+            if (preResolveRules)
+            {
+                rules.Tick(2f);
+                rules.Tick(3f);
+                Assert.That(rules.BeginResolve(), Is.True);
+            }
             controller.ConfigureForTest(rules, ball);
             return new ControllerFixture(controller, rules, ball, detector);
         }
@@ -243,6 +294,7 @@ namespace KMA.Tests.Gameplay.Ball
 
         static void SetBallForContext(ControllerFixture fixture, BallContext context)
         {
+            fixture.Ball.AttachTo(null);
             fixture.Ball.Body.position = context == BallContext.ApexNearNet
                 ? new Vector2(0f, 2f)
                 : new Vector2(0f, 1f);

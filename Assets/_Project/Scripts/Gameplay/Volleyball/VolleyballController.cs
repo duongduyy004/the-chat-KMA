@@ -25,8 +25,6 @@ namespace KMA.Gameplay
 
         bool inputRouterSubscribed;
         bool terminalResolved;
-        bool awaitingBallStateChange;
-        Vector2 lastLaunchVelocity;
 
         public VolleyballRules Rules { get; private set; }
         public BallRig Ball => ball;
@@ -47,7 +45,7 @@ namespace KMA.Gameplay
         {
             base.Awake();
             CacheReferences();
-            Rules = new VolleyballRules(targetScore, timeLimit);
+            Rules = new VolleyballRules(targetScore, timeLimit, Lifecycle);
         }
 
         void OnEnable()
@@ -60,26 +58,32 @@ namespace KMA.Gameplay
 
         void OnDestroy() => UnsubscribeInputRouter();
 
-        protected override void Update() => Simulate(Time.deltaTime);
-
         public void ConfigureForTest(VolleyballRules rules, BallRig configuredBall)
         {
-            Rules = rules;
-            ball = configuredBall;
             Lifecycle = new MinigameLifecycle(DefaultTutorialSeconds, DefaultCountdownSeconds);
+            Rules = rules ?? new VolleyballRules(targetScore, timeLimit, Lifecycle);
+            if (rules != null)
+                AdvanceRulesToPlayForTest();
+            ball = configuredBall;
             CacheReferences();
             ResetRuntimeState();
             SubscribeInputRouter();
         }
 
-        public void SimulateForTest(float dt) => Simulate(dt);
+        public void SimulateForTest(float dt)
+        {
+            float deltaTime = Mathf.Max(0f, dt);
+            Lifecycle.Tick(deltaTime);
+            if (PresentationPhase == MinigamePhase.Play)
+                TickPlay(deltaTime);
+        }
 
         public void SubmitSwipe(Vector2 swipe, bool inReachZone, float timingAccuracy)
         {
             if (Rules == null || ball == null || PresentationPhase != MinigamePhase.Play || Rules.Phase != MinigamePhase.Play)
                 return;
 
-            if (awaitingBallStateChange && !HasBallStateChangedSinceLaunch())
+            if (ball.Snapshot.IsInFlight)
                 return;
 
             BallContext context = CurrentContext;
@@ -93,8 +97,6 @@ namespace KMA.Gameplay
 
             SuccessfulLaunchCount++;
             SelectedAction = action;
-            awaitingBallStateChange = true;
-            lastLaunchVelocity = ball.Snapshot.Velocity;
             if (counterplayWasVisible)
                 ClearCounterplayCues();
             else if (TouchCount >= 3)
@@ -115,26 +117,19 @@ namespace KMA.Gameplay
 
         protected override void TickPlay(float dt)
         {
-            if (Rules != null)
-                Rules.Tick(Mathf.Max(0f, dt));
-            RefreshRuntimeState();
-            ResolveTerminalState();
-        }
+            if (Rules == null)
+                return;
 
-        void Simulate(float dt)
-        {
             float deltaTime = Mathf.Max(0f, dt);
-            Lifecycle.Tick(deltaTime);
-            if (Rules != null)
-                Rules.Tick(deltaTime);
-
-            if (PresentationPhase == MinigamePhase.Play)
+            if (Rules.Phase == MinigamePhase.Play)
             {
-                RefreshRuntimeState();
-                if (Rules != null && Rules.BuildResult().Pass)
-                    Rules.BeginResolve();
+                if (Rules.BuildResult().Pass || Rules.Elapsed + deltaTime >= timeLimit)
+                    ResolveTerminalState(force: true);
+                else
+                    Rules.Tick(deltaTime);
             }
 
+            RefreshRuntimeState();
             ResolveTerminalState();
         }
 
@@ -144,6 +139,14 @@ namespace KMA.Gameplay
                 inputRouter = GetComponent<GameplayInputRouter>();
             if (reachZone == null)
                 reachZone = GetComponent<BoxCollider2D>();
+        }
+
+        void AdvanceRulesToPlayForTest()
+        {
+            if (Rules.Phase == MinigamePhase.Tutorial)
+                Rules.Tick(DefaultTutorialSeconds);
+            if (Rules.Phase == MinigamePhase.Countdown)
+                Rules.Tick(DefaultCountdownSeconds);
         }
 
         void SubscribeInputRouter()
@@ -215,20 +218,6 @@ namespace KMA.Gameplay
             actor.position = new Vector3(PredictedLandingPoint.x + horizontalOffset, actor.position.y, actor.position.z);
         }
 
-        bool HasBallStateChangedSinceLaunch()
-        {
-            if (ball == null)
-                return false;
-
-            if (Vector2.Distance(ball.Snapshot.Velocity, lastLaunchVelocity) > .0001f)
-            {
-                awaitingBallStateChange = false;
-                return true;
-            }
-
-            return false;
-        }
-
         void ShowCounterplayCues()
         {
             OpponentCounterCueVisible = true;
@@ -241,9 +230,11 @@ namespace KMA.Gameplay
             OpponentFakeCueVisible = false;
         }
 
-        void ResolveTerminalState()
+        void ResolveTerminalState(bool force = false)
         {
-            if (terminalResolved || Rules == null || Rules.Phase != MinigamePhase.Resolve)
+            if (terminalResolved || Rules == null || PresentationPhase != MinigamePhase.Play)
+                return;
+            if (!force && Rules.Phase != MinigamePhase.Resolve && !Rules.BuildResult().Pass)
                 return;
 
             terminalResolved = true;
@@ -255,8 +246,6 @@ namespace KMA.Gameplay
         void ResetRuntimeState()
         {
             terminalResolved = false;
-            awaitingBallStateChange = false;
-            lastLaunchVelocity = Vector2.zero;
             SuccessfulLaunchCount = 0;
             SelectedAction = VolleyAction.Invalid;
             PredictedLandingPoint = Vector2.zero;
