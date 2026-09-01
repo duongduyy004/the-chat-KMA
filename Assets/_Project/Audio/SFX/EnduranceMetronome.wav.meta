@@ -1,0 +1,1 @@
+fileFormatVersion: 2\nguid: 8d4b6c7e9a1f4b2c8e3d5a7f0b6c1d2e\nAudioImporter:\n  serializedVersion: 2\n  defaultSettings:\n    loadType: 0\n    sampleRateSetting: 0\n    sampleRateOverride: 0\n    compressionFormat: 1\n    quality: 0.7\n    conversionMode: 0\n  platformSettingOverrides: {}\n  forceToMono: 1\n  normalize: 1\n  preloadAudioData: 1\n  loadInBackground: 0\n  3D: 0\n
