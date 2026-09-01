@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using System.IO;
+using System.Reflection;
 using NUnit.Framework;
 using UnityEngine;
 using UnityEngine.EventSystems;
@@ -211,6 +212,36 @@ namespace KMA.Tests.Input
             Router.FeedRhythmTapForTest(10d, 10d);
 
             Assert.That(deltaMs, Is.EqualTo(125d).Within(.000001d));
+        }
+
+        [Test]
+        public void DetectorResults_ArePublishedAfterRouterProcessing()
+        {
+            var rhythm = new InputLayer.RhythmBeatInputDetector();
+            var hold = new InputLayer.HoldInputDetector();
+            var swipe = new InputLayer.SwipeInputDetector();
+            var rhythmEvent = RequireEvent("OnRhythmJudge", typeof(System.Action<InputLayer.TimingJudge, double>));
+            var holdEvent = RequireEvent("OnHoldEnd", typeof(System.Action<double>));
+            var swipeEvent = RequireEvent("OnSwipe", typeof(System.Action<InputLayer.SwipeResult>));
+            double rhythmDelta = 0d;
+            double holdDuration = 0d;
+            InputLayer.SwipeDirection swipeDirection = InputLayer.SwipeDirection.Left;
+            System.Action<InputLayer.TimingJudge, double> captureRhythm = (_, delta) => rhythmDelta = delta;
+            System.Action<double> captureHold = duration => holdDuration = duration;
+            System.Action<InputLayer.SwipeResult> captureSwipe = result => swipeDirection = result.Direction;
+            rhythmEvent.AddEventHandler(Router, captureRhythm);
+            holdEvent.AddEventHandler(Router, captureHold);
+            swipeEvent.AddEventHandler(Router, captureSwipe);
+            Router.SetDetectors(null, rhythm, hold, null, swipe);
+            Router.RhythmOffsetMs = 125d;
+
+            Router.FeedRhythmTapForTest(10d, 10d);
+            Router.FeedPointerDownForTest(Vector2.zero, 1d);
+            Router.FeedPointerUpForTest(Vector2.up, 2d);
+
+            Assert.That(rhythmDelta, Is.EqualTo(125d).Within(.000001d));
+            Assert.That(holdDuration, Is.EqualTo(1d).Within(.000001d));
+            Assert.That(swipeDirection, Is.EqualTo(InputLayer.SwipeDirection.Up));
         }
 
         [TestCase(.08d, InputLayer.TimingJudge.Perfect)]
@@ -463,6 +494,14 @@ namespace KMA.Tests.Input
             var asset = InputActionAsset.FromJson(File.ReadAllText(path));
             temporaryAssets.Add(asset);
             return asset;
+        }
+
+        static EventInfo RequireEvent(string name, System.Type handlerType)
+        {
+            var inputEvent = typeof(InputLayer.GameplayInputRouter).GetEvent(name);
+            Assert.That(inputEvent, Is.Not.Null, $"GameplayInputRouter must publish {name} detector results.");
+            Assert.That(inputEvent.EventHandlerType, Is.EqualTo(handlerType));
+            return inputEvent;
         }
     }
 }

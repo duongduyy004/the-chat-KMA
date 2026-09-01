@@ -463,6 +463,7 @@ GameObject:
   m_Component:
   - component: {fileID: 700001}
   - component: {fileID: 700002}
+  - component: {fileID: 700003}
   m_Layer: 0
   m_Name: FullScreenGameplayInput
   m_TagString: Untagged
@@ -507,6 +508,31 @@ MonoBehaviour:
   touchPositionActionName: TouchPosition
   touchDeltaActionName: TouchDelta
   swipeThresholdPixels: 80
+--- !u!114 &700003
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 700000}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4083c0e02fc454509a146b81674033af, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  inputActions: {fileID: -944628639613478452, guid: d5e6f708192a3b4c5d6e7f8091a2b3c4, type: 3}
+  tapAction: {fileID: 0}
+  holdAction: {fileID: 0}
+  swipeAction: {fileID: 0}
+  rhythmAction: {fileID: 0}
+  sprintActionMapName: Sprint
+  enduranceActionMapName: Endurance
+  bossActionMapName: Boss
+  punishmentActionMapName: Punishment
+  uiActionMapName: UI
+  gameplayActionMapName: Endurance
+  rhythmOffsetMs: 0
+  sprintRoutingEnabled: 0
 --- !u!1 &900000
 GameObject:
   m_ObjectHideFlags: 0

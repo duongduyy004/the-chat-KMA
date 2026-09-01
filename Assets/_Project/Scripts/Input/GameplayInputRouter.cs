@@ -51,6 +51,7 @@ namespace KMA.Input
         [SerializeField] bool sprintRoutingEnabled;
         bool sprintTapSubscribed;
         bool keyboardHoldActive;
+        bool detectorEventsSubscribed;
 
         public InputActionAsset InputActions => inputActions;
         public string SprintActionMapName => sprintActionMapName;
@@ -63,12 +64,16 @@ namespace KMA.Input
         public bool InputActionsReady => subscribed;
         public event System.Action<Side> OnSprintTap;
         public event System.Action<Side> OnSprintValidTap;
+        public event System.Action<TimingJudge, double> OnRhythmJudge;
+        public event System.Action<double> OnHoldEnd;
+        public event System.Action<SwipeResult> OnSwipe;
         internal bool AcceptsPointerEvents => isActiveAndEnabled;
 
         void OnEnable()
         {
             EnhancedTouchSupport.Enable();
             ConfigureSprintRouting();
+            ConfigureDetectorEvents();
             ConfigureInputActions();
         }
 
@@ -78,6 +83,7 @@ namespace KMA.Input
             CancelKeyboardHold();
             UnsubscribeInputActions();
             UnsubscribeSprintRouting();
+            UnsubscribeDetectorEvents();
             EnhancedTouchSupport.Disable();
         }
 
@@ -87,6 +93,7 @@ namespace KMA.Input
             CancelKeyboardHold();
             UnsubscribeInputActions();
             UnsubscribeSprintRouting();
+            UnsubscribeDetectorEvents();
         }
 
         public void SetDetectors(
@@ -98,11 +105,46 @@ namespace KMA.Input
         {
             tapMashDetector = tapMash;
             rhythmBeatDetector = rhythmBeat;
+            UnsubscribeDetectorEvents();
             holdDetector = hold;
             alternateTapDetector = alternateTap;
             swipeDetector = swipe;
+            ConfigureDetectorEvents();
         }
 
+        void ConfigureDetectorEvents()
+        {
+            if (!isActiveAndEnabled || detectorEventsSubscribed)
+                return;
+
+            if (rhythmBeatDetector != null)
+                rhythmBeatDetector.OnJudge += DispatchRhythmJudge;
+            if (holdDetector != null)
+                holdDetector.OnHoldEnd += DispatchHoldEnd;
+            if (swipeDetector != null)
+                swipeDetector.OnSwipe += DispatchSwipe;
+            detectorEventsSubscribed = true;
+        }
+
+        void UnsubscribeDetectorEvents()
+        {
+            if (!detectorEventsSubscribed)
+                return;
+
+            if (rhythmBeatDetector != null)
+                rhythmBeatDetector.OnJudge -= DispatchRhythmJudge;
+            if (holdDetector != null)
+                holdDetector.OnHoldEnd -= DispatchHoldEnd;
+            if (swipeDetector != null)
+                swipeDetector.OnSwipe -= DispatchSwipe;
+            detectorEventsSubscribed = false;
+        }
+
+        void DispatchRhythmJudge(TimingJudge judge, double deltaMs) => OnRhythmJudge?.Invoke(judge, deltaMs);
+
+        void DispatchHoldEnd(double duration) => OnHoldEnd?.Invoke(duration);
+
+        void DispatchSwipe(SwipeResult swipe) => OnSwipe?.Invoke(swipe);
         public void ConfigureInputForTest(InputActionAsset actions, string actionMapName, InputAction rhythm = null)
         {
             inputActions = actions;

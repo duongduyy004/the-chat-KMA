@@ -9,108 +9,56 @@ namespace KMA.Gameplay
     {
         [SerializeField] EnduranceController controller;
         [SerializeField] InputActionAsset inputActions;
-        [SerializeField] string tapActionName = "Tap";
-        [SerializeField] string holdActionName = "Hold";
-        [SerializeField] string swipeUpActionName = "SwipeUp";
-        [SerializeField] string swipeDownActionName = "SwipeDown";
-        [SerializeField] string touchPressActionName = "TouchPress";
-        [SerializeField] string touchPositionActionName = "TouchPosition";
-        [SerializeField] string touchDeltaActionName = "TouchDelta";
-        [SerializeField] float swipeThresholdPixels = 80f;
+        [SerializeField] GameplayInputRouter inputRouter;
 
-        InputAction tapAction;
-        InputAction holdAction;
-        InputAction swipeUpAction;
-        InputAction swipeDownAction;
-        InputAction touchPressAction;
-        InputAction touchPositionAction;
-        InputAction touchDeltaAction;
         RhythmBeatInputDetector rhythmDetector;
         HoldInputDetector holdDetector;
         SwipeInputDetector swipeDetector;
-        Vector2 previousTouchPosition;
-        bool touchTracking;
-        bool touchSwipeDispatched;
+        bool routerSubscribed;
 
-        public bool InputActionsReady => tapAction != null && holdAction != null && swipeUpAction != null && swipeDownAction != null && touchPositionAction != null && touchDeltaAction != null;
+        public bool InputActionsReady => inputRouter != null && inputRouter.InputActionsReady;
         public InputActionAsset InputActionsAsset => inputActions;
 
         void Awake()
         {
-            if (controller == null)
-                controller = GetComponentInParent<EnduranceController>();
+            ResolveReferences();
         }
 
-        void OnEnable() => ConfigureInputActions();
+        void OnEnable()
+        {
+            ResolveReferences();
+            ConfigureDetectors();
+            SubscribeRouter();
+        }
 
         void OnDisable()
         {
-            UnsubscribeInputActions();
-            UnsubscribeDetectors();
+            UnsubscribeRouter();
         }
 
         void OnDestroy()
         {
-            UnsubscribeInputActions();
-            UnsubscribeDetectors();
-        }
-
-        void Update()
-        {
-            var touchscreen = Touchscreen.current;
-            if (touchscreen == null)
-                return;
-
-            var touch = touchscreen.primaryTouch;
-            ProcessTouchSample(touch.phase.ReadValue(), touch.position.ReadValue(), touch.delta.ReadValue(), touch.press.isPressed);
+            UnsubscribeRouter();
         }
 
         internal void ProcessTouchSampleForTest(UnityEngine.InputSystem.TouchPhase phase, Vector2 position, Vector2 delta, bool pressed)
         {
-            ProcessTouchSample(phase, position, delta, pressed);
-        }
-
-        void ProcessTouchSample(UnityEngine.InputSystem.TouchPhase phase, Vector2 position, Vector2 delta, bool pressed)
-        {
-            if (phase == UnityEngine.InputSystem.TouchPhase.Began ||
-                (phase == UnityEngine.InputSystem.TouchPhase.None && pressed && !touchTracking))
-            {
-                previousTouchPosition = position;
-                touchTracking = true;
-                touchSwipeDispatched = false;
+            if (inputRouter == null)
                 return;
-            }
 
-            if ((phase == UnityEngine.InputSystem.TouchPhase.Moved || phase == UnityEngine.InputSystem.TouchPhase.None) && touchTracking)
-            {
-                if (position == previousTouchPosition)
-                    return;
-                delta = position - previousTouchPosition;
-                previousTouchPosition = position;
-                DispatchVerticalSwipe(delta);
-                return;
-            }
-
-            if (phase == UnityEngine.InputSystem.TouchPhase.Ended || phase == UnityEngine.InputSystem.TouchPhase.Canceled)
-            {
-                touchTracking = false;
-                previousTouchPosition = default;
-                touchSwipeDispatched = false;
-            }
-        }
-
-        internal void ConfigureForTest(EnduranceController target, InputActionAsset actions)
-        {
-            controller = target ?? throw new ArgumentNullException(nameof(target));
-            inputActions = actions ?? throw new ArgumentNullException(nameof(actions));
-            ConfigureInputActions();
+            if (phase == UnityEngine.InputSystem.TouchPhase.Began || (phase == UnityEngine.InputSystem.TouchPhase.None && pressed))
+                inputRouter.FeedPointerDownForTest(position, Time.realtimeSinceStartupAsDouble);
+            else if (phase == UnityEngine.InputSystem.TouchPhase.Moved)
+                inputRouter.FeedPointerMoveForTest(position, Time.realtimeSinceStartupAsDouble);
+            else if (phase == UnityEngine.InputSystem.TouchPhase.Ended || phase == UnityEngine.InputSystem.TouchPhase.Canceled)
+                inputRouter.FeedPointerUpForTest(position, Time.realtimeSinceStartupAsDouble);
         }
 
         internal void ConfigureDetectorsForTest(EnduranceController target,
             RhythmBeatInputDetector rhythm, HoldInputDetector hold, SwipeInputDetector swipe)
         {
             controller = target ?? throw new ArgumentNullException(nameof(target));
-            UnsubscribeDetectors();
+            UnsubscribeRouter();
             rhythmDetector = rhythm ?? throw new ArgumentNullException(nameof(rhythm));
             holdDetector = hold ?? throw new ArgumentNullException(nameof(hold));
             swipeDetector = swipe ?? throw new ArgumentNullException(nameof(swipe));
@@ -119,73 +67,70 @@ namespace KMA.Gameplay
             swipeDetector.OnSwipe += OnSwipe;
         }
 
-        void ConfigureInputActions()
+        internal void ConfigureInputRouterForTest(EnduranceController target, GameplayInputRouter router)
         {
-            UnsubscribeInputActions();
-            if (controller == null || inputActions == null)
+            controller = target ?? throw new ArgumentNullException(nameof(target));
+            UnsubscribeRouter();
+            inputRouter = router ?? throw new ArgumentNullException(nameof(router));
+            inputActions = inputRouter.InputActions;
+            ConfigureDetectors();
+            SubscribeRouter();
+        }
+
+        void ResolveReferences()
+        {
+            if (controller == null)
+                controller = GetComponentInParent<EnduranceController>();
+            if (inputRouter == null)
+                inputRouter = FindFirstObjectByType<GameplayInputRouter>();
+            if (inputActions == null && inputRouter != null)
+                inputActions = inputRouter.InputActions;
+        }
+
+        void ConfigureDetectors()
+        {
+            if (inputRouter == null || controller == null)
                 return;
 
-            tapAction = inputActions.FindAction(tapActionName, false);
-            holdAction = inputActions.FindAction(holdActionName, false);
-            swipeUpAction = inputActions.FindAction(swipeUpActionName, false);
-            swipeDownAction = inputActions.FindAction(swipeDownActionName, false);
-            touchPressAction = inputActions.FindAction(touchPressActionName, false);
-            touchPositionAction = inputActions.FindAction(touchPositionActionName, false);
-            touchDeltaAction = inputActions.FindAction(touchDeltaActionName, false);
-            if (!InputActionsReady)
+            rhythmDetector ??= new RhythmBeatInputDetector();
+            holdDetector ??= new HoldInputDetector();
+            swipeDetector ??= new SwipeInputDetector();
+            inputRouter.RhythmOffsetMs = controller.RhythmOffsetMs;
+            inputRouter.SetDetectors(null, rhythmDetector, holdDetector, null, swipeDetector);
+        }
+
+        void SubscribeRouter()
+        {
+            if (inputRouter == null || routerSubscribed)
                 return;
 
-            tapAction.performed += OnTapPerformed;
-            holdAction.performed += OnHoldPerformed;
-            swipeUpAction.performed += OnSwipeUpPerformed;
-            swipeDownAction.performed += OnSwipeDownPerformed;
-            inputActions.Enable();
-            tapAction.Enable();
-            holdAction.Enable();
-            swipeUpAction.Enable();
-            swipeDownAction.Enable();
-            touchPressAction.Enable();
-            touchPositionAction.Enable();
-            touchDeltaAction.Enable();
+            inputRouter.OnRhythmJudge += OnRhythmJudge;
+            inputRouter.OnHoldEnd += OnHoldEnd;
+            inputRouter.OnSwipe += OnSwipe;
+            routerSubscribed = true;
         }
 
-        void UnsubscribeInputActions()
+        void UnsubscribeRouter()
         {
-            if (tapAction != null) tapAction.performed -= OnTapPerformed;
-            if (holdAction != null) holdAction.performed -= OnHoldPerformed;
-            if (swipeUpAction != null) swipeUpAction.performed -= OnSwipeUpPerformed;
-            if (swipeDownAction != null) swipeDownAction.performed -= OnSwipeDownPerformed;
-            tapAction = null;
-            holdAction = null;
-            swipeUpAction = null;
-            swipeDownAction = null;
-            touchPressAction = null;
-            touchPositionAction = null;
-            touchDeltaAction = null;
-            touchTracking = false;
-            previousTouchPosition = default;
-            touchSwipeDispatched = false;
+            if (routerSubscribed)
+            {
+                inputRouter.OnRhythmJudge -= OnRhythmJudge;
+                inputRouter.OnHoldEnd -= OnHoldEnd;
+                inputRouter.OnSwipe -= OnSwipe;
+                routerSubscribed = false;
+            }
+
+            if (inputRouter == null)
+            {
+                if (rhythmDetector != null) rhythmDetector.OnJudge -= OnRhythmJudge;
+                if (holdDetector != null) holdDetector.OnHoldEnd -= OnHoldEnd;
+                if (swipeDetector != null) swipeDetector.OnSwipe -= OnSwipe;
+            }
         }
 
-        void UnsubscribeDetectors()
-        {
-            if (rhythmDetector != null) rhythmDetector.OnJudge -= OnRhythmJudge;
-            if (holdDetector != null) holdDetector.OnHoldEnd -= OnHoldEnd;
-            if (swipeDetector != null) swipeDetector.OnSwipe -= OnSwipe;
-            rhythmDetector = null;
-            holdDetector = null;
-            swipeDetector = null;
-        }
+        void OnRhythmJudge(KMA.Input.TimingJudge _, double deltaMs) => controller.TapFromCalibratedDelta(deltaMs);
 
-        void OnRhythmJudge(TimingJudge _, double deltaMs)
-        {
-            controller.TapFromCalibratedDelta(deltaMs);
-        }
-
-        void OnHoldEnd(double _)
-        {
-            controller.EndHold((float)holdDetector.ChargeRatio);
-        }
+        void OnHoldEnd(double duration) => controller.EndHold((float)(duration / controller.BeatIntervalSeconds));
 
         void OnSwipe(SwipeResult swipe)
         {
@@ -193,38 +138,6 @@ namespace KMA.Gameplay
                 controller.Swipe(SwipeDirection.Up);
             else if (swipe.Direction == KMA.Input.SwipeDirection.Down)
                 controller.Swipe(SwipeDirection.Down);
-        }
-
-        void OnTapPerformed(InputAction.CallbackContext context)
-        {
-            if (context.performed)
-                controller.TapAtCurrentBeat();
-        }
-
-        void OnHoldPerformed(InputAction.CallbackContext context)
-        {
-            controller.EndHold((float)(context.duration / controller.BeatIntervalSeconds));
-        }
-
-        void OnSwipeUpPerformed(InputAction.CallbackContext context)
-        {
-            if (context.performed)
-                controller.Swipe(SwipeDirection.Up);
-        }
-
-        void OnSwipeDownPerformed(InputAction.CallbackContext context)
-        {
-            if (context.performed)
-                controller.Swipe(SwipeDirection.Down);
-        }
-
-        void DispatchVerticalSwipe(Vector2 delta)
-        {
-            if (touchSwipeDispatched || Mathf.Abs(delta.y) < swipeThresholdPixels || Mathf.Abs(delta.y) <= Mathf.Abs(delta.x))
-                return;
-
-            touchSwipeDispatched = true;
-            controller.Swipe(delta.y > 0f ? SwipeDirection.Up : SwipeDirection.Down);
         }
     }
 }
