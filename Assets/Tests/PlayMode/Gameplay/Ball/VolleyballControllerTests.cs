@@ -24,45 +24,53 @@ namespace KMA.Tests.Gameplay.Ball
         {
             var fixture = CreateFixture();
 
-            AdvanceRulesToPlay(fixture.Rules);
+            AdvanceControllerToPlay(fixture.Controller);
 
             Assert.That(fixture.Controller.Rules, Is.SameAs(fixture.Rules));
             Assert.That(fixture.Controller.Ball, Is.SameAs(fixture.Ball));
+            Assert.That(fixture.Controller.PresentationPhase, Is.EqualTo(MinigamePhase.Play));
+            Assert.That(fixture.Rules.Phase, Is.EqualTo(MinigamePhase.Play));
             Assert.That(fixture.Controller.CurrentContext, Is.EqualTo(BallContext.Low));
             Assert.That(fixture.Controller.PlayerScore, Is.Zero);
             Assert.That(fixture.Controller.OpponentScore, Is.Zero);
             Assert.That(fixture.Controller.LongestCombo, Is.Zero);
         }
 
-        [TestCase(BallContext.Low, 0f, -1f, VolleyAction.Dig, 5f)]
-        [TestCase(BallContext.Rising, 0f, 1f, VolleyAction.Set, 5f)]
-        [TestCase(BallContext.ApexNearNet, 1f, -1f, VolleyAction.Spike, 8f)]
+        [TestCase(BallContext.Low, 0f, -1f, VolleyAction.Dig, 5f, 0f)]
+        [TestCase(BallContext.Rising, 0f, 1f, VolleyAction.Set, 5f, 0f)]
+        [TestCase(BallContext.ApexNearNet, 1f, -1f, VolleyAction.Spike, 8f, .15f)]
         public void SubmitSwipe_ResolvesEachAuthoredActionThroughRulesAndLaunchesOnce(
             BallContext expectedContext,
             float swipeX,
             float swipeY,
             VolleyAction expectedAction,
-            float expectedLaunchForce)
+            float expectedLaunchForce,
+            float expectedCurvature)
         {
             var fixture = CreateFixture();
-            AdvanceRulesToPlay(fixture.Rules);
+            AdvanceControllerToPlay(fixture.Controller);
             SetBallForContext(fixture, expectedContext);
+            Assert.That(fixture.Controller.CurrentContext, Is.EqualTo(expectedContext));
 
             fixture.Controller.SubmitSwipe(new Vector2(swipeX, swipeY), inReachZone: true, timingAccuracy: 1f);
+            BallFlightSnapshot launched = fixture.Ball.Snapshot;
+            fixture.Controller.SubmitSwipe(new Vector2(swipeX, swipeY), inReachZone: true, timingAccuracy: 1f);
 
-            Assert.That(fixture.Controller.CurrentContext, Is.EqualTo(expectedContext));
             Assert.That(fixture.Rules.TotalTouches, Is.EqualTo(1));
             Assert.That(fixture.Controller.TouchCount, Is.EqualTo(1));
-            Assert.That(fixture.Ball.Snapshot.IsInFlight, Is.True);
-            Assert.That(fixture.Ball.Body.velocity.magnitude, Is.EqualTo(expectedLaunchForce).Within(.001f));
-            Assert.That(ResolveExpectedAction(expectedContext, new Vector2(swipeX, swipeY)), Is.EqualTo(expectedAction));
+            Assert.That(launched.IsInFlight, Is.True);
+            Assert.That(launched.Velocity.magnitude, Is.EqualTo(expectedLaunchForce).Within(.001f));
+            Assert.That(Vector2.Distance(launched.Velocity, ExpectedLaunchDirection(expectedAction).normalized * expectedLaunchForce), Is.LessThan(.001f));
+            Assert.That(launched.Curvature, Is.EqualTo(expectedCurvature).Within(.001f));
+            Assert.That(Vector2.Distance(fixture.Ball.Snapshot.Velocity, launched.Velocity), Is.LessThan(.001f));
+            Assert.That(fixture.Ball.Snapshot.Curvature, Is.EqualTo(launched.Curvature).Within(.001f));
         }
 
         [Test]
         public void SubmitSwipe_RejectsOutOfReachAndBelowThresholdWithoutChangingTouchOrScore()
         {
             var fixture = CreateFixture();
-            AdvanceRulesToPlay(fixture.Rules);
+            AdvanceControllerToPlay(fixture.Controller);
             SetBallForContext(fixture, BallContext.Low);
 
             fixture.Controller.SubmitSwipe(Vector2.down, inReachZone: false, timingAccuracy: 1f);
@@ -82,7 +90,7 @@ namespace KMA.Tests.Gameplay.Ball
         public void GameplayInputRouter_OnSwipeRoutesEveryCardinalDirectionToController(SwipeDirection direction)
         {
             var fixture = CreateFixture();
-            AdvanceRulesToPlay(fixture.Rules);
+            AdvanceControllerToPlay(fixture.Controller);
             SetBallForContext(fixture, BallContext.Low);
 
             RouteSwipe(fixture.SwipeDetector, direction);
@@ -93,10 +101,25 @@ namespace KMA.Tests.Gameplay.Ball
         }
 
         [Test]
+        public void GameplayInputRouter_OnSwipePromotesRightGestureToDownRightSpikeAtNetApex()
+        {
+            var fixture = CreateFixture();
+            AdvanceControllerToPlay(fixture.Controller);
+            SetBallForContext(fixture, BallContext.ApexNearNet);
+
+            RouteSwipe(fixture.SwipeDetector, SwipeDirection.Right);
+
+            Assert.That(fixture.Rules.TotalTouches, Is.EqualTo(1));
+            Assert.That(fixture.Controller.TouchCount, Is.EqualTo(1));
+            Assert.That(Vector2.Distance(fixture.Ball.Snapshot.Velocity, new Vector2(1f, .75f).normalized * 8f), Is.LessThan(.001f));
+            Assert.That(fixture.Ball.Snapshot.Curvature, Is.EqualTo(.15f).Within(.001f));
+        }
+
+        [Test]
         public void ContextAndReach_AreCalculatedFromBallVelocityNetWindowAndReachBounds()
         {
             var fixture = CreateFixture();
-            AdvanceRulesToPlay(fixture.Rules);
+            AdvanceControllerToPlay(fixture.Controller);
 
             SetBallForContext(fixture, BallContext.Low);
             Assert.That(fixture.Controller.CurrentContext, Is.EqualTo(BallContext.Low));
@@ -120,7 +143,7 @@ namespace KMA.Tests.Gameplay.Ball
         public void AutoPositioning_UsesBallPredictionWithoutMutatingBallPhysics()
         {
             var fixture = CreateFixture();
-            AdvanceRulesToPlay(fixture.Rules);
+            AdvanceControllerToPlay(fixture.Controller);
             fixture.Ball.Launch(new Vector2(1f, 1f), 4f, .25f);
             fixture.Ball.Body.position = new Vector2(.25f, 2f);
             fixture.Ball.Body.velocity = new Vector2(3f, 2f);
@@ -140,7 +163,7 @@ namespace KMA.Tests.Gameplay.Ball
         public void ThirdValidTouch_ShowsCounterplayCuesWithoutChangingPointsOrPrediction()
         {
             var fixture = CreateFixture();
-            AdvanceRulesToPlay(fixture.Rules);
+            AdvanceControllerToPlay(fixture.Controller);
 
             for (int touch = 0; touch < 3; touch++)
             {
@@ -157,13 +180,20 @@ namespace KMA.Tests.Gameplay.Ball
             Assert.That(fixture.Controller.OpponentScore, Is.Zero);
             Assert.That(fixture.Controller.PredictedLandingPoint.x, Is.EqualTo(predictionBeforeCueFrame.x).Within(.001f));
             Assert.That(fixture.Controller.PredictedLandingPoint.y, Is.EqualTo(predictionBeforeCueFrame.y).Within(.001f));
+
+            SetBallForContext(fixture, BallContext.Low);
+            Assert.That(fixture.Controller.OpponentCounterCueVisible, Is.True);
+            Assert.That(fixture.Controller.OpponentFakeCueVisible, Is.True);
+            fixture.Controller.SubmitSwipe(Vector2.down, inReachZone: true, timingAccuracy: 1f);
+            Assert.That(fixture.Controller.TouchCount, Is.EqualTo(4));
+            Assert.That(fixture.Ball.Snapshot.IsInFlight, Is.True);
         }
 
         [Test]
         public void HudAndCompletion_FollowRulesResultAndCompleteOnlyOnce()
         {
             var fixture = CreateFixture();
-            AdvanceRulesToPlay(fixture.Rules);
+            AdvanceControllerToPlay(fixture.Controller);
 
             Assert.That(fixture.Controller.BuildHudState().statusText, Is.EqualTo("TOUCH 1/2/3"));
             fixture.Rules.AwardRallyPoint();
@@ -202,10 +232,10 @@ namespace KMA.Tests.Gameplay.Ball
             return new ControllerFixture(controller, rules, ball, detector);
         }
 
-        static void AdvanceRulesToPlay(VolleyballRules rules)
+        static void AdvanceControllerToPlay(VolleyballController controller)
         {
-            rules.Tick(2f);
-            rules.Tick(3f);
+            controller.SimulateForTest(2f);
+            controller.SimulateForTest(3f);
         }
 
         static void SetBallForContext(ControllerFixture fixture, BallContext context)
@@ -222,8 +252,13 @@ namespace KMA.Tests.Gameplay.Ball
             };
         }
 
-        static VolleyAction ResolveExpectedAction(BallContext context, Vector2 swipe) =>
-            VolleyballRules.ResolveGesture(context, swipe);
+        static Vector2 ExpectedLaunchDirection(VolleyAction action) => action switch
+        {
+            VolleyAction.Dig => Vector2.up,
+            VolleyAction.Set => new Vector2(1f, 1.5f),
+            VolleyAction.Spike => new Vector2(1f, .75f),
+            _ => throw new System.ArgumentOutOfRangeException(nameof(action), action, null)
+        };
 
         static void RouteSwipe(SwipeInputDetector detector, SwipeDirection direction)
         {
