@@ -1,11 +1,13 @@
 using System.Collections;
+using System.Reflection;
 using KMA.Gameplay;
 using NUnit.Framework;
 using UnityEngine;
+using UnityEngine.EventSystems;
 using UnityEngine.InputSystem;
-using UnityEngine.InputSystem.LowLevel;
 using UnityEngine.SceneManagement;
 using UnityEngine.TestTools;
+using GameplayInputRouter = KMA.Input.GameplayInputRouter;
 using ScreenTapArea = KMA.Input.ScreenTapArea;
 
 namespace KMA.Tests.Gameplay.Running
@@ -111,17 +113,13 @@ namespace KMA.Tests.Gameplay.Running
             controller.Dispatch(new AuthoredBeat(BeatEvent.Jump));
             Assert.That(controller.Phase, Is.EqualTo(MinigamePhase.Play));
             Assert.That(controller.Rules.Mode, Is.EqualTo(EnduranceInputMode.ObstacleSwipe));
-            var touchscreen = Touchscreen.current ?? InputSystem.AddDevice<Touchscreen>();
-            QueueTouch(touchscreen, UnityEngine.InputSystem.TouchPhase.Began, new Vector2(100f, 100f), Vector2.zero);
-            Assert.That(touchscreen.primaryTouch.position.ReadValue(), Is.EqualTo(new Vector2(100f, 100f)));
-            Assert.That(touchscreen.primaryTouch.phase.ReadValue(), Is.EqualTo(UnityEngine.InputSystem.TouchPhase.Began));
-            bridge.ProcessTouchSampleForTest(UnityEngine.InputSystem.TouchPhase.Began, new Vector2(100f, 100f), Vector2.zero, true);
-            QueueTouch(touchscreen, UnityEngine.InputSystem.TouchPhase.Moved, new Vector2(100f, 240f), new Vector2(0f, 140f));
-            Assert.That(touchscreen.primaryTouch.phase.ReadValue(), Is.EqualTo(UnityEngine.InputSystem.TouchPhase.Moved));
-            bridge.ProcessTouchSampleForTest(UnityEngine.InputSystem.TouchPhase.Moved, new Vector2(100f, 240f), new Vector2(0f, 140f), true);
-            bridge.ProcessTouchSampleForTest(UnityEngine.InputSystem.TouchPhase.Moved, new Vector2(100f, 400f), new Vector2(0f, 160f), true);
-            QueueTouch(touchscreen, UnityEngine.InputSystem.TouchPhase.Ended, new Vector2(100f, 240f), Vector2.zero);
-            bridge.ProcessTouchSampleForTest(UnityEngine.InputSystem.TouchPhase.Ended, new Vector2(100f, 240f), Vector2.zero, false);
+            var tapArea = Object.FindFirstObjectByType<ScreenTapArea>();
+            Assert.That(tapArea, Is.Not.Null);
+            var eventSystem = EventSystem.current ?? new GameObject("EnduranceInputEventSystem", typeof(EventSystem)).GetComponent<EventSystem>();
+            var start = new Vector2(Screen.width * .5f, Screen.height * .5f);
+            tapArea.OnPointerDown(PointerAt(eventSystem, start, 1));
+            tapArea.OnDrag(PointerAt(eventSystem, start + Vector2.up * 160f, 1));
+            tapArea.OnPointerUp(PointerAt(eventSystem, start + Vector2.up * 160f, 1));
             yield return null;
 
             Assert.That(controller.InputSwipeCount, Is.EqualTo(1));
@@ -145,8 +143,11 @@ namespace KMA.Tests.Gameplay.Running
             var tapAreas = Object.FindObjectsByType<ScreenTapArea>(FindObjectsInactive.Exclude, FindObjectsSortMode.None);
             Assert.That(tapAreas, Has.Length.EqualTo(1), "Endurance must serialize one gameplay pointer surface.");
             var tapArea = tapAreas[0];
+            Assert.That(tapArea.gameObject, Is.SameAs(inputSurface));
             Assert.That(tapArea.GetComponent<UnityEngine.UI.Graphic>(), Is.Not.Null);
             Assert.That(tapArea.GetComponent<UnityEngine.UI.Graphic>().raycastTarget, Is.True);
+            Assert.That(PrivateField<GameplayInputRouter>(tapArea, "router"), Is.SameAs(inputSurface.GetComponent<GameplayInputRouter>()));
+            Assert.That(PrivateField<RectTransform>(tapArea, "gameplayArea"), Is.SameAs(inputSurface.GetComponent<RectTransform>()));
             Assert.That(controller.MetronomeAudioSource, Is.Not.Null);
             Assert.That(controller.MetronomeAudioSource.clip, Is.Not.Null);
 
@@ -237,16 +238,20 @@ namespace KMA.Tests.Gameplay.Running
             return false;
         }
 
-        static void QueueTouch(Touchscreen touchscreen, UnityEngine.InputSystem.TouchPhase phase, Vector2 position, Vector2 delta)
+        static PointerEventData PointerAt(EventSystem eventSystem, Vector2 position, int pointerId)
         {
-            InputSystem.QueueStateEvent(touchscreen, new TouchState
+            return new PointerEventData(eventSystem)
             {
-                touchId = 1,
-                phase = phase,
                 position = position,
-                delta = delta
-            });
-            InputSystem.Update();
+                pointerId = pointerId
+            };
+        }
+
+        static T PrivateField<T>(ScreenTapArea tapArea, string name) where T : class
+        {
+            var field = typeof(ScreenTapArea).GetField(name, BindingFlags.Instance | BindingFlags.NonPublic);
+            Assert.That(field, Is.Not.Null, $"ScreenTapArea must retain serialized {name} wiring.");
+            return field.GetValue(tapArea) as T;
         }
     }
 }

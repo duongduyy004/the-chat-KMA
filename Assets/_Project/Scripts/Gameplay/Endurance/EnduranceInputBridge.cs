@@ -2,7 +2,6 @@ using System;
 using KMA.Input;
 using UnityEngine;
 using UnityEngine.InputSystem;
-using UnityEngine.UI;
 
 namespace KMA.Gameplay
 {
@@ -19,6 +18,7 @@ namespace KMA.Gameplay
 
         public bool InputActionsReady => inputRouter != null && inputRouter.InputActionsReady;
         public InputActionAsset InputActionsAsset => inputActions;
+        public event Action<TimingJudge> RhythmJudged;
 
         void Awake()
         {
@@ -30,7 +30,6 @@ namespace KMA.Gameplay
             ResolveReferences();
             ConfigureDetectors();
             SubscribeRouter();
-            EnsureGameplaySurface();
         }
 
         void OnDisable()
@@ -77,16 +76,6 @@ namespace KMA.Gameplay
             inputActions = inputRouter.InputActions;
             ConfigureDetectors();
             SubscribeRouter();
-        }
-
-        void EnsureGameplaySurface()
-        {
-            if (inputRouter == null || FindFirstObjectByType<ScreenTapArea>() != null) return;
-            var surface = new GameObject("EnduranceGameplaySurface", typeof(RectTransform), typeof(CanvasRenderer), typeof(Image), typeof(ScreenTapArea));
-            var rect = (RectTransform)surface.transform;
-            rect.SetParent(transform, false); rect.anchorMin = Vector2.zero; rect.anchorMax = Vector2.one; rect.offsetMin = Vector2.zero; rect.offsetMax = Vector2.zero;
-            var image = surface.GetComponent<Image>(); image.color = new Color(0f, 0f, 0f, 0f); image.raycastTarget = true;
-            surface.GetComponent<ScreenTapArea>().Configure(inputRouter, rect);
         }
 
         void ResolveReferences()
@@ -140,7 +129,14 @@ namespace KMA.Gameplay
             }
         }
 
-        void OnRhythmJudge(KMA.Input.TimingJudge _, double deltaMs) { if (controller != null && controller.Phase == MinigamePhase.Play && controller.Rules.Mode == EnduranceInputMode.RhythmTap) controller.TapFromCalibratedDelta(deltaMs); }
+        void OnRhythmJudge(KMA.Input.TimingJudge judge, double deltaMs)
+        {
+            if (controller == null || controller.Phase != MinigamePhase.Play || controller.Rules.Mode != EnduranceInputMode.RhythmTap)
+                return;
+
+            controller.TapFromCalibratedDelta(deltaMs);
+            RhythmJudged?.Invoke(judge);
+        }
 
         void OnHoldEnd(double duration) { if (controller != null && controller.Phase == MinigamePhase.Play && controller.Rules.Mode == EnduranceInputMode.BreathHold) controller.EndHold((float)(duration / controller.BeatIntervalSeconds)); }
 

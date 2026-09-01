@@ -103,6 +103,15 @@ namespace KMA.Gameplay.UI
                     new TutorialStep("WIND CUE", "Counter the wind before the window closes")
                 });
             }
+            else if (source.GetType().Name == "EnduranceController")
+            {
+                tutorialOverlay.Show("Endurance", new List<TutorialStep>
+                {
+                    new TutorialStep("RHYTHM", "Tap on the beat"),
+                    new TutorialStep("RECOVER", "Hold to recover stamina"),
+                    new TutorialStep("OBSTACLES", "Swipe up/down to clear obstacles")
+                });
+            }
         }
 
         void RefreshCountdown()

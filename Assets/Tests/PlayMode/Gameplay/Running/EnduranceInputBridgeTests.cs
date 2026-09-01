@@ -93,21 +93,21 @@ namespace KMA.Tests.Gameplay.Running
             controller.Dispatch(new AuthoredBeat(BeatEvent.Tap));
             router.FeedRhythmTapForTest(10d, 10d);
             FeedRouterGesture(router, 1d);
-            Assert.That(controller.InputTapCount, Is.EqualTo(1));
+            Assert.That(controller.InputTapCount, Is.EqualTo(2));
             Assert.That(controller.InputHoldCount, Is.Zero);
             Assert.That(controller.InputSwipeCount, Is.Zero);
 
             controller.Dispatch(new AuthoredBeat(BeatEvent.Breath));
             router.FeedRhythmTapForTest(10d, 10d);
             FeedRouterGesture(router, 3d);
-            Assert.That(controller.InputTapCount, Is.EqualTo(1));
+            Assert.That(controller.InputTapCount, Is.EqualTo(2));
             Assert.That(controller.InputHoldCount, Is.EqualTo(1));
             Assert.That(controller.InputSwipeCount, Is.Zero);
 
             controller.Dispatch(new AuthoredBeat(BeatEvent.Jump));
             router.FeedRhythmTapForTest(10d, 10d);
             FeedRouterGesture(router, 5d);
-            Assert.That(controller.InputTapCount, Is.EqualTo(1));
+            Assert.That(controller.InputTapCount, Is.EqualTo(2));
             Assert.That(controller.InputHoldCount, Is.EqualTo(1));
             Assert.That(controller.InputSwipeCount, Is.EqualTo(1));
         }
