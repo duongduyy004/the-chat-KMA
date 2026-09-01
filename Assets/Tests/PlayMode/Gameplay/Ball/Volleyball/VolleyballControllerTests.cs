@@ -27,6 +27,7 @@ namespace KMA.Tests.Gameplay.Ball
             var fixture = CreateFixture();
 
             AdvanceControllerToPlay(fixture.Controller);
+            SetBallForContext(fixture, BallContext.Low);
 
             Assert.That(fixture.Controller.Rules, Is.SameAs(fixture.Rules));
             Assert.That(fixture.Controller.Ball, Is.SameAs(fixture.Ball));

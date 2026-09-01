@@ -91,6 +91,3 @@ The S2 Sprint gate is verified with Unity `6000.3.23f1`: `SprintSceneShowsTutori
 - [`docs/superpowers/plans/2026-08-24-running-minigames.md`](docs/superpowers/plans/2026-08-24-running-minigames.md) — Sprint and Endurance
 - [`docs/superpowers/plans/2026-08-24-ball-minigames.md`](docs/superpowers/plans/2026-08-24-ball-minigames.md) — five ball minigames
 - [`docs/superpowers/plans/2026-08-24-progression-boss.md`](docs/superpowers/plans/2026-08-24-progression-boss.md) — progression, Punishment, routing, and Boss
-
-
-codex resume, then select Implement S4 core systems plan (01a050e4-35c4-7480-bf1b-22963bc82ccc)

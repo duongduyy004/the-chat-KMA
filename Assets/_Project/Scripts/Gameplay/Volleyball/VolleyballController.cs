@@ -264,7 +264,7 @@ namespace KMA.Gameplay
 
             string status = OpponentFakeCueVisible ? "COUNTER THE FAKE" :
                 !InReachZone ? "MOVE INTO REACH" :
-                "TOUCH " + (TouchCount % 3 + 1) + "/3";
+                "TOUCH 1/2/3";
             return new MinigameHudState(
                 phase: PresentationPhase.ToString(),
                 timeRemaining: Mathf.Max(0f, timeLimit - Rules.Elapsed),
