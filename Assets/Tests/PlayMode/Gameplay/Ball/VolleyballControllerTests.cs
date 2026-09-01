@@ -237,6 +237,25 @@ namespace KMA.Tests.Gameplay.Ball
         }
 
         [Test]
+        public void DeadlineCrossing_TicksRulesBeforeCachingQualifyingResult()
+        {
+            var fixture = CreateFixture();
+            AdvanceControllerToPlay(fixture.Controller);
+            fixture.Rules.Tick(59.99f - fixture.Rules.Elapsed);
+            fixture.Rules.AwardRallyPoint();
+            fixture.Rules.AwardRallyPoint();
+
+            Assert.That(fixture.Rules.Elapsed, Is.EqualTo(59.99f).Within(.0001f));
+            Assert.That(fixture.Rules.BuildResult().Pass, Is.True);
+
+            fixture.Controller.SimulateForTest(.02f);
+
+            Assert.That(fixture.Rules.Elapsed, Is.EqualTo(60.01f).Within(.0001f));
+            Assert.That(fixture.Rules.BuildResult().Pass, Is.False);
+            Assert.That(fixture.Controller.BuildResult().Pass, Is.False);
+        }
+
+        [Test]
         public void ConfigureForTest_WaitsForPresentationPlayBeforeCompletingPreResolvedRules()
         {
             var fixture = CreateFixture(preResolveRules: true);

@@ -122,12 +122,7 @@ namespace KMA.Gameplay
 
             float deltaTime = Mathf.Max(0f, dt);
             if (Rules.Phase == MinigamePhase.Play)
-            {
-                if (Rules.BuildResult().Pass || Rules.Elapsed + deltaTime >= timeLimit)
-                    ResolveTerminalState(force: true);
-                else
-                    Rules.Tick(deltaTime);
-            }
+                Rules.Tick(deltaTime);
 
             RefreshRuntimeState();
             ResolveTerminalState();
@@ -230,11 +225,11 @@ namespace KMA.Gameplay
             OpponentFakeCueVisible = false;
         }
 
-        void ResolveTerminalState(bool force = false)
+        void ResolveTerminalState()
         {
             if (terminalResolved || Rules == null || PresentationPhase != MinigamePhase.Play)
                 return;
-            if (!force && Rules.Phase != MinigamePhase.Resolve && !Rules.BuildResult().Pass)
+            if (Rules.Phase != MinigamePhase.Resolve && !Rules.BuildResult().Pass)
                 return;
 
             terminalResolved = true;
