@@ -2,6 +2,7 @@ using System;
 using KMA.Input;
 using UnityEngine;
 using UnityEngine.InputSystem;
+using UnityEngine.UI;
 
 namespace KMA.Gameplay
 {
@@ -29,6 +30,7 @@ namespace KMA.Gameplay
             ResolveReferences();
             ConfigureDetectors();
             SubscribeRouter();
+            EnsureGameplaySurface();
         }
 
         void OnDisable()
@@ -75,6 +77,16 @@ namespace KMA.Gameplay
             inputActions = inputRouter.InputActions;
             ConfigureDetectors();
             SubscribeRouter();
+        }
+
+        void EnsureGameplaySurface()
+        {
+            if (inputRouter == null || FindFirstObjectByType<ScreenTapArea>() != null) return;
+            var surface = new GameObject("EnduranceGameplaySurface", typeof(RectTransform), typeof(CanvasRenderer), typeof(Image), typeof(ScreenTapArea));
+            var rect = (RectTransform)surface.transform;
+            rect.SetParent(transform, false); rect.anchorMin = Vector2.zero; rect.anchorMax = Vector2.one; rect.offsetMin = Vector2.zero; rect.offsetMax = Vector2.zero;
+            var image = surface.GetComponent<Image>(); image.color = new Color(0f, 0f, 0f, 0f); image.raycastTarget = true;
+            surface.GetComponent<ScreenTapArea>().Configure(inputRouter, rect);
         }
 
         void ResolveReferences()

@@ -60,11 +60,8 @@ namespace KMA.Tests.Gameplay.Running
         {
             var controller = CreateController();
             controller.RhythmOffsetMs = 100d;
-            var rhythm = new RhythmBeatInputDetector();
-            ConnectDetectorBridge(controller, rhythm, new HoldInputDetector(), new SwipeInputDetector());
             var router = gameObject.AddComponent<GameplayInputRouter>();
-            router.RhythmOffsetMs = controller.RhythmOffsetMs;
-            router.SetDetectors(null, rhythm, null, null, null);
+            ConnectRouterBridge(controller, router);
             controller.ConfigurePatternForTest(new LapPattern(new[]
             {
                 new AuthoredBeat(BeatEvent.Tap),
@@ -84,6 +81,35 @@ namespace KMA.Tests.Gameplay.Running
             Assert.That(controller.Rules.Mode, Is.EqualTo(EnduranceInputMode.ObstacleSwipe));
             router.FeedRhythmTapForTest(10d, 10d);
             Assert.That(controller.Rules.MissCount, Is.EqualTo(0));
+        }
+
+        [Test]
+        public void RouterEvents_OnlyReachControllerForTheirMatchingInputMode()
+        {
+            var controller = CreateController();
+            var router = gameObject.AddComponent<GameplayInputRouter>();
+            ConnectRouterBridge(controller, router);
+
+            controller.Dispatch(new AuthoredBeat(BeatEvent.Tap));
+            router.FeedRhythmTapForTest(10d, 10d);
+            FeedRouterGesture(router, 1d);
+            Assert.That(controller.InputTapCount, Is.EqualTo(1));
+            Assert.That(controller.InputHoldCount, Is.Zero);
+            Assert.That(controller.InputSwipeCount, Is.Zero);
+
+            controller.Dispatch(new AuthoredBeat(BeatEvent.Breath));
+            router.FeedRhythmTapForTest(10d, 10d);
+            FeedRouterGesture(router, 3d);
+            Assert.That(controller.InputTapCount, Is.EqualTo(1));
+            Assert.That(controller.InputHoldCount, Is.EqualTo(1));
+            Assert.That(controller.InputSwipeCount, Is.Zero);
+
+            controller.Dispatch(new AuthoredBeat(BeatEvent.Jump));
+            router.FeedRhythmTapForTest(10d, 10d);
+            FeedRouterGesture(router, 5d);
+            Assert.That(controller.InputTapCount, Is.EqualTo(1));
+            Assert.That(controller.InputHoldCount, Is.EqualTo(1));
+            Assert.That(controller.InputSwipeCount, Is.EqualTo(1));
         }
 
         [Test]
@@ -132,6 +158,22 @@ namespace KMA.Tests.Gameplay.Running
             Assert.That(configure, Is.Not.Null,
                 "EnduranceInputBridge needs an internal detector subscription seam for rhythm, hold, and swipe events.");
             configure.Invoke(bridge, new object[] { controller, rhythm, hold, swipe });
+        }
+
+        void ConnectRouterBridge(EnduranceController controller, GameplayInputRouter router)
+        {
+            var bridge = gameObject.GetComponent<EnduranceInputBridge>();
+            MethodInfo configure = typeof(EnduranceInputBridge).GetMethod(
+                "ConfigureInputRouterForTest", BindingFlags.Instance | BindingFlags.NonPublic);
+            Assert.That(configure, Is.Not.Null,
+                "EnduranceInputBridge needs an internal router subscription seam for the shared gameplay input path.");
+            configure.Invoke(bridge, new object[] { controller, router });
+        }
+
+        static void FeedRouterGesture(GameplayInputRouter router, double startedAt)
+        {
+            router.FeedPointerDownForTest(Vector2.zero, startedAt);
+            router.FeedPointerUpForTest(new Vector2(0f, 100f), startedAt + 1d);
         }
 
         static void FeedVerticalSwipe(SwipeInputDetector swipe, double startedAt, float verticalDistance)

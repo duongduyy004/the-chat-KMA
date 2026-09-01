@@ -282,6 +282,29 @@ namespace KMA.Tests.Input
         }
 
         [Test]
+        public void KeyboardTap_FeedsBothGenericAndRhythmDetectors()
+        {
+            var actions = ScriptableObject.CreateInstance<InputActionAsset>();
+            var map = actions.AddActionMap("Endurance");
+            map.AddAction("Tap", InputActionType.Button, "<Keyboard>/t");
+            var tapMash = new InputLayer.TapMashInputDetector();
+            var rhythm = new InputLayer.RhythmBeatInputDetector();
+            var genericTaps = 0;
+            var rhythmJudges = 0;
+            tapMash.OnTap += () => genericTaps++;
+            rhythm.OnJudge += (_, _) => rhythmJudges++;
+            Router.SetDetectors(tapMash, rhythm, null, null, null);
+            Router.RhythmBeatDsp = AudioSettings.dspTime;
+            Router.ConfigureInputForTest(actions, "Endurance");
+
+            var keyboard = InputSystem.AddDevice<Keyboard>();
+            Press(keyboard.tKey);
+
+            Assert.That(genericTaps, Is.EqualTo(1));
+            Assert.That(rhythmJudges, Is.EqualTo(1));
+        }
+
+        [Test]
         public void KeyboardRhythmAction_UsesConfiguredOffset()
         {
             var actions = ScriptableObject.CreateInstance<InputActionAsset>();

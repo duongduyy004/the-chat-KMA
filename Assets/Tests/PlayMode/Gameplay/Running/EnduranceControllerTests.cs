@@ -6,6 +6,7 @@ using UnityEngine.InputSystem;
 using UnityEngine.InputSystem.LowLevel;
 using UnityEngine.SceneManagement;
 using UnityEngine.TestTools;
+using ScreenTapArea = KMA.Input.ScreenTapArea;
 
 namespace KMA.Tests.Gameplay.Running
 {
@@ -141,6 +142,11 @@ namespace KMA.Tests.Gameplay.Running
             Assert.That(controller, Is.Not.Null);
             Assert.That(inputSurface, Is.Not.Null);
             Assert.That(inputSurface.GetComponent<EnduranceInputBridge>(), Is.Not.Null);
+            var tapAreas = Object.FindObjectsByType<ScreenTapArea>(FindObjectsInactive.Exclude, FindObjectsSortMode.None);
+            Assert.That(tapAreas, Has.Length.EqualTo(1), "Endurance must serialize one gameplay pointer surface.");
+            var tapArea = tapAreas[0];
+            Assert.That(tapArea.GetComponent<UnityEngine.UI.Graphic>(), Is.Not.Null);
+            Assert.That(tapArea.GetComponent<UnityEngine.UI.Graphic>().raycastTarget, Is.True);
             Assert.That(controller.MetronomeAudioSource, Is.Not.Null);
             Assert.That(controller.MetronomeAudioSource.clip, Is.Not.Null);
 
