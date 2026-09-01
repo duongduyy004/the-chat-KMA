@@ -54,10 +54,13 @@ namespace KMA.Tests.Gameplay.Ball
 
             fixture.Controller.SubmitSwipe(new Vector2(swipeX, swipeY), inReachZone: true, timingAccuracy: 1f);
             BallFlightSnapshot launched = fixture.Ball.Snapshot;
+            int launchCountAfterFirst = fixture.Controller.SuccessfulLaunchCount;
             fixture.Controller.SubmitSwipe(new Vector2(swipeX, swipeY), inReachZone: true, timingAccuracy: 1f);
 
             Assert.That(fixture.Rules.TotalTouches, Is.EqualTo(1));
             Assert.That(fixture.Controller.TouchCount, Is.EqualTo(1));
+            Assert.That(launchCountAfterFirst, Is.EqualTo(1));
+            Assert.That(fixture.Controller.SuccessfulLaunchCount, Is.EqualTo(1));
             Assert.That(launched.IsInFlight, Is.True);
             Assert.That(launched.Velocity.magnitude, Is.EqualTo(expectedLaunchForce).Within(.001f));
             Assert.That(Vector2.Distance(launched.Velocity, ExpectedLaunchDirection(expectedAction).normalized * expectedLaunchForce), Is.LessThan(.001f));
