@@ -1,0 +1,27 @@
+{
+    "name": "KMA.EditorTools",
+    "rootNamespace": "KMA.EditorTools",
+    "references": [
+        "KMA.Gameplay",
+        "KMA.Gameplay.Core",
+        "KMA.Gameplay.Progression",
+        "KMA.Gameplay.Shell",
+        "KMA.Gameplay.UI",
+        "Unity.RenderPipelines.Core.Runtime",
+        "Unity.RenderPipelines.Universal.2D.Runtime",
+        "Unity.RenderPipelines.Universal.Runtime",
+        "Unity.TextMeshPro",
+        "UnityEngine.UI"
+    ],
+    "includePlatforms": [
+        "Editor"
+    ],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

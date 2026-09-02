@@ -4,11 +4,11 @@ Unity gameplay prototype for KMA: seven sports subjects, normalized scoring, rec
 
 ## Project status
 
-- Unity `6000.3.22f1`
+- Unity `6000.3.23f1`
 - Input System `1.20.0`
 - NUnit/Unity Test Framework `1.6.0`
-- Android landscape target; gameplay contracts and scene routes are implemented
-- Current production scene routes: Sprint, Endurance, Punishment, Map, Game Over, and Boss
+- Android project configuration targets landscape, ARM64, IL2CPP, API 25/35, and `com.kma.thechat`; build/device verification is pending
+- Current playable subject routes are Sprint and Endurance; Volleyball is not yet a playable route
 
 The seven subject rule engines are present: Sprint, Endurance, Volleyball, Basketball, PingPong, Badminton, and Football. The current scene router exposes Sprint and Endurance as playable subject scenes; the other five are implemented as deterministic gameplay models and ball-rule contracts.
 
@@ -59,7 +59,7 @@ Touch input is supported by Endurance, Boss, and Punishment input bridges where 
 
 ## Open the project
 
-1. Install Unity `6000.3.22f1` with the required 2D and Input System packages.
+1. Install Unity `6000.3.23f1` with the required 2D and Input System packages.
 2. Open this repository as the Unity project root.
 3. Start from `Assets/_Project/Scenes/MG_Sprint.unity`, `MG_Endurance.unity`, or `MG_Boss.unity`.
 
@@ -78,11 +78,11 @@ rtk proxy "$KMA_UNITY_EDITOR" -batchmode -projectPath . \
   -testResults /tmp/kma-playmode.xml -logFile /tmp/kma-playmode.log
 ```
 
-The latest verified suite passed `121` EditMode tests and `37` PlayMode tests.
+The latest Task 1 verification passed `17/17` focused configuration tests and `209/209` full EditMode tests on Unity `6000.3.23f1`. Full PlayMode remained at the planned stabilization baseline of `125/128`: two known rhythm/input failures and one known Sprint prefab-instance failure, with no additional Task 1 failure.
 
-### S2 presentation gate
+### Historical S2 presentation evidence
 
-The S2 Sprint gate is verified with Unity `6000.3.23f1`: `SprintSceneShowsTutorialCountdownHudAndInputResponse` passed against the real `MG_Sprint` scene, covering tutorial, countdown, Play HUD refresh, and expected-side input response. Full suites also pass (`135` EditMode, `45` PlayMode); reports are `/tmp/s2-full-edit-after-buildscript.xml` and `/tmp/s2-full-play.xml`. The final ARM64 APK hash is `76ecd68a46bf052db1b11f4a6e5a7b74fc77153ad68d9c9101c59ae0880b7a5f`. Emulator runtime evidence is provisional because the connected emulator is x86_64; its screenshot is [`docs/qa/s2-emulator-screenshot.png`](docs/qa/s2-emulator-screenshot.png).
+A prior S2 snapshot verified `SprintSceneShowsTutorialCountdownHudAndInputResponse` against the real `MG_Sprint` scene, covering tutorial, countdown, Play HUD refresh, and expected-side input response. That snapshot is historical evidence only; the Task 1 counts above are the current verification source of truth.
 
 ## Design documents
 
