@@ -8,6 +8,7 @@ namespace KMA.EditorTools
 {
     public static class ProjectConfigurator
     {
+        const string ProductName = "Thể Chất KMA";
         const string AndroidApplicationId = "com.kma.thechat";
         const int AndroidMinApiLevel = 25;
         const int AndroidTargetApiLevel = 35;
@@ -16,6 +17,7 @@ namespace KMA.EditorTools
         [MenuItem("KMA/Apply Project Settings")]
         public static void Apply()
         {
+            PlayerSettings.productName = ProductName;
             ApplyAndroidSettings();
             ApplyOrientation();
             ApplyAudioSettings();

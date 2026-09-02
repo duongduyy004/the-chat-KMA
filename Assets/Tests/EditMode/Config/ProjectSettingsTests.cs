@@ -1,4 +1,5 @@
 using NUnit.Framework;
+using KMA.EditorTools;
 using UnityEditor;
 using UnityEditor.Build;
 
@@ -10,6 +11,25 @@ namespace KMA.Tests.Config
         public void UnityEditorVersionMatchesToolchainContract()
         {
             Assert.That(UnityEngine.Application.unityVersion, Is.EqualTo("6000.3.23f1"));
+        }
+
+        [Test]
+        public void ProjectConfiguratorApplyRepairsProductNameDrift()
+        {
+            var originalProductName = PlayerSettings.productName;
+            try
+            {
+                PlayerSettings.productName = "Drifted Product Name";
+
+                ProjectConfigurator.Apply();
+
+                Assert.That(PlayerSettings.productName, Is.EqualTo("Thể Chất KMA"));
+            }
+            finally
+            {
+                PlayerSettings.productName = originalProductName;
+                ProjectConfigurator.Apply();
+            }
         }
 
         [Test]

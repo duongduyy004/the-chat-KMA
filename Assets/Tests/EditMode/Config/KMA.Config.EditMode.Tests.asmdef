@@ -3,7 +3,8 @@
     "rootNamespace": "KMA.Tests.Config",
     "references": [
         "UnityEngine.TestRunner",
-        "UnityEditor.TestRunner"
+        "UnityEditor.TestRunner",
+        "KMA.EditorTools"
     ],
     "includePlatforms": [
         "Editor"

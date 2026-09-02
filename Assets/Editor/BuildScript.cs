@@ -15,10 +15,7 @@ namespace KMA.EditorTools
         {
             var outputPath = ReadArgument("-buildOutput") ?? DefaultOutputPath;
             var architecture = ReadArgument("-androidArchitecture");
-            if (string.Equals(architecture, "x86_64", StringComparison.OrdinalIgnoreCase))
-                PlayerSettings.Android.targetArchitectures = AndroidArchitecture.X86_64;
-            else if (string.Equals(architecture, "arm64", StringComparison.OrdinalIgnoreCase))
-                PlayerSettings.Android.targetArchitectures = AndroidArchitecture.ARM64;
+            ConfigureAndroidArchitecture(architecture);
             var fullPath = Path.GetFullPath(outputPath);
             var directory = Path.GetDirectoryName(fullPath);
             if (!string.IsNullOrEmpty(directory))
@@ -44,6 +41,18 @@ namespace KMA.EditorTools
                                   $"{summary.totalErrors} errors, {summary.totalWarnings} warnings.");
             if (summary.result != BuildResult.Succeeded)
                 throw new BuildFailedException(summary.ToString());
+        }
+
+        internal static void ConfigureAndroidArchitecture(string requestedArchitecture)
+        {
+            if (!string.IsNullOrEmpty(requestedArchitecture) &&
+                !string.Equals(requestedArchitecture, "arm64", StringComparison.OrdinalIgnoreCase))
+            {
+                throw new BuildFailedException(
+                    $"[KMA] Unsupported Android architecture '{requestedArchitecture}'. ARM64 is required.");
+            }
+
+            PlayerSettings.Android.targetArchitectures = AndroidArchitecture.ARM64;
         }
 
         static string ReadArgument(string name)
