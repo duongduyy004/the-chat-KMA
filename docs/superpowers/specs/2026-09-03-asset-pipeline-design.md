@@ -17,7 +17,7 @@ This spec does not cover per-minigame background/environment art or the remainin
 
 - A procedural generator that bakes neo-brutalist UI sprites (9-slice rounded-rect, radius 16, 4px black border) with no downloaded asset, for every `UITheme` color.
 - A procedural generator that bakes the four missing sport prop icons (badminton shuttlecock, table-tennis paddle/ball, swimming, push-ups) as simple geometric shapes colored from `UITheme`.
-- A one-time character-remix workflow: download Kenney Toon Characters (CC0), filter to the frames RivalRunner needs, recolor to a neutral skin matching `UITheme`, hand-paint the two missing poses (celebrate, a clearer stumble), and import as sprites bound to the existing `RivalRunner.controller`.
+- A one-time character-sourcing workflow: download Kenney Toon Characters (CC0), pick one frame (a running/athletic pose) as RivalRunner's single sprite, recolor it to a neutral skin matching `UITheme`, and import it — see §4.3 for why only one sprite is needed (not a pose set).
 - A batch Editor import step (Unity CLI, batchmode) that applies correct `TextureImporter` settings (Sprite mode, PPU 100, filter Bilinear, ASTC compression, 9-slice border where relevant) to every new file this pipeline produces.
 - An `EditMode` test that asserts the generated/imported assets exist with the correct import settings.
 - A manual license-check gate before any externally sourced file is copied into the repo, with a mandatory `CREDITS.md` entry for that file.
@@ -36,7 +36,7 @@ Verified by direct inspection (2026-09-03):
 
 - No `Assets/_Project/Art/` directory exists.
 - No `.png`/`.jpg`/`.svg`/`.fbx` files exist anywhere under `Assets/_Project/`.
-- `Assets/_Project/Animations/RivalRunner*.anim` + `RivalRunner.controller` exist and reference 6 states (`Idle`, `Run`, `Burst`, `Celebrate`, `Fail`, `Stumble`) with no backing sprites.
+- `Assets/_Project/Animations/RivalRunner*.anim` + `RivalRunner.controller` exist and reference 6 states (`Idle`, `Run`, `Burst`, `Celebrate`, `Fail`, `Stumble`). **Verified by reading the clips directly: every clip's `m_PPtrCurves` is empty** — none of them swap sprites. Each only animates `Visual.m_LocalPosition.y` (a bounce) plus one more float curve. The actual image is a single `SpriteRenderer` on `RivalRunner.prefab`'s `Visual` child, currently pointing at Unity's built-in placeholder sprite (`fileID: 10913`, a built-in primitive) at `m_Size: {x: 0.2, y: 0.2}`. **RivalRunner needs exactly one static character sprite, not a pose set** — the 6 animator states differentiate by transform/scale curves already authored, not by frame swapping.
 - `Assets/_Project/CREDITS.md` currently documents only the TMP font fallback substitution — no art entries.
 - Kenney.nl assets were downloaded and inspected directly (not just page descriptions):
   - **Sports Pack** (380 assets, CC0): top-down chibi characters, generic ball/bat/racket icons. No badminton shuttlecock, no table-tennis paddle/ball, no swimming, no push-ups content. Confirmed insufficient alone.
@@ -73,10 +73,11 @@ GenerateBrutalUISprites.cs       GeneratePropIcons.cs               download (cu
 
 `Assets/Editor/GenerateBrutalUISprites.cs` (new, sibling to `GenerateTask1Fonts.cs`, same static-class-with-`Run()`-entry-point pattern):
 
-- Reads color entries from `Assets/_Project/Settings/UI/UITheme.asset`.
-- For each color, draws a square `Texture2D` at a fixed size (e.g. 64×64) with: flat fill of the theme color, a 4px solid black border, and rounded corners at radius 16 (alpha-cutout, not anti-aliased blend, to match the flat neo-brutalist look).
-- Saves each as a `.png` under `Assets/_Project/Art/UI/Generated/`, then configures it as `Sprite (2D and UI)`, `Sprite Mode: Single`, border set for 9-slice (border = corner radius + outline width), PPU 100.
-- The shadow layer stays a plain child `Image` with a solid dark color and a fixed offset, as already specified in `PLAN.md` §Nút — no separate shadow sprite needed.
+- Reads `Assets/_Project/Settings/UI/UITheme.asset` (via `KMA.Gameplay.UI.UITheme`) for `CornerRadius` (24) and `BorderWidth` (4) — **not** hardcoded, since these are already author-tunable fields on the asset.
+- Bakes **one neutral sprite**, not one per color: a square `Texture2D` (128×128, scaled up from the 24px radius/4px border for clean 9-slice stretching) with a **white fill** and a **black border** (`UITheme.Border`), rounded corners at `CornerRadius` (alpha-cutout, no anti-aliasing, to match the flat neo-brutalist look). Confirmed against `Assets/_Project/Prefabs/UI/Btn_Brutal.prefab`: its `visual` Image already carries the theme color via `m_Color` (Image tint) with `m_Sprite: {fileID: 0}` — a white-fill sprite multiplies correctly with any tint, while the black border stays black under any tint (black × anything = black). One sprite serves every button color and the shadow (tinted black) without per-color rebakes.
+- Saves as `Assets/_Project/Art/UI/Generated/ButtonBrutal.png`, then configures it as `Sprite (2D and UI)`, `Sprite Mode: Single`, 9-slice border set from `CornerRadius + BorderWidth`, PPU 100.
+- The shadow layer stays a plain child `Image`, now also using this sprite (tinted black) instead of Unity's built-in flat-rect sprite, so the shadow's corners match the visual's rounded corners — fixing a corner mismatch visible in the current prefab.
+- **Wiring this sprite into `Btn_Brutal.prefab` (or any other UI prefab) is out of scope for this plan** — see §2 Out of scope. This branch's deliverable is the generator + the generated, correctly-imported asset.
 
 ### 4.2 Branch 2 — Procedural prop icons (no external asset)
 
@@ -88,17 +89,19 @@ GenerateBrutalUISprites.cs       GeneratePropIcons.cs               download (cu
 - Push-ups → a horizontal bar/figure abstraction.
 - All flat-filled from `UITheme`, saved to `Assets/_Project/Art/Props/Generated/`, imported as single sprites (no 9-slice needed — these are icons, not stretchable containers).
 
-### 4.3 Branch 3 — Character remix (the one external source)
+### 4.3 Branch 3 — Character sourcing (the one external source)
 
-Manual/scripted steps, run once, output committed:
+`RivalRunner.prefab`'s `Visual` child has exactly one `SpriteRenderer`, currently assigned Unity's built-in placeholder sprite. None of the 6 animation clips swap sprites (confirmed empty `m_PPtrCurves` in every clip, §3) — they only animate transform/scale. So this branch needs **one** sprite, not a pose set:
 
 1. Download `kenney_toon-characters.zip` (CC0) into scratch space; verify `License.txt` says CC0 before anything is copied into the repo.
-2. Extract only `Male person/PNG/Poses/character_malePerson_{idle,walk0..7,run0..2,jump,hit}.png`.
-3. Python/PIL script recolors the outfit region to a `UITheme` accent color and desaturates/simplifies the face so the character reads as a neutral generic runner rather than the pack's named mascot. Script is checked into `Assets/Editor/Tooling/` (or `Tools/`) for repeatability, not run ad hoc.
-4. Two additional frames — `Celebrate` and a clearer `Stumble` — are hand-painted (Aseprite/Figma, outside this repo's tooling) to match the recolored proportions, then dropped into the same input folder before import.
-5. All resulting frames copied to `Assets/_Project/Art/Characters/RivalRunner/`.
-6. Batch import (shared step, §4.4) applied — no 9-slice border here, plain sprites at a resolution matching the existing `.anim` clip's expected sprite size (verify against `RivalRunner_Idle.anim` etc. during implementation).
-7. `Assets/_Project/CREDITS.md` gets a new entry: source URL, pack name, license (CC0), date, and a one-line note on what was modified (recolor + 2 added poses), matching the existing font-credit entry's format.
+2. Pick one frame — `Male person/PNG/Poses/character_malePerson_run1.png` (a mid-stride running pose, appropriate for a runner rival) — as the single source image.
+3. Python/PIL script recolors the outfit region to a `UITheme` accent color and simplifies the face so the character reads as a neutral generic runner rather than the pack's named mascot. Script is checked into `Assets/Editor/Tooling/` for repeatability, not run ad hoc.
+4. Copy the result to `Assets/_Project/Art/Characters/RivalRunner/RivalRunner.png`.
+5. Batch import (shared step, §4.4) applied — plain single sprite, PPU chosen so the imported sprite's world size matches the prefab's existing `m_Size: {x: 0.2, y: 0.2}` (verify the exact PPU/pixel-dimension math during implementation against the source frame's pixel size).
+6. Assign the imported sprite to `RivalRunner.prefab`'s `Visual` → `SpriteRenderer.m_Sprite`, replacing the built-in placeholder. This is the one piece of "wiring into an existing prefab" this plan does perform — unlike the UI branch, there is only one consumer and one field, not a fan-out across many prefabs, so it stays in scope.
+7. `Assets/_Project/CREDITS.md` gets a new entry: source URL, pack name, license (CC0), date, and a one-line note on what was modified (recolor only), matching the existing font-credit entry's format.
+
+A multi-pose sprite-swap upgrade (celebrate/stumble as distinct frames) is explicitly not built here — there is no animation mechanism in the repo today that would consume it. If that's wanted later, it's a new, separately-scoped change to the animation clips themselves, not an asset-pipeline task.
 
 ### 4.4 Shared batch import step
 
@@ -126,7 +129,7 @@ No Editor GUI is available in this environment, so verification is config-level,
 - `unity -batchmode -quit` run of each generator must exit 0 (compile + execution success).
 - One new `EditMode` test (in `Assets/Tests/EditMode/`, following the existing suite's structure) per branch, asserting:
   - Branch 1/2: expected sprite files exist at the expected paths, `TextureImporter.spriteImportMode` and border values match spec.
-  - Branch 3: all 8 required pose files exist under `Art/Characters/RivalRunner/`, each configured as a sprite at PPU 100.
+  - Branch 3: `RivalRunner.png` exists under `Art/Characters/RivalRunner/`, is configured as a single sprite at the correct PPU, and `RivalRunner.prefab`'s `Visual/SpriteRenderer.m_Sprite` no longer points at the built-in placeholder (`fileID: 10913`).
 - Visual correctness (does the button actually look neo-brutalist, does the character read as intended) **cannot be verified in this environment** and must be confirmed by the user opening the Editor locally. This limitation will be stated explicitly when reporting completion — it is not being silently skipped.
 
 ## 7. Open Items Deferred to Sub-project B
