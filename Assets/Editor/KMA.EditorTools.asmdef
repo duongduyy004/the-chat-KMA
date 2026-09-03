@@ -6,6 +6,7 @@
         "KMA.Gameplay.Core",
         "KMA.Gameplay.Progression",
         "KMA.Gameplay.Shell",
+        "KMA.Gameplay.Sprint",
         "KMA.Gameplay.UI",
         "Unity.RenderPipelines.Core.Runtime",
         "Unity.RenderPipelines.Universal.2D.Runtime",

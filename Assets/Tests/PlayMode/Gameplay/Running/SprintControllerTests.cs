@@ -407,24 +407,18 @@ namespace KMA.Tests.Gameplay.Running
                 var controller = authoredScene.GetRootGameObjects()
                     .SelectMany(root => root.GetComponentsInChildren<SprintController>(true))
                     .Single();
-                var expectedNames = new[] { "Runner_01", "Runner_03", "Runner_04" };
-                var expectedLanes = new[] { 1, 3, 4 };
-                var expectedProfiles = new[]
-                {
-                    "Assets/_Project/ScriptableObjects/Sprint/RivalPaceProfile_Lane1.asset",
-                    "Assets/_Project/ScriptableObjects/Sprint/RivalPaceProfile_Lane3.asset",
-                    "Assets/_Project/ScriptableObjects/Sprint/RivalPaceProfile_Lane4.asset"
-                };
+                var expectedMappings = SprintRivalMappings.Required;
                 var mappingFailures = new System.Collections.Generic.List<string>();
                 for (var i = 0; i < rivals.Length; i++)
                 {
                     var rival = rivals[i];
-                    var expectedMapping = $"{expectedNames[i]} / lane {expectedLanes[i]}";
-                    if (rival.name != expectedNames[i])
+                    var expected = expectedMappings[i];
+                    var expectedMapping = $"{expected.Name} / lane {expected.Lane}";
+                    if (rival.name != expected.Name)
                         mappingFailures.Add($"{expectedMapping}: name was {rival.name}");
-                    if (rival.Lane != expectedLanes[i])
+                    if (rival.Lane != expected.Lane)
                         mappingFailures.Add($"{expectedMapping}: lane was {rival.Lane}");
-                    if (AssetDatabase.GetAssetPath(rival.ProfileAsset) != expectedProfiles[i])
+                    if (AssetDatabase.GetAssetPath(rival.ProfileAsset) != expected.ProfilePath)
                         mappingFailures.Add($"{expectedMapping}: profile was {AssetDatabase.GetAssetPath(rival.ProfileAsset)}");
                     if (PrefabUtility.GetCorrespondingObjectFromSource(rival.gameObject) == null)
                         mappingFailures.Add($"{expectedMapping}: corresponding prefab source was null");

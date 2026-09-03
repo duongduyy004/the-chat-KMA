@@ -1,6 +1,7 @@
 #if UNITY_EDITOR
 using System;
 using System.Linq;
+using KMA.Gameplay;
 using UnityEditor;
 using UnityEditor.SceneManagement;
 using UnityEngine;
@@ -15,15 +16,7 @@ namespace KMA.EditorTools
         const string RivalTypeName = "KMA.Gameplay.RivalRunnerAI";
         const string ControllerTypeName = "KMA.Gameplay.SprintController";
 
-        static readonly RivalMapping[] RequiredRivals =
-        {
-            new RivalMapping("Runner_01", 1, 0, 2.1f,
-                "Assets/_Project/ScriptableObjects/Sprint/RivalPaceProfile_Lane1.asset"),
-            new RivalMapping("Runner_03", 3, 1, -.7f,
-                "Assets/_Project/ScriptableObjects/Sprint/RivalPaceProfile_Lane3.asset"),
-            new RivalMapping("Runner_04", 4, 2, -2.1f,
-                "Assets/_Project/ScriptableObjects/Sprint/RivalPaceProfile_Lane4.asset")
-        };
+        static readonly SprintRivalMapping[] RequiredRivals = SprintRivalMappings.Required;
 
         [MenuItem("KMA/Sprint/Create or Repair Rivals")]
         public static void CreateOrRepairRivals()
@@ -80,7 +73,7 @@ namespace KMA.EditorTools
             return true;
         }
 
-        static void CreateRival(Scene scene, GameObject prefab, MonoBehaviour controller, RivalMapping mapping)
+        static void CreateRival(Scene scene, GameObject prefab, MonoBehaviour controller, SprintRivalMapping mapping)
         {
             var instance = (GameObject)PrefabUtility.InstantiatePrefab(prefab, scene);
             var rival = instance.GetComponents<MonoBehaviour>()
@@ -111,24 +104,6 @@ namespace KMA.EditorTools
             .SelectMany(root => root.GetComponentsInChildren<MonoBehaviour>(true))
             .Where(component => component != null && component.GetType().FullName == fullTypeName)
             .ToArray();
-
-        readonly struct RivalMapping
-        {
-            public RivalMapping(string name, int lane, int rivalIndex, float localY, string profilePath)
-            {
-                Name = name;
-                Lane = lane;
-                RivalIndex = rivalIndex;
-                LocalPosition = new Vector3(-9.6f, localY, 0f);
-                ProfilePath = profilePath;
-            }
-
-            public string Name { get; }
-            public int Lane { get; }
-            public int RivalIndex { get; }
-            public Vector3 LocalPosition { get; }
-            public string ProfilePath { get; }
-        }
     }
 }
 #endif
