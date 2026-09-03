@@ -6,6 +6,7 @@
         "UnityEditor.TestRunner",
         "KMA.Gameplay",
         "KMA.Gameplay.UI",
+        "KMA.Gameplay.Core",
         "UnityEngine.UI"
     ],
     "includePlatforms": [

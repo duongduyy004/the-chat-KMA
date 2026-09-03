@@ -109,6 +109,8 @@ namespace KMA.Gameplay.Core
         public event Action SessionChanged;
         public event Action<SubjectId, MinigameResult> SubjectCompleted;
         public event Action<int> LifeLost;
+        public event Action SceneLoadStarted;
+        public event Action SceneLoadCompleted;
 
         public static SceneRouter Instance => instance;
         public GameSession Session => session;
@@ -232,7 +234,8 @@ namespace KMA.Gameplay.Core
             activeSubject = null;
             awaitingSubjectScene = false;
             awaitingBossScene = false;
-            SceneManager.LoadSceneAsync("Menu", LoadSceneMode.Single);
+            SceneLoadStarted?.Invoke();
+            StartCoroutine(LoadMenuScene());
             return true;
         }
 
@@ -354,6 +357,7 @@ namespace KMA.Gameplay.Core
         public void Begin(SceneRouteTransition transition, Action onCompleted)
         {
             TransitionStarted?.Invoke(transition);
+            SceneLoadStarted?.Invoke();
             StartCoroutine(LoadGameplayScene(transition.SceneName, onCompleted));
         }
 
@@ -488,6 +492,19 @@ namespace KMA.Gameplay.Core
             }
 
             onCompleted?.Invoke();
+            SceneLoadCompleted?.Invoke();
+        }
+
+        IEnumerator LoadMenuScene()
+        {
+            var operation = SceneManager.LoadSceneAsync("Menu", LoadSceneMode.Single);
+            if (operation != null)
+            {
+                while (!operation.isDone)
+                    yield return null;
+            }
+
+            SceneLoadCompleted?.Invoke();
         }
 
         static SubjectScene[] DefaultSubjectScenes() => new[]
