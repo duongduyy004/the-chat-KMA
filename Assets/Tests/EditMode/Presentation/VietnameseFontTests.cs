@@ -30,7 +30,7 @@ namespace KMA.Tests.Presentation
                 0x0102, // Ă
                 0x1ED9, // ộ
                 0x01A1, // ơ
-                0x01B0, // ư
+                0x01AF, // Ư
                 0x1EE9, // ứ
             };
 
