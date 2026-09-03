@@ -5,6 +5,7 @@ using UnityEngine.InputSystem;
 using NUnit.Framework;
 using UnityEditor;
 using UnityEditor.Animations;
+using UnityEditor.SceneManagement;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.TestTools;
@@ -179,12 +180,13 @@ namespace KMA.Tests.Gameplay.Running
             yield return null;
 
             var scene = SceneManager.GetActiveScene();
-            var rivals = SceneObjects<RivalRunnerAI>(scene);
+            var rivals = SceneObjects<RivalRunnerAI>(scene)
+                .OrderBy(rival => rival.Lane)
+                .ThenBy(rival => rival.name)
+                .ToArray();
             Assert.That(rivals.Length, Is.EqualTo(3));
+            AssertAuthoredRivalMappings();
 
-            var lanes = new[] { rivals[0].Lane, rivals[1].Lane, rivals[2].Lane };
-            System.Array.Sort(lanes);
-            Assert.That(lanes, Is.EqualTo(new[] { 1, 3, 4 }));
             for (var i = 0; i < rivals.Length; i++)
             {
                 Assert.That(rivals[i].Lane, Is.Not.EqualTo(2));
@@ -196,10 +198,6 @@ namespace KMA.Tests.Gameplay.Running
                 var renderer = rivals[i].GetComponentInChildren<SpriteRenderer>();
                 Assert.That(renderer, Is.Not.Null);
                 Assert.That(renderer.sprite, Is.Not.Null);
-                Assert.That(PrefabUtility.GetCorrespondingObjectFromSource(rivals[i].gameObject), Is.Not.Null,
-                    $"{rivals[i].name} must remain a RivalRunner prefab instance.");
-                Assert.That(PrefabUtility.GetPrefabAssetPathOfNearestInstanceRoot(rivals[i].gameObject),
-                    Is.EqualTo("Assets/_Project/Prefabs/Gameplay/RivalRunner.prefab"));
                 var animator = rivals[i].GetComponentInChildren<Animator>();
                 Assert.That(animator, Is.Not.Null);
                 Assert.That(animator.runtimeAnimatorController, Is.Not.Null);
@@ -390,6 +388,74 @@ namespace KMA.Tests.Gameplay.Running
                         binding.propertyName.StartsWith("m_Local")), Is.True,
                     $"{expectedState} clip must animate the child visual transform, never the lane root.");
             }
+        }
+
+        static void AssertAuthoredRivalMappings()
+        {
+            var authoredScene = EditorSceneManager.OpenPreviewScene("Assets/_Project/Scenes/MG_Sprint.unity");
+            try
+            {
+                var rivals = authoredScene.GetRootGameObjects()
+                    .SelectMany(root => root.GetComponentsInChildren<RivalRunnerAI>(true))
+                    .OrderBy(rival => rival.Lane)
+                    .ThenBy(rival => rival.name)
+                    .ToArray();
+                var rivalDiagnostics = string.Join("\n", rivals.Select(RivalMappingDiagnostic));
+                Debug.Log($"[KMA] Sprint authored rival mappings:\n{rivalDiagnostics}");
+                Assert.That(rivals.Length, Is.EqualTo(3), rivalDiagnostics);
+
+                var controller = authoredScene.GetRootGameObjects()
+                    .SelectMany(root => root.GetComponentsInChildren<SprintController>(true))
+                    .Single();
+                var expectedNames = new[] { "Runner_01", "Runner_03", "Runner_04" };
+                var expectedLanes = new[] { 1, 3, 4 };
+                var expectedProfiles = new[]
+                {
+                    "Assets/_Project/ScriptableObjects/Sprint/RivalPaceProfile_Lane1.asset",
+                    "Assets/_Project/ScriptableObjects/Sprint/RivalPaceProfile_Lane3.asset",
+                    "Assets/_Project/ScriptableObjects/Sprint/RivalPaceProfile_Lane4.asset"
+                };
+                var mappingFailures = new System.Collections.Generic.List<string>();
+                for (var i = 0; i < rivals.Length; i++)
+                {
+                    var rival = rivals[i];
+                    var expectedMapping = $"{expectedNames[i]} / lane {expectedLanes[i]}";
+                    if (rival.name != expectedNames[i])
+                        mappingFailures.Add($"{expectedMapping}: name was {rival.name}");
+                    if (rival.Lane != expectedLanes[i])
+                        mappingFailures.Add($"{expectedMapping}: lane was {rival.Lane}");
+                    if (AssetDatabase.GetAssetPath(rival.ProfileAsset) != expectedProfiles[i])
+                        mappingFailures.Add($"{expectedMapping}: profile was {AssetDatabase.GetAssetPath(rival.ProfileAsset)}");
+                    if (PrefabUtility.GetCorrespondingObjectFromSource(rival.gameObject) == null)
+                        mappingFailures.Add($"{expectedMapping}: corresponding prefab source was null");
+                    if (PrefabUtility.GetPrefabAssetPathOfNearestInstanceRoot(rival.gameObject) !=
+                        "Assets/_Project/Prefabs/Gameplay/RivalRunner.prefab")
+                        mappingFailures.Add($"{expectedMapping}: nearest prefab path was " +
+                            PrefabUtility.GetPrefabAssetPathOfNearestInstanceRoot(rival.gameObject));
+
+                    var serializedRival = new SerializedObject(rival);
+                    if (serializedRival.FindProperty("controller").objectReferenceValue != controller)
+                        mappingFailures.Add($"{expectedMapping}: controller reference was " +
+                            serializedRival.FindProperty("controller").objectReferenceValue);
+                }
+                Assert.That(mappingFailures, Is.Empty,
+                    $"Invalid rival mappings:\n{string.Join("\n", mappingFailures)}\nAll rivals:\n{rivalDiagnostics}");
+            }
+            finally
+            {
+                EditorSceneManager.ClosePreviewScene(authoredScene);
+            }
+        }
+
+        static string RivalMappingDiagnostic(RivalRunnerAI rival)
+        {
+            var source = PrefabUtility.GetCorrespondingObjectFromSource(rival.gameObject);
+            var sourceDescription = source == null
+                ? "<null>"
+                : $"{source.name} ({AssetDatabase.GetAssetPath(source)})";
+            var nearestPrefabPath = PrefabUtility.GetPrefabAssetPathOfNearestInstanceRoot(rival.gameObject);
+            return $"name={rival.name}, lane={rival.Lane}, correspondingSource={sourceDescription}, " +
+                $"nearestPrefabPath={nearestPrefabPath}";
         }
 
         static T[] SceneObjects<T>(Scene scene) where T : Component
