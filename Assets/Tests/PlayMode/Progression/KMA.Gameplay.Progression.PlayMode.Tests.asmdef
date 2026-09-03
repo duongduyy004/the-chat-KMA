@@ -8,6 +8,7 @@
         "KMA.Gameplay.Boss",
         "KMA.Gameplay.Sprint",
         "KMA.Gameplay.Core",
+        "KMA.Gameplay.Shell",
         "KMA.Gameplay.UI",
         "Unity.InputSystem",
         "Unity.InputSystem.TestFramework"

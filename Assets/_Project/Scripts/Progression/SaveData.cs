@@ -5,13 +5,18 @@ namespace KMA.Gameplay
     [Serializable]
     public sealed class SaveData
     {
-        public const int CurrentVersion = 1;
+        public const int CurrentVersion = 2;
+        public const int NoAttemptVisit = 1;
 
         public int version;
         public int lives;
         public SubjectRecordData[] subjects;
         public bool bossUnlocked;
         public bool gameCompleted;
+        public bool hasActiveSubject;
+        public SubjectId activeSubject;
+        public int visitAttempt;
+        public bool awaitingPunishment;
         public bool[] tutorialSeen;
         public Settings settings;
 
@@ -38,6 +43,10 @@ namespace KMA.Gameplay
                 subjects = subjects,
                 bossUnlocked = false,
                 gameCompleted = false,
+                hasActiveSubject = false,
+                activeSubject = default,
+                visitAttempt = NoAttemptVisit,
+                awaitingPunishment = false,
                 tutorialSeen = new bool[subjectValues.Length],
                 settings = Settings.CreateDefault()
             };

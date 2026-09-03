@@ -117,6 +117,72 @@ namespace KMA.Tests.Gameplay.Progression
         }
 
         [Test]
+        public void Load_VersionOneSave_MigratesToNoActiveAttempt()
+        {
+            var versionOne = SaveData.CreateDefault();
+            versionOne.version = 1;
+            versionOne.lives = 4;
+            versionOne.subjects[0].passed = true;
+            versionOne.tutorialSeen[2] = true;
+            versionOne.settings.musicVol = 0.4f;
+            versionOne.hasActiveSubject = true;
+            versionOne.activeSubject = SubjectId.Football;
+            versionOne.visitAttempt = 2;
+            versionOne.awaitingPunishment = true;
+
+            WriteRawSave(versionOne);
+            SaveData actual = saveSystem.Load();
+
+            Assert.That(actual.version, Is.EqualTo(SaveData.CurrentVersion));
+            Assert.That(actual.lives, Is.EqualTo(4));
+            Assert.That(actual.subjects[0].passed, Is.True);
+            Assert.That(actual.tutorialSeen[2], Is.True);
+            Assert.That(actual.settings.musicVol, Is.EqualTo(0.4f));
+            Assert.That(actual.hasActiveSubject, Is.False);
+            Assert.That(actual.visitAttempt, Is.EqualTo(1));
+            Assert.That(actual.awaitingPunishment, Is.False);
+
+            var restored = new GameSession();
+            restored.Restore(actual);
+            Assert.That(restored.ResumeRoute(), Is.EqualTo(SessionRoute.Map));
+            Assert.That(restored.ActiveSubject, Is.Null);
+        }
+
+        [Test]
+        public void Load_VersionTwoSave_RetainsTheActiveAttempt()
+        {
+            var current = SaveData.CreateDefault();
+            current.lives = 3;
+            current.hasActiveSubject = true;
+            current.activeSubject = SubjectId.Badminton;
+            current.visitAttempt = 2;
+            current.awaitingPunishment = true;
+
+            saveSystem.Save(current);
+            SaveData actual = saveSystem.Load();
+
+            Assert.That(actual.version, Is.EqualTo(2));
+            Assert.That(actual.lives, Is.EqualTo(3));
+            Assert.That(actual.hasActiveSubject, Is.True);
+            Assert.That(actual.activeSubject, Is.EqualTo(SubjectId.Badminton));
+            Assert.That(actual.visitAttempt, Is.EqualTo(2));
+            Assert.That(actual.awaitingPunishment, Is.True);
+
+            var restored = new GameSession();
+            restored.Restore(actual);
+            Assert.That(restored.ResumeRoute(), Is.EqualTo(SessionRoute.Punishment));
+            Assert.That(restored.PendingPunishmentSubject, Is.EqualTo(SubjectId.Badminton));
+        }
+
+        [Test]
+        public void Load_VersionOneSaveWithoutRequiredFields_ReturnsDefaultData()
+        {
+            WriteRawJson("{\"version\":1}");
+
+            AssertDefaultData(saveSystem.Load());
+        }
+
+        [Test]
         public void Load_MissingFile_ReturnsDefaultData()
         {
             SaveData actual = saveSystem.Load();
@@ -345,6 +411,9 @@ namespace KMA.Tests.Gameplay.Progression
             }
             Assert.That(data.bossUnlocked, Is.False);
             Assert.That(data.gameCompleted, Is.False);
+            Assert.That(data.hasActiveSubject, Is.False);
+            Assert.That(data.visitAttempt, Is.EqualTo(1));
+            Assert.That(data.awaitingPunishment, Is.False);
             Assert.That(data.tutorialSeen, Has.Length.EqualTo(7));
             Assert.That(data.tutorialSeen, Is.All.False);
             Assert.That(data.settings.musicVol, Is.EqualTo(1f));

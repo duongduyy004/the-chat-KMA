@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using KMA.Gameplay;
 using KMA.Gameplay.Boss;
 using KMA.Gameplay.Core;
+using KMA.Gameplay.Shell;
 using KMA.Gameplay.UI;
 using NUnit.Framework;
 using UnityEngine;
@@ -15,22 +16,31 @@ namespace KMA.Tests.Gameplay.Progression
     public sealed class FullGameplayFlowTests
     {
         readonly List<GameObject> gameObjects = new List<GameObject>();
+        int originalTargetFrameRate;
+        int originalVSyncCount;
 
         [SetUp]
-        public void SetUp() => BossSceneSessionHandoff.ClearPendingSession();
+        public void SetUp()
+        {
+            originalTargetFrameRate = Application.targetFrameRate;
+            originalVSyncCount = QualitySettings.vSyncCount;
+            BossSceneSessionHandoff.ClearPendingSession();
+        }
 
         [TearDown]
         public void TearDown()
         {
             foreach (var gameObject in gameObjects)
-                UnityEngine.Object.DestroyImmediate(gameObject);
-            gameObjects.Clear();
-            foreach (var router in UnityEngine.Object.FindObjectsByType<SceneRouter>(
-                FindObjectsInactive.Include, FindObjectsSortMode.None))
             {
-                UnityEngine.Object.DestroyImmediate(router.gameObject);
+                if (gameObject != null)
+                    UnityEngine.Object.DestroyImmediate(gameObject);
             }
+            gameObjects.Clear();
+            DestroyAll<GameManager>();
+            DestroyAll<SceneRouter>();
             BossSceneSessionHandoff.ClearPendingSession();
+            Application.targetFrameRate = originalTargetFrameRate;
+            QualitySettings.vSyncCount = originalVSyncCount;
         }
 
         [UnityTest]
@@ -208,6 +218,115 @@ namespace KMA.Tests.Gameplay.Progression
                 if (transition.Route == SessionRoute.Map)
                     mapRouteCount++;
             }
+        }
+
+        [UnityTest]
+        public IEnumerator MutationsWhileTransitionIsPending_AreRejectedWithoutChangingSession()
+        {
+            var router = SceneRouter.EnsurePersistentInstance();
+            Assert.That(router.StartSubject(SubjectId.Sprint), Is.True);
+            Assert.That(router.IsTransitioning, Is.True);
+
+            GameSession session = router.Session;
+            int livesBefore = session.Lives;
+            var persistenceEvents = 0;
+            router.SessionChanged += () => persistenceEvents++;
+
+            Assert.That(router.StartSubject(SubjectId.Endurance), Is.False, "StartSubject must be rejected.");
+            Assert.That(router.SubmitSubjectResult(SubjectId.Sprint, new MinigameResult(false, 0f, Rank.F)),
+                Is.False, "SubmitSubjectResult must be rejected.");
+            Assert.That(router.RestartActiveSubject(), Is.False, "Restart must be rejected.");
+            Assert.That(router.ExitActiveSubjectToMap(), Is.False, "Exit must be rejected.");
+            Assert.That(router.RouteToMenu(), Is.False, "Menu must be rejected.");
+            Assert.That(router.ResumeCampaign(), Is.False, "Continue must be rejected.");
+
+            Assert.That(session.ActiveSubject, Is.EqualTo(SubjectId.Sprint));
+            Assert.That(session.PendingPunishmentSubject, Is.Null);
+            Assert.That(session.Lives, Is.EqualTo(livesBefore));
+            Assert.That(session.GetRecord(SubjectId.Sprint).FailedVisits, Is.Zero);
+            Assert.That(session.GetRecord(SubjectId.Sprint).Passed, Is.False);
+            Assert.That(persistenceEvents, Is.Zero, "A rejected route must not emit a persistence event.");
+
+            yield return WaitForRoutedScene(router, "MG_Sprint");
+
+            Assert.That(router.ExitActiveSubjectToMap(), Is.True, "Rejection must end with the transition.");
+            Assert.That(persistenceEvents, Is.EqualTo(1));
+            Assert.That(session.ActiveSubject, Is.Null);
+            yield return WaitForRoutedScene(router, "Map");
+        }
+
+        [UnityTest]
+        public IEnumerator Continue_AfterFirstFailure_ResumesPunishmentForTheSameSubjectAcrossRelaunch()
+        {
+            SaveData persisted = SaveData.CreateDefault();
+            SceneRouter router = SceneRouter.EnsurePersistentInstance();
+            CreateManager(router, () => persisted, data => persisted = data);
+
+            Assert.That(router.StartSubject(SubjectId.Sprint), Is.True);
+            yield return WaitForRoutedScene(router, "MG_Sprint");
+            Assert.That(router.SubmitSubjectResult(SubjectId.Sprint, new MinigameResult(false, 0f, Rank.F)),
+                Is.True);
+            yield return WaitForRoutedScene(router, "Punishment");
+
+            Assert.That(persisted.hasActiveSubject, Is.True);
+            Assert.That(persisted.activeSubject, Is.EqualTo(SubjectId.Sprint));
+            Assert.That(persisted.visitAttempt, Is.EqualTo(2));
+            Assert.That(persisted.awaitingPunishment, Is.True);
+            Assert.That(persisted.lives, Is.EqualTo(5));
+
+            DestroyAll<GameManager>();
+            DestroyAll<SceneRouter>();
+            yield return null;
+
+            SceneRouter relaunched = SceneRouter.EnsurePersistentInstance();
+            GameManager relaunchedManager = CreateManager(relaunched, () => persisted, data => persisted = data);
+            Assert.That(relaunchedManager.Session.ResumeRoute(), Is.EqualTo(SessionRoute.Punishment));
+
+            var transitions = new List<SceneRouteTransition>();
+            relaunched.TransitionStarted += transitions.Add;
+            MainMenuScreen menu = CreateGameObject("Relaunched shell").AddComponent<MainMenuScreen>();
+            menu.gameObject.AddComponent<S5ShellSceneController>();
+
+            Assert.That(menu.CanContinue, Is.True);
+            menu.Continue();
+
+            Assert.That(transitions, Has.Count.EqualTo(1));
+            Assert.That(transitions[0].Route, Is.EqualTo(SessionRoute.Punishment));
+            Assert.That(transitions[0].Subject, Is.EqualTo(SubjectId.Sprint));
+            Assert.That(relaunched.Session.PendingPunishmentSubject, Is.EqualTo(SubjectId.Sprint));
+            Assert.That(relaunched.Session.VisitAttempt, Is.EqualTo(2));
+            Assert.That(relaunched.Session.Lives, Is.EqualTo(5));
+
+            yield return WaitForRoutedScene(relaunched, "Punishment");
+
+            Assert.That(relaunched.ExitActiveSubjectToMap(), Is.True);
+            yield return WaitForRoutedScene(relaunched, "Map");
+        }
+
+        GameManager CreateManager(SceneRouter router, Func<SaveData> load, Action<SaveData> save)
+        {
+            GameObject gameObject = CreateGameObject("FullGameplayFlowTests.Manager");
+            gameObject.SetActive(false);
+            var manager = gameObject.AddComponent<GameManager>();
+            manager.ConfigureStartup(load, save, router, _ => { }, null, () => true);
+            gameObject.SetActive(true);
+            return manager;
+        }
+
+        static void DestroyAll<T>() where T : Component
+        {
+            foreach (T component in UnityEngine.Object.FindObjectsByType<T>(
+                FindObjectsInactive.Include, FindObjectsSortMode.None))
+            {
+                UnityEngine.Object.DestroyImmediate(component.gameObject);
+            }
+        }
+
+        static IEnumerator WaitForRoutedScene(SceneRouter router, string sceneName)
+        {
+            while (SceneManager.GetActiveScene().name != sceneName || router.IsTransitioning)
+                yield return null;
+            yield return null;
         }
 
         static void AssertRoute(SceneRouter router, SessionRoute route, SubjectId? subject)

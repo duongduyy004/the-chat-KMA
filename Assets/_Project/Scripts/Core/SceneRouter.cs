@@ -106,6 +106,7 @@ namespace KMA.Gameplay.Core
         SessionRouteTransitioner transitioner;
 
         public event Action<SceneRouteTransition> TransitionStarted;
+        public event Action SessionChanged;
         public event Action<SubjectId, MinigameResult> SubjectCompleted;
         public event Action<int> LifeLost;
 
@@ -152,8 +153,22 @@ namespace KMA.Gameplay.Core
 
         public bool StartSubject(SubjectId subject)
         {
+            if (IsTransitioning)
+                return false;
+
             EnsureRouteIsConfigured(SessionRoute.Subject, subject);
-            return Route(session.StartSubject(subject), subject);
+            SessionRoute route = session.StartSubject(subject);
+            if (route != SessionRoute.GameOver)
+                SessionChanged?.Invoke();
+            return Route(route, subject);
+        }
+
+        public bool ResumeCampaign()
+        {
+            if (IsTransitioning)
+                return false;
+
+            return Route(session.ResumeRoute(), session.ActiveSubject);
         }
 
         public void LoadSession(GameSession restoredSession)
@@ -173,8 +188,12 @@ namespace KMA.Gameplay.Core
 
         public bool SubmitSubjectResult(SubjectId subject, MinigameResult result)
         {
+            if (IsTransitioning)
+                return false;
+
             int livesBefore = session.Lives;
             SessionRoute route = session.SubmitResult(subject, result);
+            SessionChanged?.Invoke();
             bool routed = Route(route, subject);
 
             if (result.Pass)
@@ -185,9 +204,23 @@ namespace KMA.Gameplay.Core
             return routed;
         }
 
-        public bool CompletePunishment(SubjectId subject) => Route(session.CompletePunishment(), subject);
+        public bool CompletePunishment(SubjectId subject)
+        {
+            if (IsTransitioning)
+                return false;
 
-        public bool StartBoss() => Route(SessionRoute.Boss, null);
+            SessionRoute route = session.CompletePunishment();
+            SessionChanged?.Invoke();
+            return Route(route, subject);
+        }
+
+        public bool StartBoss()
+        {
+            if (IsTransitioning)
+                return false;
+
+            return Route(SessionRoute.Boss, null);
+        }
 
         public bool RouteToMenu()
         {
@@ -205,18 +238,30 @@ namespace KMA.Gameplay.Core
 
         public bool RestartActiveSubject()
         {
+            if (IsTransitioning)
+                return false;
             if (!activeSubject.HasValue || !session.ActiveSubject.HasValue)
                 return false;
+
             var subject = activeSubject.Value;
+            EnsureRouteIsConfigured(SessionRoute.Subject, subject);
             session.AbandonActiveSubject();
-            return StartSubject(subject);
+            SessionRoute route = session.StartSubject(subject);
+            SessionChanged?.Invoke();
+            return Route(route, subject);
         }
 
         public bool ExitActiveSubjectToMap()
         {
-            if (session.ActiveSubject.HasValue)
+            if (IsTransitioning)
+                return false;
+
+            bool abandoned = session.ActiveSubject.HasValue;
+            if (abandoned)
                 session.AbandonActiveSubject();
             activeSubject = null;
+            if (abandoned)
+                SessionChanged?.Invoke();
             return Route(SessionRoute.Map);
         }
 
@@ -268,6 +313,9 @@ namespace KMA.Gameplay.Core
 
         public bool Route(SessionRoute route, SubjectId? subject = null)
         {
+            if (IsTransitioning)
+                return false;
+
             if (!TryGetSceneName(route, subject, out var sceneName))
                 throw new InvalidOperationException($"No loadable scene is configured for {route}" +
                     (subject.HasValue ? $" ({subject.Value})." : "."));
@@ -362,6 +410,11 @@ namespace KMA.Gameplay.Core
                 case SessionRoute.RetrySubject:
                     activeSubject = subject;
                     awaitingSubjectScene = true;
+                    awaitingBossScene = false;
+                    break;
+                case SessionRoute.Punishment:
+                    activeSubject = subject;
+                    awaitingSubjectScene = false;
                     awaitingBossScene = false;
                     break;
                 case SessionRoute.Boss:

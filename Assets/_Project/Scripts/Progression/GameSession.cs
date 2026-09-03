@@ -22,10 +22,13 @@ namespace KMA.Gameplay
 
     public sealed class GameSession
     {
+        const int FirstVisit = 1;
+        const int FinalVisit = 2;
+
         readonly Dictionary<SubjectId, SubjectRecord> records =
             new Dictionary<SubjectId, SubjectRecord>();
         SubjectId? active;
-        int visitAttempt;
+        int visitAttempt = FirstVisit;
         bool awaitingPunishment;
 
         public GameSession()
@@ -41,8 +44,19 @@ namespace KMA.Gameplay
         public bool BossUnlocked => records.Values.All(record => record.Passed);
         public SubjectId? PendingPunishmentSubject => awaitingPunishment && active.HasValue ? active : (SubjectId?)null;
         public SubjectId? ActiveSubject => active;
+        public int VisitAttempt => visitAttempt;
+        public bool AwaitingPunishment => awaitingPunishment;
 
         public SubjectRecord GetRecord(SubjectId id) => records[id];
+
+        public SessionRoute ResumeRoute()
+        {
+            if (!active.HasValue)
+                return SessionRoute.Map;
+            if (awaitingPunishment)
+                return SessionRoute.Punishment;
+            return visitAttempt == FirstVisit ? SessionRoute.Subject : SessionRoute.RetrySubject;
+        }
 
         public void ResetCampaign()
         {
@@ -64,6 +78,10 @@ namespace KMA.Gameplay
             var data = SaveData.CreateDefault();
             data.lives = Lives;
             data.bossUnlocked = BossUnlocked;
+            data.hasActiveSubject = active.HasValue;
+            data.activeSubject = active ?? default;
+            data.visitAttempt = visitAttempt;
+            data.awaitingPunishment = awaitingPunishment;
 
             int index = 0;
             foreach (SubjectId id in Enum.GetValues(typeof(SubjectId)))
@@ -96,7 +114,25 @@ namespace KMA.Gameplay
                 records[id] = recordData == null ? new SubjectRecord() : SubjectRecord.FromData(recordData);
             }
 
+            RestoreActiveAttempt(data);
+        }
+
+        void RestoreActiveAttempt(SaveData data)
+        {
             ClearActiveSubject();
+
+            if (!data.hasActiveSubject || Lives <= 0)
+                return;
+            if (!Enum.IsDefined(typeof(SubjectId), data.activeSubject))
+                return;
+            if (data.visitAttempt != FirstVisit && data.visitAttempt != FinalVisit)
+                return;
+            if (data.awaitingPunishment && data.visitAttempt != FinalVisit)
+                return;
+
+            active = data.activeSubject;
+            visitAttempt = data.visitAttempt;
+            awaitingPunishment = data.awaitingPunishment;
         }
 
         public SessionRoute StartSubject(SubjectId id)
@@ -112,7 +148,7 @@ namespace KMA.Gameplay
             }
 
             active = id;
-            visitAttempt = 1;
+            visitAttempt = FirstVisit;
             awaitingPunishment = false;
             return SessionRoute.Subject;
         }
@@ -151,9 +187,9 @@ namespace KMA.Gameplay
                 return route;
             }
 
-            if (visitAttempt == 1)
+            if (visitAttempt == FirstVisit)
             {
-                visitAttempt = 2;
+                visitAttempt = FinalVisit;
                 awaitingPunishment = true;
                 return route;
             }
@@ -166,7 +202,7 @@ namespace KMA.Gameplay
 
         SessionRoute RouteForResult(MinigameResult result) => result.Pass
             ? SessionRoute.Map
-            : visitAttempt == 1
+            : visitAttempt == FirstVisit
                 ? SessionRoute.Punishment
                 : Lives <= 1 ? SessionRoute.GameOver : SessionRoute.Map;
 
@@ -186,7 +222,7 @@ namespace KMA.Gameplay
         void ClearActiveSubject()
         {
             active = null;
-            visitAttempt = 1;
+            visitAttempt = FirstVisit;
             awaitingPunishment = false;
         }
 

@@ -5,6 +5,7 @@ using UnityEngine;
 using UnityEngine.SceneManagement;
 
 [assembly: InternalsVisibleTo("KMA.Gameplay.Core.PlayMode.Tests")]
+[assembly: InternalsVisibleTo("KMA.Gameplay.Progression.PlayMode.Tests")]
 
 namespace KMA.Gameplay.Core
 {
@@ -23,6 +24,7 @@ namespace KMA.Gameplay.Core
         SaveSystem saveSystem;
         Func<SaveData> loadData;
         Action<SaveData> saveData;
+        Func<bool> hasExistingSave;
         Action<string> loadScene;
         SceneRouter router;
         GameSession session;
@@ -37,6 +39,7 @@ namespace KMA.Gameplay.Core
         public GameSession Session => session;
         public Settings Settings => settings;
         public bool IsInitialized => initialized;
+        public bool HasSavedCampaign { get; private set; }
 
         public event Action<Settings> SettingsChanged;
 
@@ -45,7 +48,8 @@ namespace KMA.Gameplay.Core
             Action<SaveData> configuredSave,
             SceneRouter configuredRouter,
             Action<string> configuredSceneLoader,
-            IEnumerable<IGameSettingsService> configuredServices = null)
+            IEnumerable<IGameSettingsService> configuredServices = null,
+            Func<bool> configuredHasExistingSave = null)
         {
             if (initialized)
                 throw new InvalidOperationException("GameManager startup has already completed.");
@@ -54,6 +58,7 @@ namespace KMA.Gameplay.Core
             saveData = configuredSave ?? throw new ArgumentNullException(nameof(configuredSave));
             router = configuredRouter ?? throw new ArgumentNullException(nameof(configuredRouter));
             loadScene = configuredSceneLoader ?? throw new ArgumentNullException(nameof(configuredSceneLoader));
+            hasExistingSave = configuredHasExistingSave;
             settingsServices.Clear();
             if (configuredServices != null)
             {
@@ -163,6 +168,7 @@ namespace KMA.Gameplay.Core
             saveSystem = new SaveSystem();
             loadData = saveSystem.Load;
             saveData = saveSystem.Save;
+            hasExistingSave = () => saveSystem.HasSave;
             router = SceneRouter.EnsurePersistentInstance();
             loadScene = LoadScene;
 
@@ -179,6 +185,7 @@ namespace KMA.Gameplay.Core
             if (initialized)
                 return;
 
+            HasSavedCampaign = hasExistingSave != null && hasExistingSave();
             SaveData loaded = loadData() ?? SaveData.CreateDefault();
             session = new GameSession();
             session.Restore(loaded);
@@ -193,24 +200,17 @@ namespace KMA.Gameplay.Core
             loadScene(MenuScene);
         }
 
-        void SubscribeToRouter()
-        {
-            router.SubjectCompleted += OnSubjectCompleted;
-            router.LifeLost += OnLifeLost;
-        }
+        void SubscribeToRouter() => router.SessionChanged += OnSessionChanged;
 
         void UnsubscribeFromRouter()
         {
             if (router == null)
                 return;
 
-            router.SubjectCompleted -= OnSubjectCompleted;
-            router.LifeLost -= OnLifeLost;
+            router.SessionChanged -= OnSessionChanged;
         }
 
-        void OnSubjectCompleted(SubjectId _, MinigameResult __) => SaveCurrentState();
-
-        void OnLifeLost(int _) => SaveCurrentState();
+        void OnSessionChanged() => SaveCurrentState();
 
         void SaveCurrentState()
         {
@@ -219,6 +219,7 @@ namespace KMA.Gameplay.Core
             current.tutorialSeen = CloneTutorialFlags(tutorialSeen);
             current.gameCompleted = gameCompleted;
             saveData(current);
+            HasSavedCampaign = true;
         }
 
         void ApplySettings()

@@ -35,6 +35,8 @@ namespace KMA.Gameplay
 
         public string SavePath { get; }
 
+        public bool HasSave => File.Exists(SavePath);
+
         public SaveData Load()
         {
             if (!File.Exists(SavePath))
@@ -51,15 +53,18 @@ namespace KMA.Gameplay
                 }
 
                 SaveData data = JsonUtility.FromJson<SaveData>(json);
-                if (data != null && data.version == 0)
+                if (data != null && data.version >= 0 && data.version < SaveData.CurrentVersion)
                 {
-                    LegacyV0Data legacy = ParseLegacyV0(json);
-                    if (!legacy.HasRequiredFields)
+                    LegacyData legacy = ParseLegacy(json);
+                    if (!legacy.HasRequiredFields(data.version))
                     {
                         return SaveData.CreateDefault();
                     }
 
-                    data = legacy.ToSaveData();
+                    if (data.version == 0)
+                    {
+                        data = legacy.ToSaveData();
+                    }
                 }
 
                 if (!IsLoadable(data))
@@ -130,6 +135,10 @@ namespace KMA.Gameplay
                 subjects = MigrateSubjects(data.subjects, defaults.subjects),
                 bossUnlocked = data.bossUnlocked,
                 gameCompleted = data.gameCompleted,
+                hasActiveSubject = defaults.hasActiveSubject,
+                activeSubject = defaults.activeSubject,
+                visitAttempt = defaults.visitAttempt,
+                awaitingPunishment = defaults.awaitingPunishment,
                 tutorialSeen = MigrateTutorialSeen(data.tutorialSeen, defaults.tutorialSeen.Length),
                 settings = data.settings ?? defaults.settings
             };
@@ -137,9 +146,9 @@ namespace KMA.Gameplay
             return IsCurrentVersionStructureValid(migrated) ? migrated : defaults;
         }
 
-        private static LegacyV0Data ParseLegacyV0(string json)
+        private static LegacyData ParseLegacy(string json)
         {
-            var legacy = new LegacyV0Data();
+            var legacy = new LegacyData();
             JsonUtility.FromJsonOverwrite(json, legacy);
             return legacy;
         }
@@ -267,7 +276,7 @@ namespace KMA.Gameplay
         }
 
         [Serializable]
-        private sealed class LegacyV0Data
+        private sealed class LegacyData
         {
             public int version = MissingLegacyInteger;
             public int lives = MissingLegacyInteger;
@@ -276,7 +285,8 @@ namespace KMA.Gameplay
             public bool gameCompleted;
             public bool[] tutorialSeen;
 
-            public bool HasRequiredFields => version == 0 && lives != MissingLegacyInteger;
+            public bool HasRequiredFields(int expectedVersion) =>
+                version == expectedVersion && lives != MissingLegacyInteger;
 
             public SaveData ToSaveData() => new SaveData
             {

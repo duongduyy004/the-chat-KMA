@@ -1,11 +1,234 @@
 using System;
 using KMA.Gameplay;
 using NUnit.Framework;
+using UnityEngine;
 
 namespace KMA.Tests.Gameplay.Progression
 {
     public sealed class GameSessionPersistenceTests
     {
+        [Test]
+        public void RoundTrip_AfterFirstFailure_KeepsActiveAttemptAndPendingPunishment()
+        {
+            var original = new GameSession();
+            original.StartSubject(SubjectId.Sprint);
+            original.SubmitResult(SubjectId.Sprint, Failed());
+
+            GameSession restored = RoundTrip(original);
+
+            Assert.That(restored.ActiveSubject, Is.EqualTo(SubjectId.Sprint));
+            Assert.That(restored.PendingPunishmentSubject, Is.EqualTo(SubjectId.Sprint));
+            Assert.That(restored.Lives, Is.EqualTo(5));
+        }
+
+        [Test]
+        public void RoundTrip_AfterPunishment_KeepsTheRetryAttemptActive()
+        {
+            var original = new GameSession();
+            original.StartSubject(SubjectId.Endurance);
+            original.SubmitResult(SubjectId.Endurance, Failed());
+            original.CompletePunishment();
+
+            GameSession restored = RoundTrip(original);
+
+            Assert.That(restored.ActiveSubject, Is.EqualTo(SubjectId.Endurance));
+            Assert.That(restored.PendingPunishmentSubject, Is.Null);
+        }
+
+        [Test]
+        public void ResumeRoute_WithoutAnAttempt_IsMap()
+        {
+            var session = new GameSession();
+
+            Assert.That(session.ResumeRoute(), Is.EqualTo(SessionRoute.Map));
+            Assert.That(session.VisitAttempt, Is.EqualTo(1));
+            Assert.That(session.AwaitingPunishment, Is.False);
+        }
+
+        [Test]
+        public void RoundTrip_DuringAttemptOne_ResumesTheSubjectWithRecordsAndLives()
+        {
+            var original = new GameSession();
+            original.StartSubject(SubjectId.Sprint);
+            original.SubmitResult(SubjectId.Sprint, new MinigameResult(true, 8f, Rank.A));
+            original.StartSubject(SubjectId.Volleyball);
+
+            GameSession restored = RoundTrip(original);
+
+            Assert.That(restored.ResumeRoute(), Is.EqualTo(SessionRoute.Subject));
+            Assert.That(restored.ActiveSubject, Is.EqualTo(SubjectId.Volleyball));
+            Assert.That(restored.VisitAttempt, Is.EqualTo(1));
+            Assert.That(restored.AwaitingPunishment, Is.False);
+            Assert.That(restored.Lives, Is.EqualTo(5));
+            Assert.That(restored.GetRecord(SubjectId.Sprint).Passed, Is.True);
+            Assert.That(restored.GetRecord(SubjectId.Sprint).BestScore, Is.EqualTo(8f));
+            Assert.That(restored.GetRecord(SubjectId.Sprint).BestRank, Is.EqualTo(Rank.A));
+        }
+
+        [Test]
+        public void RoundTrip_AwaitingPunishment_ResumesPunishmentWithRecordsAndLives()
+        {
+            var original = new GameSession();
+            original.StartSubject(SubjectId.Sprint);
+            original.SubmitResult(SubjectId.Sprint, Failed());
+            original.CompletePunishment();
+            original.SubmitResult(SubjectId.Sprint, Failed());
+            original.StartSubject(SubjectId.Endurance);
+            original.SubmitResult(SubjectId.Endurance, Failed());
+
+            GameSession restored = RoundTrip(original);
+
+            Assert.That(restored.ResumeRoute(), Is.EqualTo(SessionRoute.Punishment));
+            Assert.That(restored.ActiveSubject, Is.EqualTo(SubjectId.Endurance));
+            Assert.That(restored.PendingPunishmentSubject, Is.EqualTo(SubjectId.Endurance));
+            Assert.That(restored.VisitAttempt, Is.EqualTo(2));
+            Assert.That(restored.AwaitingPunishment, Is.True);
+            Assert.That(restored.Lives, Is.EqualTo(4));
+            Assert.That(restored.GetRecord(SubjectId.Sprint).FailedVisits, Is.EqualTo(1));
+        }
+
+        [Test]
+        public void RoundTrip_DuringAttemptTwo_ResumesRetryAndStillCostsALifeOnFailure()
+        {
+            var original = new GameSession();
+            original.StartSubject(SubjectId.Badminton);
+            original.SubmitResult(SubjectId.Badminton, Failed());
+            original.CompletePunishment();
+
+            GameSession restored = RoundTrip(original);
+
+            Assert.That(restored.ResumeRoute(), Is.EqualTo(SessionRoute.RetrySubject));
+            Assert.That(restored.ActiveSubject, Is.EqualTo(SubjectId.Badminton));
+            Assert.That(restored.VisitAttempt, Is.EqualTo(2));
+            Assert.That(restored.AwaitingPunishment, Is.False);
+            Assert.That(restored.Lives, Is.EqualTo(5));
+
+            Assert.That(restored.SubmitResult(SubjectId.Badminton, Failed()), Is.EqualTo(SessionRoute.Map));
+            Assert.That(restored.Lives, Is.EqualTo(4));
+            Assert.That(restored.GetRecord(SubjectId.Badminton).FailedVisits, Is.EqualTo(1));
+            Assert.That(restored.ResumeRoute(), Is.EqualTo(SessionRoute.Map));
+        }
+
+        [Test]
+        public void RoundTrip_WithoutAnAttempt_ResumesMap()
+        {
+            var original = new GameSession();
+            original.StartSubject(SubjectId.Football);
+            original.SubmitResult(SubjectId.Football, new MinigameResult(true, 7f, Rank.B));
+
+            GameSession restored = RoundTrip(original);
+
+            Assert.That(restored.ResumeRoute(), Is.EqualTo(SessionRoute.Map));
+            Assert.That(restored.ActiveSubject, Is.Null);
+            Assert.That(restored.AwaitingPunishment, Is.False);
+            Assert.That(restored.GetRecord(SubjectId.Football).Passed, Is.True);
+        }
+
+        [Test]
+        public void ToSaveData_ExportsTheActiveAttemptFields()
+        {
+            var session = new GameSession();
+            session.StartSubject(SubjectId.PingPong);
+            session.SubmitResult(SubjectId.PingPong, Failed());
+
+            SaveData exported = session.ToSaveData();
+
+            Assert.That(exported.version, Is.EqualTo(SaveData.CurrentVersion));
+            Assert.That(exported.hasActiveSubject, Is.True);
+            Assert.That(exported.activeSubject, Is.EqualTo(SubjectId.PingPong));
+            Assert.That(exported.visitAttempt, Is.EqualTo(2));
+            Assert.That(exported.awaitingPunishment, Is.True);
+
+            session.CompletePunishment();
+            session.SubmitResult(SubjectId.PingPong, new MinigameResult(true, 6f, Rank.C));
+            SaveData cleared = session.ToSaveData();
+
+            Assert.That(cleared.hasActiveSubject, Is.False);
+            Assert.That(cleared.visitAttempt, Is.EqualTo(1));
+            Assert.That(cleared.awaitingPunishment, Is.False);
+        }
+
+        [TestCase(-1)]
+        [TestCase(0)]
+        [TestCase(3)]
+        public void Restore_OutOfRangeVisitAttempt_FallsBackToNoActiveAttempt(int visitAttempt)
+        {
+            SaveData data = SaveData.CreateDefault();
+            data.hasActiveSubject = true;
+            data.activeSubject = SubjectId.Sprint;
+            data.visitAttempt = visitAttempt;
+
+            AssertNoActiveAttempt(data);
+        }
+
+        [Test]
+        public void Restore_PunishmentStateWithoutAnActiveSubject_FallsBackToNoActiveAttempt()
+        {
+            SaveData data = SaveData.CreateDefault();
+            data.hasActiveSubject = false;
+            data.activeSubject = SubjectId.Sprint;
+            data.visitAttempt = 2;
+            data.awaitingPunishment = true;
+
+            AssertNoActiveAttempt(data);
+        }
+
+        [Test]
+        public void Restore_UndefinedActiveSubject_FallsBackToNoActiveAttempt()
+        {
+            SaveData data = SaveData.CreateDefault();
+            data.hasActiveSubject = true;
+            data.activeSubject = (SubjectId)999;
+            data.visitAttempt = 1;
+
+            AssertNoActiveAttempt(data);
+        }
+
+        [Test]
+        public void Restore_AwaitingPunishmentOnAttemptOne_FallsBackToNoActiveAttempt()
+        {
+            SaveData data = SaveData.CreateDefault();
+            data.hasActiveSubject = true;
+            data.activeSubject = SubjectId.Sprint;
+            data.visitAttempt = 1;
+            data.awaitingPunishment = true;
+
+            AssertNoActiveAttempt(data);
+        }
+
+        [Test]
+        public void Restore_ActiveAttemptWithoutLives_FallsBackToNoActiveAttempt()
+        {
+            SaveData data = SaveData.CreateDefault();
+            data.lives = 0;
+            data.hasActiveSubject = true;
+            data.activeSubject = SubjectId.Sprint;
+            data.visitAttempt = 1;
+
+            AssertNoActiveAttempt(data);
+        }
+
+        [Test]
+        public void Restore_ReplacesAPreviouslyRestoredAttempt()
+        {
+            SaveData active = SaveData.CreateDefault();
+            active.hasActiveSubject = true;
+            active.activeSubject = SubjectId.Basketball;
+            active.visitAttempt = 2;
+            active.awaitingPunishment = true;
+
+            var session = new GameSession();
+            session.Restore(active);
+            Assert.That(session.ResumeRoute(), Is.EqualTo(SessionRoute.Punishment));
+
+            session.Restore(SaveData.CreateDefault());
+
+            Assert.That(session.ActiveSubject, Is.Null);
+            Assert.That(session.VisitAttempt, Is.EqualTo(1));
+            Assert.That(session.AwaitingPunishment, Is.False);
+            Assert.That(session.ResumeRoute(), Is.EqualTo(SessionRoute.Map));
+        }
+
         [Test]
         public void ToSaveDataAndRestore_PreserveCampaignState()
         {
@@ -165,5 +388,25 @@ namespace KMA.Tests.Gameplay.Progression
         }
 
         static MinigameResult Failed() => new MinigameResult(false, 0f, Rank.F);
+
+        static void AssertNoActiveAttempt(SaveData data)
+        {
+            var session = new GameSession();
+            session.Restore(data);
+
+            Assert.That(session.ActiveSubject, Is.Null);
+            Assert.That(session.PendingPunishmentSubject, Is.Null);
+            Assert.That(session.AwaitingPunishment, Is.False);
+            Assert.That(session.VisitAttempt, Is.EqualTo(1));
+            Assert.That(session.ResumeRoute(), Is.EqualTo(SessionRoute.Map));
+        }
+
+        static GameSession RoundTrip(GameSession source)
+        {
+            SaveData persisted = JsonUtility.FromJson<SaveData>(JsonUtility.ToJson(source.ToSaveData()));
+            var restored = new GameSession();
+            restored.Restore(persisted);
+            return restored;
+        }
     }
 }

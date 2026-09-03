@@ -29,8 +29,9 @@ namespace KMA.Gameplay.Shell
                 settings?.Hide();
                 calibrate?.Hide();
                 EnsureNewGameConfirmation();
+                mainMenu.Configure(GameManager.Instance != null && GameManager.Instance.HasSavedCampaign);
                 mainMenu.PlayRequested += OpenMap;
-                mainMenu.ContinueRequested += OpenMap;
+                mainMenu.ContinueRequested += ContinueCampaign;
                 mainMenu.NewGameRequested += StartNewGame;
                 mainMenu.NewGameConfirmationRequested += ShowNewGameConfirmation;
                 mainMenu.SettingsRequested += OpenSettings;
@@ -68,7 +69,7 @@ namespace KMA.Gameplay.Shell
             if (mainMenu != null)
             {
                 mainMenu.PlayRequested -= OpenMap;
-                mainMenu.ContinueRequested -= OpenMap;
+                mainMenu.ContinueRequested -= ContinueCampaign;
                 mainMenu.NewGameRequested -= StartNewGame;
                 mainMenu.NewGameConfirmationRequested -= ShowNewGameConfirmation;
                 mainMenu.SettingsRequested -= OpenSettings;
@@ -103,6 +104,13 @@ namespace KMA.Gameplay.Shell
             var router = SceneRouter.Instance;
             if (router != null)
                 router.Route(SessionRoute.Map);
+        }
+
+        static void ContinueCampaign()
+        {
+            var router = SceneRouter.Instance;
+            if (router != null)
+                router.ResumeCampaign();
         }
 
         static void StartNewGame() => GameManager.Instance?.StartNewGame();
