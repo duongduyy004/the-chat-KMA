@@ -453,7 +453,7 @@ namespace KMA.Input
                 swipePointerId = pointerId;
                 swipeDetector?.FeedSample(position, timestamp);
             }
-            if (rhythmBeatDetector != null && gameplayActionMap != null && gameplayActionMap.name == enduranceActionMapName)
+            if (rhythmBeatDetector != null)
                 FeedRhythmTap(AudioSettings.dspTime, RhythmBeatDsp);
         }
 

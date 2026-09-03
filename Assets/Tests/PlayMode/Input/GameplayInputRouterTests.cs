@@ -235,9 +235,9 @@ namespace KMA.Tests.Input
             Router.SetDetectors(null, rhythm, hold, null, swipe);
             Router.RhythmOffsetMs = 125d;
 
-            Router.FeedRhythmTapForTest(10d, 10d);
             Router.FeedPointerDownForTest(Vector2.zero, 1d);
             Router.FeedPointerUpForTest(Vector2.up, 2d);
+            Router.FeedRhythmTapForTest(10d, 10d);
 
             Assert.That(rhythmDelta, Is.EqualTo(125d).Within(.000001d));
             Assert.That(holdDuration, Is.EqualTo(1d).Within(.000001d));
@@ -451,6 +451,21 @@ namespace KMA.Tests.Input
             Assert.That(judges, Is.EqualTo(1));
             Router.enabled = false;
             Assert.That(EnhancedTouchSupport.enabled, Is.False);
+        }
+
+        [Test]
+        public void ScreenTapAreaWithoutRhythmDetector_DoesNotPublishRhythmJudge()
+        {
+            var taps = new InputLayer.TapMashInputDetector();
+            var hold = new InputLayer.HoldInputDetector();
+            var swipe = new InputLayer.SwipeInputDetector();
+            var judges = 0;
+            Router.OnRhythmJudge += (_, _) => judges++;
+            Router.SetDetectors(taps, null, hold, null, swipe);
+
+            Area.OnPointerDown(PointerAt(Vector2.zero, 8));
+
+            Assert.That(judges, Is.Zero);
         }
 
         [Test]
