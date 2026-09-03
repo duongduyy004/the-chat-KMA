@@ -102,6 +102,7 @@ namespace KMA.Gameplay.Core
         SubjectId? activeSubject;
         bool awaitingSubjectScene;
         bool awaitingBossScene;
+        bool menuLoading;
         GameSession session;
         SessionRouteTransitioner transitioner;
 
@@ -114,7 +115,7 @@ namespace KMA.Gameplay.Core
 
         public static SceneRouter Instance => instance;
         public GameSession Session => session;
-        public bool IsTransitioning => transitioner != null && transitioner.IsTransitioning;
+        public bool IsTransitioning => menuLoading || (transitioner != null && transitioner.IsTransitioning);
 
         public static SceneRouter EnsurePersistentInstance()
         {
@@ -245,6 +246,7 @@ namespace KMA.Gameplay.Core
             activeSubject = null;
             awaitingSubjectScene = false;
             awaitingBossScene = false;
+            menuLoading = true;
             SceneLoadStarted?.Invoke();
             StartCoroutine(LoadMenuScene());
             return true;
@@ -509,6 +511,7 @@ namespace KMA.Gameplay.Core
                     yield return null;
             }
 
+            menuLoading = false;
             SceneLoadCompleted?.Invoke();
         }
 

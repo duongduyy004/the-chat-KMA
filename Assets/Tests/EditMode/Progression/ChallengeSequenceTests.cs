@@ -99,7 +99,7 @@ namespace KMA.Tests.Gameplay.Progression
         }
 
         [Test]
-        public void Controller_CompletesSessionOnceWithoutChangingLivesOrBypassingRetry()
+        public void Controller_RequestsRetryOnceWithoutChangingLivesOrMutatingTheSession()
         {
             var session = new GameSession();
             session.StartSubject(SubjectId.Sprint);
@@ -119,7 +119,8 @@ namespace KMA.Tests.Gameplay.Progression
             Assert.That(completionCount, Is.EqualTo(1));
             Assert.That(session.Lives, Is.EqualTo(5));
             Assert.That(controller.IsComplete, Is.True);
-            Assert.Throws<InvalidOperationException>(() => session.CompletePunishment());
+            Assert.That(session.PendingPunishmentSubject, Is.EqualTo(SubjectId.Sprint));
+            Assert.That(session.CompletePunishment(), Is.EqualTo(SessionRoute.RetrySubject));
             Assert.That(session.SubmitResult(SubjectId.Sprint, Failed()), Is.EqualTo(SessionRoute.Map));
             Assert.That(session.Lives, Is.EqualTo(4));
         }

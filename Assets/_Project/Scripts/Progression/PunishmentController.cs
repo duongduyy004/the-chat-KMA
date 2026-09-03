@@ -114,8 +114,7 @@ namespace KMA.Gameplay
             for (var detectorIndex = 0; detectorIndex < activeDetectors.Count; detectorIndex++)
                 activeDetectors[detectorIndex].Deactivate();
             activeDetectors.Clear();
-            var route = session.CompletePunishment();
-            Completed?.Invoke(route);
+            Completed?.Invoke(SessionRoute.RetrySubject);
         }
     }
 }

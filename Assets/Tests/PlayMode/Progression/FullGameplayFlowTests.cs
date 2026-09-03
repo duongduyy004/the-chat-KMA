@@ -312,6 +312,71 @@ namespace KMA.Tests.Gameplay.Progression
             yield return WaitForRoutedScene(relaunched, "Map");
         }
 
+        [UnityTest]
+        public IEnumerator CompletingProductionPunishment_PersistsTheRetryAttemptAcrossRelaunch()
+        {
+            SaveData persisted = SaveData.CreateDefault();
+            SceneRouter router = SceneRouter.EnsurePersistentInstance();
+            CreateManager(router, () => persisted, data => persisted = data);
+
+            Assert.That(router.StartSubject(SubjectId.Sprint), Is.True);
+            yield return WaitForRoutedScene(router, "MG_Sprint");
+            Assert.That(router.SubmitSubjectResult(SubjectId.Sprint, new MinigameResult(false, 0f, Rank.F)),
+                Is.True);
+            yield return WaitForRoutedScene(router, "Punishment");
+
+            var punishment = UnityEngine.Object.FindFirstObjectByType<PunishmentSceneController>();
+            Assert.That(punishment, Is.Not.Null);
+            for (var tap = 0; tap < 5; tap++)
+                punishment.SubmitTap();
+            punishment.SubmitRhythmHold(.5f);
+            punishment.SubmitAlternateTap(true);
+            punishment.SubmitAlternateTap(false);
+            yield return WaitForRoutedScene(router, "MG_Sprint");
+
+            Assert.That(persisted.activeSubject, Is.EqualTo(SubjectId.Sprint));
+            Assert.That(persisted.visitAttempt, Is.EqualTo(2));
+            Assert.That(persisted.awaitingPunishment, Is.False);
+
+            DestroyAll<GameManager>();
+            DestroyAll<SceneRouter>();
+            yield return null;
+
+            SceneRouter relaunched = SceneRouter.EnsurePersistentInstance();
+            GameManager manager = CreateManager(relaunched, () => persisted, data => persisted = data);
+            Assert.That(manager.Session.ResumeRoute(), Is.EqualTo(SessionRoute.RetrySubject));
+        }
+
+        [UnityTest]
+        public IEnumerator MutationsWhileMenuLoadIsPending_AreRejectedWithoutChangingTheSession()
+        {
+            SceneRouter router = SceneRouter.EnsurePersistentInstance();
+            Assert.That(router.StartSubject(SubjectId.Sprint), Is.True);
+            yield return WaitForRoutedScene(router, "MG_Sprint");
+
+            GameSession session = router.Session;
+            var persistenceEvents = 0;
+            router.SessionChanged += () => persistenceEvents++;
+
+            Assert.That(router.RouteToMenu(), Is.True);
+            Assert.That(router.IsTransitioning, Is.True);
+            Assert.That(router.StartSubject(SubjectId.Endurance), Is.False);
+            Assert.That(router.SubmitSubjectResult(SubjectId.Sprint, new MinigameResult(false, 0f, Rank.F)),
+                Is.False);
+            Assert.That(router.RestartActiveSubject(), Is.False);
+            Assert.That(router.ExitActiveSubjectToMap(), Is.False);
+            Assert.That(router.ResumeCampaign(), Is.False);
+            Assert.That(router.ResetCampaign(), Is.False);
+
+            Assert.That(session.ActiveSubject, Is.EqualTo(SubjectId.Sprint));
+            Assert.That(session.VisitAttempt, Is.EqualTo(1));
+            Assert.That(session.AwaitingPunishment, Is.False);
+            Assert.That(persistenceEvents, Is.Zero);
+
+            yield return WaitForScene("Menu");
+            Assert.That(router.IsTransitioning, Is.False);
+        }
+
         GameManager CreateManager(SceneRouter router, Func<SaveData> load, Action<SaveData> save)
         {
             GameObject gameObject = CreateGameObject("FullGameplayFlowTests.Manager");

@@ -182,7 +182,7 @@ namespace KMA.Gameplay.Core
                 return;
 
             completionRouted = true;
-            router.Route(route, punishment.Subject);
+            router.CompletePunishment(punishment.Subject);
         }
 
         void DisableWithError(string message)
