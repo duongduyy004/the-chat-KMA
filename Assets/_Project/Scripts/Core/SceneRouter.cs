@@ -155,7 +155,7 @@ namespace KMA.Gameplay.Core
 
         public bool StartSubject(SubjectId subject)
         {
-            if (IsTransitioning)
+            if (IsTransitioning || session.ActiveSubject.HasValue)
                 return false;
 
             EnsureRouteIsConfigured(SessionRoute.Subject, subject);
@@ -254,19 +254,7 @@ namespace KMA.Gameplay.Core
             return Route(route, subject);
         }
 
-        public bool ExitActiveSubjectToMap()
-        {
-            if (IsTransitioning)
-                return false;
-
-            bool abandoned = session.ActiveSubject.HasValue;
-            if (abandoned)
-                session.AbandonActiveSubject();
-            activeSubject = null;
-            if (abandoned)
-                SessionChanged?.Invoke();
-            return Route(SessionRoute.Map);
-        }
+        public bool ExitActiveSubjectToMap() => Route(SessionRoute.Map);
 
         public bool CompleteBoss() => Route(SessionRoute.Map, null);
 
@@ -322,6 +310,12 @@ namespace KMA.Gameplay.Core
             if (!TryGetSceneName(route, subject, out var sceneName))
                 throw new InvalidOperationException($"No loadable scene is configured for {route}" +
                     (subject.HasValue ? $" ({subject.Value})." : "."));
+
+            if (route == SessionRoute.Map && session.ActiveSubject.HasValue)
+            {
+                session.AbandonActiveSubject();
+                SessionChanged?.Invoke();
+            }
 
             PrepareSceneBinding(route, subject);
             return transitioner.TryRoute(route, subject, sceneName);

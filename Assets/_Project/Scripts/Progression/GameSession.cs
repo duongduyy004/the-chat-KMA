@@ -22,7 +22,9 @@ namespace KMA.Gameplay
 
     public sealed class GameSession
     {
-        const int FirstVisit = 1;
+        public const int MaxLives = 5;
+        public const int FirstVisit = 1;
+
         const int FinalVisit = 2;
 
         readonly Dictionary<SubjectId, SubjectRecord> records =
@@ -39,7 +41,7 @@ namespace KMA.Gameplay
             }
         }
 
-        public int Lives { get; private set; } = 5;
+        public int Lives { get; private set; } = MaxLives;
         public IReadOnlyDictionary<SubjectId, SubjectRecord> Records => records;
         public bool BossUnlocked => records.Values.All(record => record.Passed);
         public SubjectId? PendingPunishmentSubject => awaitingPunishment && active.HasValue ? active : (SubjectId?)null;
@@ -60,7 +62,7 @@ namespace KMA.Gameplay
 
         public void ResetCampaign()
         {
-            Lives = 5;
+            Lives = MaxLives;
             foreach (SubjectId id in Enum.GetValues(typeof(SubjectId)))
                 records[id] = new SubjectRecord();
             ClearActiveSubject();
@@ -107,7 +109,7 @@ namespace KMA.Gameplay
                 throw new ArgumentNullException(nameof(data));
             }
 
-            Lives = Math.Max(0, Math.Min(5, data.lives));
+            Lives = Math.Max(0, Math.Min(MaxLives, data.lives));
             foreach (SubjectId id in Enum.GetValues(typeof(SubjectId)))
             {
                 SubjectRecordData recordData = FindRecordData(data.subjects, id);

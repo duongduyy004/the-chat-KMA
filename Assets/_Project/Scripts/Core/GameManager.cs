@@ -185,13 +185,13 @@ namespace KMA.Gameplay.Core
             if (initialized)
                 return;
 
-            HasSavedCampaign = hasExistingSave != null && hasExistingSave();
             SaveData loaded = loadData() ?? SaveData.CreateDefault();
             session = new GameSession();
             session.Restore(loaded);
             settings = loaded.settings ?? Settings.CreateDefault();
             tutorialSeen = CloneTutorialFlags(loaded.tutorialSeen);
             gameCompleted = loaded.gameCompleted;
+            RefreshSavedCampaign(hasExistingSave != null && hasExistingSave());
 
             router.LoadSession(session);
             SubscribeToRouter();
@@ -219,7 +219,27 @@ namespace KMA.Gameplay.Core
             current.tutorialSeen = CloneTutorialFlags(tutorialSeen);
             current.gameCompleted = gameCompleted;
             saveData(current);
-            HasSavedCampaign = true;
+            RefreshSavedCampaign(true);
+        }
+
+        // A save file can exist and still carry nothing to continue: SaveSystem.Load falls back to
+        // defaults for a corrupt or empty file, and a freshly reset campaign is default too. Continue
+        // must only light up when the restored state actually has something to resume.
+        void RefreshSavedCampaign(bool saveExists) =>
+            HasSavedCampaign = saveExists && HasRestoredCampaignProgress();
+
+        bool HasRestoredCampaignProgress()
+        {
+            if (gameCompleted || session.ActiveSubject.HasValue || session.Lives < GameSession.MaxLives)
+                return true;
+
+            foreach (SubjectRecord record in session.Records.Values)
+            {
+                if (record.Passed || record.FailedVisits > 0)
+                    return true;
+            }
+
+            return false;
         }
 
         void ApplySettings()

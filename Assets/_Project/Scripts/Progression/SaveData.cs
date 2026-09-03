@@ -6,7 +6,6 @@ namespace KMA.Gameplay
     public sealed class SaveData
     {
         public const int CurrentVersion = 2;
-        public const int NoAttemptVisit = 1;
 
         public int version;
         public int lives;
@@ -39,13 +38,13 @@ namespace KMA.Gameplay
             return new SaveData
             {
                 version = CurrentVersion,
-                lives = 5,
+                lives = GameSession.MaxLives,
                 subjects = subjects,
                 bossUnlocked = false,
                 gameCompleted = false,
                 hasActiveSubject = false,
                 activeSubject = default,
-                visitAttempt = NoAttemptVisit,
+                visitAttempt = GameSession.FirstVisit,
                 awaitingPunishment = false,
                 tutorialSeen = new bool[subjectValues.Length],
                 settings = Settings.CreateDefault()

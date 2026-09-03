@@ -184,6 +184,86 @@ namespace KMA.Tests.Gameplay.Progression
         }
 
         [Test]
+        public void Continue_WithASaveFileThatLoadedAsDefaults_IsDisabled()
+        {
+            SceneRouter router = CreateRouter();
+            GameManager manager = CreateManager(router, SaveData.CreateDefault(), hasExistingSave: true);
+            List<SceneRouteTransition> transitions = RecordTransitions(router);
+            MainMenuScreen menu = CreateShellMenu();
+
+            Assert.That(manager.HasSavedCampaign, Is.False);
+            Assert.That(menu.CanContinue, Is.False);
+
+            menu.Continue();
+
+            Assert.That(transitions, Is.Empty);
+        }
+
+        [Test]
+        public void Continue_WithRestoredProgress_IsEnabled()
+        {
+            SaveData persisted = SaveData.CreateDefault();
+            persisted.lives = 4;
+
+            SceneRouter router = CreateRouter();
+            GameManager manager = CreateManager(router, persisted, hasExistingSave: true);
+            MainMenuScreen menu = CreateShellMenu();
+
+            Assert.That(manager.HasSavedCampaign, Is.True);
+            Assert.That(menu.CanContinue, Is.True);
+        }
+
+        [Test]
+        public void StartSubject_WhileARestoredAttemptIsStillActive_IsRejectedWithoutThrowing()
+        {
+            SceneRouter router = CreateRouter();
+            GameManager manager = CreateManager(
+                router, Arrange(session => session.StartSubject(SubjectId.Sprint)), true);
+            List<SceneRouteTransition> transitions = RecordTransitions(router);
+
+            Assert.That(router.StartSubject(SubjectId.Endurance), Is.False);
+
+            Assert.That(transitions, Is.Empty);
+            Assert.That(manager.Session.ActiveSubject, Is.EqualTo(SubjectId.Sprint));
+            Assert.That(manager.Session.VisitAttempt, Is.EqualTo(1));
+        }
+
+        [UnityTest]
+        public IEnumerator Play_AfterRestoringAnActiveAttempt_ClearsItSoTheMapStaysUsable()
+        {
+            SaveData persisted = Arrange(session =>
+            {
+                session.StartSubject(SubjectId.Sprint);
+                session.SubmitResult(SubjectId.Sprint, new MinigameResult(false, 0f, Rank.F));
+            });
+
+            SceneRouter router = CreateRouter();
+            SaveData saved = null;
+            GameManager manager = CreateManager(router, persisted, true, data => saved = data);
+            List<SceneRouteTransition> transitions = RecordTransitions(router);
+            MainMenuScreen menu = CreateShellMenu();
+
+            Assert.That(manager.Session.ActiveSubject, Is.EqualTo(SubjectId.Sprint));
+
+            menu.Play();
+
+            Assert.That(transitions, Has.Count.EqualTo(1));
+            Assert.That(transitions[0].Route, Is.EqualTo(SessionRoute.Map));
+            Assert.That(manager.Session.ActiveSubject, Is.Null);
+            Assert.That(manager.Session.AwaitingPunishment, Is.False);
+            Assert.That(saved, Is.Not.Null, "Abandoning the stale attempt must be persisted.");
+            Assert.That(saved.hasActiveSubject, Is.False);
+            Assert.That(saved.awaitingPunishment, Is.False);
+            Assert.That(saved.lives, Is.EqualTo(5));
+
+            yield return WaitForRoutedScene(router, "Map");
+
+            Assert.That(router.StartSubject(SubjectId.Endurance), Is.True);
+            Assert.That(manager.Session.ActiveSubject, Is.EqualTo(SubjectId.Endurance));
+            yield return WaitForRoutedScene(router, "MG_Endurance");
+        }
+
+        [Test]
         public void StartNewGame_ResetsTheCampaignButKeepsSettingsAndTutorialFlags()
         {
             SaveData persisted = SaveData.CreateDefault();
@@ -213,7 +293,8 @@ namespace KMA.Tests.Gameplay.Progression
             Assert.That(saved.settings.musicVol, Is.EqualTo(0.3f));
             Assert.That(saved.settings.vibration, Is.False);
             Assert.That(manager.Session.ResumeRoute(), Is.EqualTo(SessionRoute.Map));
-            Assert.That(manager.HasSavedCampaign, Is.True);
+            Assert.That(manager.HasSavedCampaign, Is.False,
+                "A freshly reset campaign has nothing to continue.");
         }
 
         IEnumerator AssertContinueRequests(SaveData persisted, SessionRoute expectedRoute,
