@@ -173,6 +173,17 @@ namespace KMA.Gameplay.Core
             return Route(session.ResumeRoute(), session.ActiveSubject);
         }
 
+        public bool ResetCampaign()
+        {
+            if (IsTransitioning)
+                return false;
+
+            EnsureRouteIsConfigured(SessionRoute.Map, null);
+            session.ResetCampaign();
+            SessionChanged?.Invoke();
+            return Route(SessionRoute.Map);
+        }
+
         public void LoadSession(GameSession restoredSession)
         {
             if (restoredSession == null)

@@ -249,6 +249,15 @@ namespace KMA.Tests.Gameplay.Progression
 
             yield return WaitForRoutedScene(router, "MG_Sprint");
 
+            var sprint = UnityEngine.Object.FindFirstObjectByType<SprintController>();
+            Assert.That(sprint, Is.Not.Null, "The original subject route must keep its pending binding.");
+            sprint.ConfigureForTest(0f);
+            sprint.AdvanceToDistance(100f);
+            sprint.Simulate(0f);
+            var resultPanel = UnityEngine.Object.FindFirstObjectByType<ResultPanel>(FindObjectsInactive.Include);
+            Assert.That(resultPanel.CurrentResult.Pass, Is.True,
+                "The original subject controller must remain bound after rejected routes.");
+
             Assert.That(router.ExitActiveSubjectToMap(), Is.True, "Rejection must end with the transition.");
             Assert.That(persistenceEvents, Is.EqualTo(1));
             Assert.That(session.ActiveSubject, Is.Null);

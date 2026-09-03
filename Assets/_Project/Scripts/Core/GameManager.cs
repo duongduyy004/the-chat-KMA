@@ -119,10 +119,11 @@ namespace KMA.Gameplay.Core
         public void StartNewGame()
         {
             if (!initialized) throw new InvalidOperationException("GameManager has not initialized.");
-            session.ResetCampaign();
+            if (router.IsTransitioning)
+                return;
+
             gameCompleted = false;
-            SaveCurrentState();
-            loadScene(MenuScene);
+            router.ResetCampaign();
         }
 
         public void UpdateSettings(Settings updatedSettings)
@@ -222,25 +223,8 @@ namespace KMA.Gameplay.Core
             RefreshSavedCampaign(true);
         }
 
-        // A save file can exist and still carry nothing to continue: SaveSystem.Load falls back to
-        // defaults for a corrupt or empty file, and a freshly reset campaign is default too. Continue
-        // must only light up when the restored state actually has something to resume.
         void RefreshSavedCampaign(bool saveExists) =>
-            HasSavedCampaign = saveExists && HasRestoredCampaignProgress();
-
-        bool HasRestoredCampaignProgress()
-        {
-            if (gameCompleted || session.ActiveSubject.HasValue || session.Lives < GameSession.MaxLives)
-                return true;
-
-            foreach (SubjectRecord record in session.Records.Values)
-            {
-                if (record.Passed || record.FailedVisits > 0)
-                    return true;
-            }
-
-            return false;
-        }
+            HasSavedCampaign = saveExists && !gameCompleted;
 
         void ApplySettings()
         {

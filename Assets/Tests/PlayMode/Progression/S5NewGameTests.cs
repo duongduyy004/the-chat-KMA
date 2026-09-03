@@ -183,11 +183,31 @@ namespace KMA.Tests.Gameplay.Progression
                 SessionRoute.RetrySubject, SubjectId.Endurance, "MG_Endurance");
         }
 
-        [Test]
-        public void Continue_WithASaveFileThatLoadedAsDefaults_IsDisabled()
+        [UnityTest]
+        public IEnumerator Continue_WithAnExistingUncompletedDefaultSave_IsEnabled()
         {
             SceneRouter router = CreateRouter();
             GameManager manager = CreateManager(router, SaveData.CreateDefault(), hasExistingSave: true);
+            List<SceneRouteTransition> transitions = RecordTransitions(router);
+            MainMenuScreen menu = CreateShellMenu();
+
+            Assert.That(manager.HasSavedCampaign, Is.True);
+            Assert.That(menu.CanContinue, Is.True);
+
+            menu.Continue();
+
+            Assert.That(transitions, Has.Count.EqualTo(1));
+            Assert.That(transitions[0].Route, Is.EqualTo(SessionRoute.Map));
+            yield return WaitForRoutedScene(router, "Map");
+        }
+
+        [Test]
+        public void Continue_WithACompletedSave_IsDisabled()
+        {
+            SaveData persisted = SaveData.CreateDefault();
+            persisted.gameCompleted = true;
+            SceneRouter router = CreateRouter();
+            GameManager manager = CreateManager(router, persisted, hasExistingSave: true);
             List<SceneRouteTransition> transitions = RecordTransitions(router);
             MainMenuScreen menu = CreateShellMenu();
 
@@ -263,8 +283,8 @@ namespace KMA.Tests.Gameplay.Progression
             yield return WaitForRoutedScene(router, "MG_Endurance");
         }
 
-        [Test]
-        public void StartNewGame_ResetsTheCampaignButKeepsSettingsAndTutorialFlags()
+        [UnityTest]
+        public IEnumerator StartNewGame_ResetsTheCampaignThroughTheRouterButKeepsSettingsAndTutorialFlags()
         {
             SaveData persisted = SaveData.CreateDefault();
             persisted.lives = 2;
@@ -280,9 +300,15 @@ namespace KMA.Tests.Gameplay.Progression
             SceneRouter router = CreateRouter();
             SaveData saved = null;
             GameManager manager = CreateManager(router, persisted, true, data => saved = data);
+            var sessionChanges = 0;
+            router.SessionChanged += () => sessionChanges++;
+            List<SceneRouteTransition> transitions = RecordTransitions(router);
 
             manager.StartNewGame();
 
+            Assert.That(sessionChanges, Is.EqualTo(1));
+            Assert.That(transitions, Has.Count.EqualTo(1));
+            Assert.That(transitions[0].Route, Is.EqualTo(SessionRoute.Map));
             Assert.That(saved, Is.Not.Null);
             Assert.That(saved.lives, Is.EqualTo(5));
             Assert.That(saved.subjects[0].passed, Is.False);
@@ -293,8 +319,9 @@ namespace KMA.Tests.Gameplay.Progression
             Assert.That(saved.settings.musicVol, Is.EqualTo(0.3f));
             Assert.That(saved.settings.vibration, Is.False);
             Assert.That(manager.Session.ResumeRoute(), Is.EqualTo(SessionRoute.Map));
-            Assert.That(manager.HasSavedCampaign, Is.False,
-                "A freshly reset campaign has nothing to continue.");
+            Assert.That(manager.HasSavedCampaign, Is.True,
+                "A fresh saved campaign remains available for Continue until it is completed.");
+            yield return WaitForRoutedScene(router, "Map");
         }
 
         IEnumerator AssertContinueRequests(SaveData persisted, SessionRoute expectedRoute,
