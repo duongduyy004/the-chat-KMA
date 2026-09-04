@@ -18,19 +18,17 @@ namespace KMA.Tests.Presentation
             var root = new GameObject("tutorial-overlay");
             try
             {
+                var memory = new MemoryTutorialSeenStore();
                 var overlay = root.AddComponent<TutorialOverlay>();
-                overlay.Show(subject, new[] { new TutorialStep("GO", "Run.") });
+                overlay.ConfigureForTest(new SaveDataTutorialSeenStore(memory), subject,
+                    new[] { new TutorialStep("GO", "Run.") });
                 overlay.Skip();
 
                 Assert.That(overlay.ShouldShow, Is.False);
                 Assert.That(PlayerPrefs.HasKey(playerPrefsKey), Is.False,
                     "Direct-scene completion must not create the retired PlayerPrefs tutorial key.");
-
-                var memory = new MemoryTutorialSeenStore();
-                var injectedStore = new SaveDataTutorialSeenStore(memory);
-                injectedStore.MarkSeen(subject);
                 Assert.That(memory.HasSeen(subject), Is.True,
-                    "The explicitly injected memory fallback must retain direct-scene state for its store lifetime.");
+                    "Tutorial completion must retain direct-scene state in the injected memory fallback.");
             }
             finally
             {
