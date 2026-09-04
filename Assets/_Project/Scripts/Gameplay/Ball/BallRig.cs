@@ -77,6 +77,22 @@ namespace KMA.Gameplay
             currentCurvature,
             Time.fixedDeltaTime);
 
+        public Vector2 PredictLandingPoint(Vector2 direction, float force, float curvature)
+        {
+            FlightProfile activeProfile = ActiveProfile;
+            Vector2 prospectiveVelocity = direction.sqrMagnitude > Mathf.Epsilon
+                ? direction.normalized * Mathf.Max(0f, force)
+                : Vector2.zero;
+            return Ballistics.PredictGround(
+                Body.position,
+                prospectiveVelocity,
+                Physics2D.gravity * activeProfile.GravityScale,
+                activeProfile.GroundY,
+                activeProfile.LinearDrag,
+                curvature,
+                Time.fixedDeltaTime);
+        }
+
         public Vector2 Bounce(Vector2 incomingVelocity, Vector2 surfaceNormal)
         {
             return Vector2.Reflect(incomingVelocity, surfaceNormal.normalized) * ActiveProfile.BounceDamping;
