@@ -13,7 +13,72 @@ namespace KMA.Tests.Presentation
     public sealed class PhaseFlowTests
     {
         [UnityTest]
-        public IEnumerator SprintDefaultsFlowFromTutorialThroughCountdownToPlayPresentation()
+        public IEnumerator InteractiveTutorialHoldsLifecycleUntilOneCompletionThenSeenSubjectStartsCountdown()
+        {
+            var prefab = AssetDatabase.LoadAssetAtPath<GameObject>(
+                "Assets/_Project/Prefabs/UI/PhaseOverlay.prefab");
+            Assert.That(prefab, Is.Not.Null);
+
+            var firstControllerObject = new GameObject("first-sprint-controller");
+            var secondControllerObject = new GameObject("second-sprint-controller");
+            var overlayObject = Object.Instantiate(prefab);
+            try
+            {
+                var firstController = firstControllerObject.AddComponent<SprintController>();
+                var overlay = overlayObject.GetComponent<PhaseOverlay>();
+                var tutorial = overlayObject.GetComponentInChildren<TutorialOverlay>(true);
+                var store = new MemoryTutorialSeenStore();
+                tutorial.ConfigureForTest(store, "Sprint", new TutorialStep[0]);
+
+                var completionCount = 0;
+                var countdownTransitions = 0;
+                tutorial.Completed += () => completionCount++;
+                firstController.PhaseChanged += phase =>
+                {
+                    if (phase == MinigamePhase.Countdown)
+                        countdownTransitions++;
+                };
+
+                overlay.Bind(firstController);
+                tutorial.Show("Sprint", new[]
+                {
+                    new TutorialStep("START", "Get ready."),
+                    new TutorialStep("RUN", "Match the side."),
+                    new TutorialStep("WIND", "Counter the cue.")
+                });
+                yield return new WaitForSeconds(2.1f);
+
+                Assert.That(firstController.PresentationPhase, Is.EqualTo(MinigamePhase.Tutorial),
+                    "An interactive tutorial must hold the lifecycle after the ordinary tutorial timeout.");
+                tutorial.Next();
+                tutorial.Next();
+                tutorial.Close();
+                tutorial.Close();
+                tutorial.Skip();
+
+                Assert.That(completionCount, Is.EqualTo(1));
+                Assert.That(countdownTransitions, Is.EqualTo(1));
+                Assert.That(firstController.PresentationPhase, Is.EqualTo(MinigamePhase.Countdown));
+                Assert.That(store.HasSeen("Sprint"), Is.True);
+
+                var secondController = secondControllerObject.AddComponent<SprintController>();
+                overlay.Bind(secondController);
+
+                Assert.That(tutorial.ShouldShow, Is.False);
+                Assert.That(overlay.IsTutorialVisible, Is.False);
+                Assert.That(secondController.PresentationPhase, Is.EqualTo(MinigamePhase.Countdown),
+                    "An already-seen tutorial must release directly into countdown.");
+            }
+            finally
+            {
+                Object.Destroy(overlayObject);
+                Object.Destroy(firstControllerObject);
+                Object.Destroy(secondControllerObject);
+            }
+        }
+
+        [UnityTest]
+        public IEnumerator SprintTutorialCompletionFlowsThroughCountdownToPlayPresentation()
         {
             PlayerPrefs.DeleteKey("KMA.tutorialSeen.Sprint");
             var prefab = AssetDatabase.LoadAssetAtPath<GameObject>(
@@ -35,7 +100,7 @@ namespace KMA.Tests.Presentation
                 Assert.That(overlay.IsTutorialVisible, Is.True);
                 Assert.That(controller.Snapshot.Distance, Is.EqualTo(distanceBeforeBind));
 
-                yield return new WaitForSeconds(2.1f);
+                overlayObject.GetComponentInChildren<TutorialOverlay>(true).Skip();
                 Assert.That(overlay.DisplayedPhase, Is.EqualTo(MinigamePhase.Countdown));
                 Assert.That(overlay.CountdownText, Is.EqualTo("3"));
 

@@ -7,6 +7,7 @@ namespace KMA.Gameplay
         readonly float tutorialSeconds;
         readonly float countdownSeconds;
         float elapsed;
+        bool tutorialGateClosed;
 
         public MinigamePhase Phase { get; private set; } = MinigamePhase.Tutorial;
 
@@ -20,21 +21,33 @@ namespace KMA.Gameplay
 
         public void Tick(float dt)
         {
-            elapsed += dt;
-            if (Phase == MinigamePhase.Tutorial && elapsed >= tutorialSeconds)
+            if (Phase == MinigamePhase.Tutorial)
             {
-                var previousPhase = Phase;
-                Phase = MinigamePhase.Countdown;
-                elapsed = 0;
-                if (Phase != previousPhase) PhaseChanged?.Invoke(Phase);
+                if (tutorialGateClosed)
+                    return;
+
+                elapsed += dt;
+                if (elapsed >= tutorialSeconds)
+                    BeginCountdown();
             }
-            else if (Phase == MinigamePhase.Countdown && elapsed >= countdownSeconds)
+            else if (Phase == MinigamePhase.Countdown)
             {
-                var previousPhase = Phase;
-                Phase = MinigamePhase.Play;
-                elapsed = 0;
-                if (Phase != previousPhase) PhaseChanged?.Invoke(Phase);
+                elapsed += dt;
+                if (elapsed >= countdownSeconds)
+                {
+                    var previousPhase = Phase;
+                    Phase = MinigamePhase.Play;
+                    elapsed = 0;
+                    if (Phase != previousPhase) PhaseChanged?.Invoke(Phase);
+                }
             }
+        }
+
+        public void SetTutorialGate(bool closed)
+        {
+            tutorialGateClosed = closed;
+            if (!closed && Phase == MinigamePhase.Tutorial)
+                BeginCountdown();
         }
 
         public bool BeginResolve()
@@ -46,6 +59,17 @@ namespace KMA.Gameplay
             Phase = MinigamePhase.Resolve;
             if (Phase != previousPhase) PhaseChanged?.Invoke(Phase);
             return true;
+        }
+
+        void BeginCountdown()
+        {
+            if (Phase != MinigamePhase.Tutorial)
+                return;
+
+            var previousPhase = Phase;
+            Phase = MinigamePhase.Countdown;
+            elapsed = 0;
+            if (Phase != previousPhase) PhaseChanged?.Invoke(Phase);
         }
     }
 }

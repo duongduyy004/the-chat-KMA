@@ -17,7 +17,7 @@ namespace KMA.Tests.Presentation
         const string TutorialKey = "KMA.tutorialSeen.Sprint";
 
         [UnityTest]
-        public IEnumerator SprintSceneHasCompletePresentationContractAndPersistsTutorialSkip()
+        public IEnumerator SprintSceneHasCompletePresentationContractAndKeepsTutorialStateOutOfPlayerPrefs()
         {
             PlayerPrefs.DeleteKey(TutorialKey);
             yield return LoadSprint();
@@ -45,7 +45,7 @@ namespace KMA.Tests.Presentation
             overlay.Next();
             Assert.That(overlay.CurrentStep.Instruction, Is.EqualTo("Counter the wind before the window closes"));
             overlay.Skip();
-            Assert.That(PlayerPrefs.GetInt(TutorialKey, 0), Is.EqualTo(1));
+            Assert.That(PlayerPrefs.HasKey(TutorialKey), Is.False);
             Assert.That(overlay.ShouldShow, Is.False);
 
             var pause = pauses[0];
@@ -85,10 +85,6 @@ namespace KMA.Tests.Presentation
             Assert.That(1920f * (leftRect.anchorMax.x - leftRect.anchorMin.x) + leftRect.sizeDelta.x, Is.GreaterThanOrEqualTo(140f));
             Assert.That(1920f * (rightRect.anchorMax.x - rightRect.anchorMin.x) + rightRect.sizeDelta.x, Is.GreaterThanOrEqualTo(140f));
 
-            yield return LoadSprint();
-            var reloadedOverlay = SceneObjects<TutorialOverlay>(SceneManager.GetActiveScene());
-            Assert.That(reloadedOverlay.Length, Is.EqualTo(1));
-            Assert.That(reloadedOverlay[0].ShouldShow, Is.False, "Sprint tutorial skip must survive scene reload.");
             PlayerPrefs.DeleteKey(TutorialKey);
         }
 

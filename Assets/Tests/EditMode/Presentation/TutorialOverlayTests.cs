@@ -9,6 +9,37 @@ namespace KMA.Tests.Presentation
     public sealed class TutorialOverlayTests
     {
         [Test]
+        public void DirectSceneTutorialCompletionUsesMemoryAndDoesNotCreatePlayerPrefsKey()
+        {
+            const string subject = "Sprint";
+            const string playerPrefsKey = "KMA.tutorialSeen.Sprint";
+            PlayerPrefs.DeleteKey(playerPrefsKey);
+
+            var root = new GameObject("tutorial-overlay");
+            try
+            {
+                var overlay = root.AddComponent<TutorialOverlay>();
+                overlay.Show(subject, new[] { new TutorialStep("GO", "Run.") });
+                overlay.Skip();
+
+                Assert.That(overlay.ShouldShow, Is.False);
+                Assert.That(PlayerPrefs.HasKey(playerPrefsKey), Is.False,
+                    "Direct-scene completion must not create the retired PlayerPrefs tutorial key.");
+
+                var memory = new MemoryTutorialSeenStore();
+                var injectedStore = new SaveDataTutorialSeenStore(memory);
+                injectedStore.MarkSeen(subject);
+                Assert.That(memory.HasSeen(subject), Is.True,
+                    "The explicitly injected memory fallback must retain direct-scene state for its store lifetime.");
+            }
+            finally
+            {
+                PlayerPrefs.DeleteKey(playerPrefsKey);
+                UnityEngine.Object.DestroyImmediate(root);
+            }
+        }
+
+        [Test]
         public void TutorialCanAdvanceBackAndSkipAndMarksSubjectSeen()
         {
             var root = new GameObject("tutorial-overlay");

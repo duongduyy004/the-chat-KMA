@@ -2,6 +2,7 @@ using System.Collections;
 using System.IO;
 using KMA.Gameplay;
 using KMA.Gameplay.Core;
+using KMA.Gameplay.UI;
 using NUnit.Framework;
 using UnityEngine;
 using UnityEngine.SceneManagement;
@@ -103,6 +104,23 @@ namespace KMA.Tests.Gameplay.Core
             Assert.That(GameManager.Instance.Session.GetRecord(SubjectId.Sprint).BestScore,
                 Is.EqualTo(0.9f));
             Assert.That(GameManager.Instance.Session.GetRecord(SubjectId.Sprint).BestRank, Is.EqualTo(Rank.A));
+        }
+
+        [UnityTest]
+        public IEnumerator Bootstrap_TutorialCompletionPersistsInJsonWithoutPlayerPrefs()
+        {
+            const string tutorialKey = "KMA.tutorialSeen.Sprint";
+            PlayerPrefs.DeleteKey(tutorialKey);
+            saveSystem.Save(SaveData.CreateDefault());
+
+            yield return LoadBootstrapAndWaitForMenu();
+
+            var store = new SaveDataTutorialSeenStore();
+            store.MarkSeen(nameof(SubjectId.Sprint));
+
+            SaveData persisted = saveSystem.Load();
+            Assert.That(persisted.tutorialSeen[(int)SubjectId.Sprint], Is.True);
+            Assert.That(PlayerPrefs.HasKey(tutorialKey), Is.False);
         }
 
         [UnityTest]

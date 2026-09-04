@@ -20,6 +20,7 @@ namespace KMA.Gameplay.UI
 
         MinigameBase source;
         bool subscribed;
+        bool tutorialSubscribed;
         float countdownElapsed;
 
         public MinigamePhase DisplayedPhase { get; private set; } = MinigamePhase.Tutorial;
@@ -71,6 +72,7 @@ namespace KMA.Gameplay.UI
             if (source != null && subscribed)
                 source.PhaseChanged -= ApplyPhase;
             subscribed = false;
+            UnsubscribeTutorialCompletion();
         }
 
         void ApplyPhase(MinigamePhase phase)
@@ -95,6 +97,8 @@ namespace KMA.Gameplay.UI
             if (tutorialOverlay == null || source == null)
                 return;
 
+            UnsubscribeTutorialCompletion();
+
             if (source.GetType().Name == "SprintController")
             {
                 tutorialOverlay.Show("Sprint", new List<TutorialStep>
@@ -112,7 +116,27 @@ namespace KMA.Gameplay.UI
                     new TutorialStep("OBSTACLES", "Swipe up/down to clear obstacles")
                 });
             }
+
+            if (tutorialOverlay.ShouldShow)
+            {
+                tutorialOverlay.Completed += ReleaseTutorialGate;
+                tutorialSubscribed = true;
+                source.SetTutorialGate(true);
+            }
+            else
+            {
+                source.SetTutorialGate(false);
+            }
         }
+
+        void UnsubscribeTutorialCompletion()
+        {
+            if (tutorialOverlay != null && tutorialSubscribed)
+                tutorialOverlay.Completed -= ReleaseTutorialGate;
+            tutorialSubscribed = false;
+        }
+
+        void ReleaseTutorialGate() => source?.SetTutorialGate(false);
 
         void RefreshCountdown()
         {

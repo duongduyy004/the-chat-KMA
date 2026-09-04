@@ -1,6 +1,5 @@
 using System.Collections.Generic;
 using KMA.Gameplay.Core;
-using UnityEngine;
 
 namespace KMA.Gameplay.UI
 {
@@ -17,26 +16,19 @@ namespace KMA.Gameplay.UI
         public void MarkSeen(string subjectId) => seenSubjects.Add(subjectId);
     }
 
-    public sealed class PlayerPrefsTutorialSeenStore : ITutorialSeenStore
-    {
-        private const string KeyPrefix = "KMA.tutorialSeen.";
-        public bool HasSeen(string subjectId) => PlayerPrefs.GetInt(KeyPrefix + subjectId, 0) != 0;
-        public void MarkSeen(string subjectId) => PlayerPrefs.SetInt(KeyPrefix + subjectId, 1);
-    }
-
     public sealed class SaveDataTutorialSeenStore : ITutorialSeenStore
     {
         readonly ITutorialSeenStore fallback;
 
         public SaveDataTutorialSeenStore(ITutorialSeenStore fallback = null)
         {
-            this.fallback = fallback ?? new PlayerPrefsTutorialSeenStore();
+            this.fallback = fallback ?? new MemoryTutorialSeenStore();
         }
 
         public bool HasSeen(string subjectId)
         {
             var manager = GameManager.Instance;
-            return manager != null && TryParseSubject(subjectId, out var subject)
+            return manager != null && manager.IsInitialized && TryParseSubject(subjectId, out var subject)
                 ? manager.HasSeenTutorial(subject)
                 : fallback.HasSeen(subjectId);
         }
@@ -44,7 +36,7 @@ namespace KMA.Gameplay.UI
         public void MarkSeen(string subjectId)
         {
             var manager = GameManager.Instance;
-            if (manager != null && TryParseSubject(subjectId, out var subject))
+            if (manager != null && manager.IsInitialized && TryParseSubject(subjectId, out var subject))
                 manager.MarkTutorialSeen(subject);
             else
                 fallback.MarkSeen(subjectId);

@@ -26,6 +26,8 @@ namespace KMA.Gameplay
 
         public MinigamePhase PresentationPhase => Lifecycle == null ? MinigamePhase.Tutorial : Lifecycle.Phase;
 
+        public void SetTutorialGate(bool closed) => Lifecycle?.SetTutorialGate(closed);
+
         protected virtual void Awake() => Lifecycle = new MinigameLifecycle(tutorialSeconds, countdownSeconds);
 
         protected virtual void Update()

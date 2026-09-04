@@ -50,6 +50,8 @@ namespace KMA.Gameplay.UI
         public bool CanGoNext => ShouldShow && CurrentIndex < steps.Count - 1;
         public TutorialStep CurrentStep => ShouldShow && CurrentIndex < steps.Count ? steps[CurrentIndex] : null;
 
+        public event Action Completed;
+
         void Awake()
         {
             if (seenStore == null)
@@ -114,6 +116,7 @@ namespace KMA.Gameplay.UI
             seenStore.MarkSeen(subjectId);
             ShouldShow = false;
             Refresh();
+            Completed?.Invoke();
         }
 
         void Refresh()

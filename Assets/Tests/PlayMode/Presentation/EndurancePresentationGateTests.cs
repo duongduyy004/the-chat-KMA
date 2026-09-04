@@ -44,7 +44,7 @@ namespace KMA.Tests.Presentation
             overlay.Next();
             Assert.That(overlay.CurrentStep.Instruction, Is.EqualTo("Swipe up/down to clear obstacles"));
             overlay.Skip();
-            Assert.That(PlayerPrefs.GetInt(TutorialKey, 0), Is.EqualTo(1));
+            Assert.That(PlayerPrefs.HasKey(TutorialKey), Is.False);
             PlayerPrefs.DeleteKey(TutorialKey);
         }
 
