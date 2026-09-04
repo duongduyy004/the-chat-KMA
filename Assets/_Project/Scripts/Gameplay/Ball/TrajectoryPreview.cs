@@ -31,6 +31,11 @@ namespace KMA.Gameplay
             HideLine();
         }
 
+        void Update()
+        {
+            ApplyVisibility();
+        }
+
         public void Configure(BallRig sourceRig, LineRenderer lineRenderer, int samples, float step)
         {
             source = sourceRig;
