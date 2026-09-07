@@ -59,8 +59,10 @@ namespace KMA.Tests.Gameplay.Ball
             Assert.That(fixture.Ball.Snapshot.Curvature, Is.EqualTo(.15f).Within(.001f));
         }
 
+        // Touches two and three happen while the ball is airborne, so the possession order - not
+        // the flight flag - is what stops one action being played twice.
         [UnityTest]
-        public IEnumerator SubmitSwipe_KeepsSingleLaunchGuardClosedAfterBallPhysicsChangesVelocity()
+        public IEnumerator SubmitSwipe_RepeatingAConsumedActionFailsThePossessionAfterPhysicsTicks()
         {
             var fixture = CreateFixture();
             AdvanceControllerToPlay(fixture.Controller);
@@ -72,13 +74,144 @@ namespace KMA.Tests.Gameplay.Ball
             yield return new WaitForFixedUpdate();
 
             Vector2 velocityAfterPhysicsTick = fixture.Ball.Snapshot.Velocity;
+            Assert.That(Vector2.Distance(velocityAfterPhysicsTick, launchVelocity), Is.GreaterThan(.0001f));
+            Assert.That(fixture.Controller.ExpectedAction, Is.EqualTo(VolleyAction.Set));
+
+            SetBallForContext(fixture, BallContext.Low);
             fixture.Controller.SubmitSwipe(Vector2.down, inReachZone: true, timingAccuracy: 1f);
 
-            Assert.That(Vector2.Distance(velocityAfterPhysicsTick, launchVelocity), Is.GreaterThan(.0001f));
-            Assert.That(fixture.Ball.Snapshot.IsInFlight, Is.True);
-            Assert.That(fixture.Rules.TotalTouches, Is.EqualTo(1));
+            Assert.That(fixture.Rules.TotalTouches, Is.EqualTo(1),
+                "A second Dig cannot be resolved once the possession has moved on to Set.");
             Assert.That(fixture.Controller.SuccessfulLaunchCount, Is.EqualTo(1));
-            Assert.That(fixture.Ball.Snapshot.Velocity, Is.EqualTo(velocityAfterPhysicsTick));
+            Assert.That(fixture.Controller.OpponentScore, Is.EqualTo(1));
+            Assert.That(fixture.Controller.TouchCount, Is.Zero);
+        }
+
+        // The production regression the scene gates missed: every touch after the first happens
+        // while the ball is in flight, so the rally must complete without reattaching the ball.
+        [UnityTest]
+        public IEnumerator InFlightRally_CompletesDigSetSpikeAndScoresOnTheAuthoredLanding()
+        {
+            var fixture = CreateFixture(targetScore: 5);
+            AdvanceControllerToPlay(fixture.Controller);
+            SetBallForContext(fixture, BallContext.Low);
+
+            fixture.Controller.SubmitSwipe(Vector2.down, inReachZone: true, timingAccuracy: 1f);
+            Assert.That(fixture.Controller.TouchCount, Is.EqualTo(1));
+            Assert.That(fixture.Ball.Snapshot.IsInFlight, Is.True);
+
+            yield return new WaitForFixedUpdate();
+            SetBallInFlightState(fixture, BallContext.Rising);
+            Assert.That(fixture.Ball.Snapshot.IsInFlight, Is.True);
+            fixture.Controller.SubmitSwipe(Vector2.up, inReachZone: true, timingAccuracy: 1f);
+            Assert.That(fixture.Controller.TouchCount, Is.EqualTo(2),
+                "The set must resolve while the dig is still airborne.");
+
+            yield return new WaitForFixedUpdate();
+            SetBallInFlightState(fixture, BallContext.ApexNearNet);
+            Assert.That(fixture.Ball.Snapshot.IsInFlight, Is.True);
+            fixture.Controller.SubmitSwipe(new Vector2(1f, -1f), inReachZone: true, timingAccuracy: 1f);
+
+            Assert.That(fixture.Controller.TouchCount, Is.EqualTo(3));
+            Assert.That(fixture.Controller.SuccessfulLaunchCount, Is.EqualTo(3));
+            Assert.That(fixture.Controller.PlayerScore, Is.Zero, "The point is only awarded on landing.");
+
+            yield return WaitForGroundedResolution(fixture);
+
+            Assert.That(fixture.Controller.PlayerScore, Is.EqualTo(1));
+            Assert.That(fixture.Controller.OpponentScore, Is.Zero);
+            Assert.That(fixture.Controller.TouchCount, Is.Zero);
+            Assert.That(fixture.Ball.Snapshot.IsAttached, Is.True,
+                "Resolving the possession reattaches the ball for the next opponent return.");
+        }
+
+        // An unreturned ball must resolve itself: the controller watches the profile ground plane
+        // that BallRig owns, so no collider or test poke is needed to end the possession.
+        [UnityTest]
+        public IEnumerator UnreturnedFlight_ResolvesOnTheGroundPlaneAndAwardsTheOpponent()
+        {
+            var fixture = CreateFixture(targetScore: 5);
+            AdvanceControllerToPlay(fixture.Controller);
+            SetBallForContext(fixture, BallContext.Low);
+
+            fixture.Controller.SubmitSwipe(Vector2.down, inReachZone: true, timingAccuracy: 1f);
+
+            yield return WaitForGroundedResolution(fixture);
+
+            Assert.That(fixture.Controller.OpponentScore, Is.EqualTo(1),
+                "Letting the ball land before the third touch loses the rally.");
+            Assert.That(fixture.Controller.PlayerScore, Is.Zero);
+            Assert.That(fixture.Controller.TouchCount, Is.Zero);
+        }
+
+        // Receiving is the normal start of every rally after the first: the opponent's authored
+        // return is airborne and owned by the opponent when the player digs it.
+        [UnityTest]
+        public IEnumerator OpponentReturn_IsReceivedByThePlayerAndCancelsTheNextScheduledReturn()
+        {
+            var fixture = CreateFixture(targetScore: 5);
+            AdvanceControllerToPlay(fixture.Controller);
+            SetBallForContext(fixture, BallContext.Low);
+            fixture.Controller.SubmitSwipe(Vector2.down, inReachZone: true, timingAccuracy: 1f);
+
+            yield return WaitForGroundedResolution(fixture);
+            Assert.That(fixture.Controller.InFlightOwner, Is.EqualTo(VolleyBallOwner.None));
+
+            fixture.Controller.SimulateForTest(VolleyReturnPattern.AuthoredDefault().CueLeadSeconds);
+
+            Assert.That(fixture.Controller.InFlightOwner, Is.EqualTo(VolleyBallOwner.Opponent));
+            Assert.That(fixture.Ball.Snapshot.IsInFlight, Is.True);
+
+            SetBallInFlightState(fixture, BallContext.Low);
+            fixture.Controller.SubmitSwipe(Vector2.down, inReachZone: true, timingAccuracy: 1f);
+
+            Assert.That(fixture.Controller.TouchCount, Is.EqualTo(1),
+                "The player must be able to dig a return that is still in the opponent's flight.");
+            Assert.That(fixture.Controller.InFlightOwner, Is.EqualTo(VolleyBallOwner.Player));
+
+            fixture.Controller.SimulateForTest(VolleyReturnPattern.AuthoredDefault().CueLeadSeconds);
+
+            Assert.That(fixture.Controller.InFlightOwner, Is.EqualTo(VolleyBallOwner.Player),
+                "A scheduled opponent return must not hijack a possession the player already owns.");
+        }
+
+        [Test]
+        public void GameplayInputRouter_IgnoresAStationaryPressThatReportsAZeroLengthSwipe()
+        {
+            var fixture = CreateFixture();
+            AdvanceControllerToPlay(fixture.Controller);
+            SetBallForContext(fixture, BallContext.Low);
+
+            fixture.SwipeDetector.FeedSample(new Vector2(120f, 240f), 0d);
+            fixture.SwipeDetector.FeedSample(new Vector2(120f, 240f), .05d);
+            fixture.SwipeDetector.FeedEnd();
+
+            Assert.That(fixture.Rules.TotalTouches, Is.Zero,
+                "A press with no travel must not consume a touch.");
+            Assert.That(fixture.Controller.TouchCount, Is.Zero);
+            Assert.That(fixture.Controller.OpponentScore, Is.Zero);
+            Assert.That(fixture.Ball.Snapshot.IsInFlight, Is.False);
+        }
+
+        [Test]
+        public void GameplayInputRouter_SwipeProgressPreviewsTheGestureWhileTheBallIsAttached()
+        {
+            var fixture = CreateFixture();
+            PresentationFixture presentation = ConfigurePresentation(fixture, sampleCount: 24, sampleStep: .05f);
+            AdvanceControllerToPlay(fixture.Controller);
+            fixture.Ball.AttachTo(CreateAnchor(new Vector2(0f, 1f)));
+
+            fixture.SwipeDetector.FeedSample(new Vector2(120f, 400f), 0d);
+            fixture.SwipeDetector.FeedSample(new Vector2(120f, 200f), .1d);
+
+            Assert.That(fixture.Controller.IsGesturePreparation, Is.True,
+                "A drag in progress must preview the pending swipe before it is committed.");
+            Assert.That(presentation.Line.enabled, Is.True);
+
+            fixture.SwipeDetector.FeedEnd();
+
+            Assert.That(fixture.Controller.IsGesturePreparation, Is.False);
+            Assert.That(presentation.Line.enabled, Is.False);
         }
 
         [Test]
@@ -408,7 +541,7 @@ namespace KMA.Tests.Gameplay.Ball
             router.FeedPointerMoveForTest(new Vector2(200f, 100f), .1d);
             router.FeedPointerUpForTest(new Vector2(200f, 100f), .2d);
 
-            Assert.That(controller.InstalledSwipeDetector, Is.Not.Null,
+            Assert.That(controller.HasProductionSwipeDetector, Is.True,
                 "The production scene has no bridge, so the controller owns the router's swipe detector.");
             Assert.That(controller.SuccessfulLaunchCount, Is.EqualTo(1));
             Assert.That(controller.TouchCount, Is.EqualTo(1));
@@ -451,6 +584,40 @@ namespace KMA.Tests.Gameplay.Ball
 
         static void SetBallForContext(ControllerFixture fixture, BallContext context) =>
             SetBallState(fixture.Ball, context);
+
+        // Places an already-launched ball without detaching it, so touches two and three are
+        // submitted against a genuinely in-flight ball.
+        static void SetBallInFlightState(ControllerFixture fixture, BallContext context)
+        {
+            Assert.That(fixture.Ball.Snapshot.IsInFlight, Is.True,
+                "SetBallInFlightState may only reposition a ball that is already in flight.");
+            fixture.Ball.Body.position = context == BallContext.ApexNearNet
+                ? new Vector2(0f, 2f)
+                : new Vector2(0f, 1f);
+            fixture.Ball.Body.velocity = context switch
+            {
+                BallContext.Low => new Vector2(0f, -2f),
+                BallContext.Rising => new Vector2(0f, 2f),
+                BallContext.ApexNearNet => Vector2.zero,
+                _ => throw new System.ArgumentOutOfRangeException(nameof(context), context, null)
+            };
+        }
+
+        // Lets real physics carry the ball to the profile ground plane the controller watches.
+        static IEnumerator WaitForGroundedResolution(ControllerFixture fixture)
+        {
+            int pointsBefore = fixture.Controller.PlayerScore + fixture.Controller.OpponentScore;
+            float deadline = Time.unscaledTime + 20f;
+            while (fixture.Controller.PlayerScore + fixture.Controller.OpponentScore == pointsBefore &&
+                   Time.unscaledTime < deadline)
+            {
+                yield return new WaitForFixedUpdate();
+            }
+
+            Assert.That(fixture.Controller.PlayerScore + fixture.Controller.OpponentScore,
+                Is.GreaterThan(pointsBefore),
+                "An unreturned flight must resolve itself on the ground plane.");
+        }
 
         static void SetBallState(BallRig ball, BallContext context)
         {

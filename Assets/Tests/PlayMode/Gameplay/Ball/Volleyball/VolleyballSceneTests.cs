@@ -55,8 +55,18 @@ namespace KMA.Tests.Gameplay.Ball
             var surface = SceneObjects<ScreenTapArea>(scene)[0];
             Assert.That(controller.InputRouter, Is.SameAs(router));
             Assert.That(surface.Router, Is.SameAs(router));
-            Assert.That(controller.InstalledSwipeDetector, Is.Not.Null,
+            Assert.That(controller.HasProductionSwipeDetector, Is.True,
                 "The controller owns the router's swipe detector because the scene has no bridge.");
+
+            // The surface rect is canvas-driven, so assert the runtime rect a real touch is
+            // hit-tested against rather than the serialised values.
+            Assert.That(surface.GameplayArea, Is.Not.Null);
+            Rect area = surface.GameplayArea.rect;
+            Assert.That(area.width, Is.GreaterThan(0f));
+            Assert.That(area.height, Is.GreaterThan(0f));
+            Assert.That(RectTransformUtility.RectangleContainsScreenPoint(
+                surface.GameplayArea, new Vector2(Screen.width * .5f, Screen.height * .5f)), Is.True,
+                "A touch in the middle of the screen must land inside the gameplay surface.");
         }
 
         [UnityTest]
@@ -79,6 +89,9 @@ namespace KMA.Tests.Gameplay.Ball
             Assert.That(shadow.Target, Is.SameAs(controller.Ball.transform));
             Assert.That(shadow.Shadow, Is.Not.Null);
             Assert.That(shadow.Renderer, Is.Not.Null);
+            Assert.That(controller.Ball.Profile, Is.Not.Null,
+                "The authored volleyball flight profile must drive the scene ball, not the fallback default.");
+            Assert.That(controller.Ball.Profile.name, Is.EqualTo("FlightProfile_Volleyball"));
         }
 
         [UnityTest]
@@ -96,8 +109,14 @@ namespace KMA.Tests.Gameplay.Ball
 
             var hud = SceneObjects<VolleyballHud>(scene)[0];
             var controller = SceneObjects<VolleyballController>(scene)[0];
+            var sharedHud = SceneObjects<MinigameHUD>(scene)[0];
             Assert.That(hud.Controller, Is.SameAs(controller));
-            Assert.That(hud.LabelsBound, Is.True, "Every Volleyball HUD label must be authored in the scene.");
+
+            yield return null;
+
+            Assert.That(sharedHud.LastState.phase, Is.EqualTo(controller.PresentationPhase.ToString()),
+                "The shared HUD must be bound to the controller so the lifecycle and timer track it.");
+            Assert.That(sharedHud.LastState.timeRemaining, Is.GreaterThan(0f));
 
             hud.Refresh();
 

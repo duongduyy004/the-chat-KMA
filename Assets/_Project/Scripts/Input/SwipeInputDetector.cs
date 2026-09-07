@@ -34,12 +34,18 @@ namespace KMA.Input
 
         public event Action<SwipeResult> OnSwipe;
 
+        // Raised while the gesture is still down, so gameplay can preview the pending swipe.
+        // OnSwipe stays the only committed-gesture signal.
+        public event Action<Vector2> OnSwipeProgress;
+
         public void FeedSample(Vector2 position, double t)
         {
             if (!IsFinite(t) || !IsFinite(position.x) || !IsFinite(position.y)) return;
             if (samples.Count > 0 && t < samples[samples.Count - 1].Time) return;
 
             samples.Add(new Sample(position, t));
+            if (samples.Count > 1)
+                OnSwipeProgress?.Invoke(position - samples[0].Position);
         }
 
         public void FeedEnd()

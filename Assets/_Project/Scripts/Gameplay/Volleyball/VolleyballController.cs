@@ -26,6 +26,7 @@ namespace KMA.Gameplay
         [SerializeField] float apexVelocityThreshold = .1f;
         [SerializeField] float netApexWindow = 1f;
         [SerializeField] float timingWindowSeconds = 4f;
+        [SerializeField, Min(0f)] float minimumSwipeLengthPixels = 24f;
         [SerializeField] float playerLandingOffset = -1f;
         [SerializeField] float teammateLandingOffset = 1f;
 
@@ -62,7 +63,7 @@ namespace KMA.Gameplay
         public BoxCollider2D ReachZone => reachZone;
         public TrajectoryPreview Preview => trajectoryPreview;
         public BallShadow Shadow => ballShadow;
-        public SwipeInputDetector InstalledSwipeDetector => productionSwipeDetector;
+        public bool HasProductionSwipeDetector => productionSwipeDetector != null;
 
         protected override void Awake()
         {
@@ -139,7 +140,6 @@ namespace KMA.Gameplay
         {
             if (Rules == null || ball == null || PresentationPhase != MinigamePhase.Play || Rules.Phase != MinigamePhase.Play) return;
             EndGesturePreparation();
-            if (ball.Snapshot.IsInFlight || InFlightOwner == VolleyBallOwner.Opponent) return;
 
             BallContext context = CurrentContext;
             VolleyAction action = Rules.ResolveTouch(context, swipe, inReachZone, timingAccuracy);
@@ -158,6 +158,14 @@ namespace KMA.Gameplay
             SuccessfulLaunchCount++;
             SelectedAction = action;
             InFlightOwner = VolleyBallOwner.Player;
+
+            // The opponent cannot put a new ball in play while the player owns this one, so a
+            // scheduled return is cancelled the moment the possession starts.
+            if (touchNumber == 1)
+            {
+                pendingOpponentReturn = false;
+                ClearCounterplayCues();
+            }
         }
 
         // Court trigger volumes can call this directly; BallRig collision callbacks use it too.
@@ -178,6 +186,7 @@ namespace KMA.Gameplay
             float deltaTime = Mathf.Max(0f, dt);
             if (Rules.Phase == MinigamePhase.Play) Rules.Tick(deltaTime);
             TickOpponentReturn(deltaTime);
+            ResolveGroundedFlight();
             RefreshRuntimeState();
             ResolveTerminalState();
         }
@@ -185,7 +194,10 @@ namespace KMA.Gameplay
         void CacheReferences()
         {
             if (inputRouter == null) inputRouter = GetComponent<GameplayInputRouter>();
+            if (inputRouter == null) inputRouter = FindFirstObjectByType<GameplayInputRouter>();
             if (reachZone == null) reachZone = GetComponent<BoxCollider2D>();
+            if (inputRouter == null)
+                Debug.LogError("VolleyballController found no GameplayInputRouter; the scene accepts no gestures.", this);
         }
 
         void AdvanceRulesToPlayForTest()
@@ -194,19 +206,21 @@ namespace KMA.Gameplay
             if (Rules.Phase == MinigamePhase.Countdown) Rules.Tick(DefaultCountdownSeconds);
         }
 
-        // The Volleyball scene has no input bridge, so the controller owns the one swipe detector
-        // the shared router feeds. Installed once so test-supplied detectors are never clobbered.
+        // The Volleyball scene has no input bridge, so the controller owns the swipe detector the
+        // shared router feeds. Only the swipe slot is replaced, and only during Awake, so a
+        // detector another owner or a test installs afterwards stays in place.
         void InstallProductionSwipeDetector()
         {
             if (productionSwipeDetector != null || inputRouter == null) return;
             productionSwipeDetector = new SwipeInputDetector();
-            inputRouter.SetDetectors(null, null, null, null, productionSwipeDetector);
+            inputRouter.SetSwipeDetector(productionSwipeDetector);
         }
 
         void SubscribeInputRouter()
         {
             if (inputRouter == null || inputRouterSubscribed) return;
             inputRouter.OnSwipe += OnRouterSwipe;
+            inputRouter.OnSwipeProgress += OnRouterSwipeProgress;
             inputRouterSubscribed = true;
         }
 
@@ -214,6 +228,7 @@ namespace KMA.Gameplay
         {
             if (!inputRouterSubscribed) return;
             inputRouter.OnSwipe -= OnRouterSwipe;
+            inputRouter.OnSwipeProgress -= OnRouterSwipeProgress;
             inputRouterSubscribed = false;
         }
 
@@ -231,17 +246,38 @@ namespace KMA.Gameplay
             ballSubscribed = false;
         }
 
+        // A stationary press has a zero delta, which the detector reports as a Right swipe; that
+        // would otherwise consume a touch, so gestures shorter than the threshold are ignored.
         void OnRouterSwipe(SwipeResult swipe)
         {
             if (PresentationPhase != MinigamePhase.Play) return;
+            if (swipe.Length < minimumSwipeLengthPixels) return;
             Vector2 direction = ToVector2(swipe.Direction);
             if (CurrentContext == BallContext.ApexNearNet && swipe.Direction == SwipeDirection.Right) direction = new Vector2(1f, -1f);
             SubmitSwipe(direction, InReachZone, CalculateTimingAccuracy(swipe));
         }
 
+        void OnRouterSwipeProgress(Vector2 delta)
+        {
+            if (PresentationPhase != MinigamePhase.Play) return;
+            if (delta.sqrMagnitude < minimumSwipeLengthPixels * minimumSwipeLengthPixels) return;
+            BeginGesturePreparation(delta.normalized);
+        }
+
         void OnBallCollided(Collision2D collision)
         {
             if (ball == null || !ball.Snapshot.IsInFlight) return;
+            ResolveCourtContact(ball.Body.position.x <= netX);
+        }
+
+        // The ball has no collider, so flight resolves against the profile ground plane that
+        // BallRig and Ballistics already own. Court trigger volumes may still call
+        // ResolveCourtContact directly; the possession token keeps either path single-shot.
+        void ResolveGroundedFlight()
+        {
+            if (ball == null || !ball.Snapshot.IsInFlight || InFlightOwner == VolleyBallOwner.None) return;
+            float groundY = ball.Profile != null ? ball.Profile.GroundY : 0f;
+            if (ball.Body.position.y > groundY || ball.Body.velocity.y > 0f) return;
             ResolveCourtContact(ball.Body.position.x <= netX);
         }
 

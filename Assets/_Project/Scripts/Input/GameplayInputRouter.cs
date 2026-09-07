@@ -67,6 +67,7 @@ namespace KMA.Input
         public event System.Action<TimingJudge, double> OnRhythmJudge;
         public event System.Action<double> OnHoldEnd;
         public event System.Action<SwipeResult> OnSwipe;
+        public event System.Action<Vector2> OnSwipeProgress;
         internal bool AcceptsPointerEvents => isActiveAndEnabled;
 
         void OnEnable()
@@ -96,6 +97,24 @@ namespace KMA.Input
             UnsubscribeDetectorEvents();
         }
 
+        // Replaces only the swipe slot, so a caller that owns gestures cannot drop the tap,
+        // rhythm, hold or alternate-tap detectors another owner installed on the same router.
+        public void SetSwipeDetector(SwipeInputDetector swipe)
+        {
+            if (swipeDetector != null && detectorEventsSubscribed)
+            {
+                swipeDetector.OnSwipe -= DispatchSwipe;
+                swipeDetector.OnSwipeProgress -= DispatchSwipeProgress;
+            }
+
+            swipeDetector = swipe;
+            if (!isActiveAndEnabled || !detectorEventsSubscribed || swipeDetector == null)
+                return;
+
+            swipeDetector.OnSwipe += DispatchSwipe;
+            swipeDetector.OnSwipeProgress += DispatchSwipeProgress;
+        }
+
         public void SetDetectors(
             TapMashInputDetector tapMash,
             RhythmBeatInputDetector rhythmBeat,
@@ -122,7 +141,10 @@ namespace KMA.Input
             if (holdDetector != null)
                 holdDetector.OnHoldEnd += DispatchHoldEnd;
             if (swipeDetector != null)
+            {
                 swipeDetector.OnSwipe += DispatchSwipe;
+                swipeDetector.OnSwipeProgress += DispatchSwipeProgress;
+            }
             detectorEventsSubscribed = true;
         }
 
@@ -136,7 +158,10 @@ namespace KMA.Input
             if (holdDetector != null)
                 holdDetector.OnHoldEnd -= DispatchHoldEnd;
             if (swipeDetector != null)
+            {
                 swipeDetector.OnSwipe -= DispatchSwipe;
+                swipeDetector.OnSwipeProgress -= DispatchSwipeProgress;
+            }
             detectorEventsSubscribed = false;
         }
 
@@ -145,6 +170,9 @@ namespace KMA.Input
         void DispatchHoldEnd(double duration) => OnHoldEnd?.Invoke(duration);
 
         void DispatchSwipe(SwipeResult swipe) => OnSwipe?.Invoke(swipe);
+
+        void DispatchSwipeProgress(Vector2 delta) => OnSwipeProgress?.Invoke(delta);
+
         public void ConfigureInputForTest(InputActionAsset actions, string actionMapName, InputAction rhythm = null)
         {
             inputActions = actions;

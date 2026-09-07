@@ -2,6 +2,7 @@ using System.Collections;
 using KMA.Gameplay;
 using KMA.Gameplay.Core;
 using KMA.Gameplay.UI;
+using KMA.Input;
 using NUnit.Framework;
 using UnityEngine;
 using UnityEngine.SceneManagement;
@@ -52,8 +53,7 @@ namespace KMA.Tests.Gameplay.Progression
             yield return SkipTutorialAndReachPlay(controller);
 
             for (var rally = 0; rally < 5; rally++)
-                SubmitAuthoredRally(controller);
-            yield return null;
+                yield return WinOneRally(controller);
 
             Assert.That(controller.PlayerScore, Is.EqualTo(5));
             Assert.That(controller.PresentationPhase, Is.EqualTo(MinigamePhase.Resolve));
@@ -105,8 +105,8 @@ namespace KMA.Tests.Gameplay.Progression
         // overlay binds on the frame after the scene load, so keep offering Skip while waiting.
         static IEnumerator SkipTutorialAndReachPlay(VolleyballController controller)
         {
-            float deadline = Time.time + 30f;
-            while (controller.PresentationPhase != MinigamePhase.Play && Time.time < deadline)
+            float deadline = Time.unscaledTime + 30f;
+            while (controller.PresentationPhase != MinigamePhase.Play && Time.unscaledTime < deadline)
             {
                 var overlay = Object.FindFirstObjectByType<TutorialOverlay>(FindObjectsInactive.Include);
                 if (overlay != null && overlay.ShouldShow)
@@ -118,22 +118,51 @@ namespace KMA.Tests.Gameplay.Progression
                 "The Volleyball route must reach Play after the tutorial is skipped.");
         }
 
-        static void SubmitAuthoredRally(VolleyballController controller)
+        // Plays one rally the way the build does: three gestures fed through the scene's own
+        // GameplayInputRouter, then the controller's own ground-plane resolution awards the point.
+        // The ball is only ever repositioned inside reach, never detached or resolved by hand.
+        static IEnumerator WinOneRally(VolleyballController controller)
         {
-            SubmitTouch(controller, BallContext.Low, Vector2.down);
-            SubmitTouch(controller, BallContext.Rising, Vector2.up);
-            SubmitTouch(controller, BallContext.ApexNearNet, new Vector2(1f, -1f));
-            controller.ResolveCourtContact(ownCourt: false);
+            int pointsBefore = controller.PlayerScore + controller.OpponentScore;
+
+            yield return SwipeInReach(controller, BallContext.Low, new Vector2(0f, -240f));
+            Assert.That(controller.TouchCount, Is.EqualTo(1), "The dig must be routed through the router.");
+
+            yield return SwipeInReach(controller, BallContext.Rising, new Vector2(0f, 240f));
+            Assert.That(controller.TouchCount, Is.EqualTo(2), "The set must resolve while the dig is airborne.");
+
+            yield return SwipeInReach(controller, BallContext.ApexNearNet, new Vector2(240f, 0f));
+            Assert.That(controller.TouchCount, Is.EqualTo(3));
+
+            float deadline = Time.unscaledTime + 20f;
+            while (controller.PlayerScore + controller.OpponentScore == pointsBefore &&
+                   Time.unscaledTime < deadline)
+            {
+                yield return new WaitForFixedUpdate();
+            }
+
+            Assert.That(controller.PlayerScore, Is.EqualTo(pointsBefore + 1),
+                "A spike landing past the net must award the player the rally.");
         }
 
-        static void SubmitTouch(VolleyballController controller, BallContext context, Vector2 swipe)
+        static IEnumerator SwipeInReach(VolleyballController controller, BallContext context, Vector2 travel)
+        {
+            PlaceBallInReach(controller, context);
+            GameplayInputRouter router = controller.InputRouter;
+            var start = new Vector2(600f, 400f);
+            router.FeedPointerDownForTest(start, 0d);
+            router.FeedPointerMoveForTest(start + travel * .5f, .05d);
+            router.FeedPointerUpForTest(start + travel, .1d);
+            yield return new WaitForFixedUpdate();
+        }
+
+        static void PlaceBallInReach(VolleyballController controller, BallContext context)
         {
             BallRig ball = controller.Ball;
-            ball.AttachTo(null);
             Vector2 reachCentre = controller.ReachZone.bounds.center;
             ball.Body.position = context == BallContext.ApexNearNet
-                ? new Vector2(0f, reachCentre.y + 1f)
-                : new Vector2(0f, reachCentre.y);
+                ? new Vector2(reachCentre.x, reachCentre.y + 1f)
+                : new Vector2(reachCentre.x - 1.2f, reachCentre.y);
             ball.Body.velocity = context switch
             {
                 BallContext.Low => new Vector2(0f, -2f),
@@ -141,7 +170,6 @@ namespace KMA.Tests.Gameplay.Progression
                 BallContext.ApexNearNet => Vector2.zero,
                 _ => throw new System.ArgumentOutOfRangeException(nameof(context), context, null)
             };
-            controller.SubmitSwipe(swipe, inReachZone: true, timingAccuracy: 1f);
         }
 
         static SubjectRecordData RecordFor(SaveData data, SubjectId subject)
@@ -158,8 +186,8 @@ namespace KMA.Tests.Gameplay.Progression
         // observe the outgoing scene when the destination name is already active.
         static IEnumerator WaitForRoute(SceneRouter router, string sceneName)
         {
-            float deadline = Time.time + 30f;
-            while (Time.time < deadline)
+            float deadline = Time.unscaledTime + 30f;
+            while (Time.unscaledTime < deadline)
             {
                 if (!router.IsTransitioning && SceneManager.GetActiveScene().name == sceneName)
                     break;
