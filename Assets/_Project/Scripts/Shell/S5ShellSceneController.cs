@@ -1,6 +1,7 @@
 using KMA.Gameplay;
 using KMA.Gameplay.Core;
 using KMA.Gameplay.UI;
+using System.Linq;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -36,6 +37,7 @@ namespace KMA.Gameplay.Shell
                 mainMenu.NewGameConfirmationRequested += ShowNewGameConfirmation;
                 mainMenu.SettingsRequested += OpenSettings;
                 mainMenu.QuitRequested += Quit;
+                BindMainMenuButtons();
             }
             if (map != null)
             {
@@ -74,6 +76,7 @@ namespace KMA.Gameplay.Shell
                 mainMenu.NewGameConfirmationRequested -= ShowNewGameConfirmation;
                 mainMenu.SettingsRequested -= OpenSettings;
                 mainMenu.QuitRequested -= Quit;
+                UnbindMainMenuButtons();
             }
             if (map != null)
             {
@@ -116,6 +119,38 @@ namespace KMA.Gameplay.Shell
         static void StartNewGame() => GameManager.Instance?.StartNewGame();
 
         static void OpenMenu() => SceneRouter.Instance?.RouteToMenu();
+
+        void BindMainMenuButtons()
+        {
+            BindButton("PLAYButton", mainMenu.Play);
+            BindButton("CONTINUEButton", mainMenu.Continue);
+            BindButton("NEW GAMEButton", mainMenu.NewGame);
+            BindButton("SETTINGSButton", mainMenu.OpenSettings);
+            BindButton("QUITButton", mainMenu.Quit);
+        }
+
+        void UnbindMainMenuButtons()
+        {
+            UnbindButton("PLAYButton", mainMenu.Play);
+            UnbindButton("CONTINUEButton", mainMenu.Continue);
+            UnbindButton("NEW GAMEButton", mainMenu.NewGame);
+            UnbindButton("SETTINGSButton", mainMenu.OpenSettings);
+            UnbindButton("QUITButton", mainMenu.Quit);
+        }
+
+        void BindButton(string name, UnityEngine.Events.UnityAction action)
+        {
+            var target = mainMenu.GetComponentsInChildren<Button>(true)
+                .FirstOrDefault(button => button.name == name);
+            target?.onClick.AddListener(action);
+        }
+
+        void UnbindButton(string name, UnityEngine.Events.UnityAction action)
+        {
+            var target = mainMenu.GetComponentsInChildren<Button>(true)
+                .FirstOrDefault(button => button.name == name);
+            target?.onClick.RemoveListener(action);
+        }
         void ShowNewGameConfirmation() => confirmationRoot?.SetActive(true);
 
         void OpenSettings()

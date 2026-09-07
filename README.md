@@ -7,7 +7,7 @@ Unity gameplay prototype for KMA: seven sports subjects, normalized scoring, rec
 - Unity `6000.3.23f1`
 - Input System `1.20.0`
 - NUnit/Unity Test Framework `1.6.0`
-- Android project configuration targets landscape, ARM64, IL2CPP, API 25/35, and `com.kma.thechat`; build/device verification is pending
+- Android targets landscape, ARM64, IL2CPP, API 25/35, and `com.kma.thechat`. A separate x86_64 APK supports Genymotion; current results are in [demo QA](docs/qa/android-report-demo.md).
 - Current playable subject routes are Sprint and Endurance; Volleyball is not yet a playable route
 
 The seven subject rule engines are present: Sprint, Endurance, Volleyball, Basketball, PingPong, Badminton, and Football. The current scene router exposes Sprint and Endurance as playable subject scenes; the other five are implemented as deterministic gameplay models and ball-rule contracts.
@@ -61,7 +61,28 @@ Touch input is supported by Endurance, Boss, and Punishment input bridges where 
 
 1. Install Unity `6000.3.23f1` with the required 2D and Input System packages.
 2. Open this repository as the Unity project root.
-3. Start from `Assets/_Project/Scenes/MG_Sprint.unity`, `MG_Endurance.unity`, or `MG_Boss.unity`.
+3. For the report demo, open `Assets/_Project/Scenes/Bootstrap.unity` and press Play: Splash → Menu → Map → Sprint. Choose New Game, then Sprint, acknowledge the tutorial, and alternate the left/right touch buttons or arrow keys.
+4. For isolated gameplay development, open `MG_Sprint.unity`, `MG_Endurance.unity`, or `MG_Boss.unity`.
+
+## Android report demo
+
+Splash/home share a project logo and stadium illustration. Sprint has three parallax artwork layers, an animated player labelled `PLAYER`, and three animated rivals. Loading bars observe asynchronous scene progress; the initial intro remains visible for at least 1.5 seconds.
+
+Close the Editor before batch commands. Build and run on the current x86_64 emulator:
+
+```bash
+KMA_UNITY_EDITOR=/home/duongduy/Unity/Hub/Editor/6000.3.23f1/Editor/Unity
+rtk proxy "$KMA_UNITY_EDITOR" -batchmode -projectPath . \
+  -executeMethod KMA.EditorTools.DemoEmulatorBuild.Build \
+  -logFile /tmp/kma-report-emulator-build.log -quit
+rtk adb -s 127.0.0.1:6555 install -r Builds/Android/kma-report-emulator.apk
+rtk adb -s 127.0.0.1:6555 shell am start \
+  -n com.kma.thechat/com.unity3d.player.UnityPlayerGameActivity
+```
+
+For an ARM64 Android phone, use `KMA.EditorTools.BuildScript.BuildAndroid` with `-buildOutput Builds/Android/kma-report.apk`. The emulator method restores the project architecture afterward. If installation reports a signature mismatch, use the matching signing key; preserve the existing save before considering an uninstall.
+
+Rebuild authored demo layouts through **KMA → Demo → Configure Splash and Home** and **Configure Sprint Artwork**. Run these before manual layout adjustments. Sources/licenses are in [CREDITS](Assets/_Project/CREDITS.md); verified tests, device checks and remaining limits are in [Android Report Demo QA](docs/qa/android-report-demo.md).
 
 ## Run tests
 
@@ -78,7 +99,7 @@ rtk proxy "$KMA_UNITY_EDITOR" -batchmode -projectPath . \
   -testResults /tmp/kma-playmode.xml -logFile /tmp/kma-playmode.log
 ```
 
-The latest Task 1 verification passed `17/17` focused configuration tests and `209/209` full EditMode tests on Unity `6000.3.23f1`. Full PlayMode remained at the planned stabilization baseline of `125/128`: two known rhythm/input failures and one known Sprint prefab-instance failure, with no additional Task 1 failure.
+Historical Task 1 verification was `209/209` EditMode and `125/128` PlayMode. Current report-demo verification supersedes those counts in [Android Report Demo QA](docs/qa/android-report-demo.md).
 
 ### Historical S2 presentation evidence
 

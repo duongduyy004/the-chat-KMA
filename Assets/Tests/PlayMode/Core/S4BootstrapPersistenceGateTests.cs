@@ -87,6 +87,7 @@ namespace KMA.Tests.Gameplay.Core
             yield return WaitForSceneAndCompletedTransition(router, SprintSceneName);
             Assert.That(router.SubmitSubjectResult(
                 SubjectId.Sprint, new MinigameResult(true, 0.9f, Rank.A)), Is.True);
+            yield return WaitForSceneAndCompletedTransition(router, "Map");
 
             SaveData saved = saveSystem.Load();
             SubjectRecordData sprint = FindSubject(saved, SubjectId.Sprint);

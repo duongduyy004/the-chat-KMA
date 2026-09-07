@@ -120,6 +120,7 @@ namespace KMA.Tests.Gameplay.Core
             SceneRouter router = CreateRouter();
             GameManager manager = CreateInactiveManager();
             manager.ConfigureStartup(() => prepared, _ => { }, router, _ => { });
+            router.ConfigureSceneLoaderForTests(_ => null);
             SceneRouteTransition transition = default;
             int transitionCount = 0;
             router.TransitionStarted += startedTransition =>
@@ -130,7 +131,9 @@ namespace KMA.Tests.Gameplay.Core
 
             manager.gameObject.SetActive(true);
 
-            Assert.That(router.Route(SessionRoute.Map), Is.True);
+            LogAssert.Expect(LogType.Error,
+                new System.Text.RegularExpressions.Regex("Map.*did not create"));
+            Assert.That(router.Route(SessionRoute.Map), Is.False);
             Assert.That(transitionCount, Is.EqualTo(1));
             Assert.That(transition.Session, Is.SameAs(manager.Session));
         }
@@ -163,8 +166,8 @@ namespace KMA.Tests.Gameplay.Core
             Assert.That(saves, Is.EqualTo(1));
         }
 
-        [Test]
-        public void SubjectCompleted_SavesExactlyOnce()
+        [UnityTest]
+        public IEnumerator SubjectCompleted_SavesExactlyOnce()
         {
             SceneRouter router = CreateRouter();
             int saves = 0;
@@ -175,10 +178,11 @@ namespace KMA.Tests.Gameplay.Core
 
             Assert.That(manager.Session.GetRecord(SubjectId.Sprint).Passed, Is.True);
             Assert.That(saves, Is.EqualTo(1));
+            yield return new WaitUntil(() => !router.IsTransitioning);
         }
 
-        [Test]
-        public void LifeLost_SavesExactlyOnce()
+        [UnityTest]
+        public IEnumerator LifeLost_SavesExactlyOnce()
         {
             SceneRouter router = CreateRouter();
             int saves = 0;
@@ -191,6 +195,7 @@ namespace KMA.Tests.Gameplay.Core
 
             Assert.That(manager.Session.Lives, Is.EqualTo(4));
             Assert.That(saves, Is.EqualTo(1));
+            yield return new WaitUntil(() => !router.IsTransitioning);
         }
 
         [Test]
