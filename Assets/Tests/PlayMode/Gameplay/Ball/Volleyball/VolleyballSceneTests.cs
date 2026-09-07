@@ -133,6 +133,52 @@ namespace KMA.Tests.Gameplay.Ball
             Assert.That(LabelText("VolleyballCounterCueLabel"), Is.EqualTo(hud.CounterCueText));
         }
 
+        // Step 6 asks for a visible court, net and actors. The scene shipped as empty transforms
+        // with colliders, and the ball prefab has no renderer of its own, so nothing but the
+        // shadow and the preview line was on screen.
+        [UnityTest]
+        public IEnumerator VolleyballScene_RendersTheCourtNetActorsAndBall()
+        {
+            yield return SceneManager.LoadSceneAsync(SceneName, LoadSceneMode.Single);
+            yield return null;
+
+            Scene scene = SceneManager.GetActiveScene();
+            var controller = SceneObjects<VolleyballController>(scene)[0];
+
+            AssertVisible("VolleyballCourt");
+            AssertVisible("VolleyballNet");
+            AssertVisible("VolleyballPlayer");
+            AssertVisible("VolleyballTeammate");
+            AssertVisible("VolleyballOpponent");
+            AssertVisible("VolleyballOpponentTwo");
+
+            SpriteRenderer[] ballRenderers = controller.Ball.GetComponentsInChildren<SpriteRenderer>(true);
+            var ballIsDrawn = false;
+            foreach (SpriteRenderer renderer in ballRenderers)
+            {
+                if (renderer.enabled && renderer.sprite != null &&
+                    renderer.gameObject != controller.Shadow.Shadow.gameObject)
+                {
+                    ballIsDrawn = true;
+                }
+            }
+
+            Assert.That(ballIsDrawn, Is.True, "The ball itself must be drawn, not only its shadow.");
+        }
+
+        static void AssertVisible(string objectName)
+        {
+            var root = GameObject.Find(objectName);
+            Assert.That(root, Is.Not.Null, objectName + " must exist in the Volleyball scene.");
+            SpriteRenderer[] renderers = root.GetComponentsInChildren<SpriteRenderer>(true);
+            Assert.That(renderers, Is.Not.Empty, objectName + " must be visible on screen.");
+            foreach (SpriteRenderer renderer in renderers)
+            {
+                Assert.That(renderer.sprite, Is.Not.Null, objectName + " has a renderer with no sprite.");
+                Assert.That(renderer.enabled, Is.True, objectName + " has a disabled renderer.");
+            }
+        }
+
         [UnityTest]
         public IEnumerator VolleyballScene_TeachesDigSetSpikeThroughTheSharedTutorialOverlay()
         {
