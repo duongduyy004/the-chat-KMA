@@ -498,10 +498,11 @@ namespace KMA.Tests.Gameplay.Progression
 
             public IReadOnlyList<SceneRouteTransition> Transitions => transitions;
 
-            public void Begin(SceneRouteTransition transition, Action onCompleted)
+            public bool Begin(SceneRouteTransition transition, Action onCompleted)
             {
                 transitions.Add(transition);
                 complete = onCompleted;
+                return true;
             }
 
             public void CompleteActiveTransition()

@@ -293,13 +293,22 @@ namespace KMA.Tests.Gameplay.Running
                 Assert.That(visual.parent, Is.SameAs(rival.transform));
 
                 var animator = rival.Animator;
+                var visualPosition = visual.localPosition;
+                animator.Play("Burst", 0, 0f);
+                animator.Update(0f);
+                var initialSprite = rival.Sprite.sprite;
+                var initialScale = visual.localScale;
                 animator.Play("Burst", 0, .5f);
                 animator.Update(0f);
 
                 Assert.That(rival.transform.localPosition, Is.EqualTo(expectedRootPosition).Within(.001f),
                     $"Animator evaluation must not overwrite lane {rival.Lane} placement");
-                Assert.That(visual.localPosition.y, Is.EqualTo(.22f).Within(.001f),
-                    "the burst clip must still visibly animate the child visual transform");
+                Assert.That(visual.localPosition, Is.EqualTo(visualPosition).Within(.001f),
+                    "sprite animation must preserve lane foot placement and race-owned progress");
+                Assert.That(rival.Sprite.sprite, Is.Not.EqualTo(initialSprite),
+                    "the burst clip must change the child visual pose");
+                Assert.That(visual.localScale.y, Is.GreaterThan(initialScale.y),
+                    "the burst clip retains subtle visual motion without moving the root");
             }
         }
 

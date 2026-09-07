@@ -1,15 +1,18 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Runtime.CompilerServices;
 using KMA.Gameplay.Boss;
 using UnityEngine;
 using UnityEngine.SceneManagement;
+
+[assembly: InternalsVisibleTo("KMA.Gameplay.UI.PlayMode.Tests")]
 
 namespace KMA.Gameplay.Core
 {
     public interface ISceneRouteTransitionSink
     {
-        void Begin(SceneRouteTransition transition, Action onCompleted);
+        bool Begin(SceneRouteTransition transition, Action onCompleted);
     }
 
     public readonly struct SceneRouteTransition
@@ -59,9 +62,12 @@ namespace KMA.Gameplay.Core
                 if (route == SessionRoute.Boss)
                     BossSceneSessionHandoff.SetPendingSession(session);
 
-                sink.Begin(new SceneRouteTransition(route, subject, session, sceneName ?? route.ToString()),
+                bool accepted = sink.Begin(
+                    new SceneRouteTransition(route, subject, session, sceneName ?? route.ToString()),
                     CompleteTransition);
-                return true;
+                if (!accepted)
+                    transitioning = false;
+                return accepted;
             }
             catch
             {
@@ -76,6 +82,7 @@ namespace KMA.Gameplay.Core
             route == SessionRoute.Punishment || route == SessionRoute.RetrySubject;
     }
 
+    [DefaultExecutionOrder(-1000)]
     public sealed class SceneRouter : MonoBehaviour, ISceneRouteTransitionSink
     {
         [Serializable]
@@ -105,13 +112,16 @@ namespace KMA.Gameplay.Core
         bool menuLoading;
         GameSession session;
         SessionRouteTransitioner transitioner;
+        Func<string, AsyncOperation> sceneLoader;
 
         public event Action<SceneRouteTransition> TransitionStarted;
         public event Action SessionChanged;
         public event Action<SubjectId, MinigameResult> SubjectCompleted;
         public event Action<int> LifeLost;
         public event Action SceneLoadStarted;
+        public event Action<float> SceneLoadProgressChanged;
         public event Action SceneLoadCompleted;
+        public event Action<string> SceneLoadFailed;
 
         public static SceneRouter Instance => instance;
         public GameSession Session => session;
@@ -141,6 +151,7 @@ namespace KMA.Gameplay.Core
             DontDestroyOnLoad(gameObject);
             session = new GameSession();
             transitioner = new SessionRouteTransitioner(session, this);
+            sceneLoader ??= LoadSingleScene;
             SceneManager.sceneLoaded += OnSceneLoaded;
         }
 
@@ -160,10 +171,13 @@ namespace KMA.Gameplay.Core
                 return false;
 
             EnsureRouteIsConfigured(SessionRoute.Subject, subject);
+            SaveData previous = session.ToSaveData();
             SessionRoute route = session.StartSubject(subject);
+            if (!TryRouteMutatedSession(previous, route, subject))
+                return false;
             if (route != SessionRoute.GameOver)
                 SessionChanged?.Invoke();
-            return Route(route, subject);
+            return true;
         }
 
         public bool ResumeCampaign()
@@ -180,9 +194,12 @@ namespace KMA.Gameplay.Core
                 return false;
 
             EnsureRouteIsConfigured(SessionRoute.Map, null);
+            SaveData previous = session.ToSaveData();
             session.ResetCampaign();
+            if (!TryRouteMutatedSession(previous, SessionRoute.Map, null))
+                return false;
             SessionChanged?.Invoke();
-            return Route(SessionRoute.Map);
+            return true;
         }
 
         public void LoadSession(GameSession restoredSession)
@@ -206,16 +223,18 @@ namespace KMA.Gameplay.Core
                 return false;
 
             int livesBefore = session.Lives;
+            SaveData previous = session.ToSaveData();
             SessionRoute route = session.SubmitResult(subject, result);
+            if (!TryRouteMutatedSession(previous, route, subject))
+                return false;
             SessionChanged?.Invoke();
-            bool routed = Route(route, subject);
 
             if (result.Pass)
                 SubjectCompleted?.Invoke(subject, result);
             else if (session.Lives < livesBefore)
                 LifeLost?.Invoke(session.Lives);
 
-            return routed;
+            return true;
         }
 
         public bool CompletePunishment(SubjectId subject)
@@ -223,9 +242,12 @@ namespace KMA.Gameplay.Core
             if (IsTransitioning)
                 return false;
 
+            SaveData previous = session.ToSaveData();
             SessionRoute route = session.CompletePunishment();
+            if (!TryRouteMutatedSession(previous, route, subject))
+                return false;
             SessionChanged?.Invoke();
-            return Route(route, subject);
+            return true;
         }
 
         public bool StartBoss()
@@ -240,16 +262,28 @@ namespace KMA.Gameplay.Core
         {
             if (IsTransitioning)
                 return false;
+            if (!CanLoadScene("Menu"))
+                return TryLoadScene("Menu");
+
+            if (!TryLoadScene("Menu"))
+                return false;
+
             UnbindSubjects();
             UnbindBosses();
             UnbindResultPanel();
             activeSubject = null;
             awaitingSubjectScene = false;
             awaitingBossScene = false;
-            menuLoading = true;
-            SceneLoadStarted?.Invoke();
-            StartCoroutine(LoadMenuScene());
             return true;
+        }
+
+        public bool TryLoadScene(string sceneName)
+        {
+            if (IsTransitioning)
+                return false;
+
+            menuLoading = true;
+            return StartSceneLoad(sceneName, () => menuLoading = false);
         }
 
         public bool RestartActiveSubject()
@@ -261,10 +295,13 @@ namespace KMA.Gameplay.Core
 
             var subject = activeSubject.Value;
             EnsureRouteIsConfigured(SessionRoute.Subject, subject);
+            SaveData previous = session.ToSaveData();
             session.AbandonActiveSubject();
             SessionRoute route = session.StartSubject(subject);
+            if (!TryRouteMutatedSession(previous, route, subject))
+                return false;
             SessionChanged?.Invoke();
-            return Route(route, subject);
+            return true;
         }
 
         public bool ExitActiveSubjectToMap() => Route(SessionRoute.Map);
@@ -324,14 +361,17 @@ namespace KMA.Gameplay.Core
                 throw new InvalidOperationException($"No loadable scene is configured for {route}" +
                     (subject.HasValue ? $" ({subject.Value})." : "."));
 
-            if (route == SessionRoute.Map && session.ActiveSubject.HasValue)
+            bool abandonActiveSubject = route == SessionRoute.Map && session.ActiveSubject.HasValue;
+            if (!transitioner.TryRoute(route, subject, sceneName))
+                return false;
+
+            if (abandonActiveSubject)
             {
                 session.AbandonActiveSubject();
                 SessionChanged?.Invoke();
             }
-
             PrepareSceneBinding(route, subject);
-            return transitioner.TryRoute(route, subject, sceneName);
+            return true;
         }
 
         public bool TryGetSceneName(SessionRoute route, SubjectId? subject, out string sceneName)
@@ -349,24 +389,17 @@ namespace KMA.Gameplay.Core
             if (string.IsNullOrWhiteSpace(sceneName))
                 return false;
 
-            if (Application.CanStreamedLevelBeLoaded(sceneName))
-                return true;
-#if UNITY_EDITOR
-            foreach (var buildScene in UnityEditor.EditorBuildSettings.scenes)
-                if (buildScene.enabled && string.Equals(
-                    System.IO.Path.GetFileNameWithoutExtension(buildScene.path), sceneName,
-                    StringComparison.Ordinal))
-                    return true;
-#endif
-            return false;
+            return CanLoadScene(sceneName);
         }
 
-        public void Begin(SceneRouteTransition transition, Action onCompleted)
+        public bool Begin(SceneRouteTransition transition, Action onCompleted)
         {
             TransitionStarted?.Invoke(transition);
-            SceneLoadStarted?.Invoke();
-            StartCoroutine(LoadGameplayScene(transition.SceneName, onCompleted));
+            return StartSceneLoad(transition.SceneName, onCompleted);
         }
+
+        internal void ConfigureSceneLoaderForTests(Func<string, AsyncOperation> loader) =>
+            sceneLoader = loader ?? LoadSingleScene;
 
         void OnSceneLoaded(Scene scene, LoadSceneMode mode)
         {
@@ -489,30 +522,100 @@ namespace KMA.Gameplay.Core
             return null;
         }
 
-        IEnumerator LoadGameplayScene(string sceneName, Action onCompleted)
+        bool StartSceneLoad(string sceneName, Action onCompleted)
         {
-            var operation = SceneManager.LoadSceneAsync(sceneName, LoadSceneMode.Single);
-            if (operation != null)
+            SceneLoadStarted?.Invoke();
+            SceneLoadProgressChanged?.Invoke(0f);
+
+            if (!CanLoadScene(sceneName))
             {
-                while (!operation.isDone)
-                    yield return null;
+                FailSceneLoad(sceneName, onCompleted, "The scene is not enabled in Build Settings.");
+                return false;
             }
 
+            AsyncOperation operation;
+            try
+            {
+                operation = sceneLoader(sceneName);
+            }
+            catch (Exception exception)
+            {
+                FailSceneLoad(sceneName, onCompleted, exception.Message);
+                return false;
+            }
+
+            if (operation == null)
+            {
+                FailSceneLoad(sceneName, onCompleted, "Unity did not create an async load operation.");
+                return false;
+            }
+
+            StartCoroutine(ObserveSceneLoad(operation, onCompleted));
+            return true;
+        }
+
+        IEnumerator ObserveSceneLoad(AsyncOperation operation, Action onCompleted)
+        {
+            while (!operation.isDone)
+            {
+                SceneLoadProgressChanged?.Invoke(Mathf.Min(0.99f,
+                    NormalizeLoadProgress(operation.progress)));
+                yield return null;
+            }
+
+            SceneLoadProgressChanged?.Invoke(1f);
             onCompleted?.Invoke();
             SceneLoadCompleted?.Invoke();
         }
 
-        IEnumerator LoadMenuScene()
+        void FailSceneLoad(string sceneName, Action onCompleted, string reason)
         {
-            var operation = SceneManager.LoadSceneAsync("Menu", LoadSceneMode.Single);
-            if (operation != null)
+            string message = $"Could not load scene '{sceneName}': {reason}";
+            Debug.LogError(message, this);
+            SceneLoadFailed?.Invoke(message);
+            onCompleted?.Invoke();
+            SceneLoadCompleted?.Invoke();
+        }
+
+        internal static float NormalizeLoadProgress(float progress) =>
+            Mathf.Clamp01(progress / 0.9f);
+
+        bool TryRouteMutatedSession(SaveData previous, SessionRoute route, SubjectId? subject)
+        {
+            try
             {
-                while (!operation.isDone)
-                    yield return null;
+                if (Route(route, subject))
+                    return true;
+            }
+            catch
+            {
+                session.Restore(previous);
+                throw;
             }
 
-            menuLoading = false;
-            SceneLoadCompleted?.Invoke();
+            session.Restore(previous);
+            return false;
+        }
+
+        static AsyncOperation LoadSingleScene(string sceneName) =>
+            SceneManager.LoadSceneAsync(sceneName, LoadSceneMode.Single);
+
+        static bool CanLoadScene(string sceneName)
+        {
+            if (string.IsNullOrWhiteSpace(sceneName))
+                return false;
+            if (Application.CanStreamedLevelBeLoaded(sceneName))
+                return true;
+#if UNITY_EDITOR
+            foreach (var buildScene in UnityEditor.EditorBuildSettings.scenes)
+            {
+                if (buildScene.enabled && string.Equals(
+                        System.IO.Path.GetFileNameWithoutExtension(buildScene.path), sceneName,
+                        StringComparison.Ordinal))
+                    return true;
+            }
+#endif
+            return false;
         }
 
         static SubjectScene[] DefaultSubjectScenes() => new[]

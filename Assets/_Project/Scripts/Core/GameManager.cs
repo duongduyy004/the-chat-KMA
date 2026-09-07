@@ -2,7 +2,6 @@ using System;
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 using UnityEngine;
-using UnityEngine.SceneManagement;
 
 [assembly: InternalsVisibleTo("KMA.Gameplay.Core.PlayMode.Tests")]
 [assembly: InternalsVisibleTo("KMA.Gameplay.Progression.PlayMode.Tests")]
@@ -171,7 +170,7 @@ namespace KMA.Gameplay.Core
             saveData = saveSystem.Save;
             hasExistingSave = () => saveSystem.HasSave;
             router = SceneRouter.EnsurePersistentInstance();
-            loadScene = LoadScene;
+            loadScene = sceneName => router.TryLoadScene(sceneName);
 
             foreach (MonoBehaviour behaviour in FindObjectsByType<MonoBehaviour>(
                 FindObjectsInactive.Include, FindObjectsSortMode.None))
@@ -258,8 +257,5 @@ namespace KMA.Gameplay.Core
             Array.Copy(source, copy, source.Length);
             return copy;
         }
-
-        static void LoadScene(string sceneName) =>
-            SceneManager.LoadSceneAsync(sceneName, LoadSceneMode.Single);
     }
 }
