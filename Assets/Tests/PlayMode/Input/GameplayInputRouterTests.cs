@@ -562,6 +562,47 @@ namespace KMA.Tests.Input
             Assert.That(order, Is.EqualTo(new[] { "hold", "swipe" }));
         }
 
+        // A controller (e.g. Basketball) calls SetTapMashDetector from Awake, which Unity always
+        // runs before the router's own OnEnable. At that point detectorEventsSubscribed is false,
+        // so the setter only stores the detector; ConfigureDetectorEvents() on OnEnable is the only
+        // thing that ever wires it up. This test fails if the tap line is removed from
+        // ConfigureDetectorEvents().
+        [Test]
+        public void SetTapMashDetector_InstalledWhileDisabled_ConnectsWhenRouterEnables()
+        {
+            Router.enabled = false;
+
+            var tapMash = new InputLayer.TapMashInputDetector();
+            Router.SetTapMashDetector(tapMash);
+
+            var taps = 0;
+            Router.OnTap += () => taps++;
+
+            Router.enabled = true;
+            Area.OnPointerDown(PointerAt(Vector2.zero, 1));
+
+            Assert.That(taps, Is.EqualTo(1), "ConfigureDetectorEvents must connect a tap detector that was installed while the router was disabled.");
+        }
+
+        // If the tap line were missing from UnsubscribeDetectorEvents(), a disable/enable cycle
+        // would leave the original subscription in place and ConfigureDetectorEvents() would add a
+        // second one on re-enable, double-firing OnTap for a single tap.
+        [Test]
+        public void SetTapMashDetector_DisableThenEnableCycle_DoesNotDoubleFireOnTap()
+        {
+            var tapMash = new InputLayer.TapMashInputDetector();
+            Router.SetTapMashDetector(tapMash);
+
+            var taps = 0;
+            Router.OnTap += () => taps++;
+
+            Router.enabled = false;
+            Router.enabled = true;
+            Area.OnPointerDown(PointerAt(Vector2.zero, 1));
+
+            Assert.That(taps, Is.EqualTo(1), "UnsubscribeDetectorEvents must drop the tap subscription on disable so re-enabling does not double-subscribe it.");
+        }
+
         [Test]
         public void MultiPointerGestures_DoNotEndAnotherPointer()
         {
