@@ -116,6 +116,15 @@ namespace KMA.Gameplay.UI
                     new TutorialStep("OBSTACLES", "Swipe up/down to clear obstacles")
                 });
             }
+            else if (source.GetType().Name == "VolleyballController")
+            {
+                tutorialOverlay.Show("Volleyball", new List<TutorialStep>
+                {
+                    new TutorialStep("DIG", "Swipe down when the ball is low."),
+                    new TutorialStep("SET", "Swipe up while the ball is rising."),
+                    new TutorialStep("SPIKE", "Swipe toward the net near the apex.")
+                });
+            }
 
             if (tutorialOverlay.ShouldShow)
             {
