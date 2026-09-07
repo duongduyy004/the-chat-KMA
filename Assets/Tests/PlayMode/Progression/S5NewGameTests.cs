@@ -138,7 +138,8 @@ namespace KMA.Tests.Gameplay.Progression
                 var passed = new SubjectRecord();
                 passed.Accept(new MinigameResult(true, 0f, Rank.A));
                 node.Configure(SubjectId.Sprint, "Chạy nước rút", false, passed, 5);
-                Assert.That(node.DetailText, Does.Contain("HẠNG A"));
+                Assert.That(node.DetailText, Is.EqualTo("HẠNG A  ★ 3"));
+                Assert.That(node.Stars, Is.EqualTo(3));
 
                 node.Configure(SubjectId.Basketball, "Bóng rổ", true, null, 5);
                 Assert.That(node.DetailText, Is.EqualTo("ĐANG PHÁT TRIỂN"));
@@ -207,6 +208,43 @@ namespace KMA.Tests.Gameplay.Progression
                     SubjectId.Football
                 }));
             Assert.That(GameObject.Find("SelectionGrid").GetComponent<GridLayoutGroup>(), Is.Not.Null);
+        }
+
+        [UnityTest]
+        public IEnumerator MapScene_ResponsiveLayout_KeepsCardsInsideTheGridAndAboveFutureContent()
+        {
+            SceneManager.LoadScene("Map", LoadSceneMode.Single);
+            yield return null;
+
+            var screen = Object.FindFirstObjectByType<MapScreen>(FindObjectsInactive.Include);
+            Assert.That(screen, Is.Not.Null);
+            RectTransform grid = screen.transform.Find("S5MapPresentation/Content/SelectionGrid")
+                .GetComponent<RectTransform>();
+            RectTransform futureRow = screen.transform.Find("S5MapPresentation/Content/FutureRow")
+                .GetComponent<RectTransform>();
+
+            foreach (Vector2Int resolution in new[]
+            {
+                new Vector2Int(1920, 1080),
+                new Vector2Int(1280, 720)
+            })
+            {
+                Screen.SetResolution(resolution.x, resolution.y, false);
+                yield return null;
+                Canvas.ForceUpdateCanvases();
+                LayoutRebuilder.ForceRebuildLayoutImmediate(screen.transform as RectTransform);
+                Canvas.ForceUpdateCanvases();
+
+                Rect gridBounds = WorldBounds(grid);
+                Rect futureBounds = WorldBounds(futureRow);
+                Assert.That(gridBounds.Overlaps(futureBounds), Is.False,
+                    $"SelectionGrid must not overlap FutureRow at {resolution.x}x{resolution.y}.");
+                foreach (MapNodeView node in screen.Nodes)
+                {
+                    Assert.That(Contains(grid, node.transform as RectTransform), Is.True,
+                        $"{node.SubjectId} must remain inside SelectionGrid at {resolution.x}x{resolution.y}.");
+                }
+            }
         }
 
         [Test]
@@ -493,6 +531,30 @@ namespace KMA.Tests.Gameplay.Progression
             {
                 UnityEngine.Object.DestroyImmediate(component.gameObject);
             }
+        }
+
+        static Rect WorldBounds(RectTransform rect)
+        {
+            var corners = new Vector3[4];
+            rect.GetWorldCorners(corners);
+            return Rect.MinMaxRect(corners[0].x, corners[0].y, corners[2].x, corners[2].y);
+        }
+
+        static bool Contains(RectTransform container, RectTransform child)
+        {
+            var corners = new Vector3[4];
+            child.GetWorldCorners(corners);
+            Rect bounds = container.rect;
+            const float tolerance = 0.1f;
+            foreach (Vector3 corner in corners)
+            {
+                Vector3 local = container.InverseTransformPoint(corner);
+                if (local.x < bounds.xMin - tolerance || local.x > bounds.xMax + tolerance ||
+                    local.y < bounds.yMin - tolerance || local.y > bounds.yMax + tolerance)
+                    return false;
+            }
+
+            return true;
         }
 
         static IEnumerator WaitForRoutedScene(SceneRouter router, string sceneName)
