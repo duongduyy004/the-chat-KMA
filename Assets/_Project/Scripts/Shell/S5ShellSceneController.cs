@@ -177,75 +177,7 @@ namespace KMA.Gameplay.Shell
         }
 
         void BuildMapPresentation(GameSession session)
-        {
-            if (map == null || map.transform.Find("S5MapPresentation") != null)
-                return;
-            foreach (var button in map.GetComponentsInChildren<Button>(true))
-                button.gameObject.SetActive(false);
-
-            var root = new GameObject("S5MapPresentation");
-            root.transform.SetParent(map.transform, false);
-            var heartObject = new GameObject("HeartBar");
-            heartObject.transform.SetParent(root.transform, false);
-            var heartBar = heartObject.AddComponent<HeartBar>();
-            var hearts = new Image[5];
-            for (var i = 0; i < hearts.Length; i++)
-            {
-                var heart = new GameObject("Heart" + i);
-                heart.transform.SetParent(heartObject.transform, false);
-                var rect = heart.AddComponent<RectTransform>();
-                rect.anchoredPosition = new Vector2(-120f + i * 60f, 300f);
-                rect.sizeDelta = new Vector2(48f, 48f);
-                hearts[i] = heart.AddComponent<Image>();
-            }
-            heartBar.SetSlots(hearts);
-
-            var nodes = new System.Collections.Generic.List<MapNodeView>();
-            var subjects = (SubjectId[])System.Enum.GetValues(typeof(SubjectId));
-            for (var i = 0; i < subjects.Length; i++)
-            {
-                var id = subjects[i];
-                var node = CreateMapNode(root.transform, id.ToString(), id, false,
-                    new Vector2(-480f + (i % 4) * 320f, 160f - (i / 4) * 180f),
-                    () => map.SelectSubject(id));
-                nodes.Add(node);
-            }
-            foreach (var coming in new[] { "PushUps", "Rhythm", "Swimming" })
-            {
-                nodes.Add(CreateMapNode(root.transform, coming, SubjectId.Sprint, true,
-                    new Vector2(-320f + nodes.Count % 3 * 320f, -260f), null));
-            }
-            CreateMapNode(root.transform, "BOSS", SubjectId.Sprint, false,
-                new Vector2(560f, -260f), map.SelectBoss);
-            map.BindPresentation(nodes.ToArray(), heartBar, session);
-        }
-
-        static MapNodeView CreateMapNode(Transform parent, string name, SubjectId id, bool comingSoon, Vector2 position,
-            UnityEngine.Events.UnityAction action)
-        {
-            var root = new GameObject(name + "Node");
-            root.transform.SetParent(parent, false);
-            var rect = root.AddComponent<RectTransform>();
-            rect.sizeDelta = new Vector2(280f, 120f);
-            rect.anchoredPosition = position;
-            var node = root.AddComponent<MapNodeView>();
-            var titleObject = new GameObject("Title");
-            titleObject.transform.SetParent(root.transform, false);
-            var title = titleObject.AddComponent<Text>();
-            title.alignment = TextAnchor.MiddleCenter;
-            var detailObject = new GameObject("Detail");
-            detailObject.transform.SetParent(root.transform, false);
-            var detail = detailObject.AddComponent<Text>();
-            detail.alignment = TextAnchor.MiddleCenter;
-            detail.rectTransform.anchoredPosition = new Vector2(0f, -30f);
-            var button = root.AddComponent<Button>();
-            button.targetGraphic = root.AddComponent<Image>();
-            if (action != null)
-                button.onClick.AddListener(action);
-            node.Bind(button, title, detail);
-            node.Configure(id, name, comingSoon, null, 5);
-            return node;
-        }
+            => MapPresentationBuilder.Build(map, session);
 
         void EnsureNewGameConfirmation()
         {

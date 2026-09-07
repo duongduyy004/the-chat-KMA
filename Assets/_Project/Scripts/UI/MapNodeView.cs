@@ -19,6 +19,8 @@ namespace KMA.Gameplay.UI
         public bool IsComingSoon => comingSoon;
         public bool HasSubjectConfigAsset => subjectConfigAsset != null;
         public ScriptableObject SubjectConfigAsset => subjectConfigAsset;
+        public string DetailText => detailLabel == null ? string.Empty : detailLabel.text;
+        public bool IsInteractable => button != null && button.interactable;
         public int Stars { get; private set; }
         public Rank BestRank { get; private set; }
         public int Lives { get; private set; }
@@ -34,8 +36,8 @@ namespace KMA.Gameplay.UI
             if (titleLabel != null)
                 titleLabel.text = displayName;
             if (detailLabel != null)
-                detailLabel.text = IsComingSoon ? "COMING SOON" :
-                    record != null && record.Passed ? $"RANK {BestRank}  STARS {Stars}" : "LOCKED";
+                detailLabel.text = IsComingSoon ? "ĐANG PHÁT TRIỂN" :
+                    record != null && record.Passed ? $"HẠNG {BestRank}  ★ {Stars}" : "SẴN SÀNG";
             if (button != null)
                 button.interactable = !comingSoon;
         }
@@ -60,6 +62,12 @@ namespace KMA.Gameplay.UI
             button = target;
             titleLabel = title;
             detailLabel = detail;
+        }
+
+        public void SetAvailability(bool selectable, string unavailableLabel)
+        {
+            if (button != null) button.interactable = selectable;
+            if (!selectable && detailLabel != null) detailLabel.text = unavailableLabel;
         }
     }
 }
