@@ -12,6 +12,9 @@ namespace KMA.Input
 
         readonly HashSet<int> activePointerIds = new HashSet<int>();
 
+        public GameplayInputRouter Router => router;
+        public RectTransform GameplayArea => gameplayArea;
+
         void OnDisable()
         {
             router?.FlushPointerState();

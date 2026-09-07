@@ -305,6 +305,115 @@ namespace KMA.Tests.Gameplay.Ball
             Assert.That(completions, Is.EqualTo(1));
         }
 
+        [Test]
+        public void Presentation_ConfiguredOnceStaysBoundToTheControllerBallAcrossPlayFrames()
+        {
+            var fixture = CreateFixture();
+            PresentationFixture presentation = ConfigurePresentation(fixture, sampleCount: 24, sampleStep: .05f);
+            AdvanceControllerToPlay(fixture.Controller);
+            fixture.Ball.AttachTo(CreateAnchor(new Vector2(-1.5f, 1.25f)));
+
+            for (var frame = 0; frame < 30; frame++)
+                fixture.Controller.SimulateForTest(Time.fixedDeltaTime);
+            fixture.Controller.BeginGesturePreparation(Vector2.down);
+
+            Assert.That(presentation.Preview.Source, Is.SameAs(fixture.Ball));
+            Assert.That(presentation.Preview.Line, Is.SameAs(presentation.Line));
+            Assert.That(presentation.Shadow.Target, Is.SameAs(fixture.Ball.transform));
+            Assert.That(presentation.Shadow.Shadow, Is.SameAs(presentation.ShadowTransform));
+            Assert.That(presentation.Shadow.Renderer, Is.SameAs(presentation.ShadowRenderer));
+            Assert.That(presentation.Line.positionCount, Is.EqualTo(24),
+                "The authored sample count proves the preview was configured once and never re-configured.");
+        }
+
+        [Test]
+        public void GesturePreparation_ShowsThePreviewOnlyWhileAttachedAndHidesItOnSubmit()
+        {
+            var fixture = CreateFixture();
+            PresentationFixture presentation = ConfigurePresentation(fixture, sampleCount: 24, sampleStep: .05f);
+            AdvanceControllerToPlay(fixture.Controller);
+            fixture.Ball.AttachTo(CreateAnchor(new Vector2(0f, 1f)));
+
+            fixture.Controller.BeginGesturePreparation(Vector2.down);
+
+            Assert.That(fixture.Controller.IsGesturePreparation, Is.True);
+            Assert.That(presentation.Line.enabled, Is.True);
+            Assert.That(presentation.Line.positionCount, Is.EqualTo(24));
+
+            SubmitTouch(fixture, BallContext.Low, Vector2.down);
+
+            Assert.That(fixture.Controller.IsGesturePreparation, Is.False);
+            Assert.That(presentation.Line.enabled, Is.False);
+            Assert.That(presentation.Line.positionCount, Is.Zero);
+        }
+
+        [Test]
+        public void GesturePreparation_IsRejectedWhileTheBallIsAlreadyInFlight()
+        {
+            var fixture = CreateFixture();
+            PresentationFixture presentation = ConfigurePresentation(fixture, sampleCount: 24, sampleStep: .05f);
+            AdvanceControllerToPlay(fixture.Controller);
+            fixture.Ball.Launch(new Vector2(1f, 1f), 5f, 0f);
+
+            fixture.Controller.BeginGesturePreparation(Vector2.down);
+
+            Assert.That(fixture.Controller.IsGesturePreparation, Is.False);
+            Assert.That(presentation.Line.enabled, Is.False);
+            Assert.That(presentation.Line.positionCount, Is.Zero);
+        }
+
+        [Test]
+        public void PreviewAndShadowRefresh_NeverMutateBallBodyPositionOrVelocity()
+        {
+            var fixture = CreateFixture();
+            PresentationFixture presentation = ConfigurePresentation(fixture, sampleCount: 24, sampleStep: .05f);
+            AdvanceControllerToPlay(fixture.Controller);
+            fixture.Ball.AttachTo(CreateAnchor(new Vector2(-1.5f, 1.25f)));
+            Vector2 position = fixture.Ball.Body.position;
+            Vector2 velocity = fixture.Ball.Body.velocity;
+
+            fixture.Controller.BeginGesturePreparation(Vector2.down);
+            presentation.Preview.Refresh(Vector2.down, 6f, 0f);
+            presentation.Shadow.Refresh();
+            fixture.Controller.SimulateForTest(Time.fixedDeltaTime);
+
+            Assert.That(fixture.Ball.Body.position, Is.EqualTo(position));
+            Assert.That(fixture.Ball.Body.velocity, Is.EqualTo(velocity));
+            Assert.That(presentation.ShadowTransform.position.x,
+                Is.EqualTo(fixture.Ball.transform.position.x).Within(.001f));
+            Assert.That(presentation.ShadowTransform.position.y, Is.EqualTo(0f).Within(.001f));
+        }
+
+        [Test]
+        public void ProductionInputPath_InstallsOneSwipeDetectorOnTheSharedRouterAndReachesTheController()
+        {
+            var controllerObject = new GameObject("VolleyballProductionInputTest");
+            temporaryObjects.Add(controllerObject);
+            controllerObject.AddComponent<BoxCollider2D>().size = new Vector2(9f, 6f);
+            var router = controllerObject.AddComponent<GameplayInputRouter>();
+            var controller = controllerObject.AddComponent<VolleyballController>();
+
+            var ballObject = new GameObject("VolleyballProductionInputBall");
+            temporaryObjects.Add(ballObject);
+            ballObject.AddComponent<Rigidbody2D>();
+            var ball = ballObject.AddComponent<BallRig>();
+            var profile = FlightProfile.Create(1f, 0f, -10f, 1f);
+            temporaryObjects.Add(profile);
+            ball.SetProfile(profile);
+            controller.ConfigureForTest(null, ball);
+            AdvanceControllerToPlay(controller);
+            SetBallState(ball, BallContext.Low);
+
+            router.FeedPointerDownForTest(new Vector2(200f, 400f), 0d);
+            router.FeedPointerMoveForTest(new Vector2(200f, 100f), .1d);
+            router.FeedPointerUpForTest(new Vector2(200f, 100f), .2d);
+
+            Assert.That(controller.InstalledSwipeDetector, Is.Not.Null,
+                "The production scene has no bridge, so the controller owns the router's swipe detector.");
+            Assert.That(controller.SuccessfulLaunchCount, Is.EqualTo(1));
+            Assert.That(controller.TouchCount, Is.EqualTo(1));
+        }
+
         ControllerFixture CreateFixture(bool preResolveRules = false, int targetScore = 2)
         {
             var controllerObject = new GameObject("VolleyballControllerTest");
@@ -340,19 +449,58 @@ namespace KMA.Tests.Gameplay.Ball
             controller.SimulateForTest(3f);
         }
 
-        static void SetBallForContext(ControllerFixture fixture, BallContext context)
+        static void SetBallForContext(ControllerFixture fixture, BallContext context) =>
+            SetBallState(fixture.Ball, context);
+
+        static void SetBallState(BallRig ball, BallContext context)
         {
-            fixture.Ball.AttachTo(null);
-            fixture.Ball.Body.position = context == BallContext.ApexNearNet
+            ball.AttachTo(null);
+            ball.Body.position = context == BallContext.ApexNearNet
                 ? new Vector2(0f, 2f)
                 : new Vector2(0f, 1f);
-            fixture.Ball.Body.velocity = context switch
+            ball.Body.velocity = context switch
             {
                 BallContext.Low => new Vector2(0f, -2f),
                 BallContext.Rising => new Vector2(0f, 2f),
                 BallContext.ApexNearNet => Vector2.zero,
                 _ => throw new System.ArgumentOutOfRangeException(nameof(context), context, null)
             };
+        }
+
+        Transform CreateAnchor(Vector2 position)
+        {
+            var anchorObject = new GameObject("VolleyballAnchorTest");
+            temporaryObjects.Add(anchorObject);
+            anchorObject.transform.position = position;
+            return anchorObject.transform;
+        }
+
+        // Both presentation components log a configuration error in Awake, so they are authored
+        // inactive and only enabled once Configure has supplied their references.
+        PresentationFixture ConfigurePresentation(ControllerFixture fixture, int sampleCount, float sampleStep)
+        {
+            var previewObject = new GameObject("VolleyballTrajectoryPreviewTest");
+            temporaryObjects.Add(previewObject);
+            previewObject.SetActive(false);
+            var line = previewObject.AddComponent<LineRenderer>();
+            var preview = previewObject.AddComponent<TrajectoryPreview>();
+            preview.Configure(fixture.Ball, line, sampleCount, sampleStep);
+            previewObject.SetActive(true);
+
+            var shadowRootObject = new GameObject("VolleyballBallShadowTest");
+            temporaryObjects.Add(shadowRootObject);
+            shadowRootObject.SetActive(false);
+            var shadowObject = new GameObject("VolleyballBallShadowSpriteTest");
+            temporaryObjects.Add(shadowObject);
+            var shadowRenderer = shadowObject.AddComponent<SpriteRenderer>();
+            var shadow = shadowRootObject.AddComponent<BallShadow>();
+            shadow.Configure(fixture.Ball.transform, shadowObject.transform, shadowRenderer,
+                ground: 0f, maximumHeight: 4f, minimumScale: .35f, maximumScale: 1f,
+                minimumAlpha: .2f, maximumAlpha: .75f);
+            shadowRootObject.SetActive(true);
+
+            fixture.Controller.ConfigurePresentationForTest(preview, shadow);
+            return new PresentationFixture(preview, line, shadow, shadowObject.transform, shadowRenderer);
         }
 
         static void SubmitAuthoredRally(ControllerFixture fixture, bool resolve = true)
@@ -391,6 +539,29 @@ namespace KMA.Tests.Gameplay.Ball
             detector.FeedSample(Vector2.zero, 0d);
             detector.FeedSample(end * 100f, 1d);
             detector.FeedEnd();
+        }
+
+        readonly struct PresentationFixture
+        {
+            public PresentationFixture(
+                TrajectoryPreview preview,
+                LineRenderer line,
+                BallShadow shadow,
+                Transform shadowTransform,
+                SpriteRenderer shadowRenderer)
+            {
+                Preview = preview;
+                Line = line;
+                Shadow = shadow;
+                ShadowTransform = shadowTransform;
+                ShadowRenderer = shadowRenderer;
+            }
+
+            public TrajectoryPreview Preview { get; }
+            public LineRenderer Line { get; }
+            public BallShadow Shadow { get; }
+            public Transform ShadowTransform { get; }
+            public SpriteRenderer ShadowRenderer { get; }
         }
 
         readonly struct ControllerFixture

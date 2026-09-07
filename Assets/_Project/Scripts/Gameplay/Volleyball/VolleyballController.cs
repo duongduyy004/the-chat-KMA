@@ -38,6 +38,7 @@ namespace KMA.Gameplay
         int resolvedPossessionToken = -1;
         float opponentReturnDelay;
         int touchNumber;
+        SwipeInputDetector productionSwipeDetector;
 
         public VolleyballRules Rules { get; private set; }
         public BallRig Ball => ball;
@@ -57,11 +58,17 @@ namespace KMA.Gameplay
         public Vector2 PredictedLandingPoint { get; private set; }
         public VolleyAction SelectedAction { get; private set; }
         public MinigameResult LastResult { get; private set; }
+        public GameplayInputRouter InputRouter => inputRouter;
+        public BoxCollider2D ReachZone => reachZone;
+        public TrajectoryPreview Preview => trajectoryPreview;
+        public BallShadow Shadow => ballShadow;
+        public SwipeInputDetector InstalledSwipeDetector => productionSwipeDetector;
 
         protected override void Awake()
         {
             base.Awake();
             CacheReferences();
+            InstallProductionSwipeDetector();
             Rules = new VolleyballRules(targetScore, timeLimit, Lifecycle);
             ResetRuntimeState();
         }
@@ -185,6 +192,15 @@ namespace KMA.Gameplay
         {
             if (Rules.Phase == MinigamePhase.Tutorial) Rules.Tick(DefaultTutorialSeconds);
             if (Rules.Phase == MinigamePhase.Countdown) Rules.Tick(DefaultCountdownSeconds);
+        }
+
+        // The Volleyball scene has no input bridge, so the controller owns the one swipe detector
+        // the shared router feeds. Installed once so test-supplied detectors are never clobbered.
+        void InstallProductionSwipeDetector()
+        {
+            if (productionSwipeDetector != null || inputRouter == null) return;
+            productionSwipeDetector = new SwipeInputDetector();
+            inputRouter.SetDetectors(null, null, null, null, productionSwipeDetector);
         }
 
         void SubscribeInputRouter()

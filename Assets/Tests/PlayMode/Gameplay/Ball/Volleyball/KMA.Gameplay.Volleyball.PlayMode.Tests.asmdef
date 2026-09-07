@@ -9,6 +9,7 @@
         "KMA.Gameplay.UI",
         "KMA.Input",
         "Unity.InputSystem",
+        "Unity.TextMeshPro",
         "Unity.InputSystem.TestFramework"
     ],
     "includePlatforms": [],
