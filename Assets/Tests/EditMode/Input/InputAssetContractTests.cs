@@ -10,13 +10,13 @@ namespace KMA.Tests.Input
         const string AssetPath = "Assets/_Project/Settings/Input/KMA.inputactions";
 
         [Test]
-        public void SharedInputAssetDeclaresExactlyTheFiveS3Maps()
+        public void SharedInputAssetDeclaresTheS3MapsPlusBasketball()
         {
             var asset = AssetDatabase.LoadAssetAtPath<InputActionAsset>(AssetPath);
             Assert.That(asset, Is.Not.Null);
             Assert.That(asset.actionMaps.Select(map => map.name), Is.EquivalentTo(new[]
             {
-                "Sprint", "Endurance", "Boss", "Punishment", "UI"
+                "Sprint", "Endurance", "Boss", "Punishment", "UI", "Basketball"
             }));
         }
 
@@ -36,6 +36,8 @@ namespace KMA.Tests.Input
                 Is.EquivalentTo(new[] { "Tap", "Hold", "Left", "Right" }));
             Assert.That(asset.FindActionMap("UI").actions.Select(action => action.name),
                 Is.EquivalentTo(new[] { "Navigate", "Submit", "Cancel", "Pause" }));
+            Assert.That(asset.FindActionMap("Basketball").actions.Select(action => action.name),
+                Is.EquivalentTo(new[] { "Tap", "Hold", "Left", "Right" }));
 
             Assert.That(asset.actionMaps.SelectMany(map => map.bindings)
                 .Where(binding => !binding.isComposite)

@@ -490,6 +490,79 @@ namespace KMA.Tests.Input
         }
 
         [Test]
+        public void SetTapMashDetector_DispatchesOnTapWithoutDroppingOtherDetectors()
+        {
+            var hold = new InputLayer.HoldInputDetector();
+            var swipe = new InputLayer.SwipeInputDetector();
+            Router.SetDetectors(null, null, hold, null, swipe);
+
+            var tapMash = new InputLayer.TapMashInputDetector();
+            Router.SetTapMashDetector(tapMash);
+
+            var taps = 0;
+            var holdEnds = 0;
+            var swipes = 0;
+            Router.OnTap += () => taps++;
+            Router.OnHoldEnd += _ => holdEnds++;
+            Router.OnSwipe += _ => swipes++;
+
+            Router.FeedPointerDownForTest(new Vector2(100f, 100f), 0d);
+            Router.FeedPointerMoveForTest(new Vector2(300f, 100f), .05d);
+            Router.FeedPointerUpForTest(new Vector2(340f, 100f), .1d);
+
+            Assert.That(taps, Is.EqualTo(1), "Installing a tap detector must not stop feeding it.");
+            Assert.That(holdEnds, Is.EqualTo(1), "SetTapMashDetector must not drop the installed hold detector.");
+            Assert.That(swipes, Is.EqualTo(1), "SetTapMashDetector must not drop the installed swipe detector.");
+            Assert.That(tapMash.TapsPerSecond, Is.EqualTo(1));
+        }
+
+        [Test]
+        public void SetHoldDetector_ReplacesOnlyTheHoldSlot()
+        {
+            var tapMash = new InputLayer.TapMashInputDetector();
+            var swipe = new InputLayer.SwipeInputDetector();
+            Router.SetDetectors(tapMash, null, null, null, swipe);
+            Router.SetTapMashDetector(tapMash);
+
+            var replaced = new InputLayer.HoldInputDetector();
+            Router.SetHoldDetector(replaced);
+
+            double reportedDuration = -1d;
+            var swipes = 0;
+            Router.OnHoldEnd += duration => reportedDuration = duration;
+            Router.OnSwipe += _ => swipes++;
+
+            Router.FeedPointerDownForTest(new Vector2(100f, 100f), 1d);
+            Router.FeedPointerMoveForTest(new Vector2(200f, 100f), 1.4d);
+            Router.FeedPointerUpForTest(new Vector2(240f, 100f), 1.5d);
+
+            Assert.That(reportedDuration, Is.EqualTo(.5d).Within(.0001d));
+            Assert.That(replaced.ChargeRatio, Is.EqualTo(.5d).Within(.0001d));
+            Assert.That(swipes, Is.EqualTo(1), "SetHoldDetector must not drop the installed swipe detector.");
+        }
+
+        // Router.FeedPointerUp feeds hold before swipe, so a controller can read the charge that the
+        // release gesture belongs to. Basketball depends on that order.
+        [Test]
+        public void PointerUp_ReportsHoldEndBeforeSwipe()
+        {
+            var hold = new InputLayer.HoldInputDetector();
+            var swipe = new InputLayer.SwipeInputDetector();
+            Router.SetHoldDetector(hold);
+            Router.SetSwipeDetector(swipe);
+
+            var order = new List<string>();
+            Router.OnHoldEnd += _ => order.Add("hold");
+            Router.OnSwipe += _ => order.Add("swipe");
+
+            Router.FeedPointerDownForTest(new Vector2(100f, 100f), 0d);
+            Router.FeedPointerMoveForTest(new Vector2(300f, 100f), .2d);
+            Router.FeedPointerUpForTest(new Vector2(340f, 100f), .3d);
+
+            Assert.That(order, Is.EqualTo(new[] { "hold", "swipe" }));
+        }
+
+        [Test]
         public void MultiPointerGestures_DoNotEndAnotherPointer()
         {
             var hold = new InputLayer.HoldInputDetector();

@@ -91,6 +91,22 @@
         { "name": "", "id": "50000000000000000000000000000107", "path": "<Keyboard>/escape", "interactions": "", "processors": "", "groups": "", "action": "Cancel", "isComposite": false, "isPartOfComposite": false },
         { "name": "", "id": "50000000000000000000000000000108", "path": "<Keyboard>/p", "interactions": "", "processors": "", "groups": "", "action": "Pause", "isComposite": false, "isPartOfComposite": false }
       ]
+    },
+    {
+      "name": "Basketball",
+      "id": "60000000000000000000000000000001",
+      "actions": [
+        { "name": "Tap", "type": "Button", "id": "60000000000000000000000000000011", "expectedControlType": "Button" },
+        { "name": "Hold", "type": "Button", "id": "60000000000000000000000000000012", "expectedControlType": "Button" },
+        { "name": "Left", "type": "Button", "id": "60000000000000000000000000000013", "expectedControlType": "Button" },
+        { "name": "Right", "type": "Button", "id": "60000000000000000000000000000014", "expectedControlType": "Button" }
+      ],
+      "bindings": [
+        { "name": "", "id": "60000000000000000000000000000101", "path": "<Keyboard>/space", "interactions": "", "processors": "", "groups": "", "action": "Tap", "isComposite": false, "isPartOfComposite": false },
+        { "name": "", "id": "60000000000000000000000000000102", "path": "<Keyboard>/h", "interactions": "Hold(duration=0.25)", "processors": "", "groups": "", "action": "Hold", "isComposite": false, "isPartOfComposite": false },
+        { "name": "", "id": "60000000000000000000000000000103", "path": "<Keyboard>/leftArrow", "interactions": "", "processors": "", "groups": "", "action": "Left", "isComposite": false, "isPartOfComposite": false },
+        { "name": "", "id": "60000000000000000000000000000104", "path": "<Keyboard>/rightArrow", "interactions": "", "processors": "", "groups": "", "action": "Right", "isComposite": false, "isPartOfComposite": false }
+      ]
     }
   ],
   "controlSchemes": []

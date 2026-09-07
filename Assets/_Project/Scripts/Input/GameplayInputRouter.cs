@@ -115,6 +115,36 @@ namespace KMA.Input
             swipeDetector.OnSwipeProgress += DispatchSwipeProgress;
         }
 
+        public event System.Action OnTap;
+
+        // Mirrors SetSwipeDetector: replaces only the tap slot, so a caller that owns taps cannot drop
+        // the hold, rhythm, swipe or alternate-tap detectors another owner installed on the same router.
+        public void SetTapMashDetector(TapMashInputDetector tapMash)
+        {
+            if (tapMashDetector != null && detectorEventsSubscribed)
+                tapMashDetector.OnTap -= DispatchTap;
+
+            tapMashDetector = tapMash;
+            if (!isActiveAndEnabled || !detectorEventsSubscribed || tapMashDetector == null)
+                return;
+
+            tapMashDetector.OnTap += DispatchTap;
+        }
+
+        public void SetHoldDetector(HoldInputDetector hold)
+        {
+            if (holdDetector != null && detectorEventsSubscribed)
+                holdDetector.OnHoldEnd -= DispatchHoldEnd;
+
+            holdDetector = hold;
+            if (!isActiveAndEnabled || !detectorEventsSubscribed || holdDetector == null)
+                return;
+
+            holdDetector.OnHoldEnd += DispatchHoldEnd;
+        }
+
+        void DispatchTap() => OnTap?.Invoke();
+
         public void SetDetectors(
             TapMashInputDetector tapMash,
             RhythmBeatInputDetector rhythmBeat,
@@ -136,6 +166,8 @@ namespace KMA.Input
             if (!isActiveAndEnabled || detectorEventsSubscribed)
                 return;
 
+            if (tapMashDetector != null)
+                tapMashDetector.OnTap += DispatchTap;
             if (rhythmBeatDetector != null)
                 rhythmBeatDetector.OnJudge += DispatchRhythmJudge;
             if (holdDetector != null)
@@ -153,6 +185,8 @@ namespace KMA.Input
             if (!detectorEventsSubscribed)
                 return;
 
+            if (tapMashDetector != null)
+                tapMashDetector.OnTap -= DispatchTap;
             if (rhythmBeatDetector != null)
                 rhythmBeatDetector.OnJudge -= DispatchRhythmJudge;
             if (holdDetector != null)
