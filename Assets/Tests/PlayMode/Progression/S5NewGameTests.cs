@@ -160,8 +160,15 @@ namespace KMA.Tests.Gameplay.Progression
                 var grid = screen.transform.Find("S5MapPresentation/Content/SelectionGrid");
                 var responsiveGrid = grid.GetComponent<ResponsiveGridLayout>();
                 Assert.That(responsiveGrid, Is.Not.Null);
+                var gridRect = grid.GetComponent<RectTransform>();
+                gridRect.anchorMin = Vector2.zero;
+                gridRect.anchorMax = Vector2.zero;
+                gridRect.sizeDelta = new Vector2(1136f, 280f);
                 responsiveGrid.Refresh();
-                Assert.That(grid.GetComponent<GridLayoutGroup>().cellSize.x, Is.Not.EqualTo(220f));
+                var gridLayout = grid.GetComponent<GridLayoutGroup>();
+                Assert.That(gridLayout.cellSize.x, Is.Not.EqualTo(220f));
+                Assert.That(grid.GetComponent<LayoutElement>().preferredHeight,
+                    Is.GreaterThanOrEqualTo(gridLayout.cellSize.y * 2f + gridLayout.spacing.y));
                 foreach (var label in screen.GetComponentsInChildren<Text>())
                 {
                     Assert.That(label.rectTransform.anchorMin, Is.EqualTo(Vector2.zero));

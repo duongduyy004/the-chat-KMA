@@ -60,6 +60,7 @@ namespace KMA.Gameplay.UI
             grid.gameObject.AddComponent<ResponsiveGridLayout>().Refresh();
             LayoutElement gridElement = grid.gameObject.AddComponent<LayoutElement>();
             gridElement.flexibleWidth = 1; gridElement.preferredHeight = 280;
+            grid.GetComponent<ResponsiveGridLayout>().Refresh();
             var nodes = new List<MapNodeView>();
             foreach (Entry entry in Entries) nodes.Add(Card(grid, screen, entry, card, muted, mutedForeground, border));
             FutureRow(content, muted, mutedForeground, border);
@@ -195,7 +196,10 @@ namespace KMA.Gameplay.UI
             float width = rect.rect.width;
             if (width <= 0f) width = Mathf.Max(1f, Screen.width - 144f);
             float cellWidth = Mathf.Max(1f, (width - grid.padding.left - grid.padding.right - grid.spacing.x * (columns - 1)) / columns);
-            grid.cellSize = new Vector2(cellWidth, Mathf.Clamp(cellWidth * 0.6f, 96f, 160f));
+            float cellHeight = Mathf.Clamp(cellWidth * 0.6f, 96f, 160f);
+            grid.cellSize = new Vector2(cellWidth, cellHeight);
+            LayoutElement element = GetComponent<LayoutElement>();
+            if (element != null) element.preferredHeight = cellHeight * 2f + grid.spacing.y;
         }
     }
 }
