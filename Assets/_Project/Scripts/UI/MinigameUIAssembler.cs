@@ -77,6 +77,14 @@ namespace KMA.Gameplay.UI
         static void AssembleScene(Scene scene, GameObject cameraPrefab)
         {
             var cameraObject = EnsureSceneCamera(scene, cameraPrefab);
+            if (!IsGameplayScene(scene))
+            {
+                RemoveGameplayPresentation(scene);
+                EnsureEventSystem(scene);
+                EditorSceneManager.MarkSceneDirty(scene);
+                return;
+            }
+
             var camera = cameraObject.GetComponent<Camera>();
             var minigame = FindInScene<MinigameBase>(scene);
             var theme = AssetDatabase.LoadAssetAtPath<UITheme>(ThemePath);
@@ -100,6 +108,19 @@ namespace KMA.Gameplay.UI
 
             EnsureEventSystem(scene);
             EditorSceneManager.MarkSceneDirty(scene);
+        }
+
+        static bool IsGameplayScene(Scene scene)
+            => scene.name.StartsWith("MG_", StringComparison.Ordinal) || scene.name == "Punishment";
+
+        static void RemoveGameplayPresentation(Scene scene)
+        {
+            foreach (var rootName in new[] { "S2_HUD_Minigame", "S2_PhaseOverlay", "S2_ResultPanel", "PausePanel" })
+            {
+                var root = FindInSceneByName(scene, rootName);
+                if (root != null)
+                    UnityEngine.Object.DestroyImmediate(root);
+            }
         }
 
         static void EnsurePausePanel(Scene scene, Transform canvasTransform)
