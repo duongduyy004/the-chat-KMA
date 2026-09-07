@@ -23,8 +23,11 @@ namespace KMA.Gameplay
         [SerializeField] TrajectoryPreview trajectoryPreview;
         [SerializeField] BallShadow ballShadow;
         [SerializeField] float netX;
-        [SerializeField] float apexVelocityThreshold = .1f;
+        // Vertical speed within which the ball counts as at its apex. Sized so the spike window
+        // lasts a few hundred milliseconds instead of a single physics step.
+        [SerializeField] float apexVelocityThreshold = 1.5f;
         [SerializeField] float netApexWindow = 1f;
+        [SerializeField] float opponentReturnForce = 7f;
         [SerializeField] float timingWindowSeconds = 4f;
         [SerializeField, Min(0f)] float minimumSwipeLengthPixels = 24f;
         [SerializeField] float playerLandingOffset = -1f;
@@ -39,6 +42,8 @@ namespace KMA.Gameplay
         int resolvedPossessionToken = -1;
         float opponentReturnDelay;
         int touchNumber;
+        bool hasLastFlightPosition;
+        Vector2 lastFlightPosition;
         SwipeInputDetector productionSwipeDetector;
 
         public VolleyballRules Rules { get; private set; }
@@ -111,6 +116,26 @@ namespace KMA.Gameplay
             ballShadow = shadow;
         }
 
+        public void ConfigureActorsForTest(Transform playerActor, Transform teammateActor, Transform opponentActor)
+        {
+            player = playerActor;
+            teammate = teammateActor;
+            opponent = opponentActor;
+        }
+
+        public void ConfigureReachForTest(Vector2 offset, Vector2 size)
+        {
+            if (reachZone == null) return;
+            reachZone.offset = offset;
+            reachZone.size = size;
+        }
+
+        public void ScheduleOpponentReturnForTest()
+        {
+            pendingOpponentReturn = true;
+            opponentReturnDelay = VolleyReturnPattern.AuthoredDefault().CueLeadSeconds;
+        }
+
         public void SimulateForTest(float dt)
         {
             float deltaTime = Mathf.Max(0f, dt);
@@ -118,15 +143,17 @@ namespace KMA.Gameplay
             if (PresentationPhase == MinigamePhase.Play) TickPlay(deltaTime);
         }
 
-        public void BeginGesturePreparation(Vector2 swipeDirection)
+        // The preview depicts the authored trajectory for the expected action, which is what the
+        // launch will actually use - a screen-space swipe direction would draw the wrong arc.
+        public void BeginGesturePreparation()
         {
             if (Rules == null || ball == null || PresentationPhase != MinigamePhase.Play ||
                 Rules.Phase != MinigamePhase.Play || !ball.Snapshot.IsAttached) return;
 
             gesturePreparation = true;
-            if (trajectoryPreview == null) return;
-            GetLaunchParameters(ExpectedAction, out float force, out float curvature);
-            trajectoryPreview.Refresh(swipeDirection, force, curvature);
+            if (trajectoryPreview == null || ExpectedAction == VolleyAction.Invalid) return;
+            GetLaunchParameters(ExpectedAction, out Vector2 direction, out float force, out float curvature);
+            trajectoryPreview.Refresh(direction, force, curvature);
             trajectoryPreview.SetVisible(true);
         }
 
@@ -158,6 +185,7 @@ namespace KMA.Gameplay
             SuccessfulLaunchCount++;
             SelectedAction = action;
             InFlightOwner = VolleyBallOwner.Player;
+            MarkFlightRestarted();
 
             // The opponent cannot put a new ball in play while the player owns this one, so a
             // scheduled return is cancelled the moment the possession starts.
@@ -169,10 +197,15 @@ namespace KMA.Gameplay
         }
 
         // Court trigger volumes can call this directly; BallRig collision callbacks use it too.
+        // An opponent-owned ball landing on the opponent half is the player's point - the mirror
+        // of a player fault, which the owner check alone used to award to the opponent.
         public void ResolveCourtContact(bool ownCourt)
         {
             if (PresentationPhase != MinigamePhase.Play || InFlightOwner == VolleyBallOwner.None) return;
-            bool playerWon = InFlightOwner == VolleyBallOwner.Player && !ownCourt && touchNumber == TouchesPerPossession;
+
+            bool playerWon = InFlightOwner == VolleyBallOwner.Opponent
+                ? !ownCourt
+                : !ownCourt && touchNumber == TouchesPerPossession;
             ResolvePossession(playerWon);
         }
 
@@ -184,7 +217,21 @@ namespace KMA.Gameplay
         {
             if (Rules == null) return;
             float deltaTime = Mathf.Max(0f, dt);
-            if (Rules.Phase == MinigamePhase.Play) Rules.Tick(deltaTime);
+
+            // The controller owns the deadline. Rules would otherwise flip the shared lifecycle
+            // to Resolve itself, and ResolveTerminalState would then skip its own Play guard and
+            // never call Finish - leaving the scene with no Result panel on a timeout.
+            if (Rules.Phase == MinigamePhase.Play)
+            {
+                if (Rules.Elapsed + deltaTime >= timeLimit)
+                {
+                    ResolveDeadline();
+                    return;
+                }
+
+                Rules.Tick(deltaTime);
+            }
+
             TickOpponentReturn(deltaTime);
             ResolveGroundedFlight();
             RefreshRuntimeState();
@@ -261,7 +308,7 @@ namespace KMA.Gameplay
         {
             if (PresentationPhase != MinigamePhase.Play) return;
             if (delta.sqrMagnitude < minimumSwipeLengthPixels * minimumSwipeLengthPixels) return;
-            BeginGesturePreparation(delta.normalized);
+            BeginGesturePreparation();
         }
 
         void OnBallCollided(Collision2D collision)
@@ -271,22 +318,47 @@ namespace KMA.Gameplay
         }
 
         // The ball has no collider, so flight resolves against the profile ground plane that
-        // BallRig and Ballistics already own. Court trigger volumes may still call
-        // ResolveCourtContact directly; the possession token keeps either path single-shot.
+        // BallRig and Ballistics already own, plus the authored net and court bounds. Court
+        // trigger volumes may still call ResolveCourtContact directly; the possession token keeps
+        // either path single-shot. A launch is given one step before it can resolve, because every
+        // anchor sits on the ground plane.
         void ResolveGroundedFlight()
         {
             if (ball == null || !ball.Snapshot.IsInFlight || InFlightOwner == VolleyBallOwner.None) return;
-            float groundY = ball.Profile != null ? ball.Profile.GroundY : 0f;
-            if (ball.Body.position.y > groundY || ball.Body.velocity.y > 0f) return;
-            ResolveCourtContact(ball.Body.position.x <= netX);
+
+            Vector2 position = ball.Body.position;
+            if (!hasLastFlightPosition)
+            {
+                // Every anchor sits on the ground plane, so a launch is given one observed step
+                // to leave it before a landing can resolve.
+                lastFlightPosition = position;
+                hasLastFlightPosition = true;
+                return;
+            }
+
+            lastFlightPosition = position;
+            if (position.y > GroundPlane || ball.Body.velocity.y > 0f) return;
+            ResolveCourtContact(position.x <= netX);
         }
+
+        void MarkFlightRestarted() => hasLastFlightPosition = false;
+
+        float GroundPlane => ball != null && ball.Profile != null ? ball.Profile.GroundY : 0f;
 
         void ResolvePossession(bool playerWon)
         {
             if (resolvedPossessionToken == possessionToken) return;
             resolvedPossessionToken = possessionToken;
-            CompletedRallyCount++;
-            if (playerWon) Rules.AwardRallyPoint(); else Rules.AwardOpponentPoint();
+            if (playerWon)
+            {
+                // Counterplay unlocks after three *completed* rallies, so only a won rally counts.
+                CompletedRallyCount++;
+                Rules.AwardRallyPoint();
+            }
+            else
+            {
+                Rules.AwardOpponentPoint();
+            }
 
             EndGesturePreparation();
             touchNumber = 0;
@@ -316,8 +388,12 @@ namespace KMA.Gameplay
             if (opponentReturnDelay > 0f) return;
             pendingOpponentReturn = false;
             ClearCounterplayCues();
-            ball.Launch(Vector2.left + Vector2.up * .25f, 5f, 0f);
+            // A 45-degree serve at force 5 has a range of only v2/g = 2.55 units, which cannot
+            // cross the 4.5 units from the opponent anchor to the player. The authored return
+            // needs enough energy to actually land in the player half.
+            ball.Launch(Vector2.left + Vector2.up, opponentReturnForce, 0f);
             InFlightOwner = VolleyBallOwner.Opponent;
+            MarkFlightRestarted();
         }
 
         BallContext CalculateContext()
@@ -331,12 +407,19 @@ namespace KMA.Gameplay
         bool CalculateReach() => ball != null && reachZone != null && reachZone.bounds.Contains(ball.Body.position);
         float CalculateTimingAccuracy(SwipeResult swipe) => Mathf.Clamp01(1f - (float)swipe.Duration / Mathf.Max(Mathf.Epsilon, timingWindowSeconds));
 
+        // The assist only runs during a live flight. An attached ball is pinned to its anchor by
+        // BallRig, so its predicted landing is the anchor's own position - moving the anchor there
+        // plus an offset would walk both the actor and the ball off the court a unit per frame.
         void RefreshRuntimeState()
         {
             if (ball == null) return;
             PredictedLandingPoint = ball.PredictLandingPoint();
-            MoveActorToPrediction(player, playerLandingOffset);
-            MoveActorToPrediction(teammate, teammateLandingOffset);
+            if (InFlightOwner != VolleyBallOwner.None && !ball.Snapshot.IsAttached)
+            {
+                MoveActorToPrediction(player, playerLandingOffset);
+                MoveActorToPrediction(teammate, teammateLandingOffset);
+            }
+
             ballShadow?.Refresh();
         }
 
@@ -356,6 +439,18 @@ namespace KMA.Gameplay
         {
             if (terminalResolved || Rules == null || PresentationPhase != MinigamePhase.Play) return;
             if (Rules.Phase != MinigamePhase.Resolve && !Rules.BuildResult().Pass) return;
+            ResolveTerminal();
+        }
+
+        // The deadline is terminal even though no point was scored on this frame.
+        void ResolveDeadline()
+        {
+            if (terminalResolved || Rules == null || PresentationPhase != MinigamePhase.Play) return;
+            ResolveTerminal();
+        }
+
+        void ResolveTerminal()
+        {
             terminalResolved = true;
             pendingOpponentReturn = false;
             LastResult = Rules.BuildResult();
@@ -383,10 +478,12 @@ namespace KMA.Gameplay
         }
 
         static VolleyAction ActionForTouch(int touch) => touch switch { 1 => VolleyAction.Dig, 2 => VolleyAction.Set, 3 => VolleyAction.Spike, _ => VolleyAction.Invalid };
-        static void GetLaunchParameters(VolleyAction action, out float force, out float curvature)
+        static void GetLaunchParameters(VolleyAction action, out Vector2 direction, out float force, out float curvature)
         {
-            force = action == VolleyAction.Spike ? 8f : 5f;
-            curvature = action == VolleyAction.Spike ? .15f : 0f;
+            VolleyPhase phase = VolleyReturnPattern.PhaseFor(action);
+            direction = VolleyReturnPattern.AuthoredDirection(phase);
+            force = VolleyReturnPattern.AuthoredForce(phase);
+            curvature = VolleyReturnPattern.AuthoredCurvature(phase);
         }
         static Vector2 ToVector2(SwipeDirection direction) => direction switch { SwipeDirection.Left => Vector2.left, SwipeDirection.Right => Vector2.right, SwipeDirection.Up => Vector2.up, SwipeDirection.Down => Vector2.down, _ => Vector2.zero };
 

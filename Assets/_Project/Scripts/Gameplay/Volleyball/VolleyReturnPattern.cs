@@ -74,14 +74,31 @@ namespace KMA.Gameplay
             };
         }
 
-        Vector2 LaunchDirection => SelectedPhase switch
+        // The single authoring source for the three trajectories, so a preview cannot drift from
+        // the launch it depicts.
+        public static Vector2 AuthoredDirection(VolleyPhase phase) => phase switch
         {
             VolleyPhase.Dig => new Vector2(0f, 1f),
             VolleyPhase.Set => new Vector2(1f, 1.5f),
             _ => new Vector2(1f, .75f)
         };
 
-        float LaunchForce => SelectedPhase == VolleyPhase.Spike ? 8f : 5f;
-        float LaunchCurvature => SelectedPhase == VolleyPhase.Spike ? .15f : 0f;
+        public static float AuthoredForce(VolleyPhase phase) => phase == VolleyPhase.Spike ? 8f : 5f;
+
+        public static float AuthoredCurvature(VolleyPhase phase) => phase == VolleyPhase.Spike ? .15f : 0f;
+
+        public static VolleyPhase PhaseFor(VolleyAction action) => action switch
+        {
+            VolleyAction.Dig => VolleyPhase.Dig,
+            VolleyAction.Set => VolleyPhase.Set,
+            VolleyAction.Spike => VolleyPhase.Spike,
+            _ => throw new ArgumentOutOfRangeException(nameof(action), action, "Only authored volley actions have trajectories.")
+        };
+
+        Vector2 LaunchDirection => AuthoredDirection(SelectedPhase);
+
+        float LaunchForce => AuthoredForce(SelectedPhase);
+
+        float LaunchCurvature => AuthoredCurvature(SelectedPhase);
     }
 }

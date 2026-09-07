@@ -175,6 +175,89 @@ namespace KMA.Tests.Gameplay.Ball
                 "A scheduled opponent return must not hijack a possession the player already owns.");
         }
 
+        // A spike is only possible while the context reads ApexNearNet. At a 0.02 s timestep
+        // gravity changes vertical velocity by about 0.196 per step, so a threshold near that
+        // leaves a window roughly one frame wide - unhittable by a human on a device.
+        [UnityTest]
+        public IEnumerator ApexNearNetWindow_StaysOpenLongEnoughForAHumanToSpike()
+        {
+            var fixture = CreateFixture();
+            AdvanceControllerToPlay(fixture.Controller);
+            SetBallForContext(fixture, BallContext.Low);
+            fixture.Controller.SubmitSwipe(Vector2.down, inReachZone: true, timingAccuracy: 1f);
+
+            float deadline = Time.unscaledTime + 10f;
+            while (fixture.Controller.CurrentContext != BallContext.ApexNearNet && Time.unscaledTime < deadline)
+                yield return new WaitForFixedUpdate();
+
+            Assert.That(fixture.Controller.CurrentContext, Is.EqualTo(BallContext.ApexNearNet),
+                "A ball rising near the net must pass through the spike context.");
+
+            var openSeconds = 0f;
+            while (fixture.Controller.CurrentContext == BallContext.ApexNearNet && openSeconds < 2f)
+            {
+                openSeconds += Time.fixedDeltaTime;
+                yield return new WaitForFixedUpdate();
+            }
+
+            Assert.That(openSeconds, Is.GreaterThanOrEqualTo(.2f),
+                "The spike window must last at least 200 ms to be reachable by a real gesture.");
+        }
+
+        // The authored serve is what starts every rally after the first. A 45-degree launch at
+        // force 5 has a range of only v squared over g = 2.55 units, so it could never cross the
+        // 4.5 units from the opponent anchor to the player - the opponent farmed points off its
+        // own serve instead. This flies the real serve with no position poke.
+        [UnityTest]
+        public IEnumerator OpponentServe_CrossesTheNetAndArrivesInsideThePlayerReach()
+        {
+            var fixture = CreateFixture(targetScore: 5);
+            AdvanceControllerToPlay(fixture.Controller);
+            Transform opponentAnchor = CreateAnchor(new Vector2(2.5f, 0f));
+            Transform playerAnchor = CreateAnchor(new Vector2(-2f, 0f));
+            fixture.Controller.ConfigureActorsForTest(playerAnchor, null, opponentAnchor);
+            fixture.Controller.ConfigureReachForTest(new Vector2(-2.5f, 0f), new Vector2(5f, 6f));
+            fixture.Ball.AttachTo(opponentAnchor);
+            fixture.Controller.ScheduleOpponentReturnForTest();
+
+            fixture.Controller.SimulateForTest(VolleyReturnPattern.AuthoredDefault().CueLeadSeconds);
+            Assert.That(fixture.Controller.InFlightOwner, Is.EqualTo(VolleyBallOwner.Opponent));
+
+            var crossedNet = false;
+            var reachable = false;
+            float deadline = Time.unscaledTime + 10f;
+            while (fixture.Ball.Snapshot.IsInFlight && Time.unscaledTime < deadline)
+            {
+                if (fixture.Ball.Body.position.x < 0f) crossedNet = true;
+                if (crossedNet && fixture.Controller.InReachZone) reachable = true;
+                yield return new WaitForFixedUpdate();
+            }
+
+            Assert.That(crossedNet, Is.True, "The authored serve must reach the player half.");
+            Assert.That(reachable, Is.True, "The serve must pass through the player's reach zone.");
+        }
+
+        // The attached ball is pinned to its anchor, so its predicted landing is the anchor's own
+        // position. Feeding that back into the anchor walked the player and the ball out of the
+        // reach zone about a unit per frame, which made even the first rally unplayable.
+        [UnityTest]
+        public IEnumerator AttachedBall_DoesNotDriveThePlayerOutOfTheReachZone()
+        {
+            var fixture = CreateFixture();
+            Transform playerAnchor = CreateAnchor(new Vector2(-2f, 0f));
+            fixture.Controller.ConfigureActorsForTest(playerAnchor, null, null);
+            fixture.Controller.ConfigureReachForTest(new Vector2(-2.5f, 0f), new Vector2(5f, 6f));
+            AdvanceControllerToPlay(fixture.Controller);
+            fixture.Ball.AttachTo(playerAnchor);
+
+            for (var frame = 0; frame < 30; frame++)
+                yield return new WaitForFixedUpdate();
+
+            Assert.That(playerAnchor.position.x, Is.EqualTo(-2f).Within(.001f),
+                "The landing assist must not move the player while the ball is attached to them.");
+            Assert.That(fixture.Controller.InReachZone, Is.True);
+        }
+
         [Test]
         public void GameplayInputRouter_IgnoresAStationaryPressThatReportsAZeroLengthSwipe()
         {
@@ -399,10 +482,12 @@ namespace KMA.Tests.Gameplay.Ball
         }
 
         [Test]
-        public void DeadlineCrossing_TicksRulesBeforeCachingQualifyingResult()
+        public void DeadlineCrossing_FinishesOnceThroughTheControllerWithANonQualifyingResult()
         {
             var fixture = CreateFixture(targetScore: 3);
             AdvanceControllerToPlay(fixture.Controller);
+            var completions = 0;
+            fixture.Controller.Completed += _ => completions++;
             fixture.Controller.SimulateForTest(59.99f - fixture.Rules.Elapsed);
             SubmitAuthoredRally(fixture);
             SubmitAuthoredRally(fixture);
@@ -412,8 +497,35 @@ namespace KMA.Tests.Gameplay.Ball
 
             fixture.Controller.SimulateForTest(.02f);
 
-            Assert.That(fixture.Rules.Elapsed, Is.EqualTo(60.01f).Within(.0001f));
-            Assert.That(fixture.Rules.BuildResult().Pass, Is.False);
+            Assert.That(completions, Is.EqualTo(1));
+            Assert.That(fixture.Controller.PresentationPhase, Is.EqualTo(MinigamePhase.Resolve));
+            Assert.That(fixture.Controller.BuildResult().Pass, Is.False);
+
+            fixture.Controller.SimulateForTest(.02f);
+            Assert.That(completions, Is.EqualTo(1), "The deadline may only finish the attempt once.");
+        }
+
+        // In the build Rules shares the controller's lifecycle, so Rules.Tick would flip the phase
+        // to Resolve itself and ResolveTerminalState would skip its own Play guard - leaving the
+        // scene with no Result panel on a timeout. ConfigureForTest(null, ...) reproduces that
+        // shared wiring, unlike a test-supplied Rules with its own lifecycle.
+        [Test]
+        public void ProductionWiring_TimeoutStillFinishesSoTheResultPanelCanShow()
+        {
+            var fixture = CreateFixture();
+            fixture.Controller.ConfigureForTest(null, fixture.Ball);
+            AdvanceControllerToPlay(fixture.Controller);
+            Assert.That(fixture.Controller.Rules.Phase, Is.EqualTo(MinigamePhase.Play),
+                "Rules must share the controller lifecycle for this to reproduce the build.");
+
+            var completions = 0;
+            fixture.Controller.Completed += _ => completions++;
+            fixture.Controller.SimulateForTest(60f);
+
+            Assert.That(completions, Is.EqualTo(1),
+                "The controller, not Rules, owns the terminal call on a timeout.");
+            Assert.That(fixture.Controller.PresentationPhase, Is.EqualTo(MinigamePhase.Resolve));
+            Assert.That(fixture.Controller.BuildResult(), Is.Not.Null);
             Assert.That(fixture.Controller.BuildResult().Pass, Is.False);
         }
 
@@ -448,7 +560,7 @@ namespace KMA.Tests.Gameplay.Ball
 
             for (var frame = 0; frame < 30; frame++)
                 fixture.Controller.SimulateForTest(Time.fixedDeltaTime);
-            fixture.Controller.BeginGesturePreparation(Vector2.down);
+            fixture.Controller.BeginGesturePreparation();
 
             Assert.That(presentation.Preview.Source, Is.SameAs(fixture.Ball));
             Assert.That(presentation.Preview.Line, Is.SameAs(presentation.Line));
@@ -467,7 +579,7 @@ namespace KMA.Tests.Gameplay.Ball
             AdvanceControllerToPlay(fixture.Controller);
             fixture.Ball.AttachTo(CreateAnchor(new Vector2(0f, 1f)));
 
-            fixture.Controller.BeginGesturePreparation(Vector2.down);
+            fixture.Controller.BeginGesturePreparation();
 
             Assert.That(fixture.Controller.IsGesturePreparation, Is.True);
             Assert.That(presentation.Line.enabled, Is.True);
@@ -488,7 +600,7 @@ namespace KMA.Tests.Gameplay.Ball
             AdvanceControllerToPlay(fixture.Controller);
             fixture.Ball.Launch(new Vector2(1f, 1f), 5f, 0f);
 
-            fixture.Controller.BeginGesturePreparation(Vector2.down);
+            fixture.Controller.BeginGesturePreparation();
 
             Assert.That(fixture.Controller.IsGesturePreparation, Is.False);
             Assert.That(presentation.Line.enabled, Is.False);
@@ -505,7 +617,7 @@ namespace KMA.Tests.Gameplay.Ball
             Vector2 position = fixture.Ball.Body.position;
             Vector2 velocity = fixture.Ball.Body.velocity;
 
-            fixture.Controller.BeginGesturePreparation(Vector2.down);
+            fixture.Controller.BeginGesturePreparation();
             presentation.Preview.Refresh(Vector2.down, 6f, 0f);
             presentation.Shadow.Refresh();
             fixture.Controller.SimulateForTest(Time.fixedDeltaTime);

@@ -193,8 +193,9 @@ MonoBehaviour:
   trajectoryPreview: {fileID: 1530627476}
   ballShadow: {fileID: 1530627475}
   netX: 0
-  apexVelocityThreshold: 0.1
+  apexVelocityThreshold: 1.5
   netApexWindow: 1
+  opponentReturnForce: 7
   timingWindowSeconds: 4
   minimumSwipeLengthPixels: 24
   playerLandingOffset: -1
@@ -233,7 +234,7 @@ BoxCollider2D:
   m_UsedByEffector: 0
   m_CompositeOperation: 0
   m_CompositeOrder: 0
-  m_Offset: {x: 0, y: 0}
+  m_Offset: {x: -2.5, y: 0}
   m_SpriteTilingProperty:
     border: {x: 0, y: 0, z: 0, w: 0}
     pivot: {x: 0, y: 0}
@@ -243,7 +244,7 @@ BoxCollider2D:
     drawMode: 0
     adaptiveTiling: 0
   m_AutoTiling: 0
-  m_Size: {x: 9, y: 6}
+  m_Size: {x: 5, y: 6}
   m_EdgeRadius: 0
 --- !u!4 &44919635
 Transform:

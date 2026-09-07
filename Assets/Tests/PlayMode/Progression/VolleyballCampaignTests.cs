@@ -160,9 +160,10 @@ namespace KMA.Tests.Gameplay.Progression
         {
             BallRig ball = controller.Ball;
             Vector2 reachCentre = controller.ReachZone.bounds.center;
+            // A spike needs the ball at its apex near the net and still inside reach.
             ball.Body.position = context == BallContext.ApexNearNet
-                ? new Vector2(reachCentre.x, reachCentre.y + 1f)
-                : new Vector2(reachCentre.x - 1.2f, reachCentre.y);
+                ? new Vector2(reachCentre.x + 2f, reachCentre.y + 1.5f)
+                : new Vector2(reachCentre.x, reachCentre.y);
             ball.Body.velocity = context switch
             {
                 BallContext.Low => new Vector2(0f, -2f),
