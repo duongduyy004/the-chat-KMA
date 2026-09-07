@@ -159,11 +159,22 @@ namespace KMA.Tests.Gameplay.Progression
                 FindObjectsSortMode.None), Is.Empty);
             Assert.That(Object.FindObjectsByType<ResultPanel>(FindObjectsInactive.Include,
                 FindObjectsSortMode.None), Is.Empty);
+            Assert.That(Object.FindObjectsByType<PausePanel>(FindObjectsInactive.Include,
+                FindObjectsSortMode.None), Is.Empty);
 
             var screen = Object.FindFirstObjectByType<MapScreen>(FindObjectsInactive.Include);
             Assert.That(screen.transform.Find("S5MapPresentation"), Is.Not.Null);
-            Assert.That(screen.Nodes.Count(node => node.IsInteractable), Is.EqualTo(3));
-            Assert.That(screen.Nodes.Count(node => node.DetailText == "ĐANG PHÁT TRIỂN"), Is.EqualTo(4));
+            Assert.That(screen.Nodes.Where(node => node.IsInteractable).Select(node => node.SubjectId),
+                Is.EquivalentTo(new[] { SubjectId.Sprint, SubjectId.Endurance, SubjectId.Volleyball }));
+            Assert.That(screen.Nodes.Where(node => !node.IsInteractable &&
+                    node.DetailText == "ĐANG PHÁT TRIỂN").Select(node => node.SubjectId),
+                Is.EquivalentTo(new[]
+                {
+                    SubjectId.Basketball,
+                    SubjectId.PingPong,
+                    SubjectId.Badminton,
+                    SubjectId.Football
+                }));
             Assert.That(GameObject.Find("SelectionGrid").GetComponent<GridLayoutGroup>(), Is.Not.Null);
         }
 
