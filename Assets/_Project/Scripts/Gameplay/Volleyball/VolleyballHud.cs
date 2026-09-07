@@ -20,6 +20,11 @@ namespace KMA.Gameplay
         public string TimingText { get; private set; } = string.Empty;
         public string CounterCueText { get; private set; } = string.Empty;
 
+        public VolleyballController Controller => controller;
+        public bool LabelsBound =>
+            touchLabel != null && scoreLabel != null && comboLabel != null &&
+            contextLabel != null && timingLabel != null && counterCueLabel != null;
+
         public void Bind(VolleyballController value)
         {
             controller = value;
