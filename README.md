@@ -7,10 +7,13 @@ Unity gameplay prototype for KMA: seven sports subjects, normalized scoring, rec
 - Unity `6000.3.23f1`
 - Input System `1.20.0`
 - NUnit/Unity Test Framework `1.6.0`
-- Android targets landscape, ARM64, IL2CPP, API 25/35, and `com.kma.thechat`. A separate x86_64 APK supports Genymotion; current results are in [demo QA](docs/qa/android-report-demo.md).
-- Current playable subject routes are Sprint and Endurance; Volleyball is not yet a playable route
+- Android targets landscape, ARM64, IL2CPP, API 25/35, and `com.kma.thechat`. A separate x86_64 APK supports Genymotion; those results are in [demo QA](docs/qa/android-report-demo.md).
+- Current playable subject routes are Sprint, Endurance and Volleyball.
+- S1–S9 is a **checkpoint, not a release**. S10–S16 are outside the current plan, and the physical-device gate is still open — see [S1–S9 Stabilization Gate](docs/qa/s1-s9-stabilization-gate.md).
 
-The seven subject rule engines are present: Sprint, Endurance, Volleyball, Basketball, PingPong, Badminton, and Football. The current scene router exposes Sprint and Endurance as playable subject scenes; the other five are implemented as deterministic gameplay models and ball-rule contracts.
+The seven subject rule engines are present: Sprint, Endurance, Volleyball, Basketball, PingPong, Badminton, and Football. The scene router exposes Sprint, Endurance and Volleyball as playable subject scenes; the other four are implemented as deterministic gameplay models and ball-rule contracts.
+
+Volleyball plays as a three-touch `Dig → Set → Spike` possession driven by swipes on the shared gameplay surface, with the rally point awarded when the flight resolves. Its known gaps — the authored net and court colliders are not yet enforced as rules, and the ground plane sits above the drawn floor — are recorded in the gate document above.
 
 ## Core gameplay
 
@@ -41,6 +44,7 @@ The shared lifecycle is `Tutorial → Countdown → Play → Resolve`, with exac
 | --- | --- |
 | `MG_Sprint` | Sprint subject with rival pace, stamina, wind cue, and counterplay |
 | `MG_Endurance` | Phased rhythm subject with tap, hold, and swipe modes |
+| `MG_Volleyball` | Three-touch Dig-Set-Spike possession against an authored opponent return |
 | `MG_Boss` | Three-phase final boss sequence |
 | `Punishment` | Recovery challenge for a failed first attempt |
 | `Map` | Return route after subject/boss resolution |
@@ -52,10 +56,11 @@ The shared lifecycle is `Tutorial → Countdown → Play → Resolve`, with exac
 | --- | --- |
 | Sprint | Left/Right arrows |
 | Endurance | `T` tap, `H` hold, Up/Down arrows swipe |
+| Volleyball | No keyboard fallback - swipe on the gameplay surface with touch or a mouse drag |
 | Boss | `Space` tap-mash, `H` rhythm hold, Left/Right arrows alternate tap |
 | Punishment | `Space` tap-mash, `H` rhythm hold, Left/Right arrows alternate tap |
 
-Touch input is supported by Endurance, Boss, and Punishment input bridges where the scene requires it.
+Touch input is supported by Endurance, Boss, and Punishment input bridges where the scene requires it. Volleyball has no bridge: its controller owns the swipe detector on the scene's shared `GameplayInputRouter`, fed by the one full-screen `ScreenTapArea`, so it is gesture-only and has no keyboard path.
 
 ## Open the project
 
@@ -99,11 +104,13 @@ rtk proxy "$KMA_UNITY_EDITOR" -batchmode -projectPath . \
   -testResults /tmp/kma-playmode.xml -logFile /tmp/kma-playmode.log
 ```
 
-Historical Task 1 verification was `209/209` EditMode and `125/128` PlayMode. Current report-demo verification supersedes those counts in [Android Report Demo QA](docs/qa/android-report-demo.md).
+Current verification is `253/253` EditMode and `193/193` PlayMode, each reproduced twice from a clean tracked status. Evidence, commands and the open device gate are in [S1–S9 Stabilization Gate](docs/qa/s1-s9-stabilization-gate.md).
 
-### Historical S2 presentation evidence
+Test runs regenerate `Assets/_Project/Fonts/Nunito-Bold.asset` — the dynamic TextMeshPro atlas caching newly rendered glyphs. Revert it rather than committing it.
 
-A prior S2 snapshot verified `SprintSceneShowsTutorialCountdownHudAndInputResponse` against the real `MG_Sprint` scene, covering tutorial, countdown, Play HUD refresh, and expected-side input response. That snapshot is historical evidence only; the Task 1 counts above are the current verification source of truth.
+### Historical verification snapshots
+
+Superseded by the counts above, kept for provenance: Task 1 verified `209/209` EditMode and `125/128` PlayMode; the report demo's counts are in [Android Report Demo QA](docs/qa/android-report-demo.md); an earlier S2 snapshot verified `SprintSceneShowsTutorialCountdownHudAndInputResponse` against the real `MG_Sprint` scene.
 
 ## Design documents
 

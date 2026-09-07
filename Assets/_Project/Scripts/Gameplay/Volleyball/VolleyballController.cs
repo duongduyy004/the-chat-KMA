@@ -11,6 +11,9 @@ namespace KMA.Gameplay
         const float DefaultTutorialSeconds = 2f;
         const float DefaultCountdownSeconds = 3f;
         const int TouchesPerPossession = 3;
+        static readonly Vector2 PlainReturnDirection = Vector2.left + Vector2.up;
+        static readonly Vector2 CounterplayReturnDirection = Vector2.left + Vector2.up * 1.6f;
+        const float CounterplayReturnCurvature = .2f;
 
         [SerializeField] int targetScore = 5;
         [SerializeField] float timeLimit = 60f;
@@ -42,8 +45,7 @@ namespace KMA.Gameplay
         int resolvedPossessionToken = -1;
         float opponentReturnDelay;
         int touchNumber;
-        bool hasLastFlightPosition;
-        Vector2 lastFlightPosition;
+        bool hasLastFlightObservation;
         SwipeInputDetector productionSwipeDetector;
 
         public VolleyballRules Rules { get; private set; }
@@ -69,6 +71,7 @@ namespace KMA.Gameplay
         public TrajectoryPreview Preview => trajectoryPreview;
         public BallShadow Shadow => ballShadow;
         public bool HasProductionSwipeDetector => productionSwipeDetector != null;
+        public bool LastReturnWasCounterplay { get; private set; }
 
         protected override void Awake()
         {
@@ -130,11 +133,7 @@ namespace KMA.Gameplay
             reachZone.size = size;
         }
 
-        public void ScheduleOpponentReturnForTest()
-        {
-            pendingOpponentReturn = true;
-            opponentReturnDelay = VolleyReturnPattern.AuthoredDefault().CueLeadSeconds;
-        }
+        public void ScheduleOpponentReturnForTest() => ScheduleOpponentReturn();
 
         public void SimulateForTest(float dt)
         {
@@ -326,22 +325,20 @@ namespace KMA.Gameplay
         {
             if (ball == null || !ball.Snapshot.IsInFlight || InFlightOwner == VolleyBallOwner.None) return;
 
-            Vector2 position = ball.Body.position;
-            if (!hasLastFlightPosition)
+            if (!hasLastFlightObservation)
             {
                 // Every anchor sits on the ground plane, so a launch is given one observed step
                 // to leave it before a landing can resolve.
-                lastFlightPosition = position;
-                hasLastFlightPosition = true;
+                hasLastFlightObservation = true;
                 return;
             }
 
-            lastFlightPosition = position;
+            Vector2 position = ball.Body.position;
             if (position.y > GroundPlane || ball.Body.velocity.y > 0f) return;
             ResolveCourtContact(position.x <= netX);
         }
 
-        void MarkFlightRestarted() => hasLastFlightPosition = false;
+        void MarkFlightRestarted() => hasLastFlightObservation = false;
 
         float GroundPlane => ball != null && ball.Profile != null ? ball.Profile.GroundY : 0f;
 
@@ -374,6 +371,11 @@ namespace KMA.Gameplay
             if (ball == null) return;
             Transform anchor = opponent != null ? opponent : player != null ? player : transform;
             ball.AttachTo(anchor);
+            ScheduleOpponentReturn();
+        }
+
+        void ScheduleOpponentReturn()
+        {
             pendingOpponentReturn = !terminalResolved;
             opponentReturnDelay = VolleyReturnPattern.AuthoredDefault().CueLeadSeconds;
             bool counterplayUnlocked = CompletedRallyCount >= TouchesPerPossession;
@@ -386,13 +388,22 @@ namespace KMA.Gameplay
             if (!pendingOpponentReturn || terminalResolved || Rules == null || Rules.Phase != MinigamePhase.Play) return;
             opponentReturnDelay -= deltaTime;
             if (opponentReturnDelay > 0f) return;
+
+            // The cue that has been showing for CueLeadSeconds must actually mean something, so a
+            // flagged return launches the authored spin serve instead of the plain one. Curvature
+            // is fixed at launch; nothing mutates a trajectory once it is in flight.
+            bool counterplay = OpponentCounterCueVisible;
             pendingOpponentReturn = false;
             ClearCounterplayCues();
+
             // A 45-degree serve at force 5 has a range of only v2/g = 2.55 units, which cannot
             // cross the 4.5 units from the opponent anchor to the player. The authored return
             // needs enough energy to actually land in the player half.
-            ball.Launch(Vector2.left + Vector2.up, opponentReturnForce, 0f);
+            Vector2 direction = counterplay ? CounterplayReturnDirection : PlainReturnDirection;
+            float curvature = counterplay ? CounterplayReturnCurvature : 0f;
+            ball.Launch(direction, opponentReturnForce, curvature);
             InFlightOwner = VolleyBallOwner.Opponent;
+            LastReturnWasCounterplay = counterplay;
             MarkFlightRestarted();
         }
 
@@ -400,7 +411,10 @@ namespace KMA.Gameplay
         {
             if (ball == null) return BallContext.Low;
             BallFlightSnapshot snapshot = ball.Snapshot;
-            if (ball.IsNearApex(apexVelocityThreshold) && Mathf.Abs(snapshot.Position.x - netX) <= netApexWindow) return BallContext.ApexNearNet;
+            // A resting attached ball also has zero vertical speed, so the apex context is only
+            // offered to a ball that is actually flying.
+            if (!snapshot.IsAttached && ball.IsNearApex(apexVelocityThreshold) &&
+                Mathf.Abs(snapshot.Position.x - netX) <= netApexWindow) return BallContext.ApexNearNet;
             return ball.Body.velocity.y > 0f ? BallContext.Rising : BallContext.Low;
         }
 
@@ -423,10 +437,15 @@ namespace KMA.Gameplay
             ballShadow?.Refresh();
         }
 
+        // The player's own spike lands deep in the opponent half, so the assist target is clamped
+        // to the player side of the net - otherwise both actors visibly teleport across it once
+        // per rally while chasing a landing they are not allowed to reach.
         void MoveActorToPrediction(Transform actor, float horizontalOffset)
         {
-            if (actor == null) return;
-            actor.position = new Vector3(PredictedLandingPoint.x + horizontalOffset, actor.position.y, actor.position.z);
+            if (actor == null || reachZone == null) return;
+            Bounds reach = reachZone.bounds;
+            float target = Mathf.Clamp(PredictedLandingPoint.x + horizontalOffset, reach.min.x, reach.max.x);
+            actor.position = new Vector3(target, actor.position.y, actor.position.z);
         }
 
         void ClearCounterplayCues()
@@ -490,7 +509,7 @@ namespace KMA.Gameplay
         MinigameHudState CreateHudState()
         {
             if (Rules == null) return MinigameHudState.Empty;
-            string status = OpponentFakeCueVisible ? "COUNTER THE FAKE" : !InReachZone ? "MOVE INTO REACH" : $"TOUCH {Mathf.Clamp(touchNumber + 1, 1, TouchesPerPossession)}/{TouchesPerPossession}";
+            string status = OpponentFakeCueVisible ? "COUNTER THE FAKE" : !InReachZone ? "OUT OF REACH" : $"TOUCH {Mathf.Clamp(touchNumber + 1, 1, TouchesPerPossession)}/{TouchesPerPossession}";
             return new MinigameHudState(PresentationPhase.ToString(), Mathf.Max(0f, timeLimit - Rules.Elapsed), Mathf.Clamp01(PlayerScore / (float)Mathf.Max(1, targetScore)), Rules.TotalTouches == 0 ? 0f : Rules.AccurateTouches / (float)Rules.TotalTouches, Rules.BuildResult().Score, status);
         }
     }

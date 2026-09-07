@@ -258,6 +258,49 @@ namespace KMA.Tests.Gameplay.Ball
             Assert.That(fixture.Controller.InReachZone, Is.True);
         }
 
+        // The counterplay cue showed for CueLeadSeconds and then launched a byte-identical serve.
+        // A flagged return must actually differ, and must not be altered once it is in flight.
+        [Test]
+        public void CounterplayReturn_LaunchesADifferentTrajectoryThanThePlainReturn()
+        {
+            var fixture = CreateFixture(targetScore: 9);
+            Transform opponentAnchor = CreateAnchor(new Vector2(2.5f, 0f));
+            fixture.Controller.ConfigureActorsForTest(CreateAnchor(new Vector2(-2f, 0f)), null, opponentAnchor);
+            AdvanceControllerToPlay(fixture.Controller);
+            float cueLead = VolleyReturnPattern.AuthoredDefault().CueLeadSeconds;
+
+            fixture.Ball.AttachTo(opponentAnchor);
+            fixture.Controller.ScheduleOpponentReturnForTest();
+            Assert.That(fixture.Controller.OpponentCounterCueVisible, Is.False,
+                "Counterplay stays locked until three rallies are completed.");
+            fixture.Controller.SimulateForTest(cueLead);
+            Vector2 plainVelocity = fixture.Ball.Snapshot.Velocity;
+            float plainCurvature = fixture.Ball.Snapshot.Curvature;
+            Assert.That(fixture.Controller.LastReturnWasCounterplay, Is.False);
+
+            for (var rally = 0; rally < 3; rally++)
+                SubmitAuthoredRally(fixture);
+
+            fixture.Ball.AttachTo(opponentAnchor);
+            fixture.Controller.ScheduleOpponentReturnForTest();
+            Assert.That(fixture.Controller.OpponentCounterCueVisible, Is.True,
+                "The cue must be up before the counterplay serve launches.");
+
+            fixture.Controller.SimulateForTest(cueLead);
+
+            Assert.That(fixture.Controller.LastReturnWasCounterplay, Is.True);
+            Assert.That(fixture.Controller.OpponentCounterCueVisible, Is.False, "The cue clears on launch.");
+            Vector2 counterVelocity = fixture.Ball.Snapshot.Velocity;
+            float counterCurvature = fixture.Ball.Snapshot.Curvature;
+            Assert.That(Vector2.Distance(counterVelocity, plainVelocity), Is.GreaterThan(.1f),
+                "A flagged return must not be identical to a plain one.");
+            Assert.That(counterCurvature, Is.Not.EqualTo(plainCurvature));
+
+            fixture.Controller.SimulateForTest(Time.fixedDeltaTime);
+            Assert.That(fixture.Ball.Snapshot.Curvature, Is.EqualTo(counterCurvature),
+                "A launched trajectory is never altered mid-flight.");
+        }
+
         [Test]
         public void GameplayInputRouter_IgnoresAStationaryPressThatReportsAZeroLengthSwipe()
         {

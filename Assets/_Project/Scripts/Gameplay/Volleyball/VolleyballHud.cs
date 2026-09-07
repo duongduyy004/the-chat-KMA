@@ -39,7 +39,7 @@ namespace KMA.Gameplay
             ScoreText = $"{controller.PlayerScore} - {controller.OpponentScore}";
             ComboText = $"COMBO {controller.LongestCombo}";
             ContextText = controller.CurrentContext.ToString().ToUpperInvariant();
-            TimingText = controller.InReachZone ? controller.ExpectedAction.ToString().ToUpperInvariant() : "MOVE INTO REACH";
+            TimingText = controller.InReachZone ? controller.ExpectedAction.ToString().ToUpperInvariant() : "OUT OF REACH";
             CounterCueText = controller.OpponentCounterCueVisible ? "COUNTER THE FAKE" : string.Empty;
 
             SetText(touchLabel, TouchText);

@@ -1,10 +1,12 @@
 using System.Collections;
+using System.Collections.Generic;
 using KMA.Gameplay;
 using KMA.Gameplay.UI;
 using KMA.Input;
 using NUnit.Framework;
 using TMPro;
 using UnityEngine;
+using UnityEngine.EventSystems;
 using UnityEngine.SceneManagement;
 using UnityEngine.TestTools;
 
@@ -67,6 +69,22 @@ namespace KMA.Tests.Gameplay.Ball
             Assert.That(RectTransformUtility.RectangleContainsScreenPoint(
                 surface.GameplayArea, new Vector2(Screen.width * .5f, Screen.height * .5f)), Is.True,
                 "A touch in the middle of the screen must land inside the gameplay surface.");
+
+            // Rect geometry is not ownership. Run the real raycast stack an actual touch goes
+            // through, so a full-screen raycast target on a canvas above the surface is caught.
+            Assert.That(EventSystem.current, Is.Not.Null, "The scene must own an EventSystem.");
+            var pointer = new PointerEventData(EventSystem.current)
+            {
+                position = new Vector2(Screen.width * .5f, Screen.height * .5f)
+            };
+            var hits = new List<RaycastResult>();
+            EventSystem.current.RaycastAll(pointer, hits);
+
+            Assert.That(hits, Is.Not.Empty, "The gameplay surface must be raycast-reachable.");
+            GameObject top = hits[0].gameObject;
+            Assert.That(top.GetComponentInParent<ScreenTapArea>(), Is.SameAs(surface),
+                "The top raycast hit at screen centre must belong to the gameplay surface, not to " +
+                "UI drawn above it. Blocker: " + top.name);
         }
 
         [UnityTest]
