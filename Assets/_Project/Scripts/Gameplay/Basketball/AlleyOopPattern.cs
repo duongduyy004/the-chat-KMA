@@ -29,7 +29,11 @@ namespace KMA.Gameplay
             return true;
         }
 
+        // Sized so the apex window lasts a few hundred milliseconds instead of a single physics
+        // step: at 0.02s steps gravity changes velocityY by ~0.196 per step, so the old 0.1
+        // threshold made FinishJudge.Perfect unreachable in the build. The 0.4-unit height band
+        // is unchanged, so aiming and timing stay independent axes.
         public static AlleyOopPattern AuthoredDefault(Vector2? passVector = null) =>
-            new AlleyOopPattern(passVector ?? new Vector2(1f, .75f), 8f, 0f, 2.8f, 3.2f, .1f);
+            new AlleyOopPattern(passVector ?? new Vector2(1f, .75f), 8f, 0f, 2.8f, 3.2f, 1.5f);
     }
 }
