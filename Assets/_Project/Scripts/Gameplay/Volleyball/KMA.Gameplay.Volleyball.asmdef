@@ -4,7 +4,8 @@
     "references": [
         "KMA.Gameplay",
         "KMA.Gameplay.Ball",
-        "KMA.Input"
+        "KMA.Input",
+        "Unity.TextMeshPro"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],

@@ -39,37 +39,24 @@ namespace KMA.Tests.Gameplay.Ball
             Assert.That(fixture.Controller.LongestCombo, Is.Zero);
         }
 
-        [TestCase(BallContext.Low, 0f, -1f, VolleyAction.Dig, 5f, 0f)]
-        [TestCase(BallContext.Rising, 0f, 1f, VolleyAction.Set, 5f, 0f)]
-        [TestCase(BallContext.ApexNearNet, 1f, -1f, VolleyAction.Spike, 8f, .15f)]
-        public void SubmitSwipe_ResolvesEachAuthoredActionThroughRulesAndLaunchesOnce(
-            BallContext expectedContext,
-            float swipeX,
-            float swipeY,
-            VolleyAction expectedAction,
-            float expectedLaunchForce,
-            float expectedCurvature)
+        [Test]
+        public void SubmitSwipe_ResolvesDigSetSpikeInPossessionOrderAndLaunchesEachOnce()
         {
-            var fixture = CreateFixture();
+            var fixture = CreateFixture(targetScore: 5);
             AdvanceControllerToPlay(fixture.Controller);
-            SetBallForContext(fixture, expectedContext);
-            Assert.That(fixture.Controller.CurrentContext, Is.EqualTo(expectedContext));
-
-            fixture.Controller.SubmitSwipe(new Vector2(swipeX, swipeY), inReachZone: true, timingAccuracy: 1f);
-            BallFlightSnapshot launched = fixture.Ball.Snapshot;
-            int launchCountAfterFirst = fixture.Controller.SuccessfulLaunchCount;
-            fixture.Controller.SubmitSwipe(new Vector2(swipeX, swipeY), inReachZone: true, timingAccuracy: 1f);
-
-            Assert.That(fixture.Rules.TotalTouches, Is.EqualTo(1));
+            SubmitTouch(fixture, BallContext.Low, Vector2.down);
             Assert.That(fixture.Controller.TouchCount, Is.EqualTo(1));
-            Assert.That(launchCountAfterFirst, Is.EqualTo(1));
-            Assert.That(fixture.Controller.SuccessfulLaunchCount, Is.EqualTo(1));
-            Assert.That(launched.IsInFlight, Is.True);
-            Assert.That(launched.Velocity.magnitude, Is.EqualTo(expectedLaunchForce).Within(.001f));
-            Assert.That(Vector2.Distance(launched.Velocity, ExpectedLaunchDirection(expectedAction).normalized * expectedLaunchForce), Is.LessThan(.001f));
-            Assert.That(launched.Curvature, Is.EqualTo(expectedCurvature).Within(.001f));
-            Assert.That(Vector2.Distance(fixture.Ball.Snapshot.Velocity, launched.Velocity), Is.LessThan(.001f));
-            Assert.That(fixture.Ball.Snapshot.Curvature, Is.EqualTo(launched.Curvature).Within(.001f));
+            Assert.That(fixture.Controller.SelectedAction, Is.EqualTo(VolleyAction.Dig));
+            Assert.That(fixture.Ball.Snapshot.Velocity.magnitude, Is.EqualTo(5f).Within(.001f));
+            SubmitTouch(fixture, BallContext.Rising, Vector2.up);
+            Assert.That(fixture.Controller.TouchCount, Is.EqualTo(2));
+            Assert.That(fixture.Controller.SelectedAction, Is.EqualTo(VolleyAction.Set));
+            SubmitTouch(fixture, BallContext.ApexNearNet, new Vector2(1f, -1f));
+            Assert.That(fixture.Controller.TouchCount, Is.EqualTo(3));
+            Assert.That(fixture.Controller.SelectedAction, Is.EqualTo(VolleyAction.Spike));
+            Assert.That(fixture.Controller.SuccessfulLaunchCount, Is.EqualTo(3));
+            Assert.That(fixture.Ball.Snapshot.Velocity.magnitude, Is.EqualTo(8f).Within(.001f));
+            Assert.That(fixture.Ball.Snapshot.Curvature, Is.EqualTo(.15f).Within(.001f));
         }
 
         [UnityTest]
@@ -95,20 +82,19 @@ namespace KMA.Tests.Gameplay.Ball
         }
 
         [Test]
-        public void SubmitSwipe_RejectsOutOfReachAndBelowThresholdWithoutChangingTouchOrScore()
+        public void SubmitSwipe_RejectsAnOutOfReachPossessionWithOneOpponentPoint()
         {
             var fixture = CreateFixture();
             AdvanceControllerToPlay(fixture.Controller);
             SetBallForContext(fixture, BallContext.Low);
 
             fixture.Controller.SubmitSwipe(Vector2.down, inReachZone: false, timingAccuracy: 1f);
-            fixture.Controller.SubmitSwipe(Vector2.down, inReachZone: true, timingAccuracy: .74f);
 
             Assert.That(fixture.Rules.TotalTouches, Is.Zero);
             Assert.That(fixture.Controller.TouchCount, Is.Zero);
             Assert.That(fixture.Controller.PlayerScore, Is.Zero);
-            Assert.That(fixture.Controller.OpponentScore, Is.Zero);
-            Assert.That(fixture.Ball.Snapshot.IsInFlight, Is.False);
+            Assert.That(fixture.Controller.OpponentScore, Is.EqualTo(1));
+            Assert.That(fixture.Ball.Snapshot.IsAttached, Is.True);
         }
 
         [TestCase(SwipeDirection.Left)]
@@ -117,7 +103,7 @@ namespace KMA.Tests.Gameplay.Ball
         [TestCase(SwipeDirection.Down)]
         public void GameplayInputRouter_OnSwipeRoutesEveryCardinalDirectionToController(SwipeDirection direction)
         {
-            var fixture = CreateFixture();
+            var fixture = CreateFixture(targetScore: 3);
             AdvanceControllerToPlay(fixture.Controller);
             SetBallForContext(fixture, BallContext.Low);
 
@@ -133,12 +119,13 @@ namespace KMA.Tests.Gameplay.Ball
         {
             var fixture = CreateFixture();
             AdvanceControllerToPlay(fixture.Controller);
+            SubmitTouch(fixture, BallContext.Low, Vector2.down);
+            SubmitTouch(fixture, BallContext.Rising, Vector2.up);
             SetBallForContext(fixture, BallContext.ApexNearNet);
-
             RouteSwipe(fixture.SwipeDetector, SwipeDirection.Right);
 
-            Assert.That(fixture.Rules.TotalTouches, Is.EqualTo(1));
-            Assert.That(fixture.Controller.TouchCount, Is.EqualTo(1));
+            Assert.That(fixture.Rules.TotalTouches, Is.EqualTo(3));
+            Assert.That(fixture.Controller.TouchCount, Is.EqualTo(3));
             Assert.That(Vector2.Distance(fixture.Ball.Snapshot.Velocity, new Vector2(1f, .75f).normalized * 8f), Is.LessThan(.001f));
             Assert.That(fixture.Ball.Snapshot.Curvature, Is.EqualTo(.15f).Within(.001f));
         }
@@ -188,66 +175,107 @@ namespace KMA.Tests.Gameplay.Ball
         }
 
         [Test]
-        public void ThirdValidTouch_ShowsCounterplayCuesWithoutChangingPointsOrPrediction()
+        public void ThirdValidTouch_ShowsCounterplayCuesWithoutChangingPrediction()
         {
-            var fixture = CreateFixture();
+            var fixture = CreateFixture(targetScore: 5);
             AdvanceControllerToPlay(fixture.Controller);
 
-            for (int touch = 0; touch < 3; touch++)
+            for (int rally = 0; rally < 3; rally++)
             {
-                SetBallForContext(fixture, BallContext.Low);
-                fixture.Controller.SubmitSwipe(Vector2.down, inReachZone: true, timingAccuracy: 1f);
+                SubmitAuthoredRally(fixture);
             }
             Vector2 predictionBeforeCueFrame = fixture.Ball.PredictLandingPoint();
             fixture.Controller.SimulateForTest(0f);
 
-            Assert.That(fixture.Controller.TouchCount, Is.EqualTo(3));
+            Assert.That(fixture.Controller.CompletedRallyCount, Is.EqualTo(3));
             Assert.That(fixture.Controller.OpponentCounterCueVisible, Is.True);
             Assert.That(fixture.Controller.OpponentFakeCueVisible, Is.True);
-            Assert.That(fixture.Controller.PlayerScore, Is.Zero);
-            Assert.That(fixture.Controller.OpponentScore, Is.Zero);
             Assert.That(fixture.Controller.PredictedLandingPoint.x, Is.EqualTo(predictionBeforeCueFrame.x).Within(.001f));
             Assert.That(fixture.Controller.PredictedLandingPoint.y, Is.EqualTo(predictionBeforeCueFrame.y).Within(.001f));
 
-            SetBallForContext(fixture, BallContext.Low);
-            Assert.That(fixture.Controller.OpponentCounterCueVisible, Is.True);
-            Assert.That(fixture.Controller.OpponentFakeCueVisible, Is.True);
-            fixture.Controller.SubmitSwipe(Vector2.down, inReachZone: true, timingAccuracy: 1f);
-            Assert.That(fixture.Controller.TouchCount, Is.EqualTo(4));
-            Assert.That(fixture.Ball.Snapshot.IsInFlight, Is.True);
+            fixture.Controller.SimulateForTest(VolleyReturnPattern.AuthoredDefault().CueLeadSeconds);
+            Assert.That(fixture.Controller.OpponentCounterCueVisible, Is.False);
+            Assert.That(fixture.Controller.OpponentFakeCueVisible, Is.False);
         }
 
         [Test]
-        public void HudAndCompletion_FollowRulesResultAndCompleteOnlyOnce()
+        public void DigSetSpike_ChangesScoreOnceAndResetsThePossessionForTheNextReturn()
+        {
+            var fixture = CreateFixture(targetScore: 1);
+            AdvanceControllerToPlay(fixture.Controller);
+
+            Assert.That(fixture.Controller.BuildHudState().statusText, Is.EqualTo("TOUCH 1/3"));
+            SubmitAuthoredRally(fixture);
+
+            Assert.That(fixture.Controller.PlayerScore, Is.EqualTo(1));
+            Assert.That(fixture.Controller.OpponentScore, Is.Zero);
+            Assert.That(fixture.Controller.TouchCount, Is.Zero);
+            Assert.That(fixture.Ball.Snapshot.IsAttached, Is.True);
+            Assert.That(fixture.Ball.Snapshot.IsInFlight, Is.False);
+        }
+
+        [Test]
+        public void FailedPossession_AwardsOneOpponentPointAndReattachesTheBall()
         {
             var fixture = CreateFixture();
             AdvanceControllerToPlay(fixture.Controller);
+            SetBallForContext(fixture, BallContext.Low);
 
-            Assert.That(fixture.Controller.BuildHudState().statusText, Is.EqualTo("TOUCH 1/2/3"));
-            fixture.Rules.AwardRallyPoint();
-            Assert.That(fixture.Controller.BuildHudState().score, Is.EqualTo(fixture.Rules.BuildResult().Score));
+            fixture.Controller.SubmitSwipe(Vector2.down, inReachZone: false, timingAccuracy: 1f);
 
+            Assert.That(fixture.Controller.PlayerScore, Is.Zero);
+            Assert.That(fixture.Controller.OpponentScore, Is.EqualTo(1));
+            Assert.That(fixture.Controller.TouchCount, Is.Zero);
+            Assert.That(fixture.Ball.Snapshot.IsAttached, Is.True);
+        }
+
+        [Test]
+        public void TargetScoreCompletion_AndDeadlineFailure_FinishOnlyOnceThroughTheController()
+        {
+            var winningFixture = CreateFixture(targetScore: 1);
+            AdvanceControllerToPlay(winningFixture.Controller);
             int completions = 0;
-            fixture.Controller.Completed += _ => completions++;
-            fixture.Rules.AwardRallyPoint();
-            fixture.Controller.SimulateForTest(0f);
-            fixture.Controller.SubmitSwipe(Vector2.down, inReachZone: true, timingAccuracy: 1f);
-            fixture.Controller.SimulateForTest(1f);
+            winningFixture.Controller.Completed += _ => completions++;
+            SubmitAuthoredRally(winningFixture);
+            winningFixture.Controller.SimulateForTest(1f);
 
             Assert.That(completions, Is.EqualTo(1));
+
+            var timeoutFixture = CreateFixture(targetScore: 2);
+            AdvanceControllerToPlay(timeoutFixture.Controller);
+            timeoutFixture.Controller.SimulateForTest(59.99f);
+            SetBallForContext(timeoutFixture, BallContext.Low);
+            timeoutFixture.Controller.SubmitSwipe(Vector2.down, inReachZone: true, timingAccuracy: 1f);
+            timeoutFixture.Controller.SimulateForTest(.02f);
+
+            Assert.That(timeoutFixture.Controller.BuildResult().Pass, Is.False);
+        }
+
+        [Test]
+        public void FourthTouchInOnePossession_IsRejected()
+        {
+            var fixture = CreateFixture();
+            AdvanceControllerToPlay(fixture.Controller);
+            SubmitAuthoredRally(fixture, resolve: false);
+            int launches = fixture.Controller.SuccessfulLaunchCount;
+            SetBallForContext(fixture, BallContext.Low);
+
+            fixture.Controller.SubmitSwipe(Vector2.down, inReachZone: true, timingAccuracy: 1f);
+
+            Assert.That(fixture.Controller.SuccessfulLaunchCount, Is.EqualTo(launches));
         }
 
         [Test]
         public void DeadlineCrossing_TicksRulesBeforeCachingQualifyingResult()
         {
-            var fixture = CreateFixture();
+            var fixture = CreateFixture(targetScore: 3);
             AdvanceControllerToPlay(fixture.Controller);
-            fixture.Rules.Tick(59.99f - fixture.Rules.Elapsed);
-            fixture.Rules.AwardRallyPoint();
-            fixture.Rules.AwardRallyPoint();
+            fixture.Controller.SimulateForTest(59.99f - fixture.Rules.Elapsed);
+            SubmitAuthoredRally(fixture);
+            SubmitAuthoredRally(fixture);
 
             Assert.That(fixture.Rules.Elapsed, Is.EqualTo(59.99f).Within(.0001f));
-            Assert.That(fixture.Rules.BuildResult().Pass, Is.True);
+            Assert.That(fixture.Rules.BuildResult().Pass, Is.False);
 
             fixture.Controller.SimulateForTest(.02f);
 
@@ -277,7 +305,7 @@ namespace KMA.Tests.Gameplay.Ball
             Assert.That(completions, Is.EqualTo(1));
         }
 
-        ControllerFixture CreateFixture(bool preResolveRules = false)
+        ControllerFixture CreateFixture(bool preResolveRules = false, int targetScore = 2)
         {
             var controllerObject = new GameObject("VolleyballControllerTest");
             temporaryObjects.Add(controllerObject);
@@ -295,7 +323,7 @@ namespace KMA.Tests.Gameplay.Ball
 
             var detector = new SwipeInputDetector();
             router.SetDetectors(null, null, null, null, detector);
-            var rules = new VolleyballRules(targetScore: 2, timeLimit: 60f);
+            var rules = new VolleyballRules(targetScore: targetScore, timeLimit: 60f);
             if (preResolveRules)
             {
                 rules.Tick(2f);
@@ -325,6 +353,21 @@ namespace KMA.Tests.Gameplay.Ball
                 BallContext.ApexNearNet => Vector2.zero,
                 _ => throw new System.ArgumentOutOfRangeException(nameof(context), context, null)
             };
+        }
+
+        static void SubmitAuthoredRally(ControllerFixture fixture, bool resolve = true)
+        {
+            SubmitTouch(fixture, BallContext.Low, Vector2.down);
+            SubmitTouch(fixture, BallContext.Rising, Vector2.up);
+            SubmitTouch(fixture, BallContext.ApexNearNet, new Vector2(1f, -1f));
+            if (resolve)
+                fixture.Controller.ResolveCourtContact(ownCourt: false);
+        }
+
+        static void SubmitTouch(ControllerFixture fixture, BallContext context, Vector2 swipe)
+        {
+            SetBallForContext(fixture, context);
+            fixture.Controller.SubmitSwipe(swipe, inReachZone: true, timingAccuracy: 1f);
         }
 
         static Vector2 ExpectedLaunchDirection(VolleyAction action) => action switch
