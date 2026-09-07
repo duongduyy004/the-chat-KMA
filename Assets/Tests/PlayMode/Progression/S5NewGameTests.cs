@@ -1,6 +1,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using KMA.Gameplay;
 using KMA.Gameplay.Core;
 using KMA.Gameplay.Shell;
@@ -9,6 +10,8 @@ using NUnit.Framework;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.TestTools;
+using UnityEngine.UI;
+using Object = UnityEngine.Object;
 
 namespace KMA.Tests.Gameplay.Progression
 {
@@ -109,17 +112,59 @@ namespace KMA.Tests.Gameplay.Progression
         }
 
         [Test]
-        public void MapNode_UsesDerivedStarsAndComingSoonLock()
+        public void MapNode_ReportsReadyCompletedAndUnavailableStates()
         {
             var node = new GameObject("MapNode").AddComponent<MapNodeView>();
             try
             {
-                node.Configure(SubjectId.Sprint, "Sprint", false, null, 5);
-                Assert.That(node.Stars, Is.Zero);
-                node.Configure(SubjectId.Sprint, "Sprint", true, null, 5);
-                Assert.That(node.IsComingSoon, Is.True);
+                Font font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
+                var button = new GameObject("Button", typeof(RectTransform), typeof(Button))
+                    .GetComponent<Button>();
+                var title = new GameObject("Title", typeof(RectTransform), typeof(Text))
+                    .GetComponent<Text>();
+                var detail = new GameObject("Detail", typeof(RectTransform), typeof(Text))
+                    .GetComponent<Text>();
+                button.transform.SetParent(node.transform);
+                title.transform.SetParent(node.transform);
+                detail.transform.SetParent(node.transform);
+                title.font = font;
+                detail.font = font;
+                node.Bind(button, title, detail);
+
+                node.Configure(SubjectId.Sprint, "Chạy nước rút", false, null, 5);
+                Assert.That(node.DetailText, Is.EqualTo("SẴN SÀNG"));
+                Assert.That(node.IsInteractable, Is.True);
+
+                var passed = new SubjectRecord();
+                passed.Accept(new MinigameResult(true, 0f, Rank.A));
+                node.Configure(SubjectId.Sprint, "Chạy nước rút", false, passed, 5);
+                Assert.That(node.DetailText, Does.Contain("HẠNG A"));
+
+                node.Configure(SubjectId.Basketball, "Bóng rổ", true, null, 5);
+                Assert.That(node.DetailText, Is.EqualTo("ĐANG PHÁT TRIỂN"));
+                Assert.That(node.IsInteractable, Is.False);
             }
             finally { UnityEngine.Object.DestroyImmediate(node.gameObject); }
+        }
+
+        [UnityTest]
+        public IEnumerator MapScene_ContainsOnlyResponsiveSelectionPresentation()
+        {
+            SceneManager.LoadScene("Map", LoadSceneMode.Single);
+            yield return null;
+
+            Assert.That(Object.FindObjectsByType<MinigameHUD>(FindObjectsInactive.Include,
+                FindObjectsSortMode.None), Is.Empty);
+            Assert.That(Object.FindObjectsByType<PhaseOverlay>(FindObjectsInactive.Include,
+                FindObjectsSortMode.None), Is.Empty);
+            Assert.That(Object.FindObjectsByType<ResultPanel>(FindObjectsInactive.Include,
+                FindObjectsSortMode.None), Is.Empty);
+
+            var screen = Object.FindFirstObjectByType<MapScreen>(FindObjectsInactive.Include);
+            Assert.That(screen.transform.Find("S5MapPresentation"), Is.Not.Null);
+            Assert.That(screen.Nodes.Count(node => node.IsInteractable), Is.EqualTo(3));
+            Assert.That(screen.Nodes.Count(node => node.DetailText == "ĐANG PHÁT TRIỂN"), Is.EqualTo(4));
+            Assert.That(GameObject.Find("SelectionGrid").GetComponent<GridLayoutGroup>(), Is.Not.Null);
         }
 
         [Test]
