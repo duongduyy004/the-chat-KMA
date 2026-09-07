@@ -147,6 +147,30 @@ namespace KMA.Tests.Gameplay.Progression
             finally { UnityEngine.Object.DestroyImmediate(node.gameObject); }
         }
 
+        [Test]
+        public void MapPresentation_UsesResponsiveGridAndStretchedTextLabels()
+        {
+            var screenObject = new GameObject("MapScreen", typeof(RectTransform));
+            var screen = screenObject.AddComponent<MapScreen>();
+            try
+            {
+                screenObject.GetComponent<RectTransform>().sizeDelta = new Vector2(1280f, 720f);
+                MapPresentationBuilder.Build(screen, new GameSession());
+
+                var grid = screen.transform.Find("S5MapPresentation/Content/SelectionGrid");
+                var responsiveGrid = grid.GetComponent<ResponsiveGridLayout>();
+                Assert.That(responsiveGrid, Is.Not.Null);
+                responsiveGrid.Refresh();
+                Assert.That(grid.GetComponent<GridLayoutGroup>().cellSize.x, Is.Not.EqualTo(220f));
+                foreach (var label in screen.GetComponentsInChildren<Text>())
+                {
+                    Assert.That(label.rectTransform.anchorMin, Is.EqualTo(Vector2.zero));
+                    Assert.That(label.rectTransform.anchorMax, Is.EqualTo(Vector2.one));
+                }
+            }
+            finally { UnityEngine.Object.DestroyImmediate(screenObject); }
+        }
+
         [UnityTest]
         public IEnumerator MapScene_ContainsOnlyResponsiveSelectionPresentation()
         {

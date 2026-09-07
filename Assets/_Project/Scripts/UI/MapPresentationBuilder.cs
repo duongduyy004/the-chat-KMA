@@ -55,8 +55,9 @@ namespace KMA.Gameplay.UI
             RectTransform grid = Rect(content, "SelectionGrid");
             GridLayoutGroup gridLayout = grid.gameObject.AddComponent<GridLayoutGroup>();
             gridLayout.constraint = GridLayoutGroup.Constraint.FixedColumnCount;
-            gridLayout.constraintCount = 4; gridLayout.cellSize = new Vector2(220, 132);
+            gridLayout.constraintCount = 4;
             gridLayout.spacing = new Vector2(16, 16); gridLayout.childAlignment = TextAnchor.UpperCenter;
+            grid.gameObject.AddComponent<ResponsiveGridLayout>().Refresh();
             LayoutElement gridElement = grid.gameObject.AddComponent<LayoutElement>();
             gridElement.flexibleWidth = 1; gridElement.preferredHeight = 280;
             var nodes = new List<MapNodeView>();
@@ -75,8 +76,8 @@ namespace KMA.Gameplay.UI
             layout.spacing = 16; layout.childAlignment = TextAnchor.MiddleCenter; layout.childControlWidth = true;
             layout.childControlHeight = true; layout.childForceExpandWidth = false;
             header.gameObject.AddComponent<LayoutElement>().preferredHeight = 60;
-            Text title = Text(header, "Title", "CHỌN MÔN THI", 32, Color.black, TextAnchor.MiddleLeft);
-            title.gameObject.AddComponent<LayoutElement>().flexibleWidth = 1;
+            Text title = LayoutLabel(header, "Title", "CHỌN MÔN THI", 32, Color.black, TextAnchor.MiddleLeft);
+            title.transform.parent.gameObject.AddComponent<LayoutElement>().flexibleWidth = 1;
             RectTransform bar = Rect(header, "HeartBar");
             HorizontalLayoutGroup heartLayout = bar.gameObject.AddComponent<HorizontalLayoutGroup>();
             heartLayout.spacing = 6; heartLayout.childAlignment = TextAnchor.MiddleRight;
@@ -91,8 +92,8 @@ namespace KMA.Gameplay.UI
                 LayoutElement element = slot.gameObject.AddComponent<LayoutElement>(); element.preferredWidth = 22; element.preferredHeight = 22;
             }
             hearts.SetSlots(slots);
-            Text lives = Text(header, "LivesLabel", "LƯỢT: " + (session == null ? 5 : session.Lives) + "/5", 18, Color.black, TextAnchor.MiddleRight);
-            lives.gameObject.AddComponent<LayoutElement>().preferredWidth = 100;
+            Text lives = LayoutLabel(header, "LivesLabel", "LƯỢT: " + (session == null ? 5 : session.Lives) + "/5", 18, Color.black, TextAnchor.MiddleRight);
+            lives.transform.parent.gameObject.AddComponent<LayoutElement>().preferredWidth = 100;
             return hearts;
         }
 
@@ -107,10 +108,10 @@ namespace KMA.Gameplay.UI
             layout.childControlHeight = true; layout.childForceExpandWidth = true; layout.childForceExpandHeight = false;
             RectTransform stripe = Rect(root, "Stripe"); stripe.gameObject.AddComponent<Image>().color = entry.Color;
             stripe.gameObject.AddComponent<LayoutElement>().preferredHeight = 12;
-            Text title = Text(root, "Title", entry.Label, 20, entry.Available ? Color.black : foreground, TextAnchor.MiddleCenter);
-            title.gameObject.AddComponent<LayoutElement>().flexibleHeight = 1;
-            Text detail = Text(root, "Detail", string.Empty, 14, foreground, TextAnchor.MiddleCenter);
-            detail.gameObject.AddComponent<LayoutElement>().preferredHeight = 24;
+            Text title = LayoutLabel(root, "Title", entry.Label, 20, entry.Available ? Color.black : foreground, TextAnchor.MiddleCenter);
+            title.transform.parent.gameObject.AddComponent<LayoutElement>().flexibleHeight = 1;
+            Text detail = LayoutLabel(root, "Detail", string.Empty, 14, foreground, TextAnchor.MiddleCenter);
+            detail.transform.parent.gameObject.AddComponent<LayoutElement>().preferredHeight = 24;
             MapNodeView node = root.gameObject.AddComponent<MapNodeView>(); node.Bind(button, title, detail);
             node.Configure(entry.Subject, entry.Label, !entry.Available, null, 5);
             if (entry.Available) button.onClick.AddListener(() => screen.SelectSubject(entry.Subject));
@@ -160,9 +161,41 @@ namespace KMA.Gameplay.UI
             return text;
         }
 
+        static Text LayoutLabel(Transform parent, string name, string value, int size, Color color, TextAnchor alignment)
+        {
+            return Text(Rect(parent, name + "Container"), name, value, size, color, alignment);
+        }
+
         static void Stretch(RectTransform rect, Vector2 min, Vector2 max)
         {
             rect.anchorMin = Vector2.zero; rect.anchorMax = Vector2.one; rect.offsetMin = min; rect.offsetMax = max;
+        }
+    }
+
+    public sealed class ResponsiveGridLayout : MonoBehaviour
+    {
+        GridLayoutGroup grid;
+        RectTransform rect;
+
+        void Awake()
+        {
+            grid = GetComponent<GridLayoutGroup>();
+            rect = GetComponent<RectTransform>();
+        }
+
+        void OnEnable() => Refresh();
+        void OnRectTransformDimensionsChange() => Refresh();
+
+        public void Refresh()
+        {
+            if (grid == null) grid = GetComponent<GridLayoutGroup>();
+            if (rect == null) rect = GetComponent<RectTransform>();
+            if (grid == null || rect == null) return;
+            int columns = Mathf.Max(1, grid.constraintCount);
+            float width = rect.rect.width;
+            if (width <= 0f) width = Mathf.Max(1f, Screen.width - 144f);
+            float cellWidth = Mathf.Max(1f, (width - grid.padding.left - grid.padding.right - grid.spacing.x * (columns - 1)) / columns);
+            grid.cellSize = new Vector2(cellWidth, Mathf.Clamp(cellWidth * 0.6f, 96f, 160f));
         }
     }
 }
