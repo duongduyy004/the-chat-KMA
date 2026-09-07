@@ -89,6 +89,7 @@ namespace KMA.Tests.Presentation
             SetField(presenter, "canvasGroup", canvasGroup);
             SetField(presenter, "loadingBar", slider);
             SetField(presenter, "minimumIntroSeconds", 0.12f);
+            SetField(presenter, "minimumIntroFrames", 1);
             splashRoot.SetActive(true);
 
             Time.timeScale = 0f;
@@ -113,6 +114,37 @@ namespace KMA.Tests.Presentation
             yield return null;
             Assert.That(presenter == null, Is.True,
                 "The completed startup presentation must not persist into later routes.");
+        }
+
+        [UnityTest]
+        public IEnumerator Splash_StaysVisibleUntilItHasBeenPresentedForMinimumFrames()
+        {
+            // On device, scene activation stalls the player inside one long frame: the
+            // wall-clock hold expired after two presented frames and the intro was never seen.
+            SceneRouter router = Track(new GameObject("SplashLoadingFlowTests.Router"))
+                .AddComponent<SceneRouter>();
+            var splashRoot = Track(new GameObject("SplashLoadingFlowTests.Splash"));
+            splashRoot.SetActive(false);
+            CanvasGroup canvasGroup = splashRoot.AddComponent<CanvasGroup>();
+            SplashScreenPresenter presenter = splashRoot.AddComponent<SplashScreenPresenter>();
+            SetField(presenter, "canvasGroup", canvasGroup);
+            SetField(presenter, "minimumIntroSeconds", 0f);
+            SetField(presenter, "minimumIntroFrames", 20);
+            splashRoot.SetActive(true);
+
+            Raise(router, "SceneLoadStarted");
+            Raise(router, "SceneLoadCompleted");
+            int completedFrame = Time.frameCount;
+
+            while (presenter != null && presenter.IsVisible)
+            {
+                Assert.That(Time.frameCount - completedFrame, Is.LessThanOrEqualTo(60),
+                    "The presented-frame hold must still end.");
+                yield return null;
+            }
+
+            Assert.That(Time.frameCount - completedFrame, Is.GreaterThanOrEqualTo(20),
+                "A zero-second hold must still present the intro for its minimum frame count.");
         }
 
         [Test]
@@ -266,9 +298,17 @@ namespace KMA.Tests.Presentation
         [UnityTest]
         public IEnumerator HomePlayButton_RoutesThroughTheRealRuntimeBinding()
         {
-            AsyncOperation load = SceneManager.LoadSceneAsync("Menu", LoadSceneMode.Single);
+            // The button reaches Map through SceneRouter, which only exists once the
+            // Bootstrap route has run, so Menu must be entered the way the game enters it.
+            yield return DestroyPersistentRuntime();
+            AsyncOperation load = SceneManager.LoadSceneAsync(BootstrapScenePath, LoadSceneMode.Single);
+            Assert.That(load, Is.Not.Null);
             while (!load.isDone)
                 yield return null;
+            yield return WaitForScene("Menu");
+            Assert.That(SceneRouter.Instance, Is.Not.Null,
+                "The Bootstrap route must publish the runtime the menu buttons bind to.");
+
             Button play = GameObject.Find("PLAYButton").GetComponent<Button>();
             Assert.That(play, Is.Not.Null);
 

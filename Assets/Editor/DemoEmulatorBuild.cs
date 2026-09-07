@@ -31,6 +31,9 @@ namespace KMA.EditorTools
             {
                 PlayerSettings.Android.targetArchitectures = previous;
                 AssetDatabase.SaveAssets();
+                // SaveAssets does not write ProjectSettings.asset, so a batch run would quit
+                // leaving the emulator architecture as the project's shipping default.
+                EditorApplication.ExecuteMenuItem("File/Save Project");
             }
         }
     }

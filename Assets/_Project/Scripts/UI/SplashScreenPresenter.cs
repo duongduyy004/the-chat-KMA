@@ -14,9 +14,11 @@ namespace KMA.Gameplay.UI
         [SerializeField] Slider loadingBar;
         [SerializeField] TMP_Text statusText;
         [SerializeField, Min(0f)] float minimumIntroSeconds = 1.5f;
+        [SerializeField, Min(0)] int minimumIntroFrames = 30;
 
         SceneRouter router;
         float introStartedAt;
+        int introStartedFrame;
         bool loadCompleted;
         bool loadFailed;
         bool finishScheduled;
@@ -131,7 +133,13 @@ namespace KMA.Gameplay.UI
             while (!UnityEngine.Rendering.SplashScreen.isFinished)
                 yield return null;
             introStartedAt = Time.realtimeSinceStartup;
-            while (loadCompleted && Time.realtimeSinceStartup - introStartedAt < minimumIntroSeconds)
+            introStartedFrame = Time.frameCount;
+            // Scene activation can stall the player for seconds inside a single frame, so a
+            // purely wall-clock hold expires before Android ever presents the splash. Require
+            // presented frames as well: the intro is a presentation, not a timer.
+            while (loadCompleted &&
+                   (Time.realtimeSinceStartup - introStartedAt < minimumIntroSeconds ||
+                    Time.frameCount - introStartedFrame < minimumIntroFrames))
                 yield return null;
 
             if (loadCompleted && !loadFailed)
