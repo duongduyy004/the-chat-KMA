@@ -121,6 +121,30 @@ namespace KMA.Tests.Gameplay.Ball
             Assert.That(controller.Rules.State, Is.EqualTo(BasketballState.Holding));
             Assert.That(controller.Attempts, Is.Zero);
             Assert.That(ball.Snapshot.IsInFlight, Is.False);
+            // CancelCharge's observable effect: a rejected gesture must not leave the charge
+            // running, or TickPlay keeps advancing it and the HUD stays stuck on "RELEASE IN THE BAND".
+            Assert.That(controller.IsCharging, Is.False,
+                "A rejected below-minimum charge must cancel, or the charge keeps advancing unattended.");
+            Assert.That(controller.ChargeRatio, Is.Zero, "CancelCharge must reset the charge back to zero.");
+        }
+
+        // The production path that protects a player from losing a possession to an accidental
+        // tap: a stationary press-then-release reports a zero-length swipe, which is below
+        // minimumSwipeLengthPixels, so CancelCharge must fire the same as the direct-API case above.
+        [Test]
+        public void ProductionPointerGesture_ZeroLengthSwipe_CancelsTheChargeWithoutTouchingTheRules()
+        {
+            var point = new Vector2(500f, 400f);
+            router.FeedPointerDownForTest(point, 0d);
+            Assert.That(controller.IsCharging, Is.True, "Pointer down must start the charge.");
+
+            router.FeedPointerUpForTest(point, .3d);
+
+            Assert.That(controller.Rules.State, Is.EqualTo(BasketballState.Holding));
+            Assert.That(controller.Attempts, Is.Zero);
+            Assert.That(controller.IsCharging, Is.False,
+                "A zero-length swipe must cancel the charge, not silently keep it running.");
+            Assert.That(controller.ChargeRatio, Is.Zero);
         }
 
         [Test]
@@ -259,6 +283,37 @@ namespace KMA.Tests.Gameplay.Ball
             }
         }
 
+        // Pins the authored table's literal values, not just the invariant above. Without this,
+        // a transposed .50/.45 or a 40/50-for-45/55 typo in Task 4's array would still satisfy
+        // every inequality-based assertion in this file.
+        //
+        // Task 7's balance pass owns these five numbers. If it retunes the table, THIS test must
+        // be updated in the same diff - that friction is deliberate, so a deliberate tuning change
+        // is visible in review and a transcription typo is not.
+        [Test]
+        public void AuthoredDifficultyTable_MatchesThePlanExactly()
+        {
+            var steps = controller.DifficultySteps;
+            Assert.That(steps.Count, Is.EqualTo(5));
+
+            var expected = new[]
+            {
+                (finishCueLeadSeconds: .60f, chargeAngleSpanDegrees: 35f),
+                (finishCueLeadSeconds: .45f, chargeAngleSpanDegrees: 35f),
+                (finishCueLeadSeconds: .45f, chargeAngleSpanDegrees: 45f),
+                (finishCueLeadSeconds: .30f, chargeAngleSpanDegrees: 45f),
+                (finishCueLeadSeconds: .30f, chargeAngleSpanDegrees: 55f),
+            };
+
+            for (var index = 0; index < expected.Length; index++)
+            {
+                Assert.That(steps[index].finishCueLeadSeconds, Is.EqualTo(expected[index].finishCueLeadSeconds).Within(.001f),
+                    "Step " + index + " finishCueLeadSeconds does not match the authored table.");
+                Assert.That(steps[index].chargeAngleSpanDegrees, Is.EqualTo(expected[index].chargeAngleSpanDegrees).Within(.001f),
+                    "Step " + index + " chargeAngleSpanDegrees does not match the authored table.");
+            }
+        }
+
         [UnityTest]
         public IEnumerator DifficultyStepFollowsTheBasketCountAndNarrowsTheTargetBand()
         {
@@ -313,6 +368,12 @@ namespace KMA.Tests.Gameplay.Ball
             Assert.That(observed.Pass, Is.True);
             Assert.That(observed.Score, Is.GreaterThan(0f));
             Assert.That(controller.PresentationPhase, Is.EqualTo(MinigamePhase.Resolve));
+
+            MinigameResult stored = controller.BuildResult();
+            Assert.That(stored, Is.Not.Null, "BuildResult must not go back to a fresh Rules result after Completed already fired.");
+            Assert.That(stored.Pass, Is.EqualTo(observed.Pass),
+                "BuildResult must keep returning the same result Completed delivered, not a stale or recomputed one.");
+            Assert.That(stored.Score, Is.EqualTo(observed.Score).Within(.0001f));
 
             controller.SubmitFinishTap();
             controller.SimulateForTest(1f);
