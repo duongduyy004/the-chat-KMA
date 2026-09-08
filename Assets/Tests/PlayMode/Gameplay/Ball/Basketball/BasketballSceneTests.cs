@@ -63,6 +63,17 @@ namespace KMA.Tests.Gameplay.Ball
                 "The authored launch height must leave a reachable charge band.");
         }
 
+        // Screen centre is owned by two different things depending on phase, and both halves are
+        // load-bearing: while the 3-step tutorial modal is up, it must own centre (so a stray tap
+        // cannot reach gameplay through it - the modal's entire purpose); once it is dismissed, the
+        // gameplay surface must own centre again (the original point of this test). Before Fix 2 of
+        // the S10 whole-branch review, the Overlay gameplay surface won the raycast unconditionally
+        // (see BasketballScene_PauseButtonIsReachableAboveTheGameplayInputSurface's comment for the
+        // mechanism), so this test used to assert only the second half - and it happened to pass
+        // only because the tutorial modal could never win against it either, the very same defect
+        // that made the pause button unreachable. Asserting only "gameplay owns centre" was
+        // therefore asserting the bug as correct; this test now pins both halves of the corrected
+        // behaviour, not just the half that reads as familiar.
         [UnityTest]
         public IEnumerator BasketballScene_RoutesGameplayThroughOneSharedInputRouterAndSurface()
         {
@@ -83,16 +94,44 @@ namespace KMA.Tests.Gameplay.Ball
                 "Basketball must have a keyboard fallback, unlike the S9 Volleyball scene.");
 
             Assert.That(EventSystem.current, Is.Not.Null);
+            var tutorialOverlay = SceneObjects<TutorialOverlay>(scene)[0];
+            Assert.That(tutorialOverlay.ShouldShow, Is.True,
+                "This test needs the tutorial to genuinely be showing here, or the next assertion proves nothing.");
+
+            RaycastResult duringTutorial = RaycastScreenCentre();
+            Assert.That(duringTutorial.gameObject.GetComponentInParent<TutorialOverlay>(), Is.SameAs(tutorialOverlay),
+                "While the tutorial modal is showing, the top raycast hit at screen centre must belong to it - " +
+                "a stray tap must not reach gameplay behind a modal. Hit: " + duringTutorial.gameObject.name);
+
+            // Dismiss the same way BasketballCampaignTests.SkipTutorialAndReachPlay does: the
+            // overlay's own Skip(), not the raw SkipTutorialForTest() lifecycle shortcut - only
+            // Skip() actually deactivates the modal's raycast-blocking Image, which this test (unlike
+            // the router-driven ones) depends on.
+            float deadline = Time.unscaledTime + 30f;
+            while (controller.PresentationPhase != MinigamePhase.Play && Time.unscaledTime < deadline)
+            {
+                if (tutorialOverlay.ShouldShow) tutorialOverlay.Skip();
+                yield return null;
+            }
+            Assert.That(controller.PresentationPhase, Is.EqualTo(MinigamePhase.Play),
+                "The scene must reach Play once the tutorial is skipped, or the assertion below proves nothing.");
+
+            RaycastResult afterTutorial = RaycastScreenCentre();
+            Assert.That(afterTutorial.gameObject.GetComponentInParent<ScreenTapArea>(), Is.SameAs(surface),
+                "Once the tutorial is dismissed, the top raycast hit at screen centre must belong to the " +
+                "gameplay surface. Blocker: " + afterTutorial.gameObject.name);
+        }
+
+        static RaycastResult RaycastScreenCentre()
+        {
             var pointer = new PointerEventData(EventSystem.current)
             {
                 position = new Vector2(Screen.width * .5f, Screen.height * .5f)
             };
             var hits = new List<RaycastResult>();
             EventSystem.current.RaycastAll(pointer, hits);
-
             Assert.That(hits, Is.Not.Empty);
-            Assert.That(hits[0].gameObject.GetComponentInParent<ScreenTapArea>(), Is.SameAs(surface),
-                "The top raycast hit at screen centre must belong to the gameplay surface. Blocker: " + hits[0].gameObject.name);
+            return hits[0];
         }
 
         // GraphicRaycaster.sortOrderPriority returns canvas.sortingOrder for a Screen Space -
