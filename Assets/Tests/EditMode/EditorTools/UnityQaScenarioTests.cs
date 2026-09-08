@@ -1,11 +1,27 @@
+using System.Collections;
 using KMA.EditorTools;
 using NUnit.Framework;
 using UnityEngine;
+using UnityEngine.EventSystems;
+using UnityEngine.TestTools;
+using UnityEngine.UI;
 
 namespace KMA.Tests.EditorTools
 {
     public sealed class UnityQaScenarioTests
     {
+        GameObject testRoot;
+        TestGraphicRaycaster testRaycaster;
+
+        [TearDown]
+        public void TearDown()
+        {
+            if (testRaycaster != null)
+                testRaycaster.Unregister();
+            if (testRoot != null)
+                Object.DestroyImmediate(testRoot);
+        }
+
         [Test]
         public void LegacyRequestWithoutActions_IsValid()
         {
@@ -198,6 +214,85 @@ namespace KMA.Tests.EditorTools
             Assert.That(new UnityQaResult().failedActionIndex, Is.EqualTo(-1));
         }
 
+        [UnityTest]
+        public IEnumerator Resolve_UniqueActiveLeafName_IgnoresInactiveDuplicate()
+        {
+            var eventSystem = BuildUi();
+            var active = CreateButton("PLAYButton", testRoot.transform);
+            var inactive = CreateButton("PLAYButton", testRoot.transform);
+            inactive.SetActive(false);
+            yield return null;
+
+            var resolved = UnityQaTargetResolver.Resolve("PLAYButton", eventSystem, out var target);
+
+            Assert.That(resolved, Is.True);
+            Assert.That(target.GameObject, Is.SameAs(active));
+            Assert.That(target.RaycastResult.gameObject, Is.SameAs(active));
+        }
+
+        [UnityTest]
+        public IEnumerator Resolve_CompleteHierarchyPath_SelectsMatchingTarget()
+        {
+            var eventSystem = BuildUi();
+            var menu = new GameObject("Menu", typeof(RectTransform));
+            menu.transform.SetParent(testRoot.transform, false);
+            var play = CreateButton("PLAYButton", menu.transform);
+            yield return null;
+
+            var resolved = UnityQaTargetResolver.Resolve("Canvas/Menu/PLAYButton", eventSystem, out var target);
+
+            Assert.That(resolved, Is.True);
+            Assert.That(target.GameObject, Is.SameAs(play));
+        }
+
+        [Test]
+        public void Resolve_DuplicateActiveLeafNames_IsRejected()
+        {
+            var eventSystem = BuildUi();
+            CreateButton("PLAYButton", testRoot.transform);
+            CreateButton("PLAYButton", testRoot.transform);
+
+            Assert.That(UnityQaTargetResolver.Resolve("PLAYButton", eventSystem, out _), Is.False);
+        }
+
+        [Test]
+        public void Resolve_InactiveTarget_IsRejected()
+        {
+            var eventSystem = BuildUi();
+            var inactive = CreateButton("PLAYButton", testRoot.transform);
+            inactive.SetActive(false);
+
+            Assert.That(UnityQaTargetResolver.Resolve("PLAYButton", eventSystem, out _), Is.False);
+        }
+
+        [Test]
+        public void Resolve_DisabledSelectable_IsRejected()
+        {
+            var eventSystem = BuildUi();
+            var button = CreateButton("PLAYButton", testRoot.transform);
+            button.GetComponent<Button>().interactable = false;
+
+            Assert.That(UnityQaTargetResolver.Resolve("PLAYButton", eventSystem, out _), Is.False);
+        }
+
+        [UnityTest]
+        public IEnumerator Resolve_TargetBehindAnotherEligibleHandler_IsRejected()
+        {
+            var eventSystem = BuildUi();
+            CreateButton("PLAYButton", testRoot.transform);
+            CreateButton("BlockingButton", testRoot.transform);
+            yield return null;
+
+            Assert.That(UnityQaTargetResolver.Resolve("PLAYButton", eventSystem, out _), Is.False);
+        }
+
+        [Test]
+        public void NormalizedToScreen_ScalesBothCoordinatesByScreenDimensions()
+        {
+            Assert.That(UnityQaTargetResolver.NormalizedToScreen(new[] { .25f, .75f }),
+                Is.EqualTo(new Vector2(Screen.width * .25f, Screen.height * .75f)));
+        }
+
         private static UnityQaRequest Parse(string json)
         {
             return JsonUtility.FromJson<UnityQaRequest>(json);
@@ -206,6 +301,42 @@ namespace KMA.Tests.EditorTools
         private static UnityQaRequest RequestWith(UnityQaAction action)
         {
             return new UnityQaRequest { actions = new[] { action } };
+        }
+
+        private EventSystem BuildUi()
+        {
+            testRoot = new GameObject("Canvas", typeof(Canvas));
+            var canvas = testRoot.GetComponent<Canvas>();
+            canvas.renderMode = RenderMode.ScreenSpaceOverlay;
+            testRaycaster = testRoot.AddComponent<TestGraphicRaycaster>();
+            testRaycaster.Register();
+            var eventSystemObject = new GameObject("EventSystem", typeof(EventSystem));
+            eventSystemObject.transform.SetParent(testRoot.transform, false);
+            return eventSystemObject.GetComponent<EventSystem>();
+        }
+
+        private static GameObject CreateButton(string name, Transform parent)
+        {
+            var button = new GameObject(name, typeof(RectTransform), typeof(CanvasRenderer), typeof(Image), typeof(Button));
+            button.transform.SetParent(parent, false);
+            var rect = (RectTransform)button.transform;
+            rect.anchorMin = new Vector2(.5f, .5f);
+            rect.anchorMax = new Vector2(.5f, .5f);
+            rect.sizeDelta = new Vector2(200f, 100f);
+            return button;
+        }
+    }
+
+    public sealed class TestGraphicRaycaster : GraphicRaycaster
+    {
+        public void Register()
+        {
+            base.OnEnable();
+        }
+
+        public void Unregister()
+        {
+            base.OnDisable();
         }
     }
 }
