@@ -100,7 +100,7 @@ transform, never for contact resolution.
 `SetSwipeDetector` setters, so it cannot silently drop a detector another owner installed on the
 same router (there is none in this scene, but the setters are shared code with Volleyball).
 
-Verified by `Assets/Tests/PlayMode/Gameplay/Ball/Basketball/BasketballSceneTests.cs` (9 tests, all
+Verified by `Assets/Tests/PlayMode/Gameplay/Ball/Basketball/BasketballSceneTests.cs` (8 tests, all
 in the green PlayMode runs above): single controller/ball/HUD, rim inside the authored apex band,
 one router/one surface with the screen-centre raycast owned by the gameplay surface, the S8 kit
 referenced not duplicated, HUD labels backed by a real font asset, the finisher bounds able to
@@ -137,15 +137,17 @@ keyboard `Tap`/`Hold` straight into the same `tapMashDetector`/`holdDetector`, a
 into `FeedKeyboardSwipe`, so a desktop tester without a touchscreen can still charge, aim and
 finish through the identical detector chain, verified by
 `BasketballSceneTests.BasketballScene_RoutesGameplayThroughOneSharedInputRouterAndSurface`
-(`router.InputActions` non-null) and by `BasketballCampaignTests.ScoreOneBasketThroughTheRouter`,
-which drives an entire basket through `FeedPointerDownForTest`/`FeedPointerMoveForTest`/
-`FeedPointerUpForTest` on the real router.
+(`router.InputActions` non-null) and by
+`BasketballCampaignTests.BasketballPass_PreviewsMapThenContinuesAndPersistsTheRecord`, which calls
+the private helper `ScoreOneBasketThroughTheRouter` five times to drive whole baskets through
+`FeedPointerDownForTest`/`FeedPointerMoveForTest`/`FeedPointerUpForTest` on the real router.
 
 ## 4. Difficulty axes
 
 Five authored steps (`BasketballController.difficultySteps`, index = `Baskets` clamped to the
 table), each changing exactly one axis from the previous step
-(`AuthoredDifficultyTable_ChangesExactlyOneAxisPerStep`, EditMode):
+(`AuthoredDifficultyTable_ChangesExactlyOneAxisPerStep`, PlayMode —
+`BasketballControllerTests.cs:265`):
 
 | Step (baskets scored) | `finishCueLeadSeconds` | `chargeAngleSpanDegrees` | Axis changed from previous step |
 | --- | --- | --- | --- |
