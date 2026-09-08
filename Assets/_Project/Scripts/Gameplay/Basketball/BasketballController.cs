@@ -7,7 +7,6 @@ namespace KMA.Gameplay
 {
     public sealed class BasketballController : MinigameBase
     {
-        const float DefaultTutorialSeconds = 2f;
         const float DefaultCountdownSeconds = 3f;
         const int ChargeBandSamples = 201;
 
@@ -218,6 +217,11 @@ namespace KMA.Gameplay
 
             ChargeRatio = charge;
             PendingPassVector = PassVectorForCharge(charge, direction);
+            // The invariant TryPass needs is "body and transform agree at the moment it reads the
+            // Transform" (see SyncBallTransform's comment) - enforced here, at the read site, not
+            // at whichever earlier attach happened to run last, so it still holds even if something
+            // moves the hand (an animated actor, say) between an attach and this pass.
+            SyncBallTransform();
             if (!Rules.TryPass(ball, PendingPassVector))
             {
                 CancelCharge();
@@ -275,7 +279,7 @@ namespace KMA.Gameplay
             float radians = AngleForCharge(charge01) * Mathf.Deg2Rad;
             var velocity = new Vector2(Mathf.Cos(radians), Mathf.Sin(radians)) * AuthoredBand.LaunchForce;
             return PredictApex(LaunchOrigin, velocity, ProfileGravity, ProfileDrag,
-                Time.fixedDeltaTime, out _).y;
+                Time.fixedDeltaTime, out _, AuthoredBand.Curvature).y;
         }
 
         Vector2 LaunchOrigin => playerHand != null
@@ -287,8 +291,12 @@ namespace KMA.Gameplay
 
         // Mirrors the integrator BallRig/Ballistics own, so the ring closes on the frame the ball
         // actually stops rising instead of on a closed-form estimate that linear drag invalidates.
+        // curvature defaults to 0 (today's authored value) so existing callers - including the
+        // test file's own independent recomputation - are unaffected; passing AuthoredBand.Curvature
+        // explicitly keeps this prediction from silently diverging from the simulation if a future
+        // balance pass ever tunes curvature away from zero.
         public static Vector2 PredictApex(Vector2 position, Vector2 velocity, Vector2 gravity,
-            float linearDrag, float deltaTime, out float secondsToApex, int maxSteps = 10000)
+            float linearDrag, float deltaTime, out float secondsToApex, float curvature = 0f, int maxSteps = 10000)
         {
             secondsToApex = 0f;
             if (deltaTime <= 0f || maxSteps <= 0 || velocity.y <= 0f) return position;
@@ -297,7 +305,7 @@ namespace KMA.Gameplay
             Vector2 currentPosition = position;
             for (var step = 0; step < maxSteps; step++)
             {
-                Vector2 next = Ballistics.AdvanceVelocity(current, gravity, 0f, linearDrag, deltaTime);
+                Vector2 next = Ballistics.AdvanceVelocity(current, gravity, curvature, linearDrag, deltaTime);
                 if (next.y <= 0f) return currentPosition;
                 currentPosition += next * deltaTime;
                 secondsToApex += deltaTime;
@@ -336,6 +344,7 @@ namespace KMA.Gameplay
 
             TickAlleyOopLaunch(deltaTime);
             RefreshFlightState();
+            ResolveWhiffOnGroundContact();
             ResolveTerminalState();
         }
 
@@ -348,8 +357,9 @@ namespace KMA.Gameplay
             pendingAlleyOop = false;
             if (!Rules.TryLaunchAlleyOop(ball)) return;
 
-            PredictApex(ball.Body.position, ball.Body.velocity, ProfileGravity, ProfileDrag,
-                Time.fixedDeltaTime, out launchSecondsToApex);
+            BallFlightSnapshot launchSnapshot = ball.Snapshot;
+            PredictApex(launchSnapshot.Position, launchSnapshot.Velocity, ProfileGravity, ProfileDrag,
+                Time.fixedDeltaTime, out launchSecondsToApex, AuthoredBand.Curvature);
             launchSecondsToApex = Mathf.Max(launchSecondsToApex, Mathf.Epsilon);
         }
 
@@ -358,7 +368,8 @@ namespace KMA.Gameplay
             if (ball == null) return;
             PredictedLandingPoint = ball.PredictLandingPoint();
 
-            if (Rules.State != BasketballState.AlleyOopFlight || !ball.Snapshot.IsInFlight)
+            BallFlightSnapshot snapshot = ball.Snapshot;
+            if (Rules.State != BasketballState.AlleyOopFlight || !snapshot.IsInFlight)
             {
                 FinishCueVisible = false;
                 FlightApexProgress = 0f;
@@ -367,20 +378,42 @@ namespace KMA.Gameplay
                 return;
             }
 
-            PredictedApexPoint = PredictApex(ball.Body.position, ball.Body.velocity, ProfileGravity,
-                ProfileDrag, Time.fixedDeltaTime, out float remaining);
+            PredictedApexPoint = PredictApex(snapshot.Position, snapshot.Velocity, ProfileGravity,
+                ProfileDrag, Time.fixedDeltaTime, out float remaining, AuthoredBand.Curvature);
             SecondsToApex = remaining;
             FlightApexProgress = Mathf.Clamp01(1f - remaining / launchSecondsToApex);
-            // Strict less-than, and guarded with Mathf.Approximately: for the widest authored lead
-            // (step 0), the discrete, quantized flight time to the true apex and the lead constant
-            // land on the same physics-step boundary, so the freshly-launched "remaining" can come
-            // out a few float-ULPs under the lead purely from step quantization, not because the
-            // ball is genuinely inside the window yet. Treating that near-tie as "not yet" (the same
-            // tolerance Unity's own Mathf.Approximately uses) keeps the cue off at launch without
-            // weakening the window once the ball is actually within it.
-            FinishCueVisible = remaining < FinishCueLeadSeconds && !Mathf.Approximately(remaining, FinishCueLeadSeconds);
+            // PredictApex truncates rather than interpolating the apex-crossing step, so it
+            // quantizes "remaining" to whole multiples of Time.fixedDeltaTime. At the widest
+            // authored lead the freshly-launched "remaining" can therefore land a few float-ULPs
+            // under FinishCueLeadSeconds purely from that quantization, not because the ball is
+            // genuinely inside the window. A tolerance at the ULP scale (Mathf.Approximately) would
+            // defend a boundary five orders of magnitude finer than the quantity being compared, so
+            // it would flip with any change to fixed timestep, gravity, launch force or
+            // passAngleCentreDegrees. Defending the boundary at the quantization's own scale - half
+            // a fixed step - is the tolerance that actually matches what is being compared.
+            //
+            // The cue must also never latch through the descent: once the ball is at or past its
+            // true apex, PredictApex early-returns remaining=0, which would otherwise read as
+            // "always within the lead" for the entire fall.
+            bool ascending = snapshot.Velocity.y > 0f;
+            FinishCueVisible = ascending && remaining <= FinishCueLeadSeconds - Time.fixedDeltaTime * .5f;
             MoveFinisherToPrediction();
             ballShadow?.Refresh();
+        }
+
+        // A flight that reaches the ground without a tap is a whiff: it must consume the attempt
+        // and return the ball to the hand, the same as a genuine late tap, rather than leaving the
+        // possession stuck until the 60s deadline. The non-positive-velocity guard keeps the launch
+        // frame itself (which can start at or below the ground plane before its first upward step)
+        // from tripping this early - only a ball that is actually descending can whiff.
+        void ResolveWhiffOnGroundContact()
+        {
+            if (Rules == null || ball == null || Rules.State != BasketballState.AlleyOopFlight) return;
+            BallFlightSnapshot snapshot = ball.Snapshot;
+            if (snapshot.Velocity.y > 0f) return;
+            float groundY = ball.Profile != null ? ball.Profile.GroundY : 0f;
+            if (snapshot.Position.y > groundY) return;
+            SubmitFinishTap();
         }
 
         // Transforms only. The assist must never write to the ball body, or it fights the physics
@@ -422,15 +455,18 @@ namespace KMA.Gameplay
             cachedBandStep = -1;                 // the difficulty step just moved
             RefreshTargetChargeBand();
             ball.AttachTo(playerHand != null ? playerHand : transform);
-            SyncBallTransform();
         }
 
         // BallRig.AttachTo assigns Rigidbody2D.position directly. After the ball has spent a real
         // flight as a Dynamic body, Unity does not carry that assignment over to the ball's own
         // Transform within the same frame. BasketballRules.TryPass (immutable) re-attaches via
-        // ball.AttachTo(ball.transform) on the very next pass, which reads the Transform - without
-        // this explicit copy it would read the stale, still-mid-air position and launch the next
-        // alley-oop from the wrong height.
+        // ball.AttachTo(ball.transform) on its own very next call, which reads the Transform -
+        // without a fresh copy it would read a stale, still-mid-air position and launch the next
+        // alley-oop from the wrong height. Called from SubmitPass, immediately before TryPass reads
+        // it, rather than from wherever the ball was last attached - the read site is the only place
+        // that actually needs the invariant to hold, and the only place guaranteed to run right
+        // before it matters even if something else moves the hand in between (Task 5's animated
+        // actor, for instance).
         void SyncBallTransform()
         {
             Vector2 position = ball.Body.position;
@@ -482,11 +518,7 @@ namespace KMA.Gameplay
             LastResult = default;
             cachedBandStep = -1;
             RefreshTargetChargeBand();
-            if (ball != null)
-            {
-                ball.AttachTo(playerHand != null ? playerHand : transform);
-                SyncBallTransform();   // see SyncBallTransform's comment
-            }
+            if (ball != null) ball.AttachTo(playerHand != null ? playerHand : transform);
         }
 
         // Deviation from the brief: MinigameResult is a sealed class, not a struct, and a
@@ -518,6 +550,11 @@ namespace KMA.Gameplay
         public void ConfigureSceneRefsForTest(BallRig configuredBall, GameplayInputRouter router,
             Transform hand, Transform finisherActor)
         {
+            // Unsubscribe from whatever router OnEnable already found (e.g. via
+            // FindFirstObjectByType) before swapping it out - otherwise that subscription stays
+            // live while SubscribeInputRouter below early-returns on inputRouterSubscribed already
+            // being true, so the new router silently never gets hooked up.
+            UnsubscribeInputRouter();
             ball = configuredBall;
             inputRouter = router;
             playerHand = hand;
