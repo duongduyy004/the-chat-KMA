@@ -122,7 +122,6 @@ namespace KMA.Gameplay.Shell
 
         void BindMainMenuButtons()
         {
-            BindButton("PLAYButton", mainMenu.Play);
             BindButton("CONTINUEButton", mainMenu.Continue);
             BindButton("NEW GAMEButton", mainMenu.NewGame);
             BindButton("SETTINGSButton", mainMenu.OpenSettings);
@@ -131,7 +130,6 @@ namespace KMA.Gameplay.Shell
 
         void UnbindMainMenuButtons()
         {
-            UnbindButton("PLAYButton", mainMenu.Play);
             UnbindButton("CONTINUEButton", mainMenu.Continue);
             UnbindButton("NEW GAMEButton", mainMenu.NewGame);
             UnbindButton("SETTINGSButton", mainMenu.OpenSettings);

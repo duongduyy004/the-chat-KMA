@@ -41,7 +41,7 @@ namespace KMA.Gameplay.UI
                     record != null && record.Passed ? $"HẠNG {BestRank}  ★ {Stars}" : "SẴN SÀNG";
             if (statusLabel != null)
                 statusLabel.text = IsComingSoon ? "🔒  KHÓA" :
-                    record != null && record.Passed ? "✓  HOÀN THÀNH" : "SẴN SÀNG";
+                    record != null && record.Passed ? "✓  HOÀN THÀNH" : string.Empty;
             if (button != null)
                 button.interactable = !comingSoon;
         }
