@@ -6,6 +6,9 @@ namespace KMA.Gameplay
 {
     public sealed class BasketballHud : MonoBehaviour
     {
+        // Indexed by (int)FinishJudge: Ignored, Early, Perfect, Late.
+        static readonly string[] JudgeLabels = { string.Empty, "EARLY", "PERFECT", "LATE" };
+
         [SerializeField] BasketballController controller;
         [SerializeField] int targetBaskets = 5;
         [SerializeField] TMP_Text scoreLabel;
@@ -28,6 +31,18 @@ namespace KMA.Gameplay
         public float ApexRing01 { get; private set; }
         public bool ApexZoneGlowing { get; private set; }
 
+        // Last-rendered inputs, so Refresh() (called every frame from Update()) only rebuilds a
+        // formatted string when the value behind it actually changed, instead of allocating five
+        // interpolated strings plus an enum ToString().ToUpperInvariant() every single frame.
+        bool hasRenderedOnce;
+        int lastBaskets = -1;
+        int lastTargetBaskets = -1;
+        int lastAttempts = -1;
+        int lastBestCombo = -1;
+        FinishJudge lastJudge = (FinishJudge)(-1);
+        bool lastIsCharging;
+        int lastChargePercent = -1;
+
         public void Bind(BasketballController value)
         {
             controller = value;
@@ -40,23 +55,48 @@ namespace KMA.Gameplay
         {
             if (controller == null) return;
 
-            ScoreText = $"BASKETS {controller.Baskets}/{targetBaskets}";
-            AttemptsText = $"ATTEMPTS {controller.Attempts}";
-            ComboText = $"COMBO {controller.BestCombo}";
-            JudgeText = controller.LastJudge == FinishJudge.Ignored
-                ? string.Empty
-                : controller.LastJudge.ToString().ToUpperInvariant();
-            ChargeText = controller.IsCharging
-                ? $"CHARGE {Mathf.RoundToInt(controller.ChargeRatio * 100f)}%"
-                : "AIM";
+            if (!hasRenderedOnce || controller.Baskets != lastBaskets || targetBaskets != lastTargetBaskets)
+            {
+                lastBaskets = controller.Baskets;
+                lastTargetBaskets = targetBaskets;
+                ScoreText = $"BASKETS {lastBaskets}/{lastTargetBaskets}";
+                SetText(scoreLabel, ScoreText);
+            }
+
+            if (!hasRenderedOnce || controller.Attempts != lastAttempts)
+            {
+                lastAttempts = controller.Attempts;
+                AttemptsText = $"ATTEMPTS {lastAttempts}";
+                SetText(attemptsLabel, AttemptsText);
+            }
+
+            if (!hasRenderedOnce || controller.BestCombo != lastBestCombo)
+            {
+                lastBestCombo = controller.BestCombo;
+                ComboText = $"COMBO {lastBestCombo}";
+                SetText(comboLabel, ComboText);
+            }
+
+            if (!hasRenderedOnce || controller.LastJudge != lastJudge)
+            {
+                lastJudge = controller.LastJudge;
+                JudgeText = JudgeLabels[(int)lastJudge];
+                SetText(judgeLabel, JudgeText);
+            }
+
+            int chargePercent = Mathf.RoundToInt(controller.ChargeRatio * 100f);
+            if (!hasRenderedOnce || controller.IsCharging != lastIsCharging || chargePercent != lastChargePercent)
+            {
+                lastIsCharging = controller.IsCharging;
+                lastChargePercent = chargePercent;
+                ChargeText = lastIsCharging ? $"CHARGE {chargePercent}%" : "AIM";
+                SetText(chargeLabel, ChargeText);
+            }
+
+            hasRenderedOnce = true;
+
             ApexRing01 = controller.FlightApexProgress;
             ApexZoneGlowing = controller.FinishCueVisible;
-
-            SetText(scoreLabel, ScoreText);
-            SetText(attemptsLabel, AttemptsText);
-            SetText(judgeLabel, JudgeText);
-            SetText(comboLabel, ComboText);
-            SetText(chargeLabel, ChargeText);
 
             // The ring closes around the ball as the apex approaches; the zone lights up only
             // inside the authored cue lead, so the player is warned before they must act.

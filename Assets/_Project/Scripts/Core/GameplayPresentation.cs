@@ -119,7 +119,7 @@ namespace KMA.Gameplay.Core
             "MG_Sprint" => "Sprint: Left / Right arrows",
             "MG_Endurance" => "Endurance: T tap · H hold · Up / Down swipe",
             "MG_Boss" => "Boss: Space tap · H hold · Left / Right alternate",
-            "MG_Basketball" => "Basketball: hold to charge, release to pass, Space to finish",
+            "MG_Basketball" => "Basketball: Space charge · H hold ratio · Left / Right pass · Space finish",
             "Punishment" => "Recovery: Space tap · H hold · Left / Right alternate",
             "Map" => "Progression route",
             "GameOver" => "Run complete",

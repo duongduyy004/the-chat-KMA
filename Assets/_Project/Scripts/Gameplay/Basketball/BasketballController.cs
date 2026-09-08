@@ -299,7 +299,12 @@ namespace KMA.Gameplay
             float linearDrag, float deltaTime, out float secondsToApex, float curvature = 0f, int maxSteps = 10000)
         {
             secondsToApex = 0f;
-            if (deltaTime <= 0f || maxSteps <= 0 || velocity.y <= 0f) return position;
+            // A FlightProfile with non-negative effective gravity would never satisfy the loop's
+            // own descent check (next.y <= 0f), so it would run the full maxSteps every single
+            // sample - RefreshTargetChargeBand's 201-sample scan would then cost 2,010,000
+            // iterations inside BeginCharge. Bail out before that, the same way the other
+            // physically-impossible inputs below already do.
+            if (deltaTime <= 0f || maxSteps <= 0 || velocity.y <= 0f || gravity.y >= 0f) return position;
 
             Vector2 current = velocity;
             Vector2 currentPosition = position;
@@ -337,7 +342,20 @@ namespace KMA.Gameplay
             if (IsCharging)
             {
                 chargeElapsed += deltaTime;
-                ChargeRatio = Mathf.Clamp01(chargeElapsed);   // HoldInputDetector maxChargeSeconds is 1
+                // The bar the player watches fill must be the same clock as the value OnRouterHoldEnd
+                // will submit, or a hitch, a pause, or a backgrounded frame (Time.deltaTime not
+                // tracking real elapsed time) makes the displayed charge under- or over-read relative
+                // to what actually gets submitted. Whenever the production hold detector is the one
+                // actually driving this hold - the only way a real player can ever reach this branch,
+                // since BeginCharge() is only ever called directly (bypassing the detector) by tests -
+                // its own Time.realtimeSinceStartupAsDouble-based ratio is the single source of truth
+                // for both the live display and the value FeedUp will commit at release. The
+                // chargeElapsed fallback below only serves that direct-API test path, where the
+                // detector was never engaged; HoldInputDetector's maxChargeSeconds is 1, so chargeElapsed
+                // maps onto the same 0..1 range.
+                ChargeRatio = productionHoldDetector != null && productionHoldDetector.IsHolding
+                    ? Mathf.Clamp01((float)productionHoldDetector.CurrentRatio(Time.realtimeSinceStartupAsDouble))
+                    : Mathf.Clamp01(chargeElapsed);
                 Rules.Hold(deltaTime);
                 RefreshChargePreview();
             }
@@ -355,7 +373,15 @@ namespace KMA.Gameplay
             if (alleyOopDelay > 0f) return;
 
             pendingAlleyOop = false;
-            if (!Rules.TryLaunchAlleyOop(ball)) return;
+            if (!Rules.TryLaunchAlleyOop(ball))
+            {
+                // Unreachable today (the authored pattern always launches after its lead), but if it
+                // ever did fail the player would otherwise be soft-locked in Passing with no cue until
+                // the 60s deadline - log loudly rather than fail silently.
+                Debug.LogError("BasketballController: TryLaunchAlleyOop failed after the authored lead " +
+                    "elapsed; the player is stuck in Passing until the timeout.", this);
+                return;
+            }
 
             BallFlightSnapshot launchSnapshot = ball.Snapshot;
             PredictApex(launchSnapshot.Position, launchSnapshot.Velocity, ProfileGravity, ProfileDrag,
