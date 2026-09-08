@@ -8,7 +8,11 @@ checkpoint. S11–S16 (PingPong, Badminton, Football, Boss/Punishment polish, en
 art/audio/release) are untouched by this gate and are not claimed here. This document does not
 claim the game-wide Definition of Done.
 
-- Commit under test: `4558ad9` ("test: verify the basketball campaign route"), branch `master`
+- Commit under test: `36dc85d` ("fix: correct three citation errors in the S10 gate document"),
+  branch `master`. (Originally captured against `4558ad9`; head advanced by three more
+  documentation-only commits before this gate's own commit landed. The delta between `4558ad9` and
+  `36dc85d` is documentation-only — no source, scene or test file differs — so every measurement,
+  count and verdict in this document is unaffected and was not re-run for this correction.)
 - Editor: Unity `6000.3.23f1`, Windows 11 Pro 10.0.26200, batch mode, `-nographics`
 - A second session was concurrently active in this same working copy during this gate (see
   "Concurrent session" below); its files were left untouched throughout
@@ -100,12 +104,14 @@ transform, never for contact resolution.
 `SetSwipeDetector` setters, so it cannot silently drop a detector another owner installed on the
 same router (there is none in this scene, but the setters are shared code with Volleyball).
 
-Verified by `Assets/Tests/PlayMode/Gameplay/Ball/Basketball/BasketballSceneTests.cs` (8 tests, all
+Verified by `Assets/Tests/PlayMode/Gameplay/Ball/Basketball/BasketballSceneTests.cs` (10 tests, all
 in the green PlayMode runs above): single controller/ball/HUD, rim inside the authored apex band,
-one router/one surface with the screen-centre raycast owned by the gameplay surface, the S8 kit
-referenced not duplicated, HUD labels backed by a real font asset, the finisher bounds able to
-reach an in-band shot's landing point, every actor visibly rendered, and the 3-step tutorial
-content.
+one router/one surface with the screen-centre raycast owned by the gameplay surface, the pause
+button's own screen rect raycasting to a `Selectable` above that same surface, every `Image` of
+`type == Filled` in the HUD carrying a non-null sprite (a `Filled` `Image` with no sprite silently
+draws as a plain static rectangle, ignoring `fillAmount`/`fillMethod` entirely), the S8 kit referenced not duplicated, HUD labels
+backed by a real font asset, the finisher bounds able to reach an in-band shot's landing point,
+every actor visibly rendered, and the 3-step tutorial content.
 
 ## 3. Input route
 
@@ -218,17 +224,60 @@ review and deliberately deferred to this task's balance pass, because tuning it 
 device measurement this gate could not obtain. It is recorded here, unresolved, with the exact
 numbers above.
 
+**Second, unmeasured balance defect — the charge band reads as uniform but is not.** The HUD draws
+`BasketballChargeTargetBand` as a single flat-opacity strip across its whole authored width, but a
+charge released at the band's low edge (`TargetChargeMin`) does not get the same Perfect-timing
+window as a charge released at its high edge (`TargetChargeMax`), because the two charges apex at
+different heights inside the (fixed-width) authored apex band and therefore satisfy the height gate
+for very different durations. Measured by simulating the authored integrator (not by device, and
+not by the committed C# test suite):
+
+- A charge at `TargetChargeMin` apexes exactly at `ApexMin = 2.8` — the ball only satisfies the
+  height gate for two to four physics steps.
+- A charge at `TargetChargeMax` apexes at `~3.196` and stays inside the height gate for the entire
+  `0.30s` velocity-threshold window `AlleyOopWindowTests` measures.
+
+| Difficulty step | Band (min–max) | Width | Perfect window at band mid | at low edge | at high edge |
+| --- | --- | --- | --- | --- | --- |
+| 0 (35°) | 0.450 – 0.655 | 0.205 | 0.300 s | 0.060 s | 0.300 s |
+| 2 (45°) | 0.460 – 0.620 | 0.160 | 0.300 s | 0.040 s | 0.300 s |
+| 4 (55°) | 0.470 – 0.600 | 0.130 | 0.300 s | 0.080 s | 0.320 s |
+
+A player releasing in the bottom fifth of the glowing band is given a 40–80 ms Perfect window
+against the mid-band's (and high-edge's) ~300 ms — a window narrow enough to read as the game
+cheating them, not as their own timing error. This is a genuine asymmetry in the authored pattern,
+not a HUD rendering bug (Fix 1 in this fix wave corrected the HUD rendering itself; this finding is
+about what the corrected HUD would now faithfully show). It was found by simulation during the
+whole-branch review, is **not fixed here** — Correction 3 forbids tuning any of the four balance
+knobs (`difficultySteps`, `BasketballPlayerHand.y`, `alleyOopLeadSeconds`) without a real-device
+pass-rate measurement this gate still cannot obtain — and is recorded here, unresolved, alongside
+the step-0 cue-lead finding above. Candidate fixes for whoever picks this up next: clamp the
+advertised band inward so the whole visible strip carries a usable window, or grade the band's
+opacity by its local window length so the player can see the low edge is a worse bet. Neither was
+applied.
+
+**The 40–60% first-attempt pass-rate target is S16-owned, not an S10 gap.** Spec §6 assigns
+first-attempt pass-rate tuning to S16 (the polish/release pass); the "unavailable — not measured"
+row for it in section 8's device checklist below reflects that this gate could not obtain a device
+to measure it, not that S10 owes a fix here. Do not read that open row as an S10 failure.
+
 ## 7. Known gaps
 
 Found during S10's reviews, deliberately deferred, listed here rather than silently dropped:
 
 - **Step 0's apex cue conveys almost no warning** — section 6 above. Unmeasured on device.
-- **The pause button is likely unreachable during play.** `FullScreenGameplayInput`'s overlay
-  canvas outranks the `ScreenSpaceCamera` S2 HUD canvas in `RaycastAll` regardless of sorting
-  order, so its full-screen image sits above the pause button and `ScreenTapArea.OnPointerDown`
-  consumes the event first. This is inherited verbatim from the reviewed `MG_Volleyball` scene and
-  affects both scenes — not an S10 regression — but no test in either scene covers it, and it
-  should be flagged for whoever owns the shared input surface.
+- **The pause button was unreachable during play — fixed in this document's own fix wave, in
+  Basketball only.** `FullScreenGameplayInput`'s `ScreenSpaceOverlay` canvas outranked the
+  `ScreenSpaceCamera` S2 HUD canvas in `RaycastAll` regardless of sorting order (`GraphicRaycaster.
+  sortOrderPriority` returns `canvas.sortingOrder` for Overlay and `int.MinValue` for every other
+  render mode), so its full-screen image sat above the pause button and
+  `ScreenTapArea.OnPointerDown` consumed the event first. `BasketballSceneConfigurator` now authors
+  `FullScreenGameplayInput` as `ScreenSpaceCamera` on the same camera as the HUD, with a lower
+  `sortingOrder`, restoring ordinary sorting-order comparison; covered by
+  `BasketballSceneTests.BasketballScene_PauseButtonIsReachableAboveTheGameplayInputSurface`. This
+  defect was inherited verbatim from the reviewed `MG_Volleyball` scene and **still affects
+  `MG_Volleyball`** — that scene was deliberately left untouched by this fix wave (out of scope)
+  and remains a separate, open follow-up for whoever owns the shared input surface.
 - **`CreateHudState` allocates on every read** (a `ToString()` plus a fresh `MinigameResult`), and
   the shared `MinigameHUD` polls it every frame — per-frame GC on a mobile target. Identical in
   `VolleyballController`, so it must be fixed in both places at once or not at all.
@@ -266,7 +315,7 @@ getprop ro.build.version.release -> 15
 getprop ro.build.version.sdk     -> 35
 ```
 
-The shipping APK is ARM64-only (section 3's build, `native-code: 'arm64-v8a'` only, no other
+The shipping APK is ARM64-only (section 9's build, `native-code: 'arm64-v8a'` only, no other
 `lib/` ABI directory), so it cannot run on that x86_64 target. Install was not attempted a second
 time given the identical, already-documented S1–S9 failure mode for the same class of target.
 
