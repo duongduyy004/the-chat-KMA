@@ -87,7 +87,7 @@ namespace KMA.EditorTools
             GameObject ballGO = InstantiateBall(sprite);
 
             // --- Gameplay input surface (mirrors MG_Volleyball's FullScreenGameplayInput) ---
-            (GameplayInputRouter router, ScreenTapArea surface) = BuildFullScreenGameplayInput();
+            (GameplayInputRouter router, ScreenTapArea surface) = BuildFullScreenGameplayInput(camera);
 
             // --- Controller ---
             var controllerGO = new GameObject("BasketballController");
@@ -122,7 +122,7 @@ namespace KMA.EditorTools
             var band = AlleyOopPattern.AuthoredDefault(Vector2.right);
             float apexY = (band.ApexMin + band.ApexMax) * .5f;
             Vector2 apexAnchor = ViewportAnchorForOrthographicCamera(camera, new Vector3(0f, apexY, 0f));
-            BuildHud(controller, font, apexAnchor);
+            BuildHud(controller, font, apexAnchor, sprite);
 
             // --- Rebind the shared S2 presentation kit from the placeholder to the new controller ---
             var sharedHud = FindComponentInScene<MinigameHUD>(scene);
@@ -211,17 +211,25 @@ namespace KMA.EditorTools
             return ballGO;
         }
 
-        // Copied structurally from MG_Volleyball.unity's FullScreenGameplayInput: one Canvas
-        // (ScreenSpaceOverlay, below the HUD canvas), a transparent full-screen raycast Image,
-        // the shared router and the shared tap surface. Basketball differs in one respect: it
-        // binds inputActions so a keyboard fallback exists, unlike the S9 Volleyball scene.
-        static (GameplayInputRouter router, ScreenTapArea surface) BuildFullScreenGameplayInput()
+        // Copied structurally from MG_Volleyball.unity's FullScreenGameplayInput, with one
+        // deliberate departure: this canvas is ScreenSpaceCamera (sharing the HUD's camera),
+        // not ScreenSpaceOverlay. GraphicRaycaster.sortOrderPriority returns canvas.sortingOrder
+        // for an Overlay canvas but int.MinValue for every other render mode, and the
+        // EventSystem's raycast comparer sorts on that first - so an Overlay canvas always wins
+        // the raycast over a Camera-space canvas regardless of sortingOrder, which is exactly
+        // what made the HUD_Minigame prefab's PausePanel (Screen Space - Camera) unreachable
+        // beneath this surface. Putting both canvases in the same render mode restores ordinary
+        // sortingOrder comparison, so this surface's lower sortingOrder correctly loses to the
+        // HUD canvas's pause button. Basketball differs from Volleyball in one further respect:
+        // it binds inputActions so a keyboard fallback exists, unlike the S9 Volleyball scene.
+        static (GameplayInputRouter router, ScreenTapArea surface) BuildFullScreenGameplayInput(Camera camera)
         {
             var go = new GameObject("FullScreenGameplayInput", typeof(RectTransform));
             var rect = go.GetComponent<RectTransform>();
 
             var canvas = go.AddComponent<Canvas>();
-            canvas.renderMode = RenderMode.ScreenSpaceOverlay;
+            canvas.renderMode = RenderMode.ScreenSpaceCamera;
+            canvas.worldCamera = camera;
             canvas.sortingOrder = -1;
 
             var scaler = go.AddComponent<CanvasScaler>();
@@ -248,7 +256,7 @@ namespace KMA.EditorTools
             return (router, surface);
         }
 
-        static void BuildHud(BasketballController controller, TMP_FontAsset font, Vector2 apexAnchor)
+        static void BuildHud(BasketballController controller, TMP_FontAsset font, Vector2 apexAnchor, Sprite sprite)
         {
             var canvasGO = new GameObject("BasketballHudCanvas", typeof(RectTransform));
             var canvas = canvasGO.AddComponent<Canvas>();
@@ -285,6 +293,7 @@ namespace KMA.EditorTools
             var apexZone = CreateRect("BasketballApexZone", safeArea);
             Anchor(apexZone, apexAnchor, apexAnchor, new Vector2(.5f, .5f), Vector2.zero, new Vector2(240f, 240f));
             var apexZoneImage = apexZone.gameObject.AddComponent<Image>();
+            apexZoneImage.sprite = sprite;
             apexZoneImage.color = new Color(1f, .85f, .2f, .35f);
             apexZoneImage.raycastTarget = false;
             apexZoneImage.enabled = false;
@@ -292,6 +301,7 @@ namespace KMA.EditorTools
             var apexRing = CreateRect("BasketballApexRing", safeArea);
             Anchor(apexRing, apexAnchor, apexAnchor, new Vector2(.5f, .5f), Vector2.zero, new Vector2(180f, 180f));
             var apexRingImage = apexRing.gameObject.AddComponent<Image>();
+            apexRingImage.sprite = sprite;
             apexRingImage.color = new Color(1f, 1f, 1f, .9f);
             apexRingImage.type = Image.Type.Filled;
             apexRingImage.fillMethod = Image.FillMethod.Radial360;
@@ -301,12 +311,14 @@ namespace KMA.EditorTools
             var chargeTrack = CreateRect("BasketballChargeTrack", safeArea);
             Anchor(chargeTrack, new Vector2(1f, 0f), new Vector2(1f, 0f), new Vector2(1f, 0f), new Vector2(-70f, 240f), new Vector2(60f, 420f));
             var chargeTrackImage = chargeTrack.gameObject.AddComponent<Image>();
+            chargeTrackImage.sprite = sprite;
             chargeTrackImage.color = new Color(0f, 0f, 0f, .35f);
             chargeTrackImage.raycastTarget = false;
 
             var chargeFillRect = CreateRect("BasketballChargeFill", chargeTrack);
             Stretch(chargeFillRect);
             var chargeFillImage = chargeFillRect.gameObject.AddComponent<Image>();
+            chargeFillImage.sprite = sprite;
             chargeFillImage.color = new Color(.2f, .9f, .5f, .9f);
             chargeFillImage.type = Image.Type.Filled;
             chargeFillImage.fillMethod = Image.FillMethod.Vertical;
@@ -317,6 +329,7 @@ namespace KMA.EditorTools
             var chargeTargetBand = CreateRect("BasketballChargeTargetBand", chargeTrack);
             Anchor(chargeTargetBand, new Vector2(0f, 0f), new Vector2(1f, 0f), new Vector2(.5f, .5f), Vector2.zero, Vector2.zero);
             var chargeTargetBandImage = chargeTargetBand.gameObject.AddComponent<Image>();
+            chargeTargetBandImage.sprite = sprite;
             chargeTargetBandImage.color = new Color(1f, 1f, 1f, .55f);
             chargeTargetBandImage.raycastTarget = false;
 

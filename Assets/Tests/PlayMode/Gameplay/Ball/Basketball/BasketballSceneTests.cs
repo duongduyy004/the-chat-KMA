@@ -9,6 +9,7 @@ using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.SceneManagement;
 using UnityEngine.TestTools;
+using UnityEngine.UI;
 
 namespace KMA.Tests.Gameplay.Ball
 {
@@ -92,6 +93,71 @@ namespace KMA.Tests.Gameplay.Ball
             Assert.That(hits, Is.Not.Empty);
             Assert.That(hits[0].gameObject.GetComponentInParent<ScreenTapArea>(), Is.SameAs(surface),
                 "The top raycast hit at screen centre must belong to the gameplay surface. Blocker: " + hits[0].gameObject.name);
+        }
+
+        // GraphicRaycaster.sortOrderPriority returns canvas.sortingOrder for a Screen Space -
+        // Overlay canvas but int.MinValue for every other render mode, so an Overlay gameplay
+        // input surface always wins the raycast over a Screen Space - Camera HUD canvas
+        // regardless of sortingOrder - which made PausePanel's button (and therefore Resume,
+        // Restart and Exit, all built onto the same canvas) unreachable everywhere on screen.
+        // The centre-screen assertion above must still pass (the gameplay surface owns the
+        // centre), but that alone does not prove the pause button is reachable in its own rect -
+        // this test raycasts there specifically.
+        [UnityTest]
+        public IEnumerator BasketballScene_PauseButtonIsReachableAboveTheGameplayInputSurface()
+        {
+            yield return SceneManager.LoadSceneAsync(SceneName, LoadSceneMode.Single);
+            yield return null;
+
+            Scene scene = SceneManager.GetActiveScene();
+            var pausePanel = SceneObjects<PausePanel>(scene)[0];
+            var pauseButtonRect = pausePanel.GetComponent<RectTransform>();
+            Assert.That(pauseButtonRect, Is.Not.Null, "PausePanel must carry the pause button's own RectTransform.");
+
+            var canvas = pausePanel.GetComponentInParent<Canvas>();
+            Camera pressCamera = canvas.renderMode == RenderMode.ScreenSpaceOverlay ? null : canvas.worldCamera;
+
+            var corners = new Vector3[4];
+            pauseButtonRect.GetWorldCorners(corners);
+            Vector3 worldCenter = (corners[0] + corners[2]) * .5f;
+            Vector2 screenPoint = RectTransformUtility.WorldToScreenPoint(pressCamera, worldCenter);
+
+            Assert.That(EventSystem.current, Is.Not.Null);
+            var pointer = new PointerEventData(EventSystem.current) { position = screenPoint };
+            var hits = new List<RaycastResult>();
+            EventSystem.current.RaycastAll(pointer, hits);
+
+            Assert.That(hits, Is.Not.Empty, "Nothing was hit at the pause button's screen rect.");
+            Assert.That(hits[0].gameObject.GetComponentInParent<Selectable>(), Is.Not.Null,
+                "The top raycast hit over the pause button must be a Selectable, or the button is " +
+                "unreachable beneath the gameplay input surface. Blocker: " + hits[0].gameObject.name);
+        }
+
+        // Mirrors the LabelFont guard below: a value can be set correctly on a component and still
+        // never reach the screen because of a silently-ignored uGUI precondition. Image.OnPopulateMesh
+        // short-circuits to Graphic.OnPopulateMesh (a plain full-rect quad) whenever activeSprite is
+        // null, which makes it ignore type, fillMethod and fillAmount entirely - so a Filled image with
+        // no sprite draws as a static rectangle no matter what fillAmount the HUD script computes.
+        [UnityTest]
+        public IEnumerator BasketballScene_FilledHudImagesCarryASpriteOrTheirFillIsIgnored()
+        {
+            yield return SceneManager.LoadSceneAsync(SceneName, LoadSceneMode.Single);
+            yield return null;
+
+            Scene scene = SceneManager.GetActiveScene();
+            var hud = SceneObjects<BasketballHud>(scene)[0];
+            var hudCanvas = hud.GetComponentInParent<Canvas>();
+            Assert.That(hudCanvas, Is.Not.Null, "BasketballHud must live under a Canvas.");
+
+            foreach (Image image in hudCanvas.GetComponentsInChildren<Image>(true))
+            {
+                if (image.type != Image.Type.Filled)
+                    continue;
+                Assert.That(image.sprite, Is.Not.Null,
+                    image.gameObject.name + " is Image.Type.Filled with no sprite assigned - " +
+                    "Graphic.OnPopulateMesh silently ignores type/fillMethod/fillAmount in that case " +
+                    "and draws a plain static rectangle instead of sweeping.");
+            }
         }
 
         [UnityTest]
