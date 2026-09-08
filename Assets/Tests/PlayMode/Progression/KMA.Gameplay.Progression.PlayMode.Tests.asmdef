@@ -10,6 +10,7 @@
         "KMA.Gameplay.Boss",
         "KMA.Gameplay.Sprint",
         "KMA.Gameplay.Volleyball",
+        "KMA.Gameplay.Basketball",
         "KMA.Gameplay.Core",
         "KMA.Gameplay.Shell",
         "KMA.Gameplay.UI",
