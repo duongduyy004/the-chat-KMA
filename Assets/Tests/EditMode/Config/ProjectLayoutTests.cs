@@ -20,6 +20,7 @@ namespace KMA.Tests.Config
         [TestCase("KMA.EditorTools.ProjectConfigurator", "Apply")]
         [TestCase("KMA.EditorTools.UrpBootstrap", "CreateOrRepair")]
         [TestCase("KMA.EditorTools.BuildScript", "BuildAndroid")]
+        [TestCase("KMA.EditorTools.AndroidBuildMatrix", "Build")]
         public void HeadlessEntryPointIsPublicAndStatic(string typeName, string methodName)
         {
             var type = AppDomain.CurrentDomain.GetAssemblies()

@@ -91,6 +91,41 @@ For an ARM64 Android phone, use `KMA.EditorTools.BuildScript.BuildAndroid` with 
 
 Rebuild authored demo layouts through **KMA → Demo → Configure Splash and Home** and **Configure Sprint Artwork**. Run these before manual layout adjustments. Sources/licenses are in [CREDITS](Assets/_Project/CREDITS.md); verified tests, device checks and remaining limits are in [Android Report Demo QA](docs/qa/android-report-demo.md).
 
+## Build APK
+
+`tools/build-apk.sh` (Linux) and `tools/build-apk.ps1` (Windows) wrap
+`KMA.EditorTools.AndroidBuildMatrix.Build`, which builds every requested ABI inside one headless
+Editor session and restores the project's ARM64 default before quitting. Close the Editor first —
+batchmode cannot open a locked project.
+
+```bash
+tools/build-apk.sh                 # arm64 + x86_64 -> Builds/Android/kma-arm64.apk, kma-x86_64.apk
+tools/build-apk.sh --arm64         # phones only
+tools/build-apk.sh --x86_64        # emulators only
+tools/build-apk.sh --abi all --output-dir Builds/Release --name kma-1.0
+```
+
+```powershell
+.\tools\build-apk.cmd
+.\tools\build-apk.cmd -Abi x86_64
+.\tools\build-apk.cmd -Abi all -OutputDir Builds/Release -Name kma-1.0
+```
+
+On a default Windows install the execution policy is `Restricted`, so `.\tools\build-apk.ps1`
+fails with `running scripts is disabled on this system`. `build-apk.cmd` is a thin wrapper that
+forwards its arguments through `powershell -ExecutionPolicy Bypass -File`, so it works without
+changing machine settings. To call the `.ps1` directly instead, allow local scripts once with
+`Set-ExecutionPolicy -Scope CurrentUser RemoteSigned` (no admin rights needed).
+
+Both resolve Unity from `KMA_UNITY_EDITOR`, then from the Unity Hub install matching
+`ProjectSettings/ProjectVersion.txt`; override with `--unity` / `-Unity`. Each run writes
+`<output-dir>/build-apk.log`, prints the per-ABI result line, and reports each APK's size and
+SHA-256. A non-zero exit dumps the last 40 log lines.
+
+The APKs are signed with Unity's debug keystore (`androidUseCustomKeystore: 0`); set a release
+keystore in Player Settings before distributing. `BuildScript.BuildAndroid` stays the ARM64-only
+shipping path and `DemoEmulatorBuild.Build` the fixed-path emulator demo build; neither changes.
+
 ## Run tests
 
 Set the Unity executable path for your machine, then run Unity Test Framework without `-quit`:
