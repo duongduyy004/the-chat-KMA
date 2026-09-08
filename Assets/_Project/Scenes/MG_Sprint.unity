@@ -1244,7 +1244,7 @@ MonoBehaviour:
     loopWidth: 25.6
   - first: {fileID: 720005}
     second: {fileID: 720006}
-    scrollMultiplier: 0.65
+    scrollMultiplier: 0
     loopWidth: 25.6
 --- !u!4 &720001
 Transform:
@@ -2363,6 +2363,10 @@ PrefabInstance:
       propertyPath: minigameSource
       value: 
       objectReference: {fileID: 200002}
+    - target: {fileID: 8863690910283851387, guid: 6a27ebbd3993f2763bf5abf89d2a3a7f, type: 3}
+      propertyPath: m_IsActive
+      value: 0
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects:

@@ -211,7 +211,7 @@ namespace KMA.Tests.Gameplay.Progression
         }
 
         [UnityTest]
-        public IEnumerator MapScene_ResponsiveLayout_KeepsCardsInsideTheGridAndAboveFutureContent()
+        public IEnumerator MapScene_ResponsiveLayout_KeepsCardsInsideTheGridAndAboveProgress()
         {
             SceneManager.LoadScene("Map", LoadSceneMode.Single);
             yield return null;
@@ -220,7 +220,7 @@ namespace KMA.Tests.Gameplay.Progression
             Assert.That(screen, Is.Not.Null);
             RectTransform grid = screen.transform.Find("S5MapPresentation/Content/SelectionGrid")
                 .GetComponent<RectTransform>();
-            RectTransform futureRow = screen.transform.Find("S5MapPresentation/Content/FutureRow")
+            RectTransform progressSection = screen.transform.Find("S5MapPresentation/Content/ProgressSection")
                 .GetComponent<RectTransform>();
 
             foreach (Vector2Int resolution in new[]
@@ -236,14 +236,19 @@ namespace KMA.Tests.Gameplay.Progression
                 Canvas.ForceUpdateCanvases();
 
                 Rect gridBounds = WorldBounds(grid);
-                Rect futureBounds = WorldBounds(futureRow);
-                Assert.That(gridBounds.Overlaps(futureBounds), Is.False,
-                    $"SelectionGrid must not overlap FutureRow at {resolution.x}x{resolution.y}.");
+                Rect progressBounds = WorldBounds(progressSection);
+                Assert.That(gridBounds.Overlaps(progressBounds), Is.False,
+                    $"SelectionGrid must not overlap ProgressSection at {resolution.x}x{resolution.y}.");
                 foreach (MapNodeView node in screen.Nodes)
                 {
                     Assert.That(Contains(grid, node.transform as RectTransform), Is.True,
                         $"{node.SubjectId} must remain inside SelectionGrid at {resolution.x}x{resolution.y}.");
                 }
+
+                Rect secondRowBounds = WorldBounds(screen.Nodes[4].transform as RectTransform);
+                secondRowBounds.xMax = WorldBounds(screen.Nodes[6].transform as RectTransform).xMax;
+                Assert.That(secondRowBounds.center.x, Is.EqualTo(gridBounds.center.x).Within(1f),
+                    $"The three-card second row must be centered at {resolution.x}x{resolution.y}.");
             }
         }
 

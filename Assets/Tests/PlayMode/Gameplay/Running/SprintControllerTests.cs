@@ -206,7 +206,8 @@ namespace KMA.Tests.Gameplay.Running
 
             var player = GameObject.Find("Player");
             Assert.That(player, Is.Not.Null);
-            Assert.That(player.transform.position.x, Is.EqualTo(-2.88f).Within(.001f));
+            Assert.That(player.transform.position.x, Is.EqualTo(-9.6f).Within(.001f));
+            Assert.That(player.transform.position.y, Is.EqualTo(.7f).Within(.001f));
 
             var parallax = SceneObjects<SprintParallax>(scene);
             Assert.That(parallax.Length, Is.EqualTo(1));

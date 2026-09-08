@@ -1,6 +1,8 @@
 using System.Reflection;
 using System.Collections;
+using System.Linq;
 using UnityEditor;
+using KMA.Gameplay;
 using KMA.Gameplay.UI;
 using NUnit.Framework;
 using UnityEngine;
@@ -111,6 +113,54 @@ namespace KMA.Tests.Presentation
 
                 heartBar.SetHearts(99);
                 Assert.That(heartBar.CurrentHearts, Is.EqualTo(5));
+            }
+            finally
+            {
+                Object.DestroyImmediate(root);
+            }
+        }
+
+        [Test]
+        public void MapPresentationUsesCompactHudCardsAndProgressHierarchy()
+        {
+            var root = new GameObject("map", typeof(RectTransform));
+            try
+            {
+                var screen = root.AddComponent<MapScreen>();
+                MapPresentationBuilder.Build(screen, new GameSession());
+
+                var heartBar = root.GetComponentInChildren<HeartBar>(true);
+                Assert.That(heartBar, Is.Not.Null);
+                foreach (var heart in heartBar.GetComponentsInChildren<Image>(true))
+                {
+                    Assert.That(heart.sprite, Is.Not.Null, heart.name);
+                    Assert.That(heart.preserveAspect, Is.True, heart.name);
+                }
+
+                var title = root.GetComponentsInChildren<Text>(true)
+                    .Single(text => text.name == "Title" && text.text == "CHỌN MÔN THI");
+                Assert.That(title.fontSize, Is.LessThan(40));
+                Assert.That(root.GetComponentsInChildren<Text>(true)
+                    .Any(text => text.text == "Chọn thử thách tiếp theo"), Is.True);
+
+                var grid = root.transform.Find("S5MapPresentation/Content/SelectionGrid")
+                    .GetComponent<GridLayoutGroup>();
+                Assert.That(grid.constraint, Is.EqualTo(GridLayoutGroup.Constraint.FixedColumnCount));
+                Assert.That(grid.constraintCount, Is.EqualTo(4));
+
+                Assert.That(root.transform.Find("S5MapPresentation/Content/FutureRow"), Is.Null);
+                Assert.That(root.transform.Find("S5MapPresentation/Content/ProgressSection"), Is.Not.Null);
+
+                foreach (var node in root.GetComponentsInChildren<MapNodeView>(true))
+                {
+                    var nodeTitle = node.GetComponentsInChildren<Text>(true)
+                        .Single(text => text.name == "Title");
+                    Assert.That(nodeTitle.fontSize, Is.GreaterThanOrEqualTo(24), node.name);
+                    Assert.That(node.GetComponent<Shadow>(), Is.Not.Null, node.name);
+                    if (!node.IsInteractable)
+                        Assert.That(node.GetComponent<Image>().color.grayscale,
+                            Is.GreaterThan(.35f), node.name + " must remain readable when locked.");
+                }
             }
             finally
             {

@@ -12,6 +12,7 @@ namespace KMA.Gameplay.UI
         [SerializeField] ScriptableObject subjectConfigAsset;
         [SerializeField] Text titleLabel;
         [SerializeField] Text detailLabel;
+        [SerializeField] Text statusLabel;
         [SerializeField] Button button;
 
         public SubjectId SubjectId => subjectId;
@@ -38,6 +39,9 @@ namespace KMA.Gameplay.UI
             if (detailLabel != null)
                 detailLabel.text = IsComingSoon ? "ĐANG PHÁT TRIỂN" :
                     record != null && record.Passed ? $"HẠNG {BestRank}  ★ {Stars}" : "SẴN SÀNG";
+            if (statusLabel != null)
+                statusLabel.text = IsComingSoon ? "🔒  KHÓA" :
+                    record != null && record.Passed ? "✓  HOÀN THÀNH" : "SẴN SÀNG";
             if (button != null)
                 button.interactable = !comingSoon;
         }
@@ -64,10 +68,13 @@ namespace KMA.Gameplay.UI
             detailLabel = detail;
         }
 
+        public void BindStatusLabel(Text status) => statusLabel = status;
+
         public void SetAvailability(bool selectable, string unavailableLabel)
         {
             if (button != null) button.interactable = selectable;
             if (!selectable && detailLabel != null) detailLabel.text = unavailableLabel;
+            if (!selectable && statusLabel != null) statusLabel.text = "🔒  KHÓA";
         }
     }
 }

@@ -208,7 +208,7 @@ Trích từ `src/index.css`:
   - Sự kiện tuột dây giày ngẫu nhiên bị loại bỏ. Thay bằng vạch đường trơn có cue rõ; tap đúng nhịp khi đi qua để không mất tốc độ.
 - **PrimaryObjective / Pass**: hoàn thành 100m trong `timeLimit` (≈14s). Thứ hạng không tạo đường tắt để pass.
 - **Điểm `0..10`**: `6` hoàn thành; `0..2` theo thời gian; `0..1` stamina còn lại; `0..1` cadence combo + thứ hạng.
-- **Trình bày**: side-scroll, parallax 3 lớp (trời / khán đài / đường chạy), player khoá ở x = 35% màn hình.
+- **Trình bày**: side-scroll, parallax 3 lớp (trời / khán đài / đường chạy), player và ba đối thủ cùng tiến từ vạch xuất phát đến đích theo quãng đường riêng.
 
 ### M2 — Chạy bền 1500m (`MG_Endurance`)
 - **Input chính**: tap **đều theo nhịp** metronome. BPM `100 → 140` tăng dần theo vòng. Mỗi thời điểm chỉ có **một mode input đang active**; HUD đổi màu và phát cue khi chuyển mode.

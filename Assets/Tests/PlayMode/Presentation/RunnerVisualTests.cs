@@ -94,5 +94,48 @@ namespace KMA.Tests.Presentation
                     .Where(c => c.name.Contains("Run")), Is.Not.Empty);
             }
         }
+
+        [UnityTest]
+        public IEnumerator PlayerMapsItsOwnRaceDistanceAcrossTheTrack()
+        {
+            yield return SceneManager.LoadSceneAsync("MG_Sprint");
+            var controller = Object.FindFirstObjectByType<SprintController>();
+            controller.ConfigureForTest(.8f);
+            controller.enabled = false;
+            var player = GameObject.Find("Player");
+
+            controller.AdvanceToDistance(50f);
+            yield return null;
+
+            Assert.That(player.transform.position.x, Is.EqualTo(0f).Within(.001f),
+                "At half race distance the player must be halfway across the authored track.");
+            Assert.That(player.transform.position.y, Is.EqualTo(.7f).Within(.001f),
+                "Race progress must not move the player out of lane 2.");
+        }
+
+        [UnityTest]
+        public IEnumerator SprintDisablesGenericHudContentButKeepsCustomMetrics()
+        {
+            yield return SceneManager.LoadSceneAsync("MG_Sprint");
+
+            Assert.That(GameObject.Find("SafeAreaRoot"), Is.Null,
+                "The generic HUD content must not cover the Sprint presentation.");
+            Assert.That(GameObject.Find("SprintMetrics"), Is.Not.Null,
+                "Sprint-specific race metrics must remain visible.");
+        }
+
+        [UnityTest]
+        public IEnumerator TrackLayerStaysFixedAsRunnersAdvance()
+        {
+            yield return SceneManager.LoadSceneAsync("MG_Sprint");
+            var parallax = Object.FindFirstObjectByType<SprintParallax>();
+            Assert.That(parallax.TryGetLayerTilePositions(2, out var firstBefore, out var secondBefore), Is.True);
+
+            parallax.RefreshForTest(25f);
+
+            Assert.That(parallax.TryGetLayerTilePositions(2, out var firstAfter, out var secondAfter), Is.True);
+            Assert.That(firstAfter, Is.EqualTo(firstBefore).Within(.001f));
+            Assert.That(secondAfter, Is.EqualTo(secondBefore).Within(.001f));
+        }
     }
 }

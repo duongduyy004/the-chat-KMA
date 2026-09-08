@@ -34,18 +34,26 @@ namespace KMA.Gameplay.UI
             HasContinued = false;
 
             gameObject.SetActive(true);
+            transform.SetAsLastSibling();
             if (contentRoot != null)
                 contentRoot.SetActive(true);
             if (statusLabel != null)
             {
-                statusLabel.text = result.Pass ? "PASS" : "FAIL";
+                statusLabel.text = result.Pass ? "CHIẾN THẮNG" : "THẤT BẠI";
                 if (theme != null)
                     statusLabel.color = result.Pass ? theme.Success : theme.Primary;
             }
             if (scoreLabel != null)
                 scoreLabel.text = Mathf.RoundToInt(result.Score).ToString();
             if (rankLabel != null)
-                rankLabel.text = $"RANK {result.Rank}";
+                rankLabel.text = $"XẾP HẠNG {result.Rank}";
+
+            if (actionButton != null)
+            {
+                var label = actionButton.GetComponentInChildren<TMP_Text>(true);
+                if (label != null)
+                    label.text = "TIẾP TỤC";
+            }
         }
 
         public void Continue()

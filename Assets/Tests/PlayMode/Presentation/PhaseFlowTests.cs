@@ -161,13 +161,37 @@ namespace KMA.Tests.Presentation
 
                 var labels = resultObject.GetComponentsInChildren<TMP_Text>(true)
                     .ToDictionary(label => label.name, label => label.text);
-                Assert.That(labels["StatusLabel"], Is.EqualTo("FAIL"));
+                Assert.That(labels["StatusLabel"], Is.EqualTo("THẤT BẠI"));
                 Assert.That(labels["ScoreLabel"], Is.EqualTo("988"));
-                Assert.That(labels["RankLabel"], Is.EqualTo("RANK B"));
+                Assert.That(labels["RankLabel"], Is.EqualTo("XẾP HẠNG B"));
             }
             finally
             {
                 Object.Destroy(resultObject);
+            }
+        }
+
+        [Test]
+        public void ResultPanel_ShowMovesModalAboveLateGameplayOverlays()
+        {
+            var prefab = AssetDatabase.LoadAssetAtPath<GameObject>(
+                "Assets/_Project/Prefabs/UI/ResultPanel.prefab");
+            var canvas = new GameObject("canvas", typeof(RectTransform));
+            var resultObject = Object.Instantiate(prefab, canvas.transform);
+            var lateOverlay = new GameObject("late-overlay", typeof(RectTransform));
+            lateOverlay.transform.SetParent(canvas.transform, false);
+            try
+            {
+                resultObject.GetComponent<ResultPanel>().Show(
+                    new MinigameResult(true, 8f, Rank.A), "Map");
+
+                Assert.That(resultObject.transform.GetSiblingIndex(),
+                    Is.EqualTo(canvas.transform.childCount - 1),
+                    "The result modal must render above pause/HUD overlays created later.");
+            }
+            finally
+            {
+                Object.DestroyImmediate(canvas);
             }
         }
     }
