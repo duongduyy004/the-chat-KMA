@@ -125,6 +125,15 @@ namespace KMA.Gameplay.UI
                     new TutorialStep("SPIKE", "Swipe toward the net near the apex.")
                 });
             }
+            else if (source.GetType().Name == "BasketballController")
+            {
+                tutorialOverlay.Show("Basketball", new List<TutorialStep>
+                {
+                    new TutorialStep("HOLD", "Hold to charge the lob."),
+                    new TutorialStep("AIM", "Release inside the glowing charge band."),
+                    new TutorialStep("FINISH", "Tap when the ball reaches the apex ring.")
+                });
+            }
 
             if (tutorialOverlay.ShouldShow)
             {
