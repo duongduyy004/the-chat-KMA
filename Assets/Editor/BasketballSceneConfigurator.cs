@@ -1,9 +1,9 @@
 #if UNITY_EDITOR
 using System;
-using System.IO;
 using KMA.Gameplay;
 using KMA.Gameplay.UI;
 using KMA.Input;
+using TMPro;
 using UnityEditor;
 using UnityEditor.SceneManagement;
 using UnityEngine;
@@ -12,9 +12,11 @@ using UnityEngine.UI;
 
 namespace KMA.EditorTools
 {
-    // Authors the MG_Basketball production scene from scratch every time it runs, so the scene
-    // stays reproducible from source rather than from hand-edited YAML (see S9's Volleyball
-    // lesson: an unauthored scene is unverifiable and un-diffable).
+    // Authors the MG_Basketball production scene, destroying and rebuilding every object it owns
+    // (by name, see AuthoredRootNames) on each run rather than only building once - so re-running
+    // this exact committed script on the scene it just produced is safe, not merely "reproducible
+    // from a clean scene". This keeps the scene diffable and reproducible from source rather than
+    // from hand-edited YAML (see S9's Volleyball lesson: an unauthored scene is unverifiable).
     public static class BasketballSceneConfigurator
     {
         const string ScenePath = "Assets/_Project/Scenes/MG_Basketball.unity";
@@ -22,8 +24,28 @@ namespace KMA.EditorTools
         const string FlightProfilePath = "Assets/_Project/ScriptableObjects/Ball/FlightProfile_Basketball.asset";
         const string InputActionsPath = "Assets/_Project/Settings/Input/KMA.inputactions";
         const string ThemePath = "Assets/_Project/Settings/UI/UITheme.asset";
-        const string PlaceholderSpritePath = "Assets/_Project/Art/Placeholder/PlaceholderSquare.png";
+        const string BodyFontPath = "Assets/_Project/Fonts/Nunito-Bold.asset";
         const string BuiltinSpriteResource = "UI/Skin/UISprite.psd";
+        const float ReferenceAspect = 1920f / 1080f;
+
+        // Every root object Author() creates. Destroyed by name at the top of each run so the
+        // script is idempotent - run it twice on the scene it just authored and the second run
+        // must produce the same single set of objects, not a duplicate of everything.
+        static readonly string[] AuthoredRootNames =
+        {
+            "Placeholder_MG_Basketball",
+            "BasketballCourt",
+            "BasketballPlayer",
+            "BasketballPlayerHand",
+            "BasketballHoop",
+            "BasketballBackboard",
+            "BasketballFinisher",
+            "BasketballDefender",
+            "BallPresentation",
+            "FullScreenGameplayInput",
+            "BasketballController",
+            "BasketballHudCanvas"
+        };
 
         static readonly Color CourtColor = new Color(.55f, .35f, .18f, 1f);
         static readonly Color PlayerColor = new Color(.15f, .55f, .95f, 1f);
@@ -38,9 +60,16 @@ namespace KMA.EditorTools
         {
             Scene scene = EditorSceneManager.OpenScene(ScenePath, OpenSceneMode.Single);
 
-            RemovePlaceholder();
+            RemovePreviouslyAuthoredObjects();
 
             Sprite sprite = LoadPlaceholderSprite();
+            var font = AssetDatabase.LoadAssetAtPath<TMP_FontAsset>(BodyFontPath);
+            if (font == null)
+                throw new InvalidOperationException($"Missing {BodyFontPath}");
+
+            var camera = GameObject.Find("GameCamera")?.GetComponent<Camera>();
+            if (camera == null)
+                throw new InvalidOperationException("MG_Basketball has no GameCamera to anchor the apex cue against.");
 
             // --- World layout (world units, ground y = 0 per FlightProfile_Basketball.groundY) ---
             AddVisual(null, "BasketballCourt", sprite, CourtColor, new Vector3(0f, -.15f, 1f), 18f, .3f, -10);
@@ -64,8 +93,13 @@ namespace KMA.EditorTools
             var controllerGO = new GameObject("BasketballController");
             var finisherBounds = controllerGO.AddComponent<BoxCollider2D>();
             finisherBounds.isTrigger = true;
-            finisherBounds.offset = new Vector2(-1.5f, 0f);
-            finisherBounds.size = new Vector2(7f, 4f);
+            // The controller sits at the world origin, so this box is the world-space clamp
+            // MoveFinisherToPrediction uses directly. An in-band shot from the authored hand
+            // position lands around world x ~ 3.5-3.8 (reviewer-verified against the physics),
+            // so the box must reach that far right, not stop at x = 2 - a box that cannot
+            // contain the real landing point pins the finisher short and it never meets the ball.
+            finisherBounds.offset = new Vector2(0f, 0f);
+            finisherBounds.size = new Vector2(8f, 4f);
             var controller = controllerGO.AddComponent<BasketballController>();
 
             var ballRig = ballGO.GetComponent<BallRig>();
@@ -81,7 +115,14 @@ namespace KMA.EditorTools
             SetObjectReference(controller, "ballShadow", shadow);
 
             // --- HUD ---
-            BuildHud(controller);
+            // The apex cue must be anchored where the ball's apex actually is, not at a guessed
+            // screen fraction: derive it from the authored apex band's centre (the same constants
+            // BasketballController.AuthoredBand uses) projected through the actual orthographic
+            // camera, so the configurator stays the single source of the number.
+            var band = AlleyOopPattern.AuthoredDefault(Vector2.right);
+            float apexY = (band.ApexMin + band.ApexMax) * .5f;
+            Vector2 apexAnchor = ViewportAnchorForOrthographicCamera(camera, new Vector3(0f, apexY, 0f));
+            BuildHud(controller, font, apexAnchor);
 
             // --- Rebind the shared S2 presentation kit from the placeholder to the new controller ---
             var sharedHud = FindComponentInScene<MinigameHUD>(scene);
@@ -91,6 +132,8 @@ namespace KMA.EditorTools
                 throw new InvalidOperationException("MG_Basketball has no MinigameHUD to rebind.");
             if (phaseOverlay == null)
                 throw new InvalidOperationException("MG_Basketball has no PhaseOverlay to rebind.");
+            if (theme == null)
+                throw new InvalidOperationException($"Missing {ThemePath}");
 
             SetObjectReference(sharedHud, "minigameSource", controller);
             SetObjectReference(sharedHud, "theme", theme);
@@ -102,11 +145,17 @@ namespace KMA.EditorTools
             AssetDatabase.Refresh();
         }
 
-        static void RemovePlaceholder()
+        // Destroys every object a previous run of Author() created (by name), so running this
+        // script twice in a row on the scene it just authored rebuilds the same single set of
+        // objects instead of duplicating the whole scene.
+        static void RemovePreviouslyAuthoredObjects()
         {
-            var placeholder = GameObject.Find("Placeholder_MG_Basketball");
-            if (placeholder != null)
-                UnityEngine.Object.DestroyImmediate(placeholder);
+            foreach (var name in AuthoredRootNames)
+            {
+                var existing = GameObject.Find(name);
+                if (existing != null)
+                    UnityEngine.Object.DestroyImmediate(existing);
+            }
         }
 
         static GameObject InstantiateBall(Sprite sprite)
@@ -199,7 +248,7 @@ namespace KMA.EditorTools
             return (router, surface);
         }
 
-        static void BuildHud(BasketballController controller)
+        static void BuildHud(BasketballController controller, TMP_FontAsset font, Vector2 apexAnchor)
         {
             var canvasGO = new GameObject("BasketballHudCanvas", typeof(RectTransform));
             var canvas = canvasGO.AddComponent<Canvas>();
@@ -219,29 +268,29 @@ namespace KMA.EditorTools
 
             TMPro.TMP_Text scoreLabel = CreateLabel(safeArea, "BasketballScoreLabel",
                 new Vector2(0f, 1f), new Vector2(0f, 1f), new Vector2(0f, 1f),
-                new Vector2(40f, -40f), new Vector2(460f, 60f), TMPro.TextAlignmentOptions.TopLeft);
+                new Vector2(40f, -40f), new Vector2(460f, 60f), TMPro.TextAlignmentOptions.TopLeft, font);
             TMPro.TMP_Text attemptsLabel = CreateLabel(safeArea, "BasketballAttemptsLabel",
                 new Vector2(0f, 1f), new Vector2(0f, 1f), new Vector2(0f, 1f),
-                new Vector2(40f, -104f), new Vector2(460f, 60f), TMPro.TextAlignmentOptions.TopLeft);
+                new Vector2(40f, -104f), new Vector2(460f, 60f), TMPro.TextAlignmentOptions.TopLeft, font);
             TMPro.TMP_Text comboLabel = CreateLabel(safeArea, "BasketballComboLabel",
                 new Vector2(0f, 1f), new Vector2(0f, 1f), new Vector2(0f, 1f),
-                new Vector2(40f, -168f), new Vector2(460f, 60f), TMPro.TextAlignmentOptions.TopLeft);
+                new Vector2(40f, -168f), new Vector2(460f, 60f), TMPro.TextAlignmentOptions.TopLeft, font);
             TMPro.TMP_Text judgeLabel = CreateLabel(safeArea, "BasketballJudgeLabel",
                 new Vector2(.5f, 1f), new Vector2(.5f, 1f), new Vector2(.5f, 1f),
-                new Vector2(0f, -40f), new Vector2(600f, 70f), TMPro.TextAlignmentOptions.Top);
+                new Vector2(0f, -40f), new Vector2(600f, 70f), TMPro.TextAlignmentOptions.Top, font);
             TMPro.TMP_Text chargeLabel = CreateLabel(safeArea, "BasketballChargeLabel",
                 new Vector2(.5f, 0f), new Vector2(.5f, 0f), new Vector2(.5f, 0f),
-                new Vector2(0f, 80f), new Vector2(400f, 60f), TMPro.TextAlignmentOptions.Bottom);
+                new Vector2(0f, 80f), new Vector2(400f, 60f), TMPro.TextAlignmentOptions.Bottom, font);
 
             var apexZone = CreateRect("BasketballApexZone", safeArea);
-            Anchor(apexZone, new Vector2(.5f, .62f), new Vector2(.5f, .62f), new Vector2(.5f, .5f), Vector2.zero, new Vector2(240f, 240f));
+            Anchor(apexZone, apexAnchor, apexAnchor, new Vector2(.5f, .5f), Vector2.zero, new Vector2(240f, 240f));
             var apexZoneImage = apexZone.gameObject.AddComponent<Image>();
             apexZoneImage.color = new Color(1f, .85f, .2f, .35f);
             apexZoneImage.raycastTarget = false;
             apexZoneImage.enabled = false;
 
             var apexRing = CreateRect("BasketballApexRing", safeArea);
-            Anchor(apexRing, new Vector2(.5f, .62f), new Vector2(.5f, .62f), new Vector2(.5f, .5f), Vector2.zero, new Vector2(180f, 180f));
+            Anchor(apexRing, apexAnchor, apexAnchor, new Vector2(.5f, .5f), Vector2.zero, new Vector2(180f, 180f));
             var apexRingImage = apexRing.gameObject.AddComponent<Image>();
             apexRingImage.color = new Color(1f, 1f, 1f, .9f);
             apexRingImage.type = Image.Type.Filled;
@@ -315,12 +364,14 @@ namespace KMA.EditorTools
         }
 
         static TMPro.TMP_Text CreateLabel(Transform parent, string name, Vector2 anchorMin, Vector2 anchorMax,
-            Vector2 pivot, Vector2 anchoredPosition, Vector2 sizeDelta, TMPro.TextAlignmentOptions alignment)
+            Vector2 pivot, Vector2 anchoredPosition, Vector2 sizeDelta, TMPro.TextAlignmentOptions alignment,
+            TMP_FontAsset font)
         {
             RectTransform rect = CreateRect(name, parent);
             Anchor(rect, anchorMin, anchorMax, pivot, anchoredPosition, sizeDelta);
             var label = rect.gameObject.AddComponent<TMPro.TextMeshProUGUI>();
             label.text = string.Empty;
+            label.font = font;
             label.fontSize = 40f;
             label.color = Color.white;
             label.alignment = alignment;
@@ -328,51 +379,31 @@ namespace KMA.EditorTools
             return label;
         }
 
+        // Projects a world point through an orthographic camera into a 0..1 anchor fraction,
+        // using the CanvasScaler's own reference resolution (1920x1080) for the aspect ratio
+        // rather than Camera.WorldToViewportPoint's runtime aspect - which in -batchmode has no
+        // real window and would bake a wrong, aspect-dependent anchor permanently into the scene.
+        static Vector2 ViewportAnchorForOrthographicCamera(Camera camera, Vector3 worldPoint)
+        {
+            Vector3 local = worldPoint - camera.transform.position;
+            float halfHeight = camera.orthographicSize;
+            float halfWidth = halfHeight * ReferenceAspect;
+            float x = (local.x + halfWidth) / (2f * halfWidth);
+            float y = (local.y + halfHeight) / (2f * halfHeight);
+            return new Vector2(x, y);
+        }
+
         // The built-in placeholder sprite matches the Volleyball scene (guid
-        // 0000000000000000f000000000000000, fileIDs 10905/10913). If batch mode ever returns null
-        // for it, fall back to a small committed placeholder sprite sized to the same 0.16 x 0.16
-        // world-unit bounds, so AddVisual's localScale = worldSize / .16f stays valid either way.
+        // 0000000000000000f000000000000000, fileIDs 10905/10913). This is a hard requirement,
+        // not a contingency: a silent fallback would write a new, uncommitted sprite asset into
+        // the project, leaving the scene referencing a guid absent from the repo and defeating
+        // the reproducibility this script exists to provide.
         static Sprite LoadPlaceholderSprite()
         {
             var builtin = AssetDatabase.GetBuiltinExtraResource<Sprite>(BuiltinSpriteResource);
-            if (builtin != null)
-                return builtin;
-
-            EnsurePlaceholderSpriteAsset();
-            var sprite = AssetDatabase.LoadAssetAtPath<Sprite>(PlaceholderSpritePath);
-            if (sprite == null)
-                throw new InvalidOperationException($"Could not load or generate a placeholder sprite at {PlaceholderSpritePath}.");
-            return sprite;
-        }
-
-        static void EnsurePlaceholderSpriteAsset()
-        {
-            if (AssetDatabase.LoadAssetAtPath<Sprite>(PlaceholderSpritePath) != null)
-                return;
-
-            string directory = Path.GetDirectoryName(PlaceholderSpritePath);
-            if (!string.IsNullOrEmpty(directory))
-                Directory.CreateDirectory(directory);
-
-            const int size = 16;
-            var texture = new Texture2D(size, size, TextureFormat.RGBA32, false);
-            var pixels = new Color32[size * size];
-            for (var i = 0; i < pixels.Length; i++)
-                pixels[i] = new Color32(255, 255, 255, 255);
-            texture.SetPixels32(pixels);
-            texture.Apply();
-            File.WriteAllBytes(PlaceholderSpritePath, texture.EncodeToPNG());
-            UnityEngine.Object.DestroyImmediate(texture);
-
-            AssetDatabase.ImportAsset(PlaceholderSpritePath, ImportAssetOptions.ForceUpdate);
-            var importer = (TextureImporter)AssetImporter.GetAtPath(PlaceholderSpritePath);
-            if (importer == null)
-                throw new InvalidOperationException($"Could not import generated placeholder sprite at {PlaceholderSpritePath}.");
-            importer.textureType = TextureImporterType.Sprite;
-            importer.spriteImportMode = SpriteImportMode.Single;
-            importer.spritePixelsPerUnit = 100f; // size(16) / 100 = 0.16 world units, matching UISprite.
-            importer.filterMode = FilterMode.Bilinear;
-            importer.SaveAndReimport();
+            if (builtin == null)
+                throw new InvalidOperationException($"Could not load the built-in placeholder sprite '{BuiltinSpriteResource}'.");
+            return builtin;
         }
 
         // The built-in UISprite is 0.16 x 0.16 world units, so a world size becomes a local scale.

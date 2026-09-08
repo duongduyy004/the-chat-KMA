@@ -149,6 +149,48 @@ namespace KMA.Tests.Gameplay.Ball
             Assert.That(GameObject.Find("BasketballApexRing"), Is.Not.Null);
             Assert.That(GameObject.Find("BasketballApexZone"), Is.Not.Null);
             Assert.That(GameObject.Find("BasketballChargeTargetBand"), Is.Not.Null);
+
+            // A label with text but no font asset draws nothing in a build - the HUD would be
+            // blank even though TMP_Text.text (what LabelText above reads) is set correctly.
+            Assert.That(LabelFont("BasketballScoreLabel"), Is.Not.Null, "BasketballScoreLabel has no font asset and will render blank.");
+            Assert.That(LabelFont("BasketballAttemptsLabel"), Is.Not.Null, "BasketballAttemptsLabel has no font asset and will render blank.");
+            Assert.That(LabelFont("BasketballComboLabel"), Is.Not.Null, "BasketballComboLabel has no font asset and will render blank.");
+            Assert.That(LabelFont("BasketballJudgeLabel"), Is.Not.Null, "BasketballJudgeLabel has no font asset and will render blank.");
+            Assert.That(LabelFont("BasketballChargeLabel"), Is.Not.Null, "BasketballChargeLabel has no font asset and will render blank.");
+        }
+
+        // The finisher's clamp box must be able to reach where an authored, in-band shot actually
+        // lands, or MoveFinisherToPrediction pins the finisher against the wrong edge and it never
+        // meets the ball - the entire fiction of an alley-oop. No other test in this file exercises
+        // a real launch, so this box could be any size and the rest of the suite would stay green.
+        [UnityTest]
+        public IEnumerator BasketballScene_FinisherBoundsCanReachTheLandingPointOfAnInBandShot()
+        {
+            yield return SceneManager.LoadSceneAsync(SceneName, LoadSceneMode.Single);
+            yield return null;
+
+            var controller = SceneObjects<BasketballController>(SceneManager.GetActiveScene())[0];
+            controller.SkipTutorialForTest();
+
+            float charge = (controller.TargetChargeMin + controller.TargetChargeMax) * .5f;
+            controller.BeginCharge();
+            controller.SubmitPass(charge, SwipeDirection.Right);
+
+            float guard = Time.realtimeSinceStartup + 10f;
+            while (controller.Rules.State != BasketballState.AlleyOopFlight && Time.realtimeSinceStartup < guard)
+                yield return null;
+
+            Assert.That(controller.Rules.State, Is.EqualTo(BasketballState.AlleyOopFlight),
+                "An in-band charge must actually launch an alley-oop, or this test proves nothing.");
+
+            yield return null; // let RefreshFlightState recompute the landing prediction post-launch
+
+            var finisherBounds = controller.GetComponent<BoxCollider2D>();
+            Assert.That(finisherBounds, Is.Not.Null, "BasketballController must carry the finisherBounds BoxCollider2D.");
+            Bounds bounds = finisherBounds.bounds;
+            Assert.That(controller.PredictedLandingPoint.x, Is.InRange(bounds.min.x, bounds.max.x),
+                "finisherBounds must be able to reach the predicted landing point of an in-band shot, " +
+                "or the finisher can never meet the ball.");
         }
 
         // S9 shipped a scene whose colliders were invisible; do not repeat it.
@@ -224,6 +266,15 @@ namespace KMA.Tests.Gameplay.Ball
             var label = labelObject.GetComponent<TMP_Text>();
             Assert.That(label, Is.Not.Null, objectName + " must carry a TMP_Text component.");
             return label.text;
+        }
+
+        static TMP_FontAsset LabelFont(string objectName)
+        {
+            var labelObject = GameObject.Find(objectName);
+            Assert.That(labelObject, Is.Not.Null, objectName + " must exist in the Basketball scene.");
+            var label = labelObject.GetComponent<TMP_Text>();
+            Assert.That(label, Is.Not.Null, objectName + " must carry a TMP_Text component.");
+            return label.font;
         }
 
         static T[] SceneObjects<T>(Scene scene) where T : Component
