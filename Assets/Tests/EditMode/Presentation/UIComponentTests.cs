@@ -148,7 +148,7 @@ namespace KMA.Tests.Presentation
                 Assert.That(grid.constraint, Is.EqualTo(GridLayoutGroup.Constraint.FixedColumnCount));
                 Assert.That(grid.constraintCount, Is.EqualTo(4));
 
-                Assert.That(root.transform.Find("S5MapPresentation/Content/FutureRow"), Is.Null);
+                Assert.That(root.transform.Find("S5MapPresentation/Content/FutureRow"), Is.Not.Null);
                 Assert.That(root.transform.Find("S5MapPresentation/Content/ProgressSection"), Is.Not.Null);
 
                 foreach (var node in root.GetComponentsInChildren<MapNodeView>(true))

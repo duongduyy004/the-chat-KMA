@@ -37,6 +37,7 @@ namespace KMA.Gameplay.UI
         public static void Build(MapScreen screen, GameSession session)
         {
             if (screen == null || screen.transform.Find("S5MapPresentation") != null) return;
+            screen.SetBossUnlocked(session != null && session.BossUnlocked);
             foreach (Button button in screen.GetComponentsInChildren<Button>(true)) button.gameObject.SetActive(false);
             UITheme theme = screen.Theme;
             Color card = theme == null ? Color.white : theme.Card;
@@ -50,7 +51,7 @@ namespace KMA.Gameplay.UI
             Stretch(root, Vector2.zero, Vector2.zero);
             root.gameObject.AddComponent<Image>().color = background;
             RectTransform content = Rect(root, "Content");
-            Stretch(content, new Vector2(72, 40), new Vector2(-72, -40));
+            Stretch(content, new Vector2(72, 48), new Vector2(-72, -48));
             VerticalLayoutGroup vertical = content.gameObject.AddComponent<VerticalLayoutGroup>();
             vertical.spacing = 16; vertical.childControlWidth = true; vertical.childControlHeight = true;
             vertical.childForceExpandWidth = true; vertical.childForceExpandHeight = false;
@@ -67,6 +68,7 @@ namespace KMA.Gameplay.UI
             grid.GetComponent<ResponsiveGridLayout>().Refresh();
             var nodes = new List<MapNodeView>();
             foreach (Entry entry in Entries) nodes.Add(Card(grid, screen, entry, card, muted, mutedForeground, border));
+            FutureRow(content, muted, mutedForeground, border);
             ProgressSection(content, session, border);
             BossButton(content, screen, card, muted, mutedForeground, border);
             screen.BindPresentation(nodes.ToArray(), hearts, session);
@@ -107,7 +109,9 @@ namespace KMA.Gameplay.UI
                 LayoutElement element = slot.gameObject.AddComponent<LayoutElement>(); element.preferredWidth = 17; element.preferredHeight = 16;
             }
             hearts.SetSlots(slots);
-            Text lives = LayoutLabel(header, "LivesLabel", "LƯỢT " + (session == null ? 5 : session.Lives) + "/5", 17,
+            int currentLives = session == null ? GameSession.MaxLives : session.Lives;
+            hearts.SetHearts(currentLives);
+            Text lives = LayoutLabel(header, "LivesLabel", "LƯỢT: " + currentLives + "/" + GameSession.MaxLives, 17,
                 Color.white, TextAnchor.MiddleRight);
             lives.transform.parent.gameObject.AddComponent<LayoutElement>().preferredWidth = 72;
             return hearts;
@@ -124,6 +128,9 @@ namespace KMA.Gameplay.UI
             VerticalLayoutGroup layout = root.gameObject.AddComponent<VerticalLayoutGroup>();
             layout.padding = new RectOffset(14, 14, 12, 12); layout.spacing = 5; layout.childControlWidth = true;
             layout.childControlHeight = true; layout.childForceExpandWidth = true; layout.childForceExpandHeight = false;
+            RectTransform stripe = Rect(root, "HeaderStripe");
+            stripe.gameObject.AddComponent<Image>().color = entry.Color;
+            stripe.gameObject.AddComponent<LayoutElement>().preferredHeight = 6;
             RectTransform cardHeader = Rect(root, "CardHeader");
             HorizontalLayoutGroup cardHeaderLayout = cardHeader.gameObject.AddComponent<HorizontalLayoutGroup>();
             cardHeaderLayout.spacing = 10; cardHeaderLayout.childAlignment = TextAnchor.MiddleLeft;
@@ -144,6 +151,40 @@ namespace KMA.Gameplay.UI
             if (entry.Available) button.onClick.AddListener(() => screen.SelectSubject(entry.Subject));
             else node.SetAvailability(false, "ĐANG PHÁT TRIỂN");
             return node;
+        }
+
+        static void FutureRow(Transform parent, Color muted, Color foreground, Color border)
+        {
+            RectTransform row = Rect(parent, "FutureRow");
+            HorizontalLayoutGroup layout = row.gameObject.AddComponent<HorizontalLayoutGroup>();
+            layout.spacing = 12;
+            layout.childAlignment = TextAnchor.MiddleCenter;
+            layout.childControlWidth = true;
+            layout.childControlHeight = true;
+            layout.childForceExpandWidth = false;
+            layout.childForceExpandHeight = false;
+            row.gameObject.AddComponent<LayoutElement>().preferredHeight = 38;
+
+            FutureChip(row, "PushUpsChip", "Hít đất", muted, foreground, border);
+            FutureChip(row, "RhythmChip", "Nhịp điệu", muted, foreground, border);
+            FutureChip(row, "SwimmingChip", "Bơi lội", muted, foreground, border);
+        }
+
+        static void FutureChip(Transform parent, string name, string label, Color muted, Color foreground, Color border)
+        {
+            RectTransform root = Rect(parent, name);
+            Image image = root.gameObject.AddComponent<Image>();
+            image.color = muted;
+            Outline outline = root.gameObject.AddComponent<Outline>();
+            outline.effectColor = border;
+            Button button = root.gameObject.AddComponent<Button>();
+            button.targetGraphic = image;
+            button.colors = ButtonColors();
+            button.interactable = false;
+            LayoutElement element = root.gameObject.AddComponent<LayoutElement>();
+            element.preferredWidth = 168;
+            element.preferredHeight = 34;
+            Text(root, "Label", label, 16, foreground, TextAnchor.MiddleCenter);
         }
 
         static void ProgressSection(Transform parent, GameSession session, Color border)
@@ -283,7 +324,7 @@ namespace KMA.Gameplay.UI
             float width = rect.rect.width;
             if (width <= 0f) width = Mathf.Max(1f, Screen.width - 144f);
             float cellWidth = Mathf.Max(1f, (width - grid.padding.left - grid.padding.right - grid.spacing.x * (columns - 1)) / columns);
-            float cellHeight = Mathf.Clamp(cellWidth * 0.66f, 112f, 174f);
+            float cellHeight = Mathf.Clamp(cellWidth * 0.66f, 112f, 164f);
             grid.cellSize = new Vector2(cellWidth, cellHeight);
             LayoutElement element = GetComponent<LayoutElement>();
             if (element != null) element.preferredHeight = cellHeight * 2f + grid.spacing.y;
