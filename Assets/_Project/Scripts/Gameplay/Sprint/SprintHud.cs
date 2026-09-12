@@ -24,6 +24,7 @@ namespace KMA.Gameplay
             if (controller == null)
                 controller = Object.FindFirstObjectByType<SprintController>();
             CacheVisuals();
+            SprintFestivalPresentation.Build();
         }
 
         void OnEnable() => Refresh();

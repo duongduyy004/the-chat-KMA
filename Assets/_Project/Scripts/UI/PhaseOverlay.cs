@@ -88,7 +88,7 @@ namespace KMA.Gameplay.UI
             SetActive(resolveRoot, phase == MinigamePhase.Resolve);
 
             if (phaseLabel != null)
-                phaseLabel.text = phase.ToString().ToUpperInvariant();
+                phaseLabel.text = PhaseName(phase);
             RefreshCountdown();
         }
 
@@ -103,8 +103,8 @@ namespace KMA.Gameplay.UI
             {
                 tutorialOverlay.Show("Sprint", new List<TutorialStep>
                 {
-                    new TutorialStep("LEFT / RIGHT", "Tap the shown side"),
-                    new TutorialStep("WIND CUE", "Counter the wind before the window closes")
+                    new TutorialStep("TRÁI · PHẢI", "Chạm luân phiên hai bên để tăng tốc"),
+                    new TutorialStep("CẢN GIÓ", "Chạm đúng phía chỉ báo trước khi gió ập đến")
                 });
             }
             else if (source.GetType().Name == "EnduranceController")
@@ -171,5 +171,14 @@ namespace KMA.Gameplay.UI
             if (target != null)
                 target.SetActive(active);
         }
+
+        static string PhaseName(MinigamePhase phase) => phase switch
+        {
+            MinigamePhase.Tutorial => "HƯỚNG DẪN",
+            MinigamePhase.Countdown => "CHUẨN BỊ",
+            MinigamePhase.Play => "TĂNG TỐC!",
+            MinigamePhase.Resolve => "KẾT QUẢ",
+            _ => string.Empty
+        };
     }
 }

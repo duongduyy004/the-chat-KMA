@@ -28,10 +28,10 @@ namespace KMA.Gameplay
             if (controller == null) return;
             bool visible = controller.WindCueVisible || controller.WindChallengeCountered || controller.WindChallengeFailed || controller.WindChallengeExpired;
             if (cueRoot != null && cueRoot != gameObject) cueRoot.SetActive(visible);
-            if (controller.WindChallengeCountered) StateText = "WIND COUNTERED";
-            else if (controller.WindChallengeFailed || controller.WindChallengeExpired) StateText = "WIND MISSED";
-            else if (controller.WindWindowActive) StateText = "COUNTER THE WIND NOW";
-            else if (controller.WindCueVisible) StateText = "WIND INCOMING";
+            if (controller.WindChallengeCountered) StateText = "CẢN GIÓ THÀNH CÔNG";
+            else if (controller.WindChallengeFailed || controller.WindChallengeExpired) StateText = "LỠ NHỊP GIÓ";
+            else if (controller.WindWindowActive) StateText = "CHẠM ĐỂ CẢN GIÓ";
+            else if (controller.WindCueVisible) StateText = "GIÓ ĐANG ĐẾN";
             else StateText = string.Empty;
             if (stateLabel != null) stateLabel.text = StateText;
             if (cueImage != null) cueImage.color = controller.WindChallengeCountered ? successColor : (controller.WindChallengeFailed || controller.WindChallengeExpired ? failureColor : (controller.WindWindowActive ? activeColor : cueColor));

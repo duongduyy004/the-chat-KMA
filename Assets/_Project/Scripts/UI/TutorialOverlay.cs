@@ -56,6 +56,7 @@ namespace KMA.Gameplay.UI
         {
             if (seenStore == null)
                 seenStore = new SaveDataTutorialSeenStore();
+            ApplyFestivalStyle();
             WireButtons();
             Refresh();
         }
@@ -156,6 +157,63 @@ namespace KMA.Gameplay.UI
                 skipButton.onClick.AddListener(Skip);
             if (closeButton != null)
                 closeButton.onClick.AddListener(Close);
+        }
+
+        void ApplyFestivalStyle()
+        {
+            if (contentRoot != null)
+            {
+                Image card = contentRoot.GetComponent<Image>();
+                if (card != null)
+                    card.color = new Color32(255, 249, 231, 255);
+                Outline outline = contentRoot.GetComponent<Outline>() ?? contentRoot.AddComponent<Outline>();
+                outline.effectColor = new Color32(8, 35, 61, 255);
+                outline.effectDistance = new Vector2(5f, -5f);
+                if (contentRoot.transform is RectTransform rect)
+                    rect.sizeDelta = new Vector2(900f, 600f);
+            }
+
+            StyleLabel(titleLabel, 42f, new Color32(8, 35, 61, 255));
+            StyleLabel(instructionLabel, 25f, new Color32(62, 79, 96, 255));
+            StyleLabel(stepLabel, 18f, new Color32(25, 130, 196, 255));
+            StyleButton(backButton, "QUAY LẠI", new Color32(82, 96, 112, 255));
+            StyleButton(nextButton, "TIẾP", new Color32(255, 202, 58, 255));
+            StyleButton(skipButton, "BỎ QUA", new Color32(255, 89, 94, 255));
+            StyleButton(closeButton, "BẮT ĐẦU", new Color32(54, 112, 72, 255));
+        }
+
+        static void StyleLabel(TMP_Text label, float size, Color color)
+        {
+            if (label == null)
+                return;
+            label.fontSize = size;
+            label.fontStyle = FontStyles.Bold;
+            label.color = color;
+        }
+
+        static void StyleButton(Button button, string value, Color color)
+        {
+            if (button == null)
+                return;
+            Image image = button.GetComponent<Image>();
+            if (image != null)
+                image.color = color;
+            TMP_Text label = button.GetComponentInChildren<TMP_Text>(true);
+            if (label != null)
+            {
+                label.text = value;
+                label.fontSize = 20f;
+                label.fontStyle = FontStyles.Bold;
+                label.color = Color.white;
+            }
+            Outline outline = button.GetComponent<Outline>() ?? button.gameObject.AddComponent<Outline>();
+            outline.effectColor = new Color32(8, 35, 61, 255);
+            outline.effectDistance = new Vector2(3f, -3f);
+            ColorBlock colors = button.colors;
+            colors.highlightedColor = new Color32(255, 237, 176, 255);
+            colors.pressedColor = new Color32(225, 180, 50, 255);
+            colors.fadeDuration = .08f;
+            button.colors = colors;
         }
     }
 }
