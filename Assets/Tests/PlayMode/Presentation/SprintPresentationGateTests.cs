@@ -41,9 +41,11 @@ namespace KMA.Tests.Presentation
 
             var overlay = overlays[0];
             Assert.That(overlay.ShouldShow, Is.True);
-            Assert.That(overlay.CurrentStep.Instruction, Is.EqualTo("Tap the shown side"));
+            Assert.That(overlay.CurrentStep.Instruction,
+                Is.EqualTo("Chạm luân phiên hai bên để tăng tốc"));
             overlay.Next();
-            Assert.That(overlay.CurrentStep.Instruction, Is.EqualTo("Counter the wind before the window closes"));
+            Assert.That(overlay.CurrentStep.Instruction,
+                Is.EqualTo("Chạm đúng phía chỉ báo trước khi gió ập đến"));
             overlay.Skip();
             Assert.That(PlayerPrefs.HasKey(TutorialKey), Is.False);
             Assert.That(overlay.ShouldShow, Is.False);
@@ -140,24 +142,24 @@ namespace KMA.Tests.Presentation
             controller.Simulate(0f);
             windCue.Refresh();
             Assert.That(cueHost.activeSelf, Is.True);
-            Assert.That(cueState.text, Is.EqualTo("WIND INCOMING"));
+            Assert.That(cueState.text, Is.EqualTo("GIÓ ĐANG ĐẾN"));
             Assert.That(cueImage.color, Is.EqualTo(Color.white));
 
             controller.Simulate(.8f);
             windCue.Refresh();
-            Assert.That(cueState.text, Is.EqualTo("COUNTER THE WIND NOW"));
+            Assert.That(cueState.text, Is.EqualTo("CHẠM ĐỂ CẢN GIÓ"));
             Assert.That(cueImage.color, Is.EqualTo(new Color(1f, .8f, 0f, 1f)));
 
             controller.OnLeftTap();
             windCue.Refresh();
-            Assert.That(cueState.text, Is.EqualTo("WIND COUNTERED"));
+            Assert.That(cueState.text, Is.EqualTo("CẢN GIÓ THÀNH CÔNG"));
             Assert.That(cueImage.color, Is.EqualTo(Color.green));
 
             controller.ConfigureForTest(.8f);
             controller.AdvanceToDistance(30f);
             controller.Simulate(2.1f);
             windCue.Refresh();
-            Assert.That(cueState.text, Is.EqualTo("WIND MISSED"));
+            Assert.That(cueState.text, Is.EqualTo("LỠ NHỊP GIÓ"));
             Assert.That(cueImage.color, Is.EqualTo(Color.red));
 
             yield return null;
