@@ -26,6 +26,7 @@ namespace KMA.Gameplay
             Transform safeArea = canvas.transform.Find("SafeAreaRoot");
             if (safeArea == null)
                 return;
+            safeArea.gameObject.SetActive(true);
 
             GameObject oldChrome = GameObject.Find("SprintFestivalChrome");
             if (oldChrome != null)
@@ -97,7 +98,7 @@ namespace KMA.Gameplay
 
             StyleTapArea("LeftTap", new Color(1f, .35f, .37f, .10f));
             StyleTapArea("RightTap", new Color(1f, .79f, .23f, .10f));
-            EnsurePlayerMarker(root);
+            EnsurePlayerIdentity(root);
         }
 
         static void DisableSharedMetrics(Transform safeArea)
@@ -122,28 +123,50 @@ namespace KMA.Gameplay
             return text;
         }
 
-        static void EnsurePlayerMarker(Transform parent)
+        static void EnsurePlayerIdentity(Transform chrome)
         {
-            if (parent.Find("PlayerMarker") != null)
-                return;
+            Transform chromeMarker = chrome.Find("PlayerMarker");
+            if (chromeMarker != null)
+                Object.Destroy(chromeMarker.gameObject);
 
             Transform player = GameObject.Find("Player")?.transform;
             if (player == null)
                 return;
 
-            RectTransform marker = Rect(parent, "PlayerMarker");
-            marker.anchorMin = marker.anchorMax = marker.pivot = new Vector2(.5f, .5f);
-            marker.sizeDelta = new Vector2(92f, 48f);
-            Image plate = marker.gameObject.AddComponent<Image>();
-            plate.color = new Color(0f, 1f, 1f, .16f);
-            plate.raycastTarget = false;
-            Outline outline = marker.gameObject.AddComponent<Outline>();
-            outline.effectColor = Color.cyan;
-            outline.effectDistance = new Vector2(2f, -2f);
-            marker.gameObject.AddComponent<SprintPlayerMarkerFollower>().Bind(player);
-            TMP_Text label = Text(marker, "Label", "YOU", parent.GetComponentInChildren<TMP_Text>(true)?.font,
-                20f, Color.cyan, TextAlignmentOptions.Center);
-            Stretch(label.rectTransform, new Vector2(5f, 3f), new Vector2(-5f, -3f));
+            Transform presentation = player.GetComponentInChildren<RunnerVisualPresenter>(true)?.transform ?? player;
+            Transform marker = presentation.Find("PlayerMarker");
+            if (marker == null)
+            {
+                marker = presentation.Find("PlayerLabel");
+                if (marker == null)
+                {
+                    marker = new GameObject("PlayerMarker").transform;
+                    marker.SetParent(presentation, false);
+                    marker.localPosition = new Vector3(0f, 1.65f, 0f);
+                }
+                else
+                {
+                    marker.name = "PlayerMarker";
+                }
+            }
+
+            TextMesh label = marker.GetComponent<TextMesh>() ?? marker.gameObject.AddComponent<TextMesh>();
+            label.text = "PLAYER";
+            label.fontSize = 48;
+            label.characterSize = .065f;
+            label.anchor = TextAnchor.MiddleCenter;
+            label.color = Color.cyan;
+            MeshRenderer labelRenderer = marker.GetComponent<MeshRenderer>();
+            if (labelRenderer != null)
+                labelRenderer.sortingOrder = 20;
+
+            SpriteRenderer playerVisual = presentation.GetComponentInChildren<SpriteRenderer>(true);
+            if (playerVisual != null)
+            {
+                var identity = presentation.GetComponent<SprintPlayerIdentityOutline>()
+                    ?? presentation.gameObject.AddComponent<SprintPlayerIdentityOutline>();
+                identity.Bind(playerVisual, Color.cyan);
+            }
         }
 
         static void EnsurePause(Transform parent, TMP_FontAsset font)
@@ -235,26 +258,68 @@ namespace KMA.Gameplay
         }
     }
 
-    public sealed class SprintPlayerMarkerFollower : MonoBehaviour
+    public sealed class SprintPlayerIdentityOutline : MonoBehaviour
     {
-        Transform target;
+        [SerializeField] SpriteRenderer source;
+        [SerializeField] SpriteRenderer outline;
+        [SerializeField] Color outlineColor = Color.cyan;
 
-        public Transform Target => target;
+        public SpriteRenderer Source => source;
+        public SpriteRenderer Outline => outline;
+        public Color OutlineColor => outlineColor;
 
-        public void Bind(Transform playerRoot) => target = playerRoot;
+        public void Bind(SpriteRenderer sourceRenderer, Color color)
+        {
+            source = sourceRenderer;
+            outlineColor = color;
+            EnsureOutlineRenderer();
+            Refresh();
+        }
 
         void LateUpdate()
         {
-            if (target == null || transform.parent is not RectTransform parent)
+            Refresh();
+        }
+
+        void EnsureOutlineRenderer()
+        {
+            if (source == null)
                 return;
 
-            Canvas canvas = GetComponentInParent<Canvas>();
-            Camera camera = canvas != null && canvas.renderMode != RenderMode.ScreenSpaceOverlay
-                ? canvas.worldCamera ?? Camera.main
-                : null;
-            Vector2 screen = RectTransformUtility.WorldToScreenPoint(camera, target.position + Vector3.up * .7f);
-            if (RectTransformUtility.ScreenPointToLocalPointInRectangle(parent, screen, camera, out Vector2 local))
-                ((RectTransform)transform).anchoredPosition = local;
+            if (outline == null)
+            {
+                Transform existing = source.transform.Find("PlayerIdentityOutline");
+                if (existing != null)
+                    outline = existing.GetComponent<SpriteRenderer>();
+            }
+
+            if (outline == null)
+            {
+                var outlineObject = new GameObject("PlayerIdentityOutline");
+                outlineObject.transform.SetParent(source.transform, false);
+                outlineObject.transform.localScale = new Vector3(1.16f, 1.16f, 1f);
+                outline = outlineObject.AddComponent<SpriteRenderer>();
+            }
+
+            outline.sharedMaterial = source.sharedMaterial;
+            outline.sortingLayerID = source.sortingLayerID;
+            outline.sortingOrder = source.sortingOrder - 1;
+        }
+
+        void Refresh()
+        {
+            if (source == null)
+                return;
+
+            EnsureOutlineRenderer();
+            if (outline == null)
+                return;
+
+            outline.sprite = source.sprite;
+            outline.flipX = source.flipX;
+            outline.flipY = source.flipY;
+            outline.enabled = source.enabled;
+            outline.color = outlineColor;
         }
     }
 }

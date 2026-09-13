@@ -6,6 +6,7 @@
         "UnityEditor.TestRunner",
         "KMA.Gameplay",
         "KMA.Gameplay.UI",
+        "KMA.Gameplay.Sprint",
         "KMA.Gameplay.Core",
         "KMA.Gameplay.Progression",
         "UnityEngine.UI"

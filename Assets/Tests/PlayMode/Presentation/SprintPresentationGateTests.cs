@@ -188,17 +188,29 @@ namespace KMA.Tests.Presentation
                 Assert.That(runnerVisual.transform.position.y, Is.EqualTo(expectedY).Within(.02f));
             }
 
-            Transform marker = GameObject.Find("SprintBroadcastChrome")?.transform.Find("PlayerMarker");
+            Transform chromeMarker = GameObject.Find("SprintBroadcastChrome")?.transform.Find("PlayerMarker");
+            Assert.That(chromeMarker, Is.Null);
+
+            Transform playerPresentation = runnerRoots[1].GetComponentInChildren<RunnerVisualPresenter>(true)?.transform;
+            Assert.That(playerPresentation, Is.Not.Null);
+            Transform marker = playerPresentation.Find("PlayerMarker");
             Assert.That(marker, Is.Not.Null);
-            var follower = marker.GetComponent<SprintPlayerMarkerFollower>();
-            Assert.That(follower, Is.Not.Null);
-            Assert.That(follower.Target, Is.SameAs(runnerRoots[1]));
-            Outline highlight = marker.GetComponent<Outline>();
-            Assert.That(highlight, Is.Not.Null);
-            Assert.That(highlight.effectColor, Is.EqualTo(Color.cyan));
-            Assert.That(runnerRoots[0].Find("PlayerMarker"), Is.Null);
-            Assert.That(runnerRoots[2].Find("PlayerMarker"), Is.Null);
-            Assert.That(runnerRoots[3].Find("PlayerMarker"), Is.Null);
+            Assert.That(marker.IsChildOf(runnerRoots[1]), Is.True);
+            TextMesh markerLabel = marker.GetComponent<TextMesh>();
+            Assert.That(markerLabel, Is.Not.Null);
+            Assert.That(markerLabel.text, Is.EqualTo("PLAYER"));
+
+            MonoBehaviour playerIdentity = FindIdentityOutline(playerPresentation);
+            Assert.That(playerIdentity, Is.Not.Null);
+            Assert.That(ReadProperty<Color>(playerIdentity, "OutlineColor"), Is.EqualTo(Color.cyan));
+            Assert.That(ReadProperty<SpriteRenderer>(playerIdentity, "Source"), Is.SameAs(
+                runnerRoots[1].GetComponentInChildren<SpriteRenderer>(true)));
+            for (int lane = 0; lane < runnerRoots.Length; lane++)
+            {
+                if (lane == 1) continue;
+                Assert.That(FindIdentityOutline(runnerRoots[lane]), Is.Null);
+                Assert.That(FindChildRecursive(runnerRoots[lane], "PlayerMarker"), Is.Null);
+            }
         }
 
         static IEnumerator LoadSprint()
@@ -227,5 +239,29 @@ namespace KMA.Tests.Presentation
                 if (objects[i].name == name) return objects[i];
             return null;
         }
+
+        static Transform FindChildRecursive(Transform root, string name)
+        {
+            for (int i = 0; i < root.childCount; i++)
+            {
+                Transform child = root.GetChild(i);
+                if (child.name == name) return child;
+                Transform nested = FindChildRecursive(child, name);
+                if (nested != null) return nested;
+            }
+            return null;
+        }
+
+        static MonoBehaviour FindIdentityOutline(Transform root)
+        {
+            var components = root.GetComponentsInChildren<MonoBehaviour>(true);
+            for (int i = 0; i < components.Length; i++)
+                if (components[i] != null && components[i].GetType().Name == "SprintPlayerIdentityOutline")
+                    return components[i];
+            return null;
+        }
+
+        static T ReadProperty<T>(MonoBehaviour component, string propertyName) =>
+            (T)component.GetType().GetProperty(propertyName).GetValue(component);
     }
 }
