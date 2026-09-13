@@ -99,35 +99,34 @@ namespace KMA.Tests.Presentation
             var controller = SceneObjects<SprintController>(scene)[0];
             var sprintHud = SceneObjects<SprintHud>(scene)[0];
             var windCue = SceneObjects<SprintWindCue>(scene)[0];
-            var minigameHud = SceneObjects<MinigameHUD>(scene)[0];
-            var distance = FindNamed<TMP_Text>(scene, "SprintDistance");
-            var rank = FindNamed<TMP_Text>(scene, "SprintRank");
-            var cadence = FindNamed<TMP_Text>(scene, "SprintCadence");
-            var distanceFill = FindNamed<Image>(scene, "SprintDistanceFill");
-            var sharedScore = FindNamed<TMP_Text>(scene, "Score");
-            var sharedPhase = FindNamed<TMP_Text>(scene, "Phase");
-            var sharedStatus = FindNamed<TMP_Text>(scene, "Status");
+            Transform chrome = GameObject.Find("SprintBroadcastChrome")?.transform;
+            Assert.That(chrome, Is.Not.Null);
+            Assert.That(GameObject.Find("SprintFestivalChrome"), Is.Null);
+
+            TMP_Text distance = chrome.Find("Scoreboard/Distance")?.GetComponent<TMP_Text>();
+            TMP_Text rank = chrome.Find("Scoreboard/Rank")?.GetComponent<TMP_Text>();
+            TMP_Text cadence = chrome.Find("Scoreboard/Combo")?.GetComponent<TMP_Text>();
+            Image distanceFill = chrome.Find("Scoreboard/ProgressTrack/ProgressFill")?.GetComponent<Image>();
 
             Assert.That(sprintHud.HasBoundVisuals, Is.True);
             Assert.That(distance, Is.Not.Null);
             Assert.That(rank, Is.Not.Null);
             Assert.That(cadence, Is.Not.Null);
             Assert.That(distanceFill, Is.Not.Null);
-            Assert.That(sharedScore, Is.Not.Null);
-            Assert.That(distance, Is.Not.SameAs(sharedScore));
-            Assert.That(rank, Is.Not.SameAs(sharedPhase));
-            Assert.That(cadence, Is.Not.SameAs(sharedStatus));
+            Assert.That(distanceFill.type, Is.EqualTo(Image.Type.Filled));
+            Assert.That(chrome.GetComponentInParent<SafeAreaFitter>(), Is.Not.Null);
+            Assert.That(distance.text, Is.EqualTo("0 / 100 m"));
+            Assert.That(rank.text, Is.EqualTo("1st"));
+            Assert.That(cadence.text, Is.EqualTo("COMBO ×0"));
 
             controller.ConfigureForTest(.8f);
             controller.AdvanceToDistance(42f);
             sprintHud.Refresh();
-            minigameHud.RefreshFrom(controller.ReadHudState());
 
-            Assert.That(distance.text, Is.EqualTo("42 m"));
+            Assert.That(distance.text, Is.EqualTo("42 / 100 m"));
             Assert.That(rank.text, Is.EqualTo("1st"));
-            Assert.That(cadence.text, Is.EqualTo("COMBO x0"));
+            Assert.That(cadence.text, Is.EqualTo("COMBO ×0"));
             Assert.That(distanceFill.fillAmount, Is.EqualTo(.42f).Within(.001f));
-            Assert.That(sharedScore.text, Is.EqualTo("0"));
 
             var cueImage = FindNamed<Image>(scene, "WindCueHost");
             Assert.That(cueImage, Is.Not.Null);
@@ -163,6 +162,43 @@ namespace KMA.Tests.Presentation
             Assert.That(cueImage.color, Is.EqualTo(Color.red));
 
             yield return null;
+        }
+
+        [UnityTest]
+        public IEnumerator SprintSceneKeepsRunnersInFourEqualTrackBandsAndMarksOnlyThePlayer()
+        {
+            yield return LoadSprint();
+
+            var scene = SceneManager.GetActiveScene();
+            Transform[] runnerRoots =
+            {
+                FindNamed<Transform>(scene, "Runner_01"),
+                FindNamed<Transform>(scene, "Player"),
+                FindNamed<Transform>(scene, "Runner_03"),
+                FindNamed<Transform>(scene, "Runner_04")
+            };
+            var trackRegion = new Rect(-9.6f, -2.8f, 19.2f, 5.6f);
+            for (int lane = 0; lane < runnerRoots.Length; lane++)
+            {
+                Assert.That(runnerRoots[lane], Is.Not.Null);
+                SpriteRenderer runnerVisual = runnerRoots[lane].GetComponentInChildren<SpriteRenderer>(true);
+                Assert.That(runnerVisual, Is.Not.Null);
+                float expectedY = trackRegion.yMin + trackRegion.height *
+                    (1f - SprintUiLayout.LaneCenter01(lane, runnerRoots.Length));
+                Assert.That(runnerVisual.transform.position.y, Is.EqualTo(expectedY).Within(.02f));
+            }
+
+            Transform marker = GameObject.Find("SprintBroadcastChrome")?.transform.Find("PlayerMarker");
+            Assert.That(marker, Is.Not.Null);
+            var follower = marker.GetComponent<SprintPlayerMarkerFollower>();
+            Assert.That(follower, Is.Not.Null);
+            Assert.That(follower.Target, Is.SameAs(runnerRoots[1]));
+            Outline highlight = marker.GetComponent<Outline>();
+            Assert.That(highlight, Is.Not.Null);
+            Assert.That(highlight.effectColor, Is.EqualTo(Color.cyan));
+            Assert.That(runnerRoots[0].Find("PlayerMarker"), Is.Null);
+            Assert.That(runnerRoots[2].Find("PlayerMarker"), Is.Null);
+            Assert.That(runnerRoots[3].Find("PlayerMarker"), Is.Null);
         }
 
         static IEnumerator LoadSprint()

@@ -92,23 +92,9 @@ namespace KMA.Tests.Presentation
             yield return SceneManager.LoadSceneAsync("MG_Sprint", LoadSceneMode.Single);
             yield return null;
 
-            Transform chrome = GameObject.Find("SprintFestivalChrome")?.transform;
-            if (chrome == null)
-            {
-                Transform inactiveChrome = Object.FindObjectsByType<Transform>(
-                        FindObjectsInactive.Include, FindObjectsSortMode.None)
-                    .FirstOrDefault(candidate => candidate.name == "SprintFestivalChrome");
-                string canvasState = string.Join(", ", Object.FindObjectsByType<Canvas>(
-                        FindObjectsInactive.Include, FindObjectsSortMode.None)
-                    .Select(canvas => $"{canvas.name}:active={canvas.gameObject.activeInHierarchy}:scene={canvas.gameObject.scene.name}"));
-                int sprintHudCount = Object.FindObjectsByType<KMA.Gameplay.SprintHud>(
-                    FindObjectsInactive.Include, FindObjectsSortMode.None).Length;
-                Assert.Fail($"Automatic Sprint chrome install failed. Canvases=[{canvasState}], " +
-                    $"SprintHud count={sprintHudCount}, inactive chrome=" +
-                    $"{inactiveChrome != null}, parent={inactiveChrome?.parent?.name}, " +
-                    $"parent active={inactiveChrome?.parent?.gameObject.activeInHierarchy}.");
-            }
-            TMP_Text modeLabel = chrome.Find("TopBar/ModeLabel").GetComponent<TMP_Text>();
+            Transform chrome = GameObject.Find("SprintBroadcastChrome")?.transform;
+            Assert.That(chrome, Is.Not.Null, "Automatic Sprint broadcast chrome install failed.");
+            TMP_Text modeLabel = chrome.Find("ModeLabel").GetComponent<TMP_Text>();
             TMP_Text leftPrompt = chrome.Find("TouchPrompts/LeftPrompt").GetComponent<TMP_Text>();
             TMP_Text rightPrompt = chrome.Find("TouchPrompts/RightPrompt").GetComponent<TMP_Text>();
             Assert.That(modeLabel.text, Is.EqualTo("CHẠY NƯỚC RÚT · 100 M"));

@@ -23,8 +23,8 @@ namespace KMA.Gameplay
         {
             if (controller == null)
                 controller = Object.FindFirstObjectByType<SprintController>();
-            CacheVisuals();
             SprintFestivalPresentation.Build();
+            CacheVisuals();
         }
 
         void OnEnable() => Refresh();
@@ -38,9 +38,9 @@ namespace KMA.Gameplay
             var snapshot = controller.Snapshot;
             TimerText = Mathf.CeilToInt(state.timeRemaining).ToString();
             StaminaText = $"STAMINA {Mathf.RoundToInt(snapshot.Stamina)}%";
-            DistanceText = $"{Mathf.RoundToInt(snapshot.Distance)} m";
-            RankText = $"{controller.RankText}";
-            CadenceText = $"COMBO x{controller.CadenceCombo}";
+            DistanceText = $"{Mathf.RoundToInt(snapshot.Distance)} / 100 m";
+            RankText = controller.RankText;
+            CadenceText = $"COMBO ×{controller.CadenceCombo}";
             if (distanceLabel != null) distanceLabel.text = DistanceText;
             if (rankLabel != null) rankLabel.text = RankText;
             if (cadenceLabel != null) cadenceLabel.text = CadenceText;
@@ -56,18 +56,18 @@ namespace KMA.Gameplay
             if (hud == null)
                 return;
 
-            var root = hud.transform.Find("SafeAreaRoot");
-            if (root == null)
+            var chrome = hud.transform.Find("SafeAreaRoot/SprintBroadcastChrome");
+            if (chrome == null)
                 return;
 
-            metricsRoot ??= root.Find("SprintMetrics");
+            metricsRoot = chrome.Find("Scoreboard");
             if (metricsRoot == null)
                 return;
 
-            distanceLabel ??= metricsRoot.Find("SprintDistance")?.GetComponent<TMP_Text>();
-            rankLabel ??= metricsRoot.Find("SprintRank")?.GetComponent<TMP_Text>();
-            cadenceLabel ??= metricsRoot.Find("SprintCadence")?.GetComponent<TMP_Text>();
-            distanceFill ??= metricsRoot.Find("SprintDistanceFill")?.GetComponent<Image>();
+            distanceLabel = metricsRoot.Find("Distance")?.GetComponent<TMP_Text>();
+            rankLabel = metricsRoot.Find("Rank")?.GetComponent<TMP_Text>();
+            cadenceLabel = metricsRoot.Find("Combo")?.GetComponent<TMP_Text>();
+            distanceFill = metricsRoot.Find("ProgressTrack/ProgressFill")?.GetComponent<Image>();
         }
     }
 }

@@ -13,7 +13,7 @@ namespace KMA.Gameplay
 
         public static void Build()
         {
-            if (GameObject.Find("SprintFestivalChrome") != null)
+            if (GameObject.Find("SprintBroadcastChrome") != null)
                 return;
 
             Canvas canvas = GameObject.Find("S2_HUD_Minigame")?.GetComponent<Canvas>()
@@ -23,26 +23,65 @@ namespace KMA.Gameplay
             TMP_FontAsset font = canvas.GetComponentInChildren<TMP_Text>(true)?.font
                 ?? Object.FindFirstObjectByType<TMP_Text>()?.font;
 
-            RectTransform root = Rect(canvas.transform, "SprintFestivalChrome");
+            Transform safeArea = canvas.transform.Find("SafeAreaRoot");
+            if (safeArea == null)
+                return;
+
+            GameObject oldChrome = GameObject.Find("SprintFestivalChrome");
+            if (oldChrome != null)
+                Object.Destroy(oldChrome);
+
+            DisableSharedMetrics(safeArea);
+
+            RectTransform root = Rect(safeArea, "SprintBroadcastChrome");
             Stretch(root);
-            root.gameObject.AddComponent<KMA.Gameplay.UI.SafeAreaFitter>();
-            root.SetAsFirstSibling();
+            root.SetAsLastSibling();
             EnsurePause(root, font);
 
-            RectTransform topBar = Rect(root, "TopBar");
-            topBar.anchorMin = new Vector2(.31f, .91f);
-            topBar.anchorMax = new Vector2(.69f, .985f);
-            topBar.offsetMin = Vector2.zero;
-            topBar.offsetMax = Vector2.zero;
-            Image topImage = topBar.gameObject.AddComponent<Image>();
-            topImage.color = Navy;
-            topImage.raycastTarget = false;
-            Outline topOutline = topBar.gameObject.AddComponent<Outline>();
-            topOutline.effectColor = new Color32(3, 18, 33, 255);
-            topOutline.effectDistance = new Vector2(3f, -3f);
-            TMP_Text mode = Text(topBar, "ModeLabel", "CHẠY NƯỚC RÚT · 100 M", font, 28f,
+            RectTransform scoreboard = Rect(root, "Scoreboard");
+            scoreboard.anchorMin = new Vector2(.025f, .72f);
+            scoreboard.anchorMax = new Vector2(.31f, .965f);
+            scoreboard.offsetMin = Vector2.zero;
+            scoreboard.offsetMax = Vector2.zero;
+            Image scoreboardImage = scoreboard.gameObject.AddComponent<Image>();
+            scoreboardImage.color = Navy;
+            scoreboardImage.raycastTarget = false;
+            Outline scoreboardOutline = scoreboard.gameObject.AddComponent<Outline>();
+            scoreboardOutline.effectColor = new Color32(3, 18, 33, 255);
+            scoreboardOutline.effectDistance = new Vector2(3f, -3f);
+
+            TMP_Text distance = Metric(scoreboard, "Distance", font, 30f, Cream,
+                new Vector2(.08f, .64f), new Vector2(.92f, .94f));
+            TMP_Text rank = Metric(scoreboard, "Rank", font, 30f, Gold,
+                new Vector2(.08f, .35f), new Vector2(.92f, .64f));
+            TMP_Text combo = Metric(scoreboard, "Combo", font, 24f, Coral,
+                new Vector2(.08f, .13f), new Vector2(.92f, .36f));
+            distance.text = "0 / 100 m";
+            rank.text = "1st";
+            combo.text = "COMBO ×0";
+
+            RectTransform progressTrack = Rect(scoreboard, "ProgressTrack");
+            progressTrack.anchorMin = new Vector2(.08f, .05f);
+            progressTrack.anchorMax = new Vector2(.92f, .11f);
+            progressTrack.offsetMin = Vector2.zero;
+            progressTrack.offsetMax = Vector2.zero;
+            Image trackImage = progressTrack.gameObject.AddComponent<Image>();
+            trackImage.color = new Color(1f, 1f, 1f, .22f);
+            trackImage.raycastTarget = false;
+            Image progressFill = Rect(progressTrack, "ProgressFill").gameObject.AddComponent<Image>();
+            progressFill.type = Image.Type.Filled;
+            progressFill.fillMethod = Image.FillMethod.Horizontal;
+            progressFill.fillOrigin = (int)Image.OriginHorizontal.Left;
+            progressFill.fillAmount = 0f;
+            progressFill.color = Gold;
+            progressFill.raycastTarget = false;
+
+            TMP_Text mode = Text(root, "ModeLabel", "CHẠY NƯỚC RÚT · 100 M", font, 28f,
                 Cream, TextAlignmentOptions.Center);
-            Stretch(mode.rectTransform, new Vector2(18f, 7f), new Vector2(-18f, -7f));
+            mode.rectTransform.anchorMin = new Vector2(.33f, .92f);
+            mode.rectTransform.anchorMax = new Vector2(.67f, .985f);
+            mode.rectTransform.offsetMin = Vector2.zero;
+            mode.rectTransform.offsetMax = Vector2.zero;
 
             RectTransform prompts = Rect(root, "TouchPrompts");
             prompts.anchorMin = new Vector2(0f, .02f);
@@ -58,6 +97,53 @@ namespace KMA.Gameplay
 
             StyleTapArea("LeftTap", new Color(1f, .35f, .37f, .10f));
             StyleTapArea("RightTap", new Color(1f, .79f, .23f, .10f));
+            EnsurePlayerMarker(root);
+        }
+
+        static void DisableSharedMetrics(Transform safeArea)
+        {
+            string[] obsolete = { "Time", "Phase", "Score", "Status", "Progress", "Stamina", "SprintMetrics" };
+            for (int i = 0; i < obsolete.Length; i++)
+            {
+                Transform metric = safeArea.Find(obsolete[i]);
+                if (metric != null)
+                    metric.gameObject.SetActive(false);
+            }
+        }
+
+        static TMP_Text Metric(Transform parent, string name, TMP_FontAsset font, float fontSize, Color color,
+            Vector2 min, Vector2 max)
+        {
+            TMP_Text text = Text(parent, name, string.Empty, font, fontSize, color, TextAlignmentOptions.Center);
+            text.rectTransform.anchorMin = min;
+            text.rectTransform.anchorMax = max;
+            text.rectTransform.offsetMin = Vector2.zero;
+            text.rectTransform.offsetMax = Vector2.zero;
+            return text;
+        }
+
+        static void EnsurePlayerMarker(Transform parent)
+        {
+            if (parent.Find("PlayerMarker") != null)
+                return;
+
+            Transform player = GameObject.Find("Player")?.transform;
+            if (player == null)
+                return;
+
+            RectTransform marker = Rect(parent, "PlayerMarker");
+            marker.anchorMin = marker.anchorMax = marker.pivot = new Vector2(.5f, .5f);
+            marker.sizeDelta = new Vector2(92f, 48f);
+            Image plate = marker.gameObject.AddComponent<Image>();
+            plate.color = new Color(0f, 1f, 1f, .16f);
+            plate.raycastTarget = false;
+            Outline outline = marker.gameObject.AddComponent<Outline>();
+            outline.effectColor = Color.cyan;
+            outline.effectDistance = new Vector2(2f, -2f);
+            marker.gameObject.AddComponent<SprintPlayerMarkerFollower>().Bind(player);
+            TMP_Text label = Text(marker, "Label", "YOU", parent.GetComponentInChildren<TMP_Text>(true)?.font,
+                20f, Color.cyan, TextAlignmentOptions.Center);
+            Stretch(label.rectTransform, new Vector2(5f, 3f), new Vector2(-5f, -3f));
         }
 
         static void EnsurePause(Transform parent, TMP_FontAsset font)
@@ -146,6 +232,29 @@ namespace KMA.Gameplay
             rect.anchorMax = Vector2.one;
             rect.offsetMin = min;
             rect.offsetMax = max;
+        }
+    }
+
+    public sealed class SprintPlayerMarkerFollower : MonoBehaviour
+    {
+        Transform target;
+
+        public Transform Target => target;
+
+        public void Bind(Transform playerRoot) => target = playerRoot;
+
+        void LateUpdate()
+        {
+            if (target == null || transform.parent is not RectTransform parent)
+                return;
+
+            Canvas canvas = GetComponentInParent<Canvas>();
+            Camera camera = canvas != null && canvas.renderMode != RenderMode.ScreenSpaceOverlay
+                ? canvas.worldCamera ?? Camera.main
+                : null;
+            Vector2 screen = RectTransformUtility.WorldToScreenPoint(camera, target.position + Vector3.up * .7f);
+            if (RectTransformUtility.ScreenPointToLocalPointInRectangle(parent, screen, camera, out Vector2 local))
+                ((RectTransform)transform).anchoredPosition = local;
         }
     }
 }
