@@ -106,10 +106,15 @@ namespace KMA.Gameplay
         static void PrepareSafeArea(Transform safeArea)
         {
             safeArea.gameObject.SetActive(true);
-            var fitter = safeArea.GetComponent<KMA.Gameplay.UI.SafeAreaFitter>()
-                ?? safeArea.gameObject.AddComponent<KMA.Gameplay.UI.SafeAreaFitter>();
-            fitter.enabled = true;
-            fitter.Apply(Screen.safeArea, new Vector2Int(Screen.width, Screen.height));
+            var nestedFitter = safeArea.GetComponent<KMA.Gameplay.UI.SafeAreaFitter>();
+            if (nestedFitter != null)
+                nestedFitter.enabled = false;
+
+            if (safeArea is RectTransform rectTransform)
+            {
+                rectTransform.offsetMin = Vector2.zero;
+                rectTransform.offsetMax = Vector2.zero;
+            }
         }
 
         static void EnsureControls(RectTransform root)

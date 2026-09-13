@@ -286,7 +286,7 @@ namespace KMA.Tests.Presentation
         }
 
         [UnityTest]
-        public IEnumerator SprintControlsFollowEnabledSafeAreaWithoutMovingAuthoritativeTapAreas()
+        public IEnumerator SprintControlsFollowSingleRootSafeAreaWithoutMovingAuthoritativeTapAreas()
         {
             yield return LoadSprint();
 
@@ -296,8 +296,12 @@ namespace KMA.Tests.Presentation
             Image leftVisual = FindNamed<Image>(scene, "LeftControl");
             Image rightVisual = FindNamed<Image>(scene, "RightControl");
             var presenter = SceneObjects<SprintControlPresenter>(scene)[0];
-            RectTransform safeAreaRoot = GameObject.Find("SafeAreaRoot")?.GetComponent<RectTransform>();
-            var safeAreaFitter = safeAreaRoot?.GetComponent<SafeAreaFitter>();
+            RectTransform canvasRoot = GameObject.Find("S2_HUD_Minigame")?.GetComponent<RectTransform>();
+            RectTransform safeAreaRoot = canvasRoot == null
+                ? null
+                : canvasRoot.Find("SafeAreaRoot")?.GetComponent<RectTransform>();
+            var rootSafeAreaFitter = canvasRoot?.GetComponent<SafeAreaFitter>();
+            var nestedSafeAreaFitter = safeAreaRoot?.GetComponent<SafeAreaFitter>();
             RectTransform leftTapRect = leftTap.GetComponent<RectTransform>();
             RectTransform rightTapRect = rightTap.GetComponent<RectTransform>();
             Rect leftHitBefore = ScreenRect(leftTapRect);
@@ -306,30 +310,37 @@ namespace KMA.Tests.Presentation
             Rect rightVisualBefore = ScreenRect(rightVisual.rectTransform);
 
             Assert.That(presenter, Is.Not.Null);
-            Assert.That(safeAreaFitter, Is.Not.Null);
-            Assert.That(safeAreaFitter.enabled, Is.True);
+            Assert.That(canvasRoot, Is.Not.Null);
+            Assert.That(safeAreaRoot, Is.Not.Null);
+            Assert.That(rootSafeAreaFitter, Is.Not.Null);
+            Assert.That(rootSafeAreaFitter.enabled, Is.True);
+            Assert.That(nestedSafeAreaFitter == null || nestedSafeAreaFitter.enabled, Is.False);
+            Assert.That(EnabledSafeAreaFitterCountInAncestors(leftVisual.transform), Is.EqualTo(1));
+            Assert.That(EnabledSafeAreaFitterCountInAncestors(rightVisual.transform), Is.EqualTo(1));
 
             Vector2Int screenSize = new Vector2Int(Screen.width, Screen.height);
             Rect safeArea = new Rect(screenSize.x * .08f, screenSize.y * .04f,
                 screenSize.x * .84f, screenSize.y * .92f);
             Canvas.ForceUpdateCanvases();
-            safeAreaFitter.Apply(safeArea, screenSize);
+            rootSafeAreaFitter.Apply(safeArea, screenSize);
             Canvas.ForceUpdateCanvases();
             presenter.ConfigureLayout(leftTapRect, rightTapRect);
 
-            Rect safeBounds = ScreenRect(safeAreaRoot);
+            Rect safeBounds = ScreenRect(canvasRoot);
             Rect leftHitAfter = ScreenRect(leftTapRect);
             Rect rightHitAfter = ScreenRect(rightTapRect);
             Rect leftVisualAfter = ScreenRect(leftVisual.rectTransform);
             Rect rightVisualAfter = ScreenRect(rightVisual.rectTransform);
-            var expectedOffsets = safeAreaFitter.CalculateOffsets(safeArea, screenSize);
+            var expectedOffsets = rootSafeAreaFitter.CalculateOffsets(safeArea, screenSize);
 
             AssertRectClose(leftHitAfter, leftHitBefore, .01f);
             AssertRectClose(rightHitAfter, rightHitBefore, .01f);
-            Assert.That(safeAreaRoot.offsetMin.x, Is.EqualTo(expectedOffsets.left).Within(.01f));
-            Assert.That(safeAreaRoot.offsetMin.y, Is.EqualTo(expectedOffsets.bottom).Within(.01f));
-            Assert.That(safeAreaRoot.offsetMax.x, Is.EqualTo(-expectedOffsets.right).Within(.01f));
-            Assert.That(safeAreaRoot.offsetMax.y, Is.EqualTo(-expectedOffsets.top).Within(.01f));
+            Assert.That(canvasRoot.offsetMin.x, Is.EqualTo(expectedOffsets.left).Within(.01f));
+            Assert.That(canvasRoot.offsetMin.y, Is.EqualTo(expectedOffsets.bottom).Within(.01f));
+            Assert.That(canvasRoot.offsetMax.x, Is.EqualTo(-expectedOffsets.right).Within(.01f));
+            Assert.That(canvasRoot.offsetMax.y, Is.EqualTo(-expectedOffsets.top).Within(.01f));
+            Assert.That(safeAreaRoot.offsetMin, Is.EqualTo(Vector2.zero));
+            Assert.That(safeAreaRoot.offsetMax, Is.EqualTo(Vector2.zero));
             AssertRectInside(leftVisualAfter, safeBounds, 3f);
             AssertRectInside(rightVisualAfter, safeBounds, 3f);
             Assert.That(leftVisualAfter.xMin, Is.GreaterThan(leftVisualBefore.xMin + 1f));
@@ -421,6 +432,18 @@ namespace KMA.Tests.Presentation
                 max = Vector2.Max(max, point);
             }
             return Rect.MinMaxRect(min.x, min.y, max.x, max.y);
+        }
+
+        static int EnabledSafeAreaFitterCountInAncestors(Transform leaf)
+        {
+            int count = 0;
+            for (Transform current = leaf; current != null; current = current.parent)
+            {
+                var fitter = current.GetComponent<SafeAreaFitter>();
+                if (fitter != null && fitter.enabled)
+                    count++;
+            }
+            return count;
         }
 
         static void AssertColor32(Color color, Color32 expected)

@@ -160,11 +160,19 @@ namespace KMA.Gameplay
 
         static bool HasSafeAreaInsets(RectTransform visual)
         {
-            RectTransform safeArea = visual.GetComponentInParent<UI.SafeAreaFitter>()?.GetComponent<RectTransform>();
-            if (safeArea == null)
-                return false;
+            var fitters = visual.GetComponentsInParent<UI.SafeAreaFitter>(true);
+            for (int i = 0; i < fitters.Length; i++)
+            {
+                if (fitters[i] == null || !fitters[i].enabled)
+                    continue;
 
-            return safeArea.offsetMin.sqrMagnitude > .01f || safeArea.offsetMax.sqrMagnitude > .01f;
+                RectTransform safeArea = fitters[i].GetComponent<RectTransform>();
+                if (safeArea != null
+                    && (safeArea.offsetMin.sqrMagnitude > .01f || safeArea.offsetMax.sqrMagnitude > .01f))
+                    return true;
+            }
+
+            return false;
         }
 
         static Rect ScreenRect(RectTransform rect)

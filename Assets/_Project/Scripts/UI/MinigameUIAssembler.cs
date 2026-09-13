@@ -249,21 +249,8 @@ namespace KMA.Gameplay.UI
 
             if (root.GetComponent<GraphicRaycaster>() == null)
                 root.AddComponent<GraphicRaycaster>();
-            ConfigureSafeAreaFitters(root);
-        }
-
-        static void ConfigureSafeAreaFitters(GameObject root)
-        {
-            var fitters = root.GetComponentsInChildren<SafeAreaFitter>(true);
-            if (fitters.Length == 0)
-                fitters = new[] { root.AddComponent<SafeAreaFitter>() };
-
-            var screenSize = new Vector2Int(Screen.width, Screen.height);
-            for (int i = 0; i < fitters.Length; i++)
-            {
-                fitters[i].enabled = true;
-                fitters[i].Apply(Screen.safeArea, screenSize);
-            }
+            if (root.GetComponentInChildren<SafeAreaFitter>(true) == null)
+                root.AddComponent<SafeAreaFitter>();
         }
 
         static void ConfigureHud(GameObject root, MinigameBase minigame, UITheme theme)
