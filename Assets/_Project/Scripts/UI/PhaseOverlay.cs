@@ -57,7 +57,7 @@ namespace KMA.Gameplay.UI
 
         void Update()
         {
-            if (DisplayedPhase != MinigamePhase.Countdown)
+            if (IsSprintSource || DisplayedPhase != MinigamePhase.Countdown)
                 return;
 
             countdownElapsed += Time.deltaTime;
@@ -86,15 +86,19 @@ namespace KMA.Gameplay.UI
             if (phase == MinigamePhase.Countdown)
                 countdownElapsed = 0f;
 
-            SetActive(tutorialRoot, !IsSprintSource && phase == MinigamePhase.Tutorial &&
+            bool useSharedStartPresentation = !IsSprintSource;
+            SetActive(tutorialRoot, useSharedStartPresentation && phase == MinigamePhase.Tutorial &&
                 (tutorialOverlay == null || tutorialOverlay.ShouldShow));
-            SetActive(countdownRoot, phase == MinigamePhase.Countdown);
-            SetActive(playRoot, phase == MinigamePhase.Play);
+            SetActive(countdownRoot, useSharedStartPresentation && phase == MinigamePhase.Countdown);
+            SetActive(playRoot, useSharedStartPresentation && phase == MinigamePhase.Play);
             SetActive(resolveRoot, phase == MinigamePhase.Resolve);
 
             if (phaseLabel != null)
-                phaseLabel.text = PhaseName(phase);
-            RefreshCountdown();
+                phaseLabel.text = IsSprintSource && phase != MinigamePhase.Resolve
+                    ? string.Empty
+                    : PhaseName(phase);
+            if (useSharedStartPresentation)
+                RefreshCountdown();
         }
 
         void ConfigureTutorial()

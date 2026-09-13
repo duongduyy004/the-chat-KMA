@@ -8,6 +8,7 @@ namespace KMA.Gameplay
     {
         const float TutorialDuration = 1.5f;
         const float PlayInstructionDuration = .25f;
+        const float GoDuration = .25f;
 
         [SerializeField] GameObject tutorialRoot;
         [SerializeField] TMP_Text tutorialLabel;
@@ -21,6 +22,7 @@ namespace KMA.Gameplay
         float tutorialElapsed;
         float countdownElapsed;
         float instructionRemaining;
+        float goRemaining;
         bool tutorialReleased;
         string countdownText = string.Empty;
         string instructionText = string.Empty;
@@ -61,6 +63,7 @@ namespace KMA.Gameplay
             tutorialElapsed = 0f;
             countdownElapsed = 0f;
             instructionRemaining = 0f;
+            goRemaining = 0f;
             tutorialReleased = false;
             countdownText = string.Empty;
             instructionText = string.Empty;
@@ -109,13 +112,26 @@ namespace KMA.Gameplay
             }
 
             if (instructionRemaining <= 0f)
-                return;
+            {
+                if (goRemaining <= 0f)
+                    return;
+            }
 
-            instructionRemaining = Mathf.Max(0f, instructionRemaining - elapsed);
-            if (instructionCanvasGroup != null)
-                instructionCanvasGroup.alpha = instructionRemaining / PlayInstructionDuration;
-            if (instructionRemaining <= 0f)
-                SetInstructionActive(false);
+            if (instructionRemaining > 0f)
+            {
+                instructionRemaining = Mathf.Max(0f, instructionRemaining - elapsed);
+                if (instructionCanvasGroup != null)
+                    instructionCanvasGroup.alpha = instructionRemaining / PlayInstructionDuration;
+                if (instructionRemaining <= 0f)
+                    SetInstructionActive(false);
+            }
+
+            if (goRemaining > 0f)
+            {
+                goRemaining = Mathf.Max(0f, goRemaining - elapsed);
+                if (goRemaining <= 0f)
+                    SetActive(countdownRoot, false);
+            }
         }
 
         void ApplyPhase(MinigamePhase phase)
@@ -143,12 +159,13 @@ namespace KMA.Gameplay
             }
 
             SetActive(tutorialRoot, false);
-            SetActive(countdownRoot, false);
             if (phase == MinigamePhase.Play)
             {
                 countdownText = "GO!";
                 if (countdownLabel != null)
                     countdownLabel.text = countdownText;
+                goRemaining = GoDuration;
+                SetActive(countdownRoot, true);
                 instructionText = "TĂNG TỐC!";
                 if (instructionLabel != null)
                     instructionLabel.text = instructionText;
@@ -157,6 +174,7 @@ namespace KMA.Gameplay
                 return;
             }
 
+            SetActive(countdownRoot, false);
             SetInstructionActive(false);
         }
 

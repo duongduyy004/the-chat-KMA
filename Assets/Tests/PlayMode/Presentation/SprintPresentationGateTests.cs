@@ -45,6 +45,25 @@ namespace KMA.Tests.Presentation
             Assert.That(start.TutorialText,
                 Is.EqualTo("← TRÁI     BẤM LUÂN PHIÊN ĐỂ CHẠY     PHẢI →"));
 
+            Transform tutorialBanner = GameObject.Find("SprintBroadcastChrome")?.transform
+                .Find("StartPresentation/TutorialBanner");
+            RectTransform leftTipTop = tutorialBanner?.Find("LeftArrow/TipTop")
+                ?.GetComponent<RectTransform>();
+            RectTransform leftTipBottom = tutorialBanner?.Find("LeftArrow/TipBottom")
+                ?.GetComponent<RectTransform>();
+            RectTransform rightTipTop = tutorialBanner?.Find("RightArrow/TipTop")
+                ?.GetComponent<RectTransform>();
+            RectTransform rightTipBottom = tutorialBanner?.Find("RightArrow/TipBottom")
+                ?.GetComponent<RectTransform>();
+            Assert.That(leftTipTop, Is.Not.Null);
+            Assert.That(leftTipBottom, Is.Not.Null);
+            Assert.That(rightTipTop, Is.Not.Null);
+            Assert.That(rightTipBottom, Is.Not.Null);
+            Assert.That(leftTipTop.anchoredPosition.y, Is.GreaterThan(leftTipBottom.anchoredPosition.y),
+                "Left-arrow tips must form a chevron, not an X.");
+            Assert.That(rightTipTop.anchoredPosition.y, Is.GreaterThan(rightTipBottom.anchoredPosition.y),
+                "Right-arrow tips must form a chevron, not an X.");
+
             var pause = pauses[0];
             var player = GameObject.Find("Player");
             Assert.That(player, Is.Not.Null);
@@ -81,6 +100,48 @@ namespace KMA.Tests.Presentation
             Assert.That(rightRect.anchorMax.x, Is.EqualTo(.99f));
             Assert.That(1920f * (leftRect.anchorMax.x - leftRect.anchorMin.x) + leftRect.sizeDelta.x, Is.GreaterThanOrEqualTo(140f));
             Assert.That(1920f * (rightRect.anchorMax.x - rightRect.anchorMin.x) + rightRect.sizeDelta.x, Is.GreaterThanOrEqualTo(140f));
+        }
+
+        [UnityTest]
+        public IEnumerator SprintUsesOnlyStartPresentationBeforeResolve()
+        {
+            yield return LoadSprint();
+
+            var scene = SceneManager.GetActiveScene();
+            var controller = SceneObjects<SprintController>(scene)[0];
+            var start = SceneObjects<SprintStartPresentation>(scene)[0];
+            var phase = SceneObjects<PhaseOverlay>(scene)[0];
+            Transform sharedTutorial = FindChildRecursive(phase.transform, "TutorialRoot");
+            Transform sharedCountdown = FindChildRecursive(phase.transform, "CountdownRoot");
+            Transform sharedPlay = FindChildRecursive(phase.transform, "PlayRoot");
+            TMP_Text sharedPhaseLabel = FindNamed<TMP_Text>(scene, "PhaseLabel");
+
+            Assert.That(sharedTutorial, Is.Not.Null);
+            Assert.That(sharedCountdown, Is.Not.Null);
+            Assert.That(sharedPlay, Is.Not.Null);
+            Assert.That(sharedPhaseLabel, Is.Not.Null);
+            Assert.That(sharedTutorial.gameObject.activeSelf, Is.False);
+            Assert.That(sharedCountdown.gameObject.activeSelf, Is.False);
+            Assert.That(sharedPlay.gameObject.activeSelf, Is.False);
+            Assert.That(sharedPhaseLabel.text, Is.Empty);
+
+            start.TickForTest(1.5f);
+            Assert.That(controller.PresentationPhase, Is.EqualTo(MinigamePhase.Countdown));
+            Assert.That(sharedTutorial.gameObject.activeSelf, Is.False);
+            Assert.That(sharedCountdown.gameObject.activeSelf, Is.False,
+                "Sprint countdown must not duplicate the dedicated start presenter.");
+            Assert.That(sharedPlay.gameObject.activeSelf, Is.False);
+            Assert.That(sharedPhaseLabel.text, Is.Empty);
+
+            controller.Simulate(1f);
+            controller.Simulate(1f);
+            controller.Simulate(1f);
+            Assert.That(controller.PresentationPhase, Is.EqualTo(MinigamePhase.Play));
+            Assert.That(sharedTutorial.gameObject.activeSelf, Is.False);
+            Assert.That(sharedCountdown.gameObject.activeSelf, Is.False);
+            Assert.That(sharedPlay.gameObject.activeSelf, Is.False,
+                "Sprint must not show the shared static PLAY surface.");
+            Assert.That(sharedPhaseLabel.text, Is.Empty);
         }
 
         [UnityTest]

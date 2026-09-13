@@ -77,16 +77,21 @@ namespace KMA.Tests.Presentation
         {
             var controllerObject = new GameObject("sprint-controller");
             var presentationObject = new GameObject("sprint-start-presentation");
+            var tutorialRoot = new GameObject("tutorial-root");
+            var countdownRoot = new GameObject("countdown-root");
+            var instructionRoot = new GameObject("instruction-root");
             try
             {
                 var controller = controllerObject.AddComponent<SprintController>();
                 var presentation = presentationObject.AddComponent<SprintStartPresentation>();
+                presentation.Configure(tutorialRoot, null, countdownRoot, null, instructionRoot, null);
                 var distanceBeforeBind = controller.Snapshot.Distance;
 
                 presentation.Bind(controller);
 
                 Assert.That(controller.PresentationPhase, Is.EqualTo(MinigamePhase.Tutorial));
                 Assert.That(presentation.TutorialVisible, Is.True);
+                Assert.That(tutorialRoot.activeSelf, Is.True);
                 Assert.That(presentation.TutorialText,
                     Is.EqualTo("← TRÁI     BẤM LUÂN PHIÊN ĐỂ CHẠY     PHẢI →"));
                 Assert.That(controller.Snapshot.Distance, Is.EqualTo(distanceBeforeBind));
@@ -101,6 +106,7 @@ namespace KMA.Tests.Presentation
                 presentation.TickForTest(.01f);
                 Assert.That(controller.PresentationPhase, Is.EqualTo(MinigamePhase.Countdown));
                 Assert.That(presentation.TutorialVisible, Is.False);
+                Assert.That(countdownRoot.activeSelf, Is.True);
                 Assert.That(presentation.CountdownText, Is.EqualTo("3"));
 
                 controller.Simulate(1f);
@@ -112,8 +118,11 @@ namespace KMA.Tests.Presentation
                 controller.Simulate(1f);
                 Assert.That(controller.PresentationPhase, Is.EqualTo(MinigamePhase.Play));
                 Assert.That(presentation.CountdownText, Is.EqualTo("GO!"));
+                Assert.That(countdownRoot.activeSelf, Is.True,
+                    "GO! must render at the Countdown-to-Play boundary.");
                 Assert.That(presentation.InstructionVisible, Is.True);
                 presentation.TickForTest(.25f);
+                Assert.That(countdownRoot.activeSelf, Is.False);
                 Assert.That(presentation.InstructionVisible, Is.False);
                 yield return null;
             }
@@ -121,6 +130,9 @@ namespace KMA.Tests.Presentation
             {
                 Object.Destroy(presentationObject);
                 Object.Destroy(controllerObject);
+                Object.Destroy(tutorialRoot);
+                Object.Destroy(countdownRoot);
+                Object.Destroy(instructionRoot);
             }
         }
 

@@ -180,21 +180,21 @@ namespace KMA.Gameplay
             shaft.rectTransform.offsetMin = Vector2.zero;
             shaft.rectTransform.offsetMax = Vector2.zero;
 
-            CreateArrowTip(arrow, "TipTop", pointsLeft, 45f);
-            CreateArrowTip(arrow, "TipBottom", pointsLeft, -45f);
+            CreateArrowTip(arrow, "TipTop", pointsLeft, true);
+            CreateArrowTip(arrow, "TipBottom", pointsLeft, false);
         }
 
-        static void CreateArrowTip(RectTransform parent, string name, bool pointsLeft, float angle)
+        static void CreateArrowTip(RectTransform parent, string name, bool pointsLeft, bool top)
         {
             Image tip = Rect(parent, name).gameObject.AddComponent<Image>();
             tip.color = Gold;
             tip.raycastTarget = false;
-            tip.rectTransform.anchorMin = pointsLeft ? new Vector2(.08f, .5f) : new Vector2(.48f, .5f);
-            tip.rectTransform.anchorMax = pointsLeft ? new Vector2(.58f, .5f) : new Vector2(.98f, .5f);
-            tip.rectTransform.sizeDelta = new Vector2(0f, 8f);
-            tip.rectTransform.anchoredPosition = Vector2.zero;
-            tip.rectTransform.localRotation = Quaternion.Euler(0f, 0f,
-                pointsLeft ? -angle : angle);
+            tip.rectTransform.anchorMin = tip.rectTransform.anchorMax =
+                new Vector2(pointsLeft ? .38f : .62f, .5f);
+            tip.rectTransform.sizeDelta = new Vector2(42f, 8f);
+            tip.rectTransform.anchoredPosition = new Vector2(0f, top ? 12f : -12f);
+            float angle = pointsLeft == top ? 45f : -45f;
+            tip.rectTransform.localRotation = Quaternion.Euler(0f, 0f, angle);
         }
 
         static void EnsureControls(RectTransform root)
