@@ -10,6 +10,7 @@ namespace KMA.Gameplay
         static readonly Color Coral = new Color32(255, 89, 94, 235);
         static readonly Color Gold = new Color32(255, 202, 58, 235);
         static readonly Color Cream = new Color32(255, 249, 231, 255);
+        static readonly Color ControlNavy = new Color32(7, 28, 49, 128);
 
         public static void Build()
         {
@@ -109,29 +110,26 @@ namespace KMA.Gameplay
             if (leftTap == null || rightTap == null)
                 return;
 
-            Image left = Control(leftTap.transform, "LeftControl", true, Coral);
-            Image right = Control(rightTap.transform, "RightControl", false, Gold);
-            var presenter = root.gameObject.AddComponent<SprintControlPresenter>();
+            RectTransform controls = Rect(root, "Controls");
+            Stretch(controls);
+            Image left = Control(controls, "LeftControl");
+            Image right = Control(controls, "RightControl");
+            var presenter = controls.gameObject.AddComponent<SprintControlPresenter>();
             presenter.Configure(Object.FindFirstObjectByType<SprintController>(), left.rectTransform,
                 right.rectTransform, left, right);
+            presenter.ConfigureLayout(leftTap.GetComponent<RectTransform>(), rightTap.GetComponent<RectTransform>());
             presenter.BindPressFeedback(leftTap, rightTap);
         }
 
-        static Image Control(Transform parent, string name, bool left, Color color)
+        static Image Control(Transform parent, string name)
         {
             RectTransform root = Rect(parent, name);
-            Rect safe = new Rect(0f, 0f, 1f, 1f);
-            Rect visible = SprintUiLayout.VisibleControlRect(safe, left);
-            Rect hit = SprintUiLayout.HitAreaRect(safe, left);
-            root.anchorMin = new Vector2((visible.xMin - hit.xMin) / hit.width,
-                (visible.yMin - hit.yMin) / hit.height);
-            root.anchorMax = new Vector2((visible.xMax - hit.xMin) / hit.width,
-                (visible.yMax - hit.yMin) / hit.height);
-            root.offsetMin = Vector2.zero;
-            root.offsetMax = Vector2.zero;
             Image image = root.gameObject.AddComponent<Image>();
-            image.color = new Color(color.r, color.g, color.b, .5f);
+            image.color = ControlNavy;
             image.raycastTarget = false;
+            Outline outline = root.gameObject.AddComponent<Outline>();
+            outline.effectColor = new Color(1f, .79f, .23f, .16f);
+            outline.effectDistance = new Vector2(2f, -2f);
             return image;
         }
 

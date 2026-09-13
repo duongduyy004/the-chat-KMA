@@ -225,12 +225,30 @@ namespace KMA.Tests.Presentation
             var rightTap = FindNamed<ScreenTapArea>(scene, "RightTap");
             Image leftVisual = FindNamed<Image>(scene, "LeftControl");
             Image rightVisual = FindNamed<Image>(scene, "RightControl");
+            Transform safeAreaRoot = GameObject.Find("SafeAreaRoot")?.transform;
+            Transform chrome = GameObject.Find("SprintBroadcastChrome")?.transform;
+            Transform inputCanvas = GameObject.Find("Input")?.transform;
+            Color32 navyControl = new Color32(7, 28, 49, 128);
 
             Assert.That(presenter, Is.Not.Null);
             Assert.That(leftVisual, Is.Not.Null);
             Assert.That(rightVisual, Is.Not.Null);
-            Assert.That(leftVisual.color.a, Is.EqualTo(.50f).Within(.02f));
-            Assert.That(rightVisual.color.a, Is.EqualTo(.50f).Within(.02f));
+            Assert.That(safeAreaRoot, Is.Not.Null);
+            Assert.That(chrome, Is.Not.Null);
+            Assert.That(chrome.parent, Is.EqualTo(safeAreaRoot));
+            Assert.That(inputCanvas, Is.Not.Null);
+            Assert.That(leftTap.transform.IsChildOf(inputCanvas), Is.True);
+            Assert.That(rightTap.transform.IsChildOf(inputCanvas), Is.True);
+            Assert.That(leftTap.transform.IsChildOf(chrome), Is.False);
+            Assert.That(rightTap.transform.IsChildOf(chrome), Is.False);
+            Assert.That(leftVisual.transform.IsChildOf(chrome), Is.True);
+            Assert.That(rightVisual.transform.IsChildOf(chrome), Is.True);
+            Assert.That(leftVisual.GetComponentInParent<SafeAreaFitter>(), Is.Not.Null);
+            Assert.That(rightVisual.GetComponentInParent<SafeAreaFitter>(), Is.Not.Null);
+            Assert.That(leftVisual.raycastTarget, Is.False);
+            Assert.That(rightVisual.raycastTarget, Is.False);
+            AssertColor32(leftVisual.color, navyControl);
+            AssertColor32(rightVisual.color, navyControl);
             Assert.That(leftVisual.rectTransform.rect.width, Is.EqualTo(rightVisual.rectTransform.rect.width).Within(.01f));
             Assert.That(leftVisual.rectTransform.rect.height, Is.EqualTo(rightVisual.rectTransform.rect.height).Within(.01f));
 
@@ -239,6 +257,8 @@ namespace KMA.Tests.Presentation
             Rect leftVisualBounds = ScreenRect(leftVisual.rectTransform);
             Rect rightVisualBounds = ScreenRect(rightVisual.rectTransform);
             Assert.That(leftHit.Overlaps(rightHit), Is.False);
+            Assert.That(leftHit.width, Is.EqualTo(rightHit.width).Within(.01f));
+            Assert.That(leftHit.height, Is.EqualTo(rightHit.height).Within(.01f));
             Assert.That(leftVisualBounds.xMin, Is.GreaterThanOrEqualTo(leftHit.xMin - .01f));
             Assert.That(leftVisualBounds.yMin, Is.GreaterThanOrEqualTo(leftHit.yMin - .01f));
             Assert.That(leftVisualBounds.xMax, Is.LessThanOrEqualTo(leftHit.xMax + .01f));
@@ -251,9 +271,17 @@ namespace KMA.Tests.Presentation
             controller.ConfigureForTest(.8f);
             presenter.RefreshForTest();
             Assert.That(presenter.HighlightedSide, Is.EqualTo(KMA.Gameplay.Side.Left));
+            AssertColor32(leftVisual.color, navyControl);
+            AssertColor32(rightVisual.color, navyControl);
+            AssertOutlineGlow(leftVisual.GetComponent<Outline>(), true);
+            AssertOutlineGlow(rightVisual.GetComponent<Outline>(), false);
             controller.OnLeftTap();
             presenter.RefreshForTest();
             Assert.That(presenter.HighlightedSide, Is.EqualTo(KMA.Gameplay.Side.Right));
+            AssertColor32(leftVisual.color, navyControl);
+            AssertColor32(rightVisual.color, navyControl);
+            AssertOutlineGlow(leftVisual.GetComponent<Outline>(), false);
+            AssertOutlineGlow(rightVisual.GetComponent<Outline>(), true);
             Assert.That(controller.CadenceCombo, Is.EqualTo(1));
         }
 
@@ -336,6 +364,25 @@ namespace KMA.Tests.Presentation
             Vector2 min = RectTransformUtility.WorldToScreenPoint(camera, corners[0]);
             Vector2 max = RectTransformUtility.WorldToScreenPoint(camera, corners[2]);
             return Rect.MinMaxRect(min.x, min.y, max.x, max.y);
+        }
+
+        static void AssertColor32(Color color, Color32 expected)
+        {
+            Color32 actual = color;
+            Assert.That(actual.r, Is.EqualTo(expected.r));
+            Assert.That(actual.g, Is.EqualTo(expected.g));
+            Assert.That(actual.b, Is.EqualTo(expected.b));
+            Assert.That(actual.a, Is.EqualTo(expected.a));
+        }
+
+        static void AssertOutlineGlow(Outline outline, bool highlighted)
+        {
+            Assert.That(outline, Is.Not.Null);
+            Color color = outline.effectColor;
+            Assert.That(color.r, Is.EqualTo(1f).Within(.001f));
+            Assert.That(color.g, Is.EqualTo(.79f).Within(.001f));
+            Assert.That(color.b, Is.EqualTo(.23f).Within(.001f));
+            Assert.That(color.a, Is.EqualTo(highlighted ? .45f : .16f).Within(.001f));
         }
     }
 }

@@ -13,6 +13,8 @@ namespace KMA.Gameplay
         RectTransform rightVisual;
         Graphic leftGraphic;
         Graphic rightGraphic;
+        RectTransform leftHitArea;
+        RectTransform rightHitArea;
         Color leftBaseColor;
         Color rightBaseColor;
         Side pressedSide;
@@ -41,6 +43,13 @@ namespace KMA.Gameplay
         {
             BindPressFeedback(leftTap, Side.Left);
             BindPressFeedback(rightTap, Side.Right);
+        }
+
+        public void ConfigureLayout(RectTransform leftTapArea, RectTransform rightTapArea)
+        {
+            leftHitArea = leftTapArea;
+            rightHitArea = rightTapArea;
+            SyncLayout();
         }
 
         public void RefreshForTest()
@@ -77,6 +86,7 @@ namespace KMA.Gameplay
         {
             RefreshForTest();
             TickForTest(Time.unscaledDeltaTime);
+            SyncLayout();
         }
 
         void BindPressFeedback(ScreenTapArea tapArea, Side side)
@@ -96,9 +106,55 @@ namespace KMA.Gameplay
             if (graphic == null)
                 return;
 
-            Color color = highlighted ? Color.Lerp(baseColor, Color.white, .2f) : baseColor;
+            Color color = baseColor;
             color.a = .5f;
             graphic.color = color;
+
+            Outline outline = graphic.GetComponent<Outline>();
+            if (outline != null)
+                outline.effectColor = new Color(1f, .79f, .23f, highlighted ? .45f : .16f);
+        }
+
+        void SyncLayout()
+        {
+            SetVisualLayout(leftVisual, leftHitArea, true);
+            SetVisualLayout(rightVisual, rightHitArea, false);
+        }
+
+        static void SetVisualLayout(RectTransform visual, RectTransform hitArea, bool left)
+        {
+            if (visual == null || hitArea == null || visual.parent is not RectTransform parent)
+                return;
+
+            Rect hit = ScreenRect(hitArea);
+            Rect safe = new Rect(0f, 0f, 1f, 1f);
+            Rect visible = SprintUiLayout.VisibleControlRect(safe, left);
+            Rect layoutHit = SprintUiLayout.HitAreaRect(safe, left);
+            float minX = (visible.xMin - layoutHit.xMin) / layoutHit.width;
+            float minY = (visible.yMin - layoutHit.yMin) / layoutHit.height;
+            float maxX = (visible.xMax - layoutHit.xMin) / layoutHit.width;
+            float maxY = (visible.yMax - layoutHit.yMin) / layoutHit.height;
+            Vector2 screenMin = new Vector2(hit.xMin + hit.width * minX, hit.yMin + hit.height * minY);
+            Vector2 screenMax = new Vector2(hit.xMin + hit.width * maxX, hit.yMin + hit.height * maxY);
+            Camera camera = visual.GetComponentInParent<Canvas>()?.worldCamera;
+            if (!RectTransformUtility.ScreenPointToLocalPointInRectangle(parent, screenMin, camera, out Vector2 localMin)
+                || !RectTransformUtility.ScreenPointToLocalPointInRectangle(parent, screenMax, camera, out Vector2 localMax))
+                return;
+
+            visual.anchorMin = visual.anchorMax = Vector2.zero;
+            visual.pivot = new Vector2(.5f, .5f);
+            visual.anchoredPosition = (localMin + localMax) * .5f;
+            visual.sizeDelta = localMax - localMin;
+        }
+
+        static Rect ScreenRect(RectTransform rect)
+        {
+            Vector3[] corners = new Vector3[4];
+            rect.GetWorldCorners(corners);
+            Camera camera = rect.GetComponentInParent<Canvas>()?.worldCamera;
+            Vector2 min = RectTransformUtility.WorldToScreenPoint(camera, corners[0]);
+            Vector2 max = RectTransformUtility.WorldToScreenPoint(camera, corners[2]);
+            return Rect.MinMaxRect(min.x, min.y, max.x, max.y);
         }
 
         void SetScale(Side side, float scale)
