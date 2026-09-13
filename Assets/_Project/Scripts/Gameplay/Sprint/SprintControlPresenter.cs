@@ -49,6 +49,7 @@ namespace KMA.Gameplay
         {
             leftHitArea = leftTapArea;
             rightHitArea = rightTapArea;
+            Canvas.ForceUpdateCanvases();
             SyncLayout();
         }
 
@@ -126,9 +127,19 @@ namespace KMA.Gameplay
             if (visual == null || hitArea == null || visual.parent is not RectTransform parent)
                 return;
 
-            Rect hit = ScreenRect(hitArea);
             Rect safe = new Rect(0f, 0f, 1f, 1f);
             Rect visible = SprintUiLayout.VisibleControlRect(safe, left);
+            if (HasSafeAreaInsets(visual))
+            {
+                visual.anchorMin = new Vector2(visible.xMin, visible.yMin);
+                visual.anchorMax = new Vector2(visible.xMax, visible.yMax);
+                visual.pivot = new Vector2(.5f, .5f);
+                visual.offsetMin = Vector2.zero;
+                visual.offsetMax = Vector2.zero;
+                return;
+            }
+
+            Rect hit = ScreenRect(hitArea);
             Rect layoutHit = SprintUiLayout.HitAreaRect(safe, left);
             float minX = (visible.xMin - layoutHit.xMin) / layoutHit.width;
             float minY = (visible.yMin - layoutHit.yMin) / layoutHit.height;
@@ -145,6 +156,15 @@ namespace KMA.Gameplay
             visual.pivot = new Vector2(.5f, .5f);
             visual.anchoredPosition = (localMin + localMax) * .5f;
             visual.sizeDelta = localMax - localMin;
+        }
+
+        static bool HasSafeAreaInsets(RectTransform visual)
+        {
+            RectTransform safeArea = visual.GetComponentInParent<UI.SafeAreaFitter>()?.GetComponent<RectTransform>();
+            if (safeArea == null)
+                return false;
+
+            return safeArea.offsetMin.sqrMagnitude > .01f || safeArea.offsetMax.sqrMagnitude > .01f;
         }
 
         static Rect ScreenRect(RectTransform rect)

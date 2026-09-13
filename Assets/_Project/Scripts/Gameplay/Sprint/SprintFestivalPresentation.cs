@@ -27,7 +27,7 @@ namespace KMA.Gameplay
             Transform safeArea = canvas.transform.Find("SafeAreaRoot");
             if (safeArea == null)
                 return;
-            safeArea.gameObject.SetActive(true);
+            PrepareSafeArea(safeArea);
 
             GameObject oldChrome = GameObject.Find("SprintFestivalChrome");
             if (oldChrome != null)
@@ -101,6 +101,15 @@ namespace KMA.Gameplay
             PrepareTapArea("LeftTap");
             PrepareTapArea("RightTap");
             EnsurePlayerIdentity(root);
+        }
+
+        static void PrepareSafeArea(Transform safeArea)
+        {
+            safeArea.gameObject.SetActive(true);
+            var fitter = safeArea.GetComponent<KMA.Gameplay.UI.SafeAreaFitter>()
+                ?? safeArea.gameObject.AddComponent<KMA.Gameplay.UI.SafeAreaFitter>();
+            fitter.enabled = true;
+            fitter.Apply(Screen.safeArea, new Vector2Int(Screen.width, Screen.height));
         }
 
         static void EnsureControls(RectTransform root)

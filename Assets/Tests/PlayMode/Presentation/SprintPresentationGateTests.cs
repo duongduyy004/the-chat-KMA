@@ -286,6 +286,57 @@ namespace KMA.Tests.Presentation
         }
 
         [UnityTest]
+        public IEnumerator SprintControlsFollowEnabledSafeAreaWithoutMovingAuthoritativeTapAreas()
+        {
+            yield return LoadSprint();
+
+            var scene = SceneManager.GetActiveScene();
+            var leftTap = FindNamed<ScreenTapArea>(scene, "LeftTap");
+            var rightTap = FindNamed<ScreenTapArea>(scene, "RightTap");
+            Image leftVisual = FindNamed<Image>(scene, "LeftControl");
+            Image rightVisual = FindNamed<Image>(scene, "RightControl");
+            var presenter = SceneObjects<SprintControlPresenter>(scene)[0];
+            RectTransform safeAreaRoot = GameObject.Find("SafeAreaRoot")?.GetComponent<RectTransform>();
+            var safeAreaFitter = safeAreaRoot?.GetComponent<SafeAreaFitter>();
+            RectTransform leftTapRect = leftTap.GetComponent<RectTransform>();
+            RectTransform rightTapRect = rightTap.GetComponent<RectTransform>();
+            Rect leftHitBefore = ScreenRect(leftTapRect);
+            Rect rightHitBefore = ScreenRect(rightTapRect);
+            Rect leftVisualBefore = ScreenRect(leftVisual.rectTransform);
+            Rect rightVisualBefore = ScreenRect(rightVisual.rectTransform);
+
+            Assert.That(presenter, Is.Not.Null);
+            Assert.That(safeAreaFitter, Is.Not.Null);
+            Assert.That(safeAreaFitter.enabled, Is.True);
+
+            Vector2Int screenSize = new Vector2Int(Screen.width, Screen.height);
+            Rect safeArea = new Rect(screenSize.x * .08f, screenSize.y * .04f,
+                screenSize.x * .84f, screenSize.y * .92f);
+            Canvas.ForceUpdateCanvases();
+            safeAreaFitter.Apply(safeArea, screenSize);
+            Canvas.ForceUpdateCanvases();
+            presenter.ConfigureLayout(leftTapRect, rightTapRect);
+
+            Rect safeBounds = ScreenRect(safeAreaRoot);
+            Rect leftHitAfter = ScreenRect(leftTapRect);
+            Rect rightHitAfter = ScreenRect(rightTapRect);
+            Rect leftVisualAfter = ScreenRect(leftVisual.rectTransform);
+            Rect rightVisualAfter = ScreenRect(rightVisual.rectTransform);
+            var expectedOffsets = safeAreaFitter.CalculateOffsets(safeArea, screenSize);
+
+            AssertRectClose(leftHitAfter, leftHitBefore, .01f);
+            AssertRectClose(rightHitAfter, rightHitBefore, .01f);
+            Assert.That(safeAreaRoot.offsetMin.x, Is.EqualTo(expectedOffsets.left).Within(.01f));
+            Assert.That(safeAreaRoot.offsetMin.y, Is.EqualTo(expectedOffsets.bottom).Within(.01f));
+            Assert.That(safeAreaRoot.offsetMax.x, Is.EqualTo(-expectedOffsets.right).Within(.01f));
+            Assert.That(safeAreaRoot.offsetMax.y, Is.EqualTo(-expectedOffsets.top).Within(.01f));
+            AssertRectInside(leftVisualAfter, safeBounds, 3f);
+            AssertRectInside(rightVisualAfter, safeBounds, 3f);
+            Assert.That(leftVisualAfter.xMin, Is.GreaterThan(leftVisualBefore.xMin + 1f));
+            Assert.That(rightVisualAfter.xMax, Is.LessThan(rightVisualBefore.xMax - 1f));
+        }
+
+        [UnityTest]
         public IEnumerator SprintControlPressFeedbackShrinksThenRestoresWithoutChangingGameplay()
         {
             yield return LoadSprint();
@@ -362,7 +413,13 @@ namespace KMA.Tests.Presentation
             rect.GetWorldCorners(corners);
             Camera camera = rect.GetComponentInParent<Canvas>().worldCamera;
             Vector2 min = RectTransformUtility.WorldToScreenPoint(camera, corners[0]);
-            Vector2 max = RectTransformUtility.WorldToScreenPoint(camera, corners[2]);
+            Vector2 max = min;
+            for (int i = 1; i < corners.Length; i++)
+            {
+                Vector2 point = RectTransformUtility.WorldToScreenPoint(camera, corners[i]);
+                min = Vector2.Min(min, point);
+                max = Vector2.Max(max, point);
+            }
             return Rect.MinMaxRect(min.x, min.y, max.x, max.y);
         }
 
@@ -383,6 +440,22 @@ namespace KMA.Tests.Presentation
             Assert.That(color.g, Is.EqualTo(.79f).Within(.001f));
             Assert.That(color.b, Is.EqualTo(.23f).Within(.001f));
             Assert.That(color.a, Is.EqualTo(highlighted ? .45f : .16f).Within(.001f));
+        }
+
+        static void AssertRectClose(Rect actual, Rect expected, float tolerance)
+        {
+            Assert.That(actual.xMin, Is.EqualTo(expected.xMin).Within(tolerance));
+            Assert.That(actual.yMin, Is.EqualTo(expected.yMin).Within(tolerance));
+            Assert.That(actual.xMax, Is.EqualTo(expected.xMax).Within(tolerance));
+            Assert.That(actual.yMax, Is.EqualTo(expected.yMax).Within(tolerance));
+        }
+
+        static void AssertRectInside(Rect inner, Rect outer, float tolerance)
+        {
+            Assert.That(inner.xMin, Is.GreaterThanOrEqualTo(outer.xMin - tolerance));
+            Assert.That(inner.yMin, Is.GreaterThanOrEqualTo(outer.yMin - tolerance));
+            Assert.That(inner.xMax, Is.LessThanOrEqualTo(outer.xMax + tolerance));
+            Assert.That(inner.yMax, Is.LessThanOrEqualTo(outer.yMax + tolerance));
         }
     }
 }
