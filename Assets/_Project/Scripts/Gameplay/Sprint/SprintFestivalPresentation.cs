@@ -96,9 +96,43 @@ namespace KMA.Gameplay
             left.alignment = TextAlignmentOptions.Center;
             right.alignment = TextAlignmentOptions.Center;
 
-            StyleTapArea("LeftTap", new Color(1f, .35f, .37f, .10f));
-            StyleTapArea("RightTap", new Color(1f, .79f, .23f, .10f));
+            EnsureControls(root);
+            PrepareTapArea("LeftTap");
+            PrepareTapArea("RightTap");
             EnsurePlayerIdentity(root);
+        }
+
+        static void EnsureControls(RectTransform root)
+        {
+            KMA.Input.ScreenTapArea leftTap = FindTapArea("LeftTap");
+            KMA.Input.ScreenTapArea rightTap = FindTapArea("RightTap");
+            if (leftTap == null || rightTap == null)
+                return;
+
+            Image left = Control(leftTap.transform, "LeftControl", true, Coral);
+            Image right = Control(rightTap.transform, "RightControl", false, Gold);
+            var presenter = root.gameObject.AddComponent<SprintControlPresenter>();
+            presenter.Configure(Object.FindFirstObjectByType<SprintController>(), left.rectTransform,
+                right.rectTransform, left, right);
+            presenter.BindPressFeedback(leftTap, rightTap);
+        }
+
+        static Image Control(Transform parent, string name, bool left, Color color)
+        {
+            RectTransform root = Rect(parent, name);
+            Rect safe = new Rect(0f, 0f, 1f, 1f);
+            Rect visible = SprintUiLayout.VisibleControlRect(safe, left);
+            Rect hit = SprintUiLayout.HitAreaRect(safe, left);
+            root.anchorMin = new Vector2((visible.xMin - hit.xMin) / hit.width,
+                (visible.yMin - hit.yMin) / hit.height);
+            root.anchorMax = new Vector2((visible.xMax - hit.xMin) / hit.width,
+                (visible.yMax - hit.yMin) / hit.height);
+            root.offsetMin = Vector2.zero;
+            root.offsetMax = Vector2.zero;
+            Image image = root.gameObject.AddComponent<Image>();
+            image.color = new Color(color.r, color.g, color.b, .5f);
+            image.raycastTarget = false;
+            return image;
         }
 
         static void DisableSharedMetrics(Transform safeArea)
@@ -213,14 +247,20 @@ namespace KMA.Gameplay
             return text;
         }
 
-        static void StyleTapArea(string name, Color color)
+        static void PrepareTapArea(string name)
         {
             GameObject target = GameObject.Find(name);
             if (target == null)
                 return;
             Image image = target.GetComponent<Image>();
             if (image != null)
-                image.color = color;
+                image.color = new Color(1f, 1f, 1f, 0f);
+        }
+
+        static KMA.Input.ScreenTapArea FindTapArea(string name)
+        {
+            GameObject target = GameObject.Find(name);
+            return target == null ? null : target.GetComponent<KMA.Input.ScreenTapArea>();
         }
 
         static TMP_Text Text(Transform parent, string name, string value, TMP_FontAsset font,

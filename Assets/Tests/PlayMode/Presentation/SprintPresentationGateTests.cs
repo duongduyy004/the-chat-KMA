@@ -81,9 +81,9 @@ namespace KMA.Tests.Presentation
             Assert.That(right, Is.Not.Null);
             var leftRect = left.GetComponent<RectTransform>();
             var rightRect = right.GetComponent<RectTransform>();
-            Assert.That(leftRect.anchorMin.x, Is.EqualTo(0f));
+            Assert.That(leftRect.anchorMin.x, Is.EqualTo(.01f));
             Assert.That(leftRect.anchorMax.x, Is.LessThan(rightRect.anchorMin.x));
-            Assert.That(rightRect.anchorMax.x, Is.EqualTo(1f));
+            Assert.That(rightRect.anchorMax.x, Is.EqualTo(.99f));
             Assert.That(1920f * (leftRect.anchorMax.x - leftRect.anchorMin.x) + leftRect.sizeDelta.x, Is.GreaterThanOrEqualTo(140f));
             Assert.That(1920f * (rightRect.anchorMax.x - rightRect.anchorMin.x) + rightRect.sizeDelta.x, Is.GreaterThanOrEqualTo(140f));
 
@@ -213,6 +213,70 @@ namespace KMA.Tests.Presentation
             }
         }
 
+        [UnityTest]
+        public IEnumerator SprintControlsUseSmallTranslucentVisualsInsideDisjointAuthoritativeTapAreas()
+        {
+            yield return LoadSprint();
+
+            var scene = SceneManager.GetActiveScene();
+            var controller = SceneObjects<SprintController>(scene)[0];
+            var presenter = SceneObjects<SprintControlPresenter>(scene)[0];
+            var leftTap = FindNamed<ScreenTapArea>(scene, "LeftTap");
+            var rightTap = FindNamed<ScreenTapArea>(scene, "RightTap");
+            Image leftVisual = FindNamed<Image>(scene, "LeftControl");
+            Image rightVisual = FindNamed<Image>(scene, "RightControl");
+
+            Assert.That(presenter, Is.Not.Null);
+            Assert.That(leftVisual, Is.Not.Null);
+            Assert.That(rightVisual, Is.Not.Null);
+            Assert.That(leftVisual.color.a, Is.EqualTo(.50f).Within(.02f));
+            Assert.That(rightVisual.color.a, Is.EqualTo(.50f).Within(.02f));
+            Assert.That(leftVisual.rectTransform.rect.width, Is.EqualTo(rightVisual.rectTransform.rect.width).Within(.01f));
+            Assert.That(leftVisual.rectTransform.rect.height, Is.EqualTo(rightVisual.rectTransform.rect.height).Within(.01f));
+
+            Rect leftHit = ScreenRect(leftTap.GetComponent<RectTransform>());
+            Rect rightHit = ScreenRect(rightTap.GetComponent<RectTransform>());
+            Rect leftVisualBounds = ScreenRect(leftVisual.rectTransform);
+            Rect rightVisualBounds = ScreenRect(rightVisual.rectTransform);
+            Assert.That(leftHit.Overlaps(rightHit), Is.False);
+            Assert.That(leftVisualBounds.xMin, Is.GreaterThanOrEqualTo(leftHit.xMin - .01f));
+            Assert.That(leftVisualBounds.yMin, Is.GreaterThanOrEqualTo(leftHit.yMin - .01f));
+            Assert.That(leftVisualBounds.xMax, Is.LessThanOrEqualTo(leftHit.xMax + .01f));
+            Assert.That(leftVisualBounds.yMax, Is.LessThanOrEqualTo(leftHit.yMax + .01f));
+            Assert.That(rightVisualBounds.xMin, Is.GreaterThanOrEqualTo(rightHit.xMin - .01f));
+            Assert.That(rightVisualBounds.yMin, Is.GreaterThanOrEqualTo(rightHit.yMin - .01f));
+            Assert.That(rightVisualBounds.xMax, Is.LessThanOrEqualTo(rightHit.xMax + .01f));
+            Assert.That(rightVisualBounds.yMax, Is.LessThanOrEqualTo(rightHit.yMax + .01f));
+
+            controller.ConfigureForTest(.8f);
+            presenter.RefreshForTest();
+            Assert.That(presenter.HighlightedSide, Is.EqualTo(KMA.Gameplay.Side.Left));
+            controller.OnLeftTap();
+            presenter.RefreshForTest();
+            Assert.That(presenter.HighlightedSide, Is.EqualTo(KMA.Gameplay.Side.Right));
+            Assert.That(controller.CadenceCombo, Is.EqualTo(1));
+        }
+
+        [UnityTest]
+        public IEnumerator SprintControlPressFeedbackShrinksThenRestoresWithoutChangingGameplay()
+        {
+            yield return LoadSprint();
+
+            var scene = SceneManager.GetActiveScene();
+            var controller = SceneObjects<SprintController>(scene)[0];
+            var presenter = SceneObjects<SprintControlPresenter>(scene)[0];
+            controller.ConfigureForTest(.8f);
+            float distanceBefore = controller.Snapshot.Distance;
+            int comboBefore = controller.CadenceCombo;
+
+            presenter.PressForTest(KMA.Gameplay.Side.Left);
+            Assert.That(presenter.LeftScale, Is.EqualTo(.94f).Within(.001f));
+            presenter.TickForTest(.091f);
+            Assert.That(presenter.LeftScale, Is.EqualTo(1f).Within(.001f));
+            Assert.That(controller.Snapshot.Distance, Is.EqualTo(distanceBefore));
+            Assert.That(controller.CadenceCombo, Is.EqualTo(comboBefore));
+        }
+
         static IEnumerator LoadSprint()
         {
             yield return SceneManager.LoadSceneAsync(SceneName, LoadSceneMode.Single);
@@ -263,5 +327,15 @@ namespace KMA.Tests.Presentation
 
         static T ReadProperty<T>(MonoBehaviour component, string propertyName) =>
             (T)component.GetType().GetProperty(propertyName).GetValue(component);
+
+        static Rect ScreenRect(RectTransform rect)
+        {
+            Vector3[] corners = new Vector3[4];
+            rect.GetWorldCorners(corners);
+            Camera camera = rect.GetComponentInParent<Canvas>().worldCamera;
+            Vector2 min = RectTransformUtility.WorldToScreenPoint(camera, corners[0]);
+            Vector2 max = RectTransformUtility.WorldToScreenPoint(camera, corners[2]);
+            return Rect.MinMaxRect(min.x, min.y, max.x, max.y);
+        }
     }
 }
