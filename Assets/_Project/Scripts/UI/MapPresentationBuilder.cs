@@ -8,30 +8,32 @@ namespace KMA.Gameplay.UI
     public static class MapPresentationBuilder
     {
         static Sprite heartSprite;
+        static Sprite roundedRectSprite;
+        static Sprite lockSprite;
+        static readonly Dictionary<SubjectId, Sprite> SportSprites = new Dictionary<SubjectId, Sprite>();
 
         readonly struct Entry
         {
             public readonly SubjectId Subject;
             public readonly string Label;
-            public readonly string Icon;
             public readonly Color Color;
             public readonly bool Available;
 
-            public Entry(SubjectId subject, string label, string icon, Color color, bool available)
+            public Entry(SubjectId subject, string label, Color color, bool available)
             {
-                Subject = subject; Label = label; Icon = icon; Color = color; Available = available;
+                Subject = subject; Label = label; Color = color; Available = available;
             }
         }
 
         static readonly Entry[] Entries =
         {
-            new Entry(SubjectId.Sprint, "Chạy nước rút", ">>", new Color32(255, 89, 94, 255), true),
-            new Entry(SubjectId.Endurance, "Chạy bền", "∞", new Color32(255, 202, 58, 255), true),
-            new Entry(SubjectId.Volleyball, "Bóng chuyền", "◉", new Color32(138, 203, 136, 255), true),
-            new Entry(SubjectId.Basketball, "Bóng rổ", "●", new Color32(226, 232, 240, 255), false),
-            new Entry(SubjectId.PingPong, "Bóng bàn", "◎", new Color32(226, 232, 240, 255), false),
-            new Entry(SubjectId.Badminton, "Cầu lông", "⌁", new Color32(226, 232, 240, 255), false),
-            new Entry(SubjectId.Football, "Bóng đá", "⬡", new Color32(226, 232, 240, 255), false),
+            new Entry(SubjectId.Sprint, "Chạy nước rút", new Color32(49, 162, 222, 255), true),
+            new Entry(SubjectId.Endurance, "Chạy bền", new Color32(255, 202, 58, 255), true),
+            new Entry(SubjectId.Volleyball, "Bóng chuyền", new Color32(138, 203, 136, 255), true),
+            new Entry(SubjectId.Basketball, "Bóng rổ", new Color32(226, 232, 240, 255), false),
+            new Entry(SubjectId.PingPong, "Bóng bàn", new Color32(226, 232, 240, 255), false),
+            new Entry(SubjectId.Badminton, "Cầu lông", new Color32(226, 232, 240, 255), false),
+            new Entry(SubjectId.Football, "Bóng đá", new Color32(226, 232, 240, 255), false),
         };
 
         public static void Build(MapScreen screen, GameSession session)
@@ -51,12 +53,12 @@ namespace KMA.Gameplay.UI
             Stretch(root, Vector2.zero, Vector2.zero);
             root.gameObject.AddComponent<Image>().color = background;
             RectTransform content = Rect(root, "Content");
-            Stretch(content, new Vector2(56, 36), new Vector2(-56, -34));
+            Stretch(content, new Vector2(64, 40), new Vector2(-64, -40));
 
             HeartBar hearts = Header(content, session, border);
-            PinToTop((RectTransform)hearts.transform.parent, 72f);
+            PinToTop((RectTransform)hearts.transform.parent.parent, 116f);
             RectTransform grid = Rect(content, "SelectionGrid");
-            Anchor(grid, new Vector2(0f, .42f), new Vector2(1f, .82f));
+            Anchor(grid, new Vector2(0f, .33f), new Vector2(1f, .84f));
             GridLayoutGroup gridLayout = grid.gameObject.AddComponent<CenteredLastRowGridLayout>();
             gridLayout.constraint = GridLayoutGroup.Constraint.FixedColumnCount;
             gridLayout.constraintCount = 4;
@@ -67,12 +69,12 @@ namespace KMA.Gameplay.UI
             grid.GetComponent<ResponsiveGridLayout>().Refresh();
             var nodes = new List<MapNodeView>();
             foreach (Entry entry in Entries) nodes.Add(Card(grid, screen, entry, card, muted, mutedForeground, border));
+            ProgressCard(grid, session, border);
+            grid.GetComponent<ResponsiveGridLayout>().Refresh();
             FutureRow(content, muted, mutedForeground, border);
-            Anchor((RectTransform)content.Find("FutureRow"), new Vector2(.28f, .34f), new Vector2(.72f, .39f));
-            ProgressSection(content, session, border);
-            Anchor((RectTransform)content.Find("ProgressSection"), new Vector2(0f, .19f), new Vector2(1f, .30f));
-            BossButton(content, screen, card, muted, mutedForeground, border);
-            Anchor((RectTransform)content.Find("BossButton"), new Vector2(0f, .07f), new Vector2(1f, .15f));
+            Anchor((RectTransform)content.Find("FutureRow"), new Vector2(.16f, .23f), new Vector2(.84f, .29f));
+            BossChallenge(content, screen, card, mutedForeground, border);
+            Anchor((RectTransform)content.Find("BossChallenge"), new Vector2(.10f, .07f), new Vector2(.90f, .18f));
             screen.BindPresentation(nodes.ToArray(), hearts, session);
             foreach (MapNodeView node in nodes)
                 if (!node.IsComingSoon && !node.IsInteractable) node.SetAvailability(false, "ĐANG PHÁT TRIỂN");
@@ -81,12 +83,16 @@ namespace KMA.Gameplay.UI
         static HeartBar Header(Transform parent, GameSession session, Color border)
         {
             RectTransform header = Rect(parent, "Header");
+            Image headerSurface = header.gameObject.AddComponent<Image>();
+            headerSurface.color = new Color32(8, 35, 61, 178);
+            headerSurface.raycastTarget = false;
             HorizontalLayoutGroup layout = header.gameObject.AddComponent<HorizontalLayoutGroup>();
-            layout.spacing = 10; layout.childAlignment = TextAnchor.MiddleCenter; layout.childControlWidth = true;
+            layout.padding = new RectOffset(14, 16, 10, 12);
+            layout.spacing = 18; layout.childAlignment = TextAnchor.MiddleCenter; layout.childControlWidth = true;
             layout.childControlHeight = true; layout.childForceExpandWidth = false;
             LayoutElement headerElement = header.gameObject.AddComponent<LayoutElement>();
-            headerElement.minHeight = 72;
-            headerElement.preferredHeight = 72;
+            headerElement.minHeight = 116;
+            headerElement.preferredHeight = 116;
             headerElement.flexibleHeight = 0;
             Button back = HeaderButton(header, "BackButton", "‹", border);
             back.onClick.AddListener(() => KMA.Gameplay.Core.SceneRouter.Instance?.RouteToMenu());
@@ -97,18 +103,36 @@ namespace KMA.Gameplay.UI
             headingLayout.childControlWidth = true;
             headingLayout.childControlHeight = true;
             headingLayout.childForceExpandHeight = false;
-            Text title = LayoutLabel(heading, "Title", "CHỌN MÔN THI", 34,
+            Text title = LayoutLabel(heading, "Title", "CHỌN MÔN THI", 56,
                 Color.white, TextAnchor.LowerLeft);
-            title.transform.parent.gameObject.AddComponent<LayoutElement>().preferredHeight = 40;
-            Text subtitle = LayoutLabel(heading, "Subtitle", "Chọn thử thách tiếp theo", 16,
+            title.transform.parent.gameObject.AddComponent<LayoutElement>().preferredHeight = 62;
+            Text subtitle = LayoutLabel(heading, "Subtitle", "Chọn một môn để bắt đầu", 26,
                 new Color32(201, 226, 245, 255), TextAnchor.UpperLeft);
-            subtitle.transform.parent.gameObject.AddComponent<LayoutElement>().preferredHeight = 20;
-            RectTransform bar = Rect(header, "HeartBar");
+            subtitle.transform.parent.gameObject.AddComponent<LayoutElement>().preferredHeight = 34;
+            RectTransform livesPanel = Rect(header, "LivesPanel");
+            Image livesSurface = livesPanel.gameObject.AddComponent<Image>();
+            livesSurface.color = new Color32(13, 57, 92, 238);
+            UseRoundedSurface(livesSurface);
+            Outline livesOutline = livesPanel.gameObject.AddComponent<Outline>();
+            livesOutline.effectColor = new Color32(255, 202, 58, 210);
+            livesOutline.effectDistance = new Vector2(2f, -2f);
+            HorizontalLayoutGroup livesLayout = livesPanel.gameObject.AddComponent<HorizontalLayoutGroup>();
+            livesLayout.padding = new RectOffset(16, 16, 10, 10);
+            livesLayout.spacing = 12;
+            livesLayout.childAlignment = TextAnchor.MiddleCenter;
+            livesLayout.childControlWidth = true;
+            livesLayout.childControlHeight = true;
+            livesLayout.childForceExpandWidth = false;
+            livesLayout.childForceExpandHeight = false;
+            LayoutElement livesElement = livesPanel.gameObject.AddComponent<LayoutElement>();
+            livesElement.preferredWidth = 430;
+            livesElement.preferredHeight = 80;
+            RectTransform bar = Rect(livesPanel, "HeartBar");
             HorizontalLayoutGroup heartLayout = bar.gameObject.AddComponent<HorizontalLayoutGroup>();
-            heartLayout.spacing = 4; heartLayout.childAlignment = TextAnchor.MiddleRight;
+            heartLayout.spacing = 6; heartLayout.childAlignment = TextAnchor.MiddleCenter;
             heartLayout.childControlWidth = true; heartLayout.childControlHeight = true;
             heartLayout.childForceExpandWidth = false; heartLayout.childForceExpandHeight = false;
-            bar.gameObject.AddComponent<LayoutElement>().preferredWidth = 152;
+            bar.gameObject.AddComponent<LayoutElement>().preferredWidth = 184;
             HeartBar hearts = bar.gameObject.AddComponent<HeartBar>();
             var slots = new Image[5];
             for (int i = 0; i < slots.Length; i++)
@@ -117,14 +141,26 @@ namespace KMA.Gameplay.UI
                 slots[i].sprite = HeartSprite();
                 slots[i].preserveAspect = true;
                 slot.gameObject.AddComponent<Outline>().effectColor = border;
-                LayoutElement element = slot.gameObject.AddComponent<LayoutElement>(); element.preferredWidth = 24; element.preferredHeight = 23;
+                LayoutElement element = slot.gameObject.AddComponent<LayoutElement>(); element.preferredWidth = 32; element.preferredHeight = 30;
             }
             hearts.SetSlots(slots);
             int currentLives = session == null ? GameSession.MaxLives : session.Lives;
             hearts.SetHearts(currentLives);
-            Text lives = LayoutLabel(header, "LivesLabel", "LƯỢT: " + currentLives + "/" + GameSession.MaxLives, 20,
+            Text lives = LayoutLabel(livesPanel, "LivesLabel", "LƯỢT: " + currentLives + "/" + GameSession.MaxLives, 24,
                 Color.white, TextAnchor.MiddleRight);
-            lives.transform.parent.gameObject.AddComponent<LayoutElement>().preferredWidth = 82;
+            lives.horizontalOverflow = HorizontalWrapMode.Overflow;
+            LayoutElement livesLabelLayout = lives.transform.parent.gameObject.AddComponent<LayoutElement>();
+            livesLabelLayout.preferredWidth = 160;
+            livesLabelLayout.preferredHeight = 44;
+            RectTransform divider = Rect(header, "Divider");
+            LayoutElement dividerLayout = divider.gameObject.AddComponent<LayoutElement>();
+            dividerLayout.ignoreLayout = true;
+            divider.anchorMin = Vector2.zero;
+            divider.anchorMax = new Vector2(1f, 0f);
+            divider.pivot = new Vector2(.5f, 0f);
+            divider.anchoredPosition = Vector2.zero;
+            divider.sizeDelta = new Vector2(0f, 4f);
+            divider.gameObject.AddComponent<Image>().color = new Color32(255, 255, 255, 36);
             return hearts;
         }
 
@@ -133,6 +169,7 @@ namespace KMA.Gameplay.UI
             RectTransform root = Rect(parent, name);
             Image image = root.gameObject.AddComponent<Image>();
             image.color = new Color32(255, 249, 231, 255);
+            UseRoundedSurface(image);
             Outline outline = root.gameObject.AddComponent<Outline>();
             outline.effectColor = border;
             outline.effectDistance = new Vector2(2f, -2f);
@@ -140,9 +177,9 @@ namespace KMA.Gameplay.UI
             button.targetGraphic = image;
             button.colors = ButtonColors();
             LayoutElement element = root.gameObject.AddComponent<LayoutElement>();
-            element.preferredWidth = 54f;
-            element.preferredHeight = 54f;
-            Text(root, "Label", label, 38, new Color32(8, 35, 61, 255), TextAnchor.MiddleCenter);
+            element.preferredWidth = 84f;
+            element.preferredHeight = 84f;
+            Text(root, "Label", label, 56, new Color32(8, 35, 61, 255), TextAnchor.MiddleCenter);
             return button;
         }
 
@@ -150,39 +187,90 @@ namespace KMA.Gameplay.UI
         {
             RectTransform root = Rect(parent, entry.Subject + "Node");
             Image image = root.gameObject.AddComponent<Image>(); image.color = entry.Available ? card : muted;
-            Outline outline = root.gameObject.AddComponent<Outline>(); outline.effectColor = border; outline.effectDistance = new Vector2(2, -2);
-            Shadow shadow = root.gameObject.AddComponent<Shadow>(); shadow.effectColor = new Color(0f, 0f, 0f, .65f); shadow.effectDistance = new Vector2(6, -6);
-            Button button = root.gameObject.AddComponent<Button>(); button.targetGraphic = image;
-            button.colors = ButtonColors();
+            UseRoundedSurface(image);
+            Outline outline = root.gameObject.AddComponent<Outline>();
+            outline.effectColor = entry.Available ? new Color32(255, 202, 58, 255) : new Color32(117, 138, 156, 255);
+            outline.effectDistance = new Vector2(3, -3);
+            Shadow shadow = root.gameObject.AddComponent<Shadow>(); shadow.effectColor = new Color(0f, 0f, 0f, .4f); shadow.effectDistance = new Vector2(7, -7);
+            Button button = null;
+            if (entry.Available)
+            {
+                button = root.gameObject.AddComponent<Button>();
+                button.targetGraphic = image;
+                button.colors = ButtonColors();
+                root.gameObject.AddComponent<BrutalButton>();
+            }
             VerticalLayoutGroup layout = root.gameObject.AddComponent<VerticalLayoutGroup>();
-            layout.padding = new RectOffset(14, 14, 12, 12); layout.spacing = 5; layout.childControlWidth = true;
+            layout.padding = new RectOffset(20, 20, 10, 10); layout.spacing = 4; layout.childControlWidth = true;
             layout.childControlHeight = true; layout.childForceExpandWidth = true; layout.childForceExpandHeight = false;
             RectTransform stripe = Rect(root, "HeaderStripe");
             stripe.gameObject.AddComponent<Image>().color = entry.Color;
-            stripe.gameObject.AddComponent<LayoutElement>().preferredHeight = 6;
+            stripe.gameObject.AddComponent<LayoutElement>().preferredHeight = 4;
             RectTransform cardHeader = Rect(root, "CardHeader");
             HorizontalLayoutGroup cardHeaderLayout = cardHeader.gameObject.AddComponent<HorizontalLayoutGroup>();
-            cardHeaderLayout.spacing = 10; cardHeaderLayout.childAlignment = TextAnchor.MiddleLeft;
+            cardHeaderLayout.spacing = 16; cardHeaderLayout.childAlignment = TextAnchor.MiddleLeft;
             cardHeaderLayout.childControlWidth = true; cardHeaderLayout.childControlHeight = true;
-            RectTransform icon = Rect(cardHeader, "SportIcon"); icon.gameObject.AddComponent<Image>().color = entry.Color;
-            icon.gameObject.AddComponent<LayoutElement>().preferredWidth = 40;
-            Text(icon, "Glyph", entry.Icon, 22, Color.black, TextAnchor.MiddleCenter);
-            Text title = LayoutLabel(cardHeader, "Title", entry.Label, 28, entry.Available ? Color.black : foreground, TextAnchor.MiddleLeft);
-            title.transform.parent.gameObject.AddComponent<LayoutElement>().flexibleWidth = 1;
-            Text status = LayoutLabel(root, "Status", string.Empty, 18, entry.Available ? new Color32(12, 105, 94, 255) : foreground,
+            cardHeaderLayout.childForceExpandWidth = false;
+            cardHeaderLayout.childForceExpandHeight = false;
+            cardHeader.gameObject.AddComponent<LayoutElement>().preferredHeight = 72;
+            RectTransform icon = Rect(cardHeader, "SportIcon");
+            Image iconPlate = icon.gameObject.AddComponent<Image>();
+            iconPlate.color = entry.Color;
+            UseRoundedSurface(iconPlate);
+            LayoutElement iconLayout = icon.gameObject.AddComponent<LayoutElement>();
+            iconLayout.preferredWidth = 60;
+            iconLayout.preferredHeight = 60;
+            RectTransform glyph = Rect(icon, "IconGlyph");
+            Stretch(glyph, new Vector2(12, 12), new Vector2(-12, -12));
+            Image glyphImage = glyph.gameObject.AddComponent<Image>();
+            glyphImage.sprite = SportIconSprite(entry.Subject);
+            glyphImage.color = new Color32(8, 35, 61, 255);
+            glyphImage.preserveAspect = true;
+            glyphImage.raycastTarget = false;
+            Text title = LayoutLabel(cardHeader, "Title", entry.Label, 36, entry.Available ? new Color32(8, 35, 61, 255) : foreground, TextAnchor.MiddleLeft);
+            LayoutElement titleLayout = title.transform.parent.gameObject.AddComponent<LayoutElement>();
+            titleLayout.preferredHeight = 70;
+            titleLayout.flexibleWidth = 1;
+            Text status = LayoutLabel(root, "Status", string.Empty, 26, entry.Available ? new Color32(12, 105, 94, 255) : foreground,
                 TextAnchor.MiddleLeft);
-            status.transform.parent.gameObject.AddComponent<LayoutElement>().preferredHeight = 22;
-            Text detail = LayoutLabel(root, "Detail", string.Empty, 19, foreground, TextAnchor.MiddleLeft);
-            detail.transform.parent.gameObject.AddComponent<LayoutElement>().preferredHeight = 24;
-            Text action = Text(root, "ActionHint",
-                entry.Available ? "CHẠM ĐỂ THI ĐẤU" : "SẮP RA MẮT", 16,
-                entry.Available ? new Color32(8, 35, 61, 255) : foreground, TextAnchor.MiddleRight);
-            action.gameObject.AddComponent<LayoutElement>().preferredHeight = 20;
-            MapNodeView node = root.gameObject.AddComponent<MapNodeView>(); node.Bind(button, title, detail);
-            node.BindStatusLabel(status);
+            RectTransform statusContainer = status.transform.parent as RectTransform;
+            LayoutElement statusLayout = statusContainer.gameObject.AddComponent<LayoutElement>();
+            statusLayout.ignoreLayout = true;
+            statusContainer.anchorMin = Vector2.zero;
+            statusContainer.anchorMax = new Vector2(entry.Available ? .70f : 1f, 0f);
+            statusContainer.offsetMin = new Vector2(20f, 12f);
+            statusContainer.offsetMax = new Vector2(entry.Available ? -4f : -20f, 44f);
+            Text detail = LayoutLabel(root, "Detail", string.Empty, 26, foreground, TextAnchor.MiddleLeft);
+            RectTransform detailContainer = detail.transform.parent as RectTransform;
+            LayoutElement detailLayout = detailContainer.gameObject.AddComponent<LayoutElement>();
+            detailLayout.ignoreLayout = true;
+            detailContainer.anchorMin = Vector2.zero;
+            detailContainer.anchorMax = new Vector2(.74f, 0f);
+            detailContainer.offsetMin = new Vector2(20f, 46f);
+            detailContainer.offsetMax = new Vector2(-4f, 76f);
+            Text action = null;
+            if (entry.Available)
+            {
+                action = Text(root, "ActionHint", "THI →", 26,
+                    new Color32(163, 104, 0, 255), TextAnchor.MiddleRight);
+                LayoutElement actionLayout = action.gameObject.AddComponent<LayoutElement>();
+                actionLayout.ignoreLayout = true;
+                RectTransform actionRect = action.rectTransform;
+                actionRect.anchorMin = new Vector2(.68f, 0f);
+                actionRect.anchorMax = new Vector2(1f, 0f);
+                actionRect.offsetMin = new Vector2(4f, 12f);
+                actionRect.offsetMax = new Vector2(-20f, 44f);
+            }
+            MapNodeView node = root.gameObject.AddComponent<MapNodeView>();
+            node.Bind(button, title, detail, detailContainer.gameObject);
+            node.BindPresentation(status, action, image, iconPlate, outline, entry.Color);
             node.Configure(entry.Subject, entry.Label, !entry.Available, null, 5);
             if (entry.Available) button.onClick.AddListener(() => screen.SelectSubject(entry.Subject));
-            else node.SetAvailability(false, "ĐANG PHÁT TRIỂN");
+            else
+            {
+                node.SetAvailability(false, "ĐANG PHÁT TRIỂN");
+                AddCornerLockIcon(root, new Color32(38, 60, 77, 255));
+            }
             return node;
         }
 
@@ -200,6 +288,11 @@ namespace KMA.Gameplay.UI
             rowElement.preferredHeight = 38;
             rowElement.flexibleHeight = 0;
 
+            Text upcoming = LayoutLabel(row, "UpcomingLabel", "SẮP RA MẮT", 22,
+                new Color32(201, 226, 245, 255), TextAnchor.MiddleRight);
+            LayoutElement upcomingLayout = upcoming.transform.parent.gameObject.AddComponent<LayoutElement>();
+            upcomingLayout.preferredWidth = 150;
+            upcomingLayout.preferredHeight = 46;
             FutureChip(row, "PushUpsChip", "Hít đất", muted, foreground, border);
             FutureChip(row, "RhythmChip", "Nhịp điệu", muted, foreground, border);
             FutureChip(row, "SwimmingChip", "Bơi lội", muted, foreground, border);
@@ -210,19 +303,17 @@ namespace KMA.Gameplay.UI
             RectTransform root = Rect(parent, name);
             Image image = root.gameObject.AddComponent<Image>();
             image.color = muted;
+            UseRoundedSurface(image);
             Outline outline = root.gameObject.AddComponent<Outline>();
             outline.effectColor = border;
-            Button button = root.gameObject.AddComponent<Button>();
-            button.targetGraphic = image;
-            button.colors = ButtonColors();
-            button.interactable = false;
+            image.raycastTarget = false;
             LayoutElement element = root.gameObject.AddComponent<LayoutElement>();
             element.preferredWidth = 168;
-            element.preferredHeight = 34;
-            Text(root, "Label", label, 16, foreground, TextAnchor.MiddleCenter);
+            element.preferredHeight = 46;
+            Text(root, "Label", label, 22, foreground, TextAnchor.MiddleCenter);
         }
 
-        static void ProgressSection(Transform parent, GameSession session, Color border)
+        static void ProgressCard(Transform parent, GameSession session, Color border)
         {
             var completed = 0;
             if (session != null)
@@ -230,41 +321,76 @@ namespace KMA.Gameplay.UI
                 foreach (Entry entry in Entries)
                     if (session.GetRecord(entry.Subject)?.Passed == true) completed++;
             }
-            RectTransform section = Rect(parent, "ProgressSection");
+            RectTransform section = Rect(parent, "ProgressCard");
+            Image cardImage = section.gameObject.AddComponent<Image>();
+            cardImage.color = new Color32(13, 57, 92, 255);
+            UseRoundedSurface(cardImage);
+            Outline outline = section.gameObject.AddComponent<Outline>();
+            outline.effectColor = border;
+            outline.effectDistance = new Vector2(2f, -2f);
+            Shadow shadow = section.gameObject.AddComponent<Shadow>();
+            shadow.effectColor = new Color(0f, 0f, 0f, .45f);
+            shadow.effectDistance = new Vector2(6f, -6f);
             VerticalLayoutGroup layout = section.gameObject.AddComponent<VerticalLayoutGroup>();
-            layout.spacing = 5; layout.childControlWidth = true; layout.childControlHeight = true; layout.childForceExpandHeight = false;
-            LayoutElement sectionElement = section.gameObject.AddComponent<LayoutElement>();
-            sectionElement.preferredHeight = 64;
-            sectionElement.flexibleHeight = 0;
-            Text label = LayoutLabel(section, "ProgressLabel", "TIẾN ĐỘ   " + completed + "/" + Entries.Length, 18,
+            layout.padding = new RectOffset(16, 16, 12, 12);
+            layout.spacing = 6;
+            layout.childControlWidth = true;
+            layout.childControlHeight = true;
+            layout.childForceExpandHeight = false;
+            Text label = LayoutLabel(section, "ProgressLabel", "TIẾN ĐỘ", 26,
+                new Color32(201, 226, 245, 255), TextAnchor.MiddleLeft);
+            label.transform.parent.gameObject.AddComponent<LayoutElement>().preferredHeight = 30;
+            Text fraction = LayoutLabel(section, "ProgressFraction", completed + " / " + Entries.Length, 48,
                 Color.white, TextAnchor.MiddleLeft);
-            label.transform.parent.gameObject.AddComponent<LayoutElement>().preferredHeight = 22;
+            fraction.transform.parent.gameObject.AddComponent<LayoutElement>().preferredHeight = 52;
             RectTransform track = Rect(section, "ProgressTrack");
-            Image trackImage = track.gameObject.AddComponent<Image>(); trackImage.color = new Color32(255, 255, 255, 70);
+            Image trackImage = track.gameObject.AddComponent<Image>(); trackImage.color = new Color32(203, 213, 225, 255);
             track.gameObject.AddComponent<Outline>().effectColor = border;
-            track.gameObject.AddComponent<LayoutElement>().preferredHeight = 16;
+            track.gameObject.AddComponent<LayoutElement>().preferredHeight = 28;
             RectTransform fill = Rect(track, "Fill");
             fill.anchorMin = new Vector2(0f, 0f); fill.anchorMax = new Vector2((float)completed / Entries.Length, 1f);
             fill.offsetMin = new Vector2(2f, 2f); fill.offsetMax = new Vector2(-2f, -2f);
             fill.gameObject.AddComponent<Image>().color = new Color32(255, 202, 58, 255);
-            Text hint = LayoutLabel(section, "UnlockHint", "Hoàn thành môn để mở thử thách cuối", 13,
-                new Color32(201, 226, 245, 255), TextAnchor.MiddleLeft);
-            hint.transform.parent.gameObject.AddComponent<LayoutElement>().preferredHeight = 16;
+            fill.gameObject.SetActive(completed > 0);
+            int remaining = Entries.Length - completed;
+            Text hint = LayoutLabel(section, "UnlockHint",
+                remaining > 0
+                    ? "Hoàn thành thêm " + remaining + " môn để mở thử thách tiếp theo."
+                    : "Đã mở thử thách tiếp theo.",
+                24, new Color32(221, 235, 245, 255), TextAnchor.MiddleLeft);
+            hint.transform.parent.gameObject.AddComponent<LayoutElement>().preferredHeight = 60;
         }
 
-        static void BossButton(Transform parent, MapScreen screen, Color card, Color muted, Color foreground, Color border)
+        static void BossChallenge(Transform parent, MapScreen screen, Color card, Color foreground, Color border)
         {
-            RectTransform root = Rect(parent, "BossButton"); Image image = root.gameObject.AddComponent<Image>();
-            image.color = screen.BossUnlocked ? card : muted; root.gameObject.AddComponent<Outline>().effectColor = border;
-            Shadow shadow = root.gameObject.AddComponent<Shadow>(); shadow.effectColor = new Color(0f, 0f, 0f, .65f); shadow.effectDistance = new Vector2(6, -6);
-            Button button = root.gameObject.AddComponent<Button>(); button.targetGraphic = image; button.interactable = screen.BossUnlocked;
-            button.colors = ButtonColors();
-            if (screen.BossUnlocked) button.onClick.AddListener(screen.SelectBoss);
+            RectTransform root = Rect(parent, "BossChallenge");
+            Image image = root.gameObject.AddComponent<Image>();
+            image.color = screen.BossUnlocked ? card : new Color32(13, 57, 92, 220);
+            UseRoundedSurface(image);
+            Outline outline = root.gameObject.AddComponent<Outline>();
+            outline.effectColor = screen.BossUnlocked ? new Color32(255, 202, 58, 255) : new Color32(104, 137, 161, 255);
+            outline.effectDistance = new Vector2(2f, -2f);
+            Shadow shadow = root.gameObject.AddComponent<Shadow>();
+            shadow.effectColor = new Color(0f, 0f, 0f, .28f);
+            shadow.effectDistance = new Vector2(5, -5);
+            if (screen.BossUnlocked)
+            {
+                Button button = root.gameObject.AddComponent<Button>();
+                button.targetGraphic = image;
+                button.colors = ButtonColors();
+                button.onClick.AddListener(screen.SelectBoss);
+                root.gameObject.AddComponent<BrutalButton>();
+            }
             LayoutElement bossElement = root.gameObject.AddComponent<LayoutElement>();
-            bossElement.preferredHeight = 52;
+            bossElement.preferredHeight = 88;
             bossElement.flexibleHeight = 0;
-            Text(root, "Label", screen.BossUnlocked ? "THỬ THÁCH CUỐI" : "HOÀN THÀNH CÁC MÔN ĐỂ MỞ", 22,
-                screen.BossUnlocked ? Color.black : foreground, TextAnchor.MiddleCenter);
+            Text(root, "Label", screen.BossUnlocked
+                    ? "THỬ THÁCH CUỐI  →"
+                    : "🔒  Hoàn thành thêm các môn để mở thử thách tiếp theo.",
+                26, screen.BossUnlocked ? new Color32(8, 35, 61, 255) : new Color32(221, 235, 245, 255),
+                TextAnchor.MiddleCenter);
+            if (!screen.BossUnlocked)
+                AddCornerLockIcon(root, new Color32(221, 235, 245, 255));
         }
 
         static ColorBlock ButtonColors()
@@ -278,6 +404,218 @@ namespace KMA.Gameplay.UI
             colors.colorMultiplier = 1f;
             colors.fadeDuration = .08f;
             return colors;
+        }
+
+        static Sprite SportIconSprite(SubjectId subject)
+        {
+            if (SportSprites.TryGetValue(subject, out Sprite cached) && cached != null)
+                return cached;
+            SportSprites.Remove(subject);
+
+            const int size = 96;
+            var texture = new Texture2D(size, size, TextureFormat.RGBA32, false)
+            {
+                name = "SportIcon_" + subject,
+                filterMode = FilterMode.Bilinear,
+                wrapMode = TextureWrapMode.Clamp,
+                hideFlags = HideFlags.HideAndDontSave
+            };
+            var pixels = new Color32[size * size];
+            switch (subject)
+            {
+                case SubjectId.Sprint:
+                    DrawLine(pixels, size, 62, 80, 36, 52, 8);
+                    DrawLine(pixels, size, 36, 52, 61, 51, 8);
+                    DrawLine(pixels, size, 61, 51, 31, 15, 8);
+                    DrawLine(pixels, size, 24, 34, 45, 34, 6);
+                    break;
+                case SubjectId.Endurance:
+                    DrawRing(pixels, size, 31, 48, 22, 6);
+                    DrawRing(pixels, size, 65, 48, 22, 6);
+                    DrawLine(pixels, size, 28, 34, 69, 63, 6);
+                    DrawLine(pixels, size, 28, 62, 69, 33, 6);
+                    break;
+                case SubjectId.Volleyball:
+                    DrawRing(pixels, size, 48, 48, 34, 6);
+                    DrawLine(pixels, size, 18, 36, 76, 57, 5);
+                    DrawLine(pixels, size, 45, 15, 42, 79, 5);
+                    DrawLine(pixels, size, 64, 20, 53, 43, 5);
+                    break;
+                case SubjectId.Basketball:
+                    DrawRing(pixels, size, 48, 48, 34, 6);
+                    DrawLine(pixels, size, 14, 48, 82, 48, 5);
+                    DrawLine(pixels, size, 48, 14, 48, 82, 5);
+                    DrawLine(pixels, size, 23, 22, 73, 75, 5);
+                    break;
+                case SubjectId.PingPong:
+                    DrawCircle(pixels, size, 38, 57, 25);
+                    DrawLine(pixels, size, 50, 39, 72, 17, 10);
+                    DrawCircle(pixels, size, 74, 69, 8);
+                    break;
+                case SubjectId.Badminton:
+                    DrawCircle(pixels, size, 48, 24, 9);
+                    DrawLine(pixels, size, 41, 31, 24, 75, 6);
+                    DrawLine(pixels, size, 55, 31, 72, 75, 6);
+                    DrawLine(pixels, size, 24, 75, 72, 75, 6);
+                    DrawLine(pixels, size, 34, 47, 62, 47, 5);
+                    DrawLine(pixels, size, 29, 61, 67, 61, 5);
+                    break;
+                case SubjectId.Football:
+                    DrawRing(pixels, size, 48, 48, 34, 6);
+                    DrawCircle(pixels, size, 48, 48, 11);
+                    DrawLine(pixels, size, 48, 37, 48, 14, 5);
+                    DrawLine(pixels, size, 39, 54, 19, 66, 5);
+                    DrawLine(pixels, size, 57, 54, 77, 66, 5);
+                    DrawLine(pixels, size, 42, 41, 25, 25, 5);
+                    DrawLine(pixels, size, 54, 41, 70, 25, 5);
+                    break;
+            }
+            texture.SetPixels32(pixels);
+            texture.Apply(false, true);
+            Sprite sprite = Sprite.Create(texture, new Rect(0, 0, size, size), new Vector2(.5f, .5f), size);
+            sprite.name = "SportIcon_" + subject;
+            sprite.hideFlags = HideFlags.HideAndDontSave;
+            SportSprites[subject] = sprite;
+            return sprite;
+        }
+
+        static void UseRoundedSurface(Image image)
+        {
+            image.sprite = RoundedRectSprite();
+            image.type = Image.Type.Sliced;
+        }
+
+        static Sprite RoundedRectSprite()
+        {
+            if (roundedRectSprite != null)
+                return roundedRectSprite;
+
+            const int size = 64;
+            const int radius = 16;
+            var texture = new Texture2D(size, size, TextureFormat.RGBA32, false)
+            {
+                name = "RuntimeRoundedRect",
+                filterMode = FilterMode.Bilinear,
+                wrapMode = TextureWrapMode.Clamp,
+                hideFlags = HideFlags.HideAndDontSave
+            };
+            var pixels = new Color32[size * size];
+            for (int y = 0; y < size; y++)
+            for (int x = 0; x < size; x++)
+            {
+                int nearestX = Mathf.Clamp(x, radius, size - radius - 1);
+                int nearestY = Mathf.Clamp(y, radius, size - radius - 1);
+                int dx = x - nearestX;
+                int dy = y - nearestY;
+                bool inside = dx * dx + dy * dy <= radius * radius;
+                pixels[y * size + x] = inside
+                    ? new Color32(255, 255, 255, 255)
+                    : new Color32(255, 255, 255, 0);
+            }
+            texture.SetPixels32(pixels);
+            texture.Apply(false, true);
+            roundedRectSprite = Sprite.Create(texture, new Rect(0, 0, size, size),
+                new Vector2(.5f, .5f), 100f, 0, SpriteMeshType.FullRect,
+                new Vector4(radius, radius, radius, radius));
+            roundedRectSprite.name = "RuntimeRoundedRect";
+            roundedRectSprite.hideFlags = HideFlags.HideAndDontSave;
+            return roundedRectSprite;
+        }
+
+        static void AddCornerLockIcon(Transform parent, Color color)
+        {
+            RectTransform icon = Rect(parent, "LockIcon");
+            LayoutElement layout = icon.gameObject.AddComponent<LayoutElement>();
+            layout.ignoreLayout = true;
+            icon.anchorMin = Vector2.one;
+            icon.anchorMax = Vector2.one;
+            icon.pivot = Vector2.one;
+            icon.anchoredPosition = new Vector2(-14f, -14f);
+            icon.sizeDelta = new Vector2(42f, 42f);
+            Image image = icon.gameObject.AddComponent<Image>();
+            image.sprite = LockSprite();
+            image.color = color;
+            image.preserveAspect = true;
+            image.raycastTarget = false;
+        }
+
+        static Sprite LockSprite()
+        {
+            if (lockSprite != null)
+                return lockSprite;
+
+            const int size = 96;
+            var texture = new Texture2D(size, size, TextureFormat.RGBA32, false)
+            {
+                name = "RuntimeLockIcon",
+                filterMode = FilterMode.Bilinear,
+                wrapMode = TextureWrapMode.Clamp,
+                hideFlags = HideFlags.HideAndDontSave
+            };
+            var pixels = new Color32[size * size];
+            DrawRing(pixels, size, 48, 59, 23, 8);
+            for (int y = 15; y <= 57; y++)
+            for (int x = 19; x <= 77; x++)
+                SetIconPixel(pixels, size, x, y);
+            for (int y = 29; y <= 50; y++)
+            for (int x = 31; x <= 65; x++)
+                pixels[y * size + x] = new Color32(255, 255, 255, 0);
+            DrawCircle(pixels, size, 48, 37, 6);
+            DrawLine(pixels, size, 48, 35, 48, 24, 5);
+            texture.SetPixels32(pixels);
+            texture.Apply(false, true);
+            lockSprite = Sprite.Create(texture, new Rect(0, 0, size, size), new Vector2(.5f, .5f), size);
+            lockSprite.name = "RuntimeLockIcon";
+            lockSprite.hideFlags = HideFlags.HideAndDontSave;
+            return lockSprite;
+        }
+
+        static void DrawCircle(Color32[] pixels, int size, int centerX, int centerY, int radius)
+        {
+            int radiusSquared = radius * radius;
+            for (int y = centerY - radius; y <= centerY + radius; y++)
+            for (int x = centerX - radius; x <= centerX + radius; x++)
+                if ((x - centerX) * (x - centerX) + (y - centerY) * (y - centerY) <= radiusSquared)
+                    SetIconPixel(pixels, size, x, y);
+        }
+
+        static void DrawRing(Color32[] pixels, int size, int centerX, int centerY, int radius, int thickness)
+        {
+            int outer = radius * radius;
+            int innerRadius = radius - thickness;
+            int inner = innerRadius * innerRadius;
+            for (int y = centerY - radius; y <= centerY + radius; y++)
+            for (int x = centerX - radius; x <= centerX + radius; x++)
+            {
+                int distance = (x - centerX) * (x - centerX) + (y - centerY) * (y - centerY);
+                if (distance <= outer && distance >= inner)
+                    SetIconPixel(pixels, size, x, y);
+            }
+        }
+
+        static void DrawLine(Color32[] pixels, int size, int startX, int startY, int endX, int endY, int thickness)
+        {
+            int steps = Mathf.Max(Mathf.Abs(endX - startX), Mathf.Abs(endY - startY));
+            if (steps == 0)
+            {
+                DrawCircle(pixels, size, startX, startY, Mathf.Max(1, thickness / 2));
+                return;
+            }
+            for (int index = 0; index <= steps; index++)
+            {
+                float t = (float)index / steps;
+                DrawCircle(pixels, size,
+                    Mathf.RoundToInt(Mathf.Lerp(startX, endX, t)),
+                    Mathf.RoundToInt(Mathf.Lerp(startY, endY, t)),
+                    Mathf.Max(1, thickness / 2));
+            }
+        }
+
+        static void SetIconPixel(Color32[] pixels, int size, int x, int y)
+        {
+            if (x < 0 || x >= size || y < 0 || y >= size)
+                return;
+            pixels[y * size + x] = new Color32(255, 255, 255, 255);
         }
 
         static Sprite HeartSprite()
@@ -325,6 +663,8 @@ namespace KMA.Gameplay.UI
             RectTransform rect = Rect(parent, name); Stretch(rect, Vector2.zero, Vector2.zero);
             Text text = rect.gameObject.AddComponent<Text>(); text.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
             text.text = value; text.fontSize = size; text.color = color; text.alignment = alignment;
+            text.fontStyle = FontStyle.Bold;
+            text.raycastTarget = false;
             text.horizontalOverflow = HorizontalWrapMode.Wrap; text.verticalOverflow = VerticalWrapMode.Truncate;
             return text;
         }
@@ -380,8 +720,17 @@ namespace KMA.Gameplay.UI
             float width = rect.rect.width;
             if (width <= 0f) width = Mathf.Max(1f, Screen.width - 144f);
             float cellWidth = Mathf.Max(1f, (width - grid.padding.left - grid.padding.right - grid.spacing.x * (columns - 1)) / columns);
-            float cellHeight = Mathf.Clamp(cellWidth * 0.58f, 168f, 188f);
+            float cellHeight = Mathf.Clamp(cellWidth * 0.56f, 220f, 264f);
+            if (rect.rect.height > 0f)
+                cellHeight = Mathf.Min(cellHeight, Mathf.Max(1f, (rect.rect.height - grid.spacing.y) / 2f));
             grid.cellSize = new Vector2(cellWidth, cellHeight);
+            int titleSize = cellWidth < 350f ? 30 : cellWidth < 420f ? 32 : 36;
+            foreach (MapNodeView node in GetComponentsInChildren<MapNodeView>(true))
+            {
+                Transform title = node.transform.Find("CardHeader/TitleContainer/Title");
+                if (title != null)
+                    title.GetComponent<Text>().fontSize = titleSize;
+            }
             LayoutElement element = GetComponent<LayoutElement>();
             if (element != null)
             {

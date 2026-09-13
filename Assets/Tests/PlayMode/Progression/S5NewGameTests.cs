@@ -132,6 +132,7 @@ namespace KMA.Tests.Gameplay.Progression
                 node.Bind(button, title, detail);
 
                 node.Configure(SubjectId.Sprint, "Chạy nước rút", false, null, 5);
+                Assert.That(node.gameObject.activeSelf, Is.True);
                 Assert.That(node.DetailText, Is.EqualTo("SẴN SÀNG"));
                 Assert.That(node.IsInteractable, Is.True);
 
@@ -142,6 +143,7 @@ namespace KMA.Tests.Gameplay.Progression
                 Assert.That(node.Stars, Is.EqualTo(3));
 
                 node.Configure(SubjectId.Basketball, "Bóng rổ", true, null, 5);
+                Assert.That(node.gameObject.activeSelf, Is.True);
                 Assert.That(node.DetailText, Is.EqualTo("ĐANG PHÁT TRIỂN"));
                 Assert.That(node.IsInteractable, Is.False);
             }
@@ -160,46 +162,53 @@ namespace KMA.Tests.Gameplay.Progression
 
                 var content = screen.transform.Find("S5MapPresentation/Content")
                     .GetComponent<RectTransform>();
-                Assert.That(content.offsetMin, Is.EqualTo(new Vector2(72f, 48f)));
-                Assert.That(content.offsetMax, Is.EqualTo(new Vector2(-72f, -48f)));
+                Assert.That(content.offsetMin, Is.EqualTo(new Vector2(64f, 40f)));
+                Assert.That(content.offsetMax, Is.EqualTo(new Vector2(-64f, -40f)));
                 var grid = screen.transform.Find("S5MapPresentation/Content/SelectionGrid");
                 var responsiveGrid = grid.GetComponent<ResponsiveGridLayout>();
                 Assert.That(responsiveGrid, Is.Not.Null);
                 var gridRect = grid.GetComponent<RectTransform>();
                 gridRect.anchorMin = Vector2.zero;
                 gridRect.anchorMax = Vector2.zero;
-                gridRect.sizeDelta = new Vector2(1136f, 280f);
+                gridRect.sizeDelta = new Vector2(1136f, 480f);
                 responsiveGrid.Refresh();
                 var gridLayout = grid.GetComponent<GridLayoutGroup>();
                 Assert.That(gridLayout.cellSize.x, Is.Not.EqualTo(220f));
                 Assert.That(grid.GetComponent<LayoutElement>().preferredHeight,
                     Is.GreaterThanOrEqualTo(gridLayout.cellSize.y * 2f + gridLayout.spacing.y));
+                Assert.That(grid.transform.childCount, Is.EqualTo(8));
+                Assert.That(grid.transform.GetChild(7).name, Is.EqualTo("ProgressCard"));
                 foreach (MapNodeView node in screen.Nodes)
                 {
-                    Color expectedCardColor = node.IsInteractable
-                        ? Color.white
-                        : new Color32(226, 232, 240, 255);
-                    Assert.That(node.GetComponent<Image>().color, Is.EqualTo(expectedCardColor), node.name);
-                    Assert.That(node.GetComponent<Outline>().effectColor, Is.EqualTo(Color.black), node.name);
+                    Assert.That(node.GetComponent<Image>().sprite, Is.Not.Null, node.name);
                     Transform stripe = node.transform.Find("HeaderStripe");
                     Assert.That(stripe, Is.Not.Null, node.name + " must have a subject-colored header stripe.");
-                    Assert.That(stripe.GetComponent<Image>().color,
-                        Is.EqualTo(node.transform.Find("CardHeader/SportIcon").GetComponent<Image>().color), node.name);
+                    Image glyph = node.transform.Find("CardHeader/SportIcon/IconGlyph").GetComponent<Image>();
+                    Assert.That(glyph.sprite, Is.Not.Null, node.name);
+                    Assert.That(glyph.preserveAspect, Is.True, node.name);
                 }
 
                 Font legacyFont = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
                 foreach (var label in screen.GetComponentsInChildren<Text>())
                 {
                     Assert.That(label.font, Is.SameAs(legacyFont), label.name);
-                    Assert.That(label.rectTransform.anchorMin, Is.EqualTo(Vector2.zero));
-                    Assert.That(label.rectTransform.anchorMax, Is.EqualTo(Vector2.one));
+                    if (label.name == "ActionHint")
+                    {
+                        Assert.That(label.rectTransform.anchorMin.y, Is.EqualTo(0f));
+                        Assert.That(label.rectTransform.anchorMax.y, Is.EqualTo(0f));
+                    }
+                    else
+                    {
+                        Assert.That(label.rectTransform.anchorMin, Is.EqualTo(Vector2.zero));
+                        Assert.That(label.rectTransform.anchorMax, Is.EqualTo(Vector2.one));
+                    }
                 }
             }
             finally { UnityEngine.Object.DestroyImmediate(screenObject); }
         }
 
         [Test]
-        public void MapPresentation_FutureChipsAreDisabledAndRequestNoSubject()
+        public void MapPresentation_FutureTagsAreInformationalAndRequestNoSubject()
         {
             var screenObject = new GameObject("MapScreen", typeof(RectTransform));
             var screen = screenObject.AddComponent<MapScreen>();
@@ -212,18 +221,11 @@ namespace KMA.Tests.Gameplay.Progression
 
                 Transform futureRow = screen.transform.Find("S5MapPresentation/Content/FutureRow");
                 Assert.That(futureRow, Is.Not.Null);
-                Button[] chips = futureRow.GetComponentsInChildren<Button>(true);
-                Assert.That(chips.Select(chip => chip.GetComponentInChildren<Text>(true).text),
-                    Is.EquivalentTo(new[] { "Hít đất", "Nhịp điệu", "Bơi lội" }));
-                Assert.That(chips, Has.Length.EqualTo(3));
+                Assert.That(futureRow.GetComponentsInChildren<Text>(true).Select(text => text.text),
+                    Is.EquivalentTo(new[] { "SẮP RA MẮT", "Hít đất", "Nhịp điệu", "Bơi lội" }));
+                Assert.That(futureRow.GetComponentsInChildren<Button>(true), Is.Empty);
                 Assert.That(futureRow.GetComponentsInChildren<MapNodeView>(true), Is.Empty);
                 Assert.That(screen.Nodes, Has.Length.EqualTo(7));
-
-                foreach (Button chip in chips)
-                {
-                    Assert.That(chip.interactable, Is.False, chip.name);
-                    chip.onClick.Invoke();
-                }
 
                 Assert.That(requested, Is.Empty,
                     "Presentation-only future chips must never request a campaign subject route.");
@@ -249,18 +251,21 @@ namespace KMA.Tests.Gameplay.Progression
                 MapPresentationBuilder.Build(screen, session);
 
                 Text livesLabel = screen.transform
-                    .Find("S5MapPresentation/Content/Header/LivesLabelContainer/LivesLabel")
+                    .Find("S5MapPresentation/Content/Header/LivesPanel/LivesLabelContainer/LivesLabel")
                     .GetComponent<Text>();
                 Assert.That(livesLabel.text, Is.EqualTo($"LƯỢT: {expectedLives}/5"));
                 Assert.That(screen.Hearts.CurrentHearts, Is.EqualTo(expectedLives));
                 Assert.That(screen.Hearts.GetComponentsInChildren<Image>(true), Has.Length.EqualTo(5));
                 Assert.That(screen.BossUnlocked, Is.EqualTo(expectedBossUnlocked));
 
-                Transform boss = screen.transform.Find("S5MapPresentation/Content/BossButton");
-                Assert.That(boss.GetComponent<Button>().interactable, Is.EqualTo(expectedBossUnlocked));
+                Transform boss = screen.transform.Find("S5MapPresentation/Content/BossChallenge");
+                Button bossButton = boss.GetComponent<Button>();
+                Assert.That(bossButton != null, Is.EqualTo(expectedBossUnlocked));
+                if (bossButton != null)
+                    Assert.That(bossButton.interactable, Is.True);
                 Assert.That(boss.GetComponentInChildren<Text>(true).text, Is.EqualTo(expectedBossUnlocked
-                    ? "THỬ THÁCH CUỐI"
-                    : "HOÀN THÀNH CÁC MÔN ĐỂ MỞ"));
+                    ? "THỬ THÁCH CUỐI  →"
+                    : "🔒  Hoàn thành thêm các môn để mở thử thách tiếp theo."));
                 Assert.That(screen.transform.Cast<Transform>()
                     .Count(child => child.name == "S5MapPresentation"), Is.EqualTo(1));
             }
@@ -313,15 +318,18 @@ namespace KMA.Tests.Gameplay.Progression
             Transform futureRowTransform = screen.transform.Find("S5MapPresentation/Content/FutureRow");
             Assert.That(futureRowTransform, Is.Not.Null);
             RectTransform futureRow = futureRowTransform.GetComponent<RectTransform>();
-            RectTransform progressSection = screen.transform.Find("S5MapPresentation/Content/ProgressSection")
+            RectTransform progressCard = screen.transform.Find("S5MapPresentation/Content/SelectionGrid/ProgressCard")
                 .GetComponent<RectTransform>();
-            RectTransform boss = screen.transform.Find("S5MapPresentation/Content/BossButton")
+            RectTransform boss = screen.transform.Find("S5MapPresentation/Content/BossChallenge")
                 .GetComponent<RectTransform>();
 
             foreach (Vector2Int resolution in new[]
             {
                 new Vector2Int(1920, 1080),
-                new Vector2Int(1280, 720)
+                new Vector2Int(1280, 720),
+                new Vector2Int(1440, 1080),
+                new Vector2Int(1728, 1080),
+                new Vector2Int(2400, 1080)
             })
             {
                 Screen.SetResolution(resolution.x, resolution.y, false);
@@ -332,43 +340,45 @@ namespace KMA.Tests.Gameplay.Progression
 
                 Rect gridBounds = WorldBounds(grid);
                 Rect futureBounds = WorldBounds(futureRow);
-                Rect progressBounds = WorldBounds(progressSection);
                 Rect bossBounds = WorldBounds(boss);
-                Assert.That(gridBounds.Overlaps(progressBounds), Is.False,
-                    $"SelectionGrid must not overlap ProgressSection at {resolution.x}x{resolution.y}.");
                 Assert.That(gridBounds.Overlaps(futureBounds), Is.False,
                     $"SelectionGrid must not overlap FutureRow at {resolution.x}x{resolution.y}.");
-                Assert.That(futureBounds.Overlaps(progressBounds), Is.False,
-                    $"FutureRow must not overlap ProgressSection at {resolution.x}x{resolution.y}.");
-                Assert.That(progressBounds.Overlaps(bossBounds), Is.False,
-                    $"ProgressSection must not overlap BossButton at {resolution.x}x{resolution.y}.");
+                Assert.That(futureBounds.Overlaps(bossBounds), Is.False,
+                    $"FutureRow must not overlap BossChallenge at {resolution.x}x{resolution.y}.");
                 Assert.That(Contains(content, grid), Is.True);
                 Assert.That(Contains(content, futureRow), Is.True);
-                Assert.That(Contains(content, progressSection), Is.True);
                 Assert.That(Contains(content, boss), Is.True);
+                Assert.That(Contains(grid, progressCard), Is.True);
                 foreach (MapNodeView node in screen.Nodes)
                 {
                     Assert.That(Contains(grid, node.transform as RectTransform), Is.True,
                         $"{node.SubjectId} must remain inside SelectionGrid at {resolution.x}x{resolution.y}.");
                     foreach (Text label in node.GetComponentsInChildren<Text>(true))
                     {
+                        if (!label.gameObject.activeInHierarchy)
+                            continue;
                         Assert.That(Contains(node.transform as RectTransform, label.rectTransform), Is.True,
                             $"{node.SubjectId}/{label.name} must remain inside its card at {resolution.x}x{resolution.y}.");
                         Assert.That(label.rectTransform.rect.height, Is.GreaterThanOrEqualTo(label.fontSize),
                             $"{node.SubjectId}/{label.name} must be tall enough to render at {resolution.x}x{resolution.y}.");
+                        Assert.That(label.preferredHeight,
+                            Is.LessThanOrEqualTo(label.rectTransform.rect.height + 1f),
+                            $"{node.SubjectId}/{label.name} must not be vertically truncated at {resolution.x}x{resolution.y}.");
                     }
                 }
 
-                foreach (Button chip in futureRow.GetComponentsInChildren<Button>(true))
-                    Assert.That(Contains(futureRow, chip.transform as RectTransform), Is.True,
-                        $"{chip.name} must remain inside FutureRow at {resolution.x}x{resolution.y}.");
+                foreach (Text tag in futureRow.GetComponentsInChildren<Text>(true))
+                    Assert.That(Contains(futureRow, tag.rectTransform), Is.True,
+                        $"{tag.name} must remain inside FutureRow at {resolution.x}x{resolution.y}.");
                 Assert.That(Contains(boss, boss.GetComponentInChildren<Text>(true).rectTransform), Is.True,
-                    $"Boss label must remain inside BossButton at {resolution.x}x{resolution.y}.");
+                    $"Boss label must remain inside BossChallenge at {resolution.x}x{resolution.y}.");
 
-                Rect secondRowBounds = WorldBounds(screen.Nodes[4].transform as RectTransform);
-                secondRowBounds.xMax = WorldBounds(screen.Nodes[6].transform as RectTransform).xMax;
-                Assert.That(secondRowBounds.center.x, Is.EqualTo(gridBounds.center.x).Within(1f),
-                    $"The three-card second row must be centered at {resolution.x}x{resolution.y}.");
+                Assert.That(WorldBounds(screen.Nodes[0].transform as RectTransform).xMin,
+                    Is.EqualTo(WorldBounds(screen.Nodes[4].transform as RectTransform).xMin).Within(1f),
+                    $"Both grid rows must share the same first column at {resolution.x}x{resolution.y}.");
+                Assert.That(WorldBounds(screen.Nodes[3].transform as RectTransform).xMin,
+                    Is.EqualTo(WorldBounds(progressCard).xMin).Within(1f),
+                    $"Progress must occupy the fourth column at {resolution.x}x{resolution.y}.");
             }
         }
 

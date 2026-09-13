@@ -55,7 +55,7 @@ namespace KMA.Tests.Presentation
         }
 
         [UnityTest]
-        public IEnumerator MapUsesCompactLivesAndReadableResponsiveCards()
+        public IEnumerator MapUsesReadableLivesUniformCardsAndIntegratedProgress()
         {
             yield return SceneManager.LoadSceneAsync("Map", LoadSceneMode.Single);
             for (int frame = 0; frame < 4; frame++)
@@ -68,21 +68,22 @@ namespace KMA.Tests.Presentation
             Assert.That(root, Is.Not.Null);
             Assert.That(root.Find("Content/Header/BackButton"), Is.Not.Null);
             RectTransform header = root.Find("Content/Header").GetComponent<RectTransform>();
-            Assert.That(header.rect.height, Is.InRange(68f, 84f),
-                "The top bar must not consume the space reserved for minigame cards.");
+            Assert.That(header.rect.height, Is.InRange(108f, 124f));
 
-            Transform hearts = root.Find("Content/Header/HeartBar");
+            Transform hearts = root.Find("Content/Header/LivesPanel/HeartBar");
             Assert.That(hearts, Is.Not.Null);
             foreach (LayoutElement heart in hearts.GetComponentsInChildren<LayoutElement>(true)
                          .Where(element => element.name.StartsWith("Heart") && element.name != "HeartBar"))
-                Assert.That(heart.preferredWidth, Is.InRange(20f, 32f));
+                Assert.That(heart.preferredWidth, Is.InRange(32f, 40f));
 
             Transform grid = root.Find("Content/SelectionGrid");
             Assert.That(grid, Is.Not.Null);
             Assert.That(grid.GetComponent<GridLayoutGroup>().cellSize.y,
-                Is.GreaterThanOrEqualTo(168f));
+                Is.GreaterThanOrEqualTo(220f));
+            Assert.That(grid.childCount, Is.EqualTo(8));
+            Assert.That(grid.GetChild(7).name, Is.EqualTo("ProgressCard"));
             Assert.That(grid.Find("SprintNode/ActionHint").GetComponent<Text>().text,
-                Is.EqualTo("CHẠM ĐỂ THI ĐẤU"));
+                Is.EqualTo("THI →"));
         }
 
         [UnityTest]
