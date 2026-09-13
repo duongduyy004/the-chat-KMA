@@ -85,6 +85,8 @@ namespace KMA.Gameplay
             mode.rectTransform.offsetMin = Vector2.zero;
             mode.rectTransform.offsetMax = Vector2.zero;
 
+            EnsureStartPresentation(root, font);
+
             RectTransform prompts = Rect(root, "TouchPrompts");
             prompts.anchorMin = new Vector2(0f, .02f);
             prompts.anchorMax = new Vector2(1f, .16f);
@@ -103,6 +105,51 @@ namespace KMA.Gameplay
             EnsurePlayerIdentity(root);
         }
 
+        static void EnsureStartPresentation(RectTransform parent, TMP_FontAsset font)
+        {
+            RectTransform root = Rect(parent, "StartPresentation");
+            Stretch(root);
+            root.SetAsLastSibling();
+
+            RectTransform tutorial = Rect(root, "TutorialBanner");
+            tutorial.anchorMin = new Vector2(.16f, .43f);
+            tutorial.anchorMax = new Vector2(.84f, .59f);
+            tutorial.offsetMin = Vector2.zero;
+            tutorial.offsetMax = Vector2.zero;
+            Image tutorialSurface = tutorial.gameObject.AddComponent<Image>();
+            tutorialSurface.color = Navy;
+            tutorialSurface.raycastTarget = false;
+            Outline tutorialOutline = tutorial.gameObject.AddComponent<Outline>();
+            tutorialOutline.effectColor = Gold;
+            tutorialOutline.effectDistance = new Vector2(3f, -3f);
+            TMP_Text tutorialLabel = Text(tutorial, "TutorialLabel", "TRÁI     BẤM LUÂN PHIÊN ĐỂ CHẠY     PHẢI",
+                font, 35f, Cream, TextAlignmentOptions.Center);
+            Stretch(tutorialLabel.rectTransform, new Vector2(20f, 12f), new Vector2(-20f, -12f));
+            Arrow(tutorial, "LeftArrow", true);
+            Arrow(tutorial, "RightArrow", false);
+
+            TMP_Text countdown = Text(root, "CountdownLabel", string.Empty, font, 88f, Gold,
+                TextAlignmentOptions.Center);
+            countdown.rectTransform.anchorMin = new Vector2(.35f, .36f);
+            countdown.rectTransform.anchorMax = new Vector2(.65f, .68f);
+            countdown.rectTransform.offsetMin = Vector2.zero;
+            countdown.rectTransform.offsetMax = Vector2.zero;
+
+            TMP_Text instruction = Text(root, "InstructionLabel", string.Empty, font, 56f, Coral,
+                TextAlignmentOptions.Center);
+            instruction.rectTransform.anchorMin = new Vector2(.25f, .28f);
+            instruction.rectTransform.anchorMax = new Vector2(.75f, .45f);
+            instruction.rectTransform.offsetMin = Vector2.zero;
+            instruction.rectTransform.offsetMax = Vector2.zero;
+
+            SprintStartPresentation presenter = Object.FindFirstObjectByType<SprintStartPresentation>();
+            if (presenter == null)
+                presenter = root.gameObject.AddComponent<SprintStartPresentation>();
+            presenter.Configure(tutorial.gameObject, tutorialLabel, countdown.gameObject, countdown,
+                instruction.gameObject, instruction);
+            presenter.Bind(Object.FindFirstObjectByType<SprintController>());
+        }
+
         static void PrepareSafeArea(Transform safeArea)
         {
             safeArea.gameObject.SetActive(true);
@@ -115,6 +162,39 @@ namespace KMA.Gameplay
                 rectTransform.offsetMin = Vector2.zero;
                 rectTransform.offsetMax = Vector2.zero;
             }
+        }
+
+        static void Arrow(RectTransform parent, string name, bool pointsLeft)
+        {
+            RectTransform arrow = Rect(parent, name);
+            arrow.anchorMin = pointsLeft ? new Vector2(.025f, .25f) : new Vector2(.905f, .25f);
+            arrow.anchorMax = pointsLeft ? new Vector2(.115f, .75f) : new Vector2(.995f, .75f);
+            arrow.offsetMin = Vector2.zero;
+            arrow.offsetMax = Vector2.zero;
+
+            Image shaft = Rect(arrow, "Shaft").gameObject.AddComponent<Image>();
+            shaft.color = Gold;
+            shaft.raycastTarget = false;
+            shaft.rectTransform.anchorMin = new Vector2(.18f, .42f);
+            shaft.rectTransform.anchorMax = new Vector2(.82f, .58f);
+            shaft.rectTransform.offsetMin = Vector2.zero;
+            shaft.rectTransform.offsetMax = Vector2.zero;
+
+            CreateArrowTip(arrow, "TipTop", pointsLeft, 45f);
+            CreateArrowTip(arrow, "TipBottom", pointsLeft, -45f);
+        }
+
+        static void CreateArrowTip(RectTransform parent, string name, bool pointsLeft, float angle)
+        {
+            Image tip = Rect(parent, name).gameObject.AddComponent<Image>();
+            tip.color = Gold;
+            tip.raycastTarget = false;
+            tip.rectTransform.anchorMin = pointsLeft ? new Vector2(.08f, .5f) : new Vector2(.48f, .5f);
+            tip.rectTransform.anchorMax = pointsLeft ? new Vector2(.58f, .5f) : new Vector2(.98f, .5f);
+            tip.rectTransform.sizeDelta = new Vector2(0f, 8f);
+            tip.rectTransform.anchoredPosition = Vector2.zero;
+            tip.rectTransform.localRotation = Quaternion.Euler(0f, 0f,
+                pointsLeft ? -angle : angle);
         }
 
         static void EnsureControls(RectTransform root)

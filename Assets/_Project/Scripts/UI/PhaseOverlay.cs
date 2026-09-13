@@ -5,6 +5,11 @@ using UnityEngine;
 
 namespace KMA.Gameplay.UI
 {
+    public interface ISprintStartPresentation
+    {
+        void Bind(MinigameBase source);
+    }
+
     public sealed class PhaseOverlay : MonoBehaviour
     {
         const float CountdownDuration = 3f;
@@ -81,7 +86,7 @@ namespace KMA.Gameplay.UI
             if (phase == MinigamePhase.Countdown)
                 countdownElapsed = 0f;
 
-            SetActive(tutorialRoot, phase == MinigamePhase.Tutorial &&
+            SetActive(tutorialRoot, !IsSprintSource && phase == MinigamePhase.Tutorial &&
                 (tutorialOverlay == null || tutorialOverlay.ShouldShow));
             SetActive(countdownRoot, phase == MinigamePhase.Countdown);
             SetActive(playRoot, phase == MinigamePhase.Play);
@@ -94,20 +99,21 @@ namespace KMA.Gameplay.UI
 
         void ConfigureTutorial()
         {
-            if (tutorialOverlay == null || source == null)
+            if (source == null)
                 return;
 
             UnsubscribeTutorialCompletion();
 
-            if (source.GetType().Name == "SprintController")
+            if (IsSprintSource)
             {
-                tutorialOverlay.Show("Sprint", new List<TutorialStep>
-                {
-                    new TutorialStep("TRÁI · PHẢI", "Chạm luân phiên hai bên để tăng tốc"),
-                    new TutorialStep("CẢN GIÓ", "Chạm đúng phía chỉ báo trước khi gió ập đến")
-                });
+                FindSprintStartPresentation()?.Bind(source);
+                return;
             }
-            else if (source.GetType().Name == "EnduranceController")
+
+            if (tutorialOverlay == null)
+                return;
+
+            if (source.GetType().Name == "EnduranceController")
             {
                 tutorialOverlay.Show("Endurance", new List<TutorialStep>
                 {
@@ -155,6 +161,18 @@ namespace KMA.Gameplay.UI
         }
 
         void ReleaseTutorialGate() => source?.SetTutorialGate(false);
+
+        bool IsSprintSource => source != null && source.GetType().Name == "SprintController";
+
+        static ISprintStartPresentation FindSprintStartPresentation()
+        {
+            MonoBehaviour[] behaviours = Object.FindObjectsByType<MonoBehaviour>(
+                FindObjectsInactive.Include, FindObjectsSortMode.None);
+            for (int index = 0; index < behaviours.Length; index++)
+                if (behaviours[index] is ISprintStartPresentation presentation)
+                    return presentation;
+            return null;
+        }
 
         void RefreshCountdown()
         {

@@ -1,5 +1,6 @@
 using System.Collections;
 using System.Linq;
+using KMA.Gameplay;
 using KMA.Gameplay.UI;
 using NUnit.Framework;
 using TMPro;
@@ -87,7 +88,7 @@ namespace KMA.Tests.Presentation
         }
 
         [UnityTest]
-        public IEnumerator SprintUsesVietnameseTutorialAndExplicitTouchPrompts()
+        public IEnumerator SprintUsesAutomaticVietnameseStartBannerAndExplicitTouchPrompts()
         {
             yield return SceneManager.LoadSceneAsync("MG_Sprint", LoadSceneMode.Single);
             yield return null;
@@ -104,10 +105,10 @@ namespace KMA.Tests.Presentation
             Assert.That(leftPrompt.font, Is.Not.Null);
             Assert.That(rightPrompt.font, Is.Not.Null);
 
-            TutorialOverlay tutorial = Object.FindFirstObjectByType<TutorialOverlay>();
-            Assert.That(tutorial.CurrentStep.Title, Is.EqualTo("TRÁI · PHẢI"));
-            Assert.That(tutorial.CurrentStep.Instruction,
-                Is.EqualTo("Chạm luân phiên hai bên để tăng tốc"));
+            SprintStartPresentation start = Object.FindFirstObjectByType<SprintStartPresentation>();
+            Assert.That(start, Is.Not.Null);
+            Assert.That(start.TutorialText,
+                Is.EqualTo("← TRÁI     BẤM LUÂN PHIÊN ĐỂ CHẠY     PHẢI →"));
         }
 
         static Button FindButton(string name) => Object.FindObjectsByType<Button>(

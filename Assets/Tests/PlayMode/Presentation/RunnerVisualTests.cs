@@ -114,12 +114,15 @@ namespace KMA.Tests.Presentation
         }
 
         [UnityTest]
-        public IEnumerator SprintDisablesGenericHudContentButKeepsCustomMetrics()
+        public IEnumerator SprintUsesSafeAreaBroadcastChromeAndKeepsCustomMetrics()
         {
             yield return SceneManager.LoadSceneAsync("MG_Sprint");
 
-            Assert.That(GameObject.Find("SafeAreaRoot"), Is.Null,
-                "The generic HUD content must not cover the Sprint presentation.");
+            Transform safeArea = GameObject.Find("SafeAreaRoot")?.transform;
+            Assert.That(safeArea, Is.Not.Null,
+                "Sprint must use the shared safe-area root for its mobile presentation.");
+            Assert.That(safeArea.Find("SprintBroadcastChrome"), Is.Not.Null,
+                "The Sprint-specific broadcast chrome must replace generic HUD content.");
             Assert.That(GameObject.Find("SprintMetrics"), Is.Not.Null,
                 "Sprint-specific race metrics must remain visible.");
         }

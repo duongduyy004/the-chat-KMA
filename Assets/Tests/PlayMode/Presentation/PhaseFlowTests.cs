@@ -13,22 +13,22 @@ namespace KMA.Tests.Presentation
     public sealed class PhaseFlowTests
     {
         [UnityTest]
-        public IEnumerator InteractiveTutorialHoldsLifecycleUntilOneCompletionThenSeenSubjectStartsCountdown()
+        public IEnumerator EnduranceTutorialRemainsManualUntilCompletionThenSeenSubjectStartsCountdown()
         {
             var prefab = AssetDatabase.LoadAssetAtPath<GameObject>(
                 "Assets/_Project/Prefabs/UI/PhaseOverlay.prefab");
             Assert.That(prefab, Is.Not.Null);
 
-            var firstControllerObject = new GameObject("first-sprint-controller");
-            var secondControllerObject = new GameObject("second-sprint-controller");
+            var firstControllerObject = new GameObject("first-endurance-controller");
+            var secondControllerObject = new GameObject("second-endurance-controller");
             var overlayObject = Object.Instantiate(prefab);
             try
             {
-                var firstController = firstControllerObject.AddComponent<SprintController>();
+                var firstController = firstControllerObject.AddComponent<EnduranceController>();
                 var overlay = overlayObject.GetComponent<PhaseOverlay>();
                 var tutorial = overlayObject.GetComponentInChildren<TutorialOverlay>(true);
                 var store = new MemoryTutorialSeenStore();
-                tutorial.ConfigureForTest(store, "Sprint", new TutorialStep[0]);
+                tutorial.ConfigureForTest(store, "Endurance", new TutorialStep[0]);
 
                 var completionCount = 0;
                 var countdownTransitions = 0;
@@ -40,12 +40,7 @@ namespace KMA.Tests.Presentation
                 };
 
                 overlay.Bind(firstController);
-                tutorial.Show("Sprint", new[]
-                {
-                    new TutorialStep("START", "Get ready."),
-                    new TutorialStep("RUN", "Match the side."),
-                    new TutorialStep("WIND", "Counter the cue.")
-                });
+                Assert.That(tutorial.ShouldShow, Is.True);
                 yield return new WaitForSeconds(2.1f);
 
                 Assert.That(firstController.PresentationPhase, Is.EqualTo(MinigamePhase.Tutorial),
@@ -59,9 +54,9 @@ namespace KMA.Tests.Presentation
                 Assert.That(completionCount, Is.EqualTo(1));
                 Assert.That(countdownTransitions, Is.EqualTo(1));
                 Assert.That(firstController.PresentationPhase, Is.EqualTo(MinigamePhase.Countdown));
-                Assert.That(store.HasSeen("Sprint"), Is.True);
+                Assert.That(store.HasSeen("Endurance"), Is.True);
 
-                var secondController = secondControllerObject.AddComponent<SprintController>();
+                var secondController = secondControllerObject.AddComponent<EnduranceController>();
                 overlay.Bind(secondController);
 
                 Assert.That(tutorial.ShouldShow, Is.False);
@@ -78,39 +73,53 @@ namespace KMA.Tests.Presentation
         }
 
         [UnityTest]
-        public IEnumerator SprintTutorialCompletionFlowsThroughCountdownToPlayPresentation()
+        public IEnumerator SprintStartPresentationReleasesAfterApprovedBannerAndMirrorsCountdown()
         {
-            PlayerPrefs.DeleteKey("KMA.tutorialSeen.Sprint");
-            var prefab = AssetDatabase.LoadAssetAtPath<GameObject>(
-                "Assets/_Project/Prefabs/UI/PhaseOverlay.prefab");
-            Assert.That(prefab, Is.Not.Null);
-
             var controllerObject = new GameObject("sprint-controller");
-            var overlayObject = Object.Instantiate(prefab);
+            var presentationObject = new GameObject("sprint-start-presentation");
             try
             {
                 var controller = controllerObject.AddComponent<SprintController>();
-                var overlay = overlayObject.GetComponent<PhaseOverlay>();
-                Assert.That(overlay, Is.Not.Null);
+                var presentation = presentationObject.AddComponent<SprintStartPresentation>();
                 var distanceBeforeBind = controller.Snapshot.Distance;
 
-                overlay.Bind(controller);
+                presentation.Bind(controller);
 
-                Assert.That(overlay.DisplayedPhase, Is.EqualTo(MinigamePhase.Tutorial));
-                Assert.That(overlay.IsTutorialVisible, Is.True);
+                Assert.That(controller.PresentationPhase, Is.EqualTo(MinigamePhase.Tutorial));
+                Assert.That(presentation.TutorialVisible, Is.True);
+                Assert.That(presentation.TutorialText,
+                    Is.EqualTo("← TRÁI     BẤM LUÂN PHIÊN ĐỂ CHẠY     PHẢI →"));
                 Assert.That(controller.Snapshot.Distance, Is.EqualTo(distanceBeforeBind));
+                controller.OnLeftTap();
+                Assert.That(controller.Snapshot.Distance, Is.EqualTo(distanceBeforeBind),
+                    "Sprint input must remain gated before Play.");
 
-                overlayObject.GetComponentInChildren<TutorialOverlay>(true).Skip();
-                Assert.That(overlay.DisplayedPhase, Is.EqualTo(MinigamePhase.Countdown));
-                Assert.That(overlay.CountdownText, Is.EqualTo("3"));
+                presentation.TickForTest(1.49f);
+                Assert.That(controller.PresentationPhase, Is.EqualTo(MinigamePhase.Tutorial));
+                Assert.That(presentation.TutorialVisible, Is.True);
 
-                yield return new WaitForSeconds(3.1f);
-                Assert.That(overlay.DisplayedPhase, Is.EqualTo(MinigamePhase.Play));
-                Assert.That(overlay.IsPlayVisible, Is.True);
+                presentation.TickForTest(.01f);
+                Assert.That(controller.PresentationPhase, Is.EqualTo(MinigamePhase.Countdown));
+                Assert.That(presentation.TutorialVisible, Is.False);
+                Assert.That(presentation.CountdownText, Is.EqualTo("3"));
+
+                controller.Simulate(1f);
+                presentation.TickForTest(1f);
+                Assert.That(presentation.CountdownText, Is.EqualTo("2"));
+                controller.Simulate(1f);
+                presentation.TickForTest(1f);
+                Assert.That(presentation.CountdownText, Is.EqualTo("1"));
+                controller.Simulate(1f);
+                Assert.That(controller.PresentationPhase, Is.EqualTo(MinigamePhase.Play));
+                Assert.That(presentation.CountdownText, Is.EqualTo("GO!"));
+                Assert.That(presentation.InstructionVisible, Is.True);
+                presentation.TickForTest(.25f);
+                Assert.That(presentation.InstructionVisible, Is.False);
+                yield return null;
             }
             finally
             {
-                Object.Destroy(overlayObject);
+                Object.Destroy(presentationObject);
                 Object.Destroy(controllerObject);
             }
         }

@@ -214,6 +214,9 @@ namespace KMA.Gameplay
 
         void OnTap(Side side)
         {
+            if (Lifecycle.Phase != MinigamePhase.Play)
+                return;
+
             Side expected = rules.ExpectedSide;
             rules.Tap(side);
             cadenceCombo = side == expected ? cadenceCombo + 1 : 0;

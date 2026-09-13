@@ -14,12 +14,9 @@ namespace KMA.Tests.Presentation
     public sealed class SprintPresentationGateTests
     {
         const string SceneName = "MG_Sprint";
-        const string TutorialKey = "KMA.tutorialSeen.Sprint";
-
         [UnityTest]
-        public IEnumerator SprintSceneHasCompletePresentationContractAndKeepsTutorialStateOutOfPlayerPrefs()
+        public IEnumerator SprintSceneHasCompletePresentationContractAndUsesAutomaticStart()
         {
-            PlayerPrefs.DeleteKey(TutorialKey);
             yield return LoadSprint();
 
             var scene = SceneManager.GetActiveScene();
@@ -27,11 +24,13 @@ namespace KMA.Tests.Presentation
             var sprintHuds = SceneObjects<SprintHud>(scene);
             var windCues = SceneObjects<SprintWindCue>(scene);
             var overlays = SceneObjects<TutorialOverlay>(scene);
+            var starts = SceneObjects<SprintStartPresentation>(scene);
             var pauses = SceneObjects<PausePanel>(scene);
             Assert.That(controllers.Length, Is.EqualTo(1));
             Assert.That(sprintHuds.Length, Is.EqualTo(1));
             Assert.That(windCues.Length, Is.EqualTo(1));
             Assert.That(overlays.Length, Is.EqualTo(1));
+            Assert.That(starts.Length, Is.EqualTo(1));
             Assert.That(pauses.Length, Is.EqualTo(1));
 
             var sprintHud = sprintHuds[0];
@@ -39,16 +38,12 @@ namespace KMA.Tests.Presentation
             Assert.That(sprintHud.HasBoundVisuals, Is.True, "SprintHud must bind all authored HUD labels/fills.");
             Assert.That(windCue.HasBoundVisuals, Is.True, "SprintWindCue must bind a separate host, Image, and TMP state label.");
 
-            var overlay = overlays[0];
-            Assert.That(overlay.ShouldShow, Is.True);
-            Assert.That(overlay.CurrentStep.Instruction,
-                Is.EqualTo("Chạm luân phiên hai bên để tăng tốc"));
-            overlay.Next();
-            Assert.That(overlay.CurrentStep.Instruction,
-                Is.EqualTo("Chạm đúng phía chỉ báo trước khi gió ập đến"));
-            overlay.Skip();
-            Assert.That(PlayerPrefs.HasKey(TutorialKey), Is.False);
-            Assert.That(overlay.ShouldShow, Is.False);
+            var start = starts[0];
+            Assert.That(overlays[0].ShouldShow, Is.False,
+                "Sprint must not open the shared multi-page tutorial.");
+            Assert.That(start.TutorialVisible, Is.True);
+            Assert.That(start.TutorialText,
+                Is.EqualTo("← TRÁI     BẤM LUÂN PHIÊN ĐỂ CHẠY     PHẢI →"));
 
             var pause = pauses[0];
             var player = GameObject.Find("Player");
@@ -86,8 +81,6 @@ namespace KMA.Tests.Presentation
             Assert.That(rightRect.anchorMax.x, Is.EqualTo(.99f));
             Assert.That(1920f * (leftRect.anchorMax.x - leftRect.anchorMin.x) + leftRect.sizeDelta.x, Is.GreaterThanOrEqualTo(140f));
             Assert.That(1920f * (rightRect.anchorMax.x - rightRect.anchorMin.x) + rightRect.sizeDelta.x, Is.GreaterThanOrEqualTo(140f));
-
-            PlayerPrefs.DeleteKey(TutorialKey);
         }
 
         [UnityTest]
