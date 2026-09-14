@@ -372,6 +372,73 @@ namespace KMA.Tests.Presentation
         }
 
         [UnityTest]
+        public IEnumerator SprintTapAreasStayInTheInputCanvasOutsideTheChrome()
+        {
+            yield return LoadSprint();
+            var scene = SceneManager.GetActiveScene();
+
+            Transform chrome = GameObject.Find("SprintBroadcastChrome").transform;
+            Transform inputCanvas = GameObject.Find("Input")?.transform;
+            Assert.That(inputCanvas, Is.Not.Null);
+
+            foreach (string tapName in new[] { "LeftTap", "RightTap" })
+            {
+                Transform tap = GameObject.Find(tapName).transform;
+                Assert.That(tap.IsChildOf(inputCanvas), Is.True,
+                    $"{tapName} must stay in the input canvas.");
+                Assert.That(tap.IsChildOf(chrome), Is.False,
+                    $"{tapName} must not be reparented under the HUD chrome.");
+            }
+        }
+
+        [UnityTest]
+        public IEnumerator SprintControlsColourReflectsExpectedPressedAndFinishedStates()
+        {
+            yield return LoadSprint();
+            var scene = SceneManager.GetActiveScene();
+            var controller = SceneObjects<SprintController>(scene)[0];
+            var start = SceneObjects<SprintStartPresentation>(scene)[0];
+            var presenter = SceneObjects<SprintControlPresenter>(scene)[0];
+
+            Image LeftBackground() =>
+                GameObject.Find("LeftTap").transform.Find("Visual/Background").GetComponent<Image>();
+            Image RightBackground() =>
+                GameObject.Find("RightTap").transform.Find("Visual/Background").GetComponent<Image>();
+            Image LeftBorder() =>
+                GameObject.Find("LeftTap").transform.Find("Visual/Border").GetComponent<Image>();
+            Image RightBorder() =>
+                GameObject.Find("RightTap").transform.Find("Visual/Border").GetComponent<Image>();
+
+            start.TickForTest(1.5f);
+            controller.Simulate(1f);
+            controller.Simulate(1f);
+            controller.Simulate(1f);
+            Assert.That(controller.PresentationPhase, Is.EqualTo(MinigamePhase.Play));
+            presenter.RefreshForTest();
+
+            bool leftExpected = presenter.HighlightedSide == KMA.Gameplay.Side.Left;
+            Image expectedBorder = leftExpected ? LeftBorder() : RightBorder();
+            Image otherBorder = leftExpected ? RightBorder() : LeftBorder();
+            Assert.That(expectedBorder.color, Is.Not.EqualTo(otherBorder.color),
+                "the next side to press must look different from the other one");
+            Assert.That(expectedBorder.color.a, Is.GreaterThan(otherBorder.color.a),
+                "the expected side must be the more prominent of the two");
+
+            Color idleLeftBackground = LeftBackground().color;
+            Color idleRightBackground = RightBackground().color;
+            presenter.PressForTest(KMA.Gameplay.Side.Left);
+            Assert.That(LeftBackground().color, Is.Not.EqualTo(idleLeftBackground),
+                "pressing must visibly change the button, not only its scale");
+            Assert.That(RightBackground().color, Is.EqualTo(idleRightBackground),
+                "pressing one side must not restyle the other");
+
+            presenter.TickForTest(.1f);
+            presenter.RefreshForTest();
+            Assert.That(LeftBackground().color, Is.EqualTo(idleLeftBackground).Within(.01f),
+                "the press tint must decay back to idle");
+        }
+
+        [UnityTest]
         public IEnumerator SprintControlPressFeedbackShrinksThenRestoresWithoutChangingGameplay()
         {
             yield return LoadSprint();
