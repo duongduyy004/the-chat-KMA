@@ -90,11 +90,34 @@ namespace KMA.Tests.Presentation
         {
             var reference = new Rect(0f, 0f, 1920f, safe.height);
             Assert.That(SprintUiLayout.ControlRect(safe, true).size,
-                Is.EqualTo(SprintUiLayout.ControlRect(reference, true).size));
+                Is.EqualTo(SprintUiLayout.ControlRect(reference, true).size), "ControlRect");
+            Assert.That(SprintUiLayout.ControlRect(safe, false).size,
+                Is.EqualTo(SprintUiLayout.ControlRect(reference, false).size), "ControlRect right");
             Assert.That(SprintUiLayout.ScoreboardRect(safe).size,
-                Is.EqualTo(SprintUiLayout.ScoreboardRect(reference).size));
+                Is.EqualTo(SprintUiLayout.ScoreboardRect(reference).size), "ScoreboardRect");
             Assert.That(SprintUiLayout.PauseRect(safe).size,
-                Is.EqualTo(SprintUiLayout.PauseRect(reference).size));
+                Is.EqualTo(SprintUiLayout.PauseRect(reference).size), "PauseRect");
+            Assert.That(SprintUiLayout.ModeChipRect(safe).size,
+                Is.EqualTo(SprintUiLayout.ModeChipRect(reference).size), "ModeChipRect");
+            Assert.That(SprintUiLayout.CountdownRect(safe).size,
+                Is.EqualTo(SprintUiLayout.CountdownRect(reference).size), "CountdownRect");
+            Assert.That(SprintUiLayout.InstructionRect(safe).size,
+                Is.EqualTo(SprintUiLayout.InstructionRect(reference).size), "InstructionRect");
+            Assert.That(SprintUiLayout.ProgressRailRect(safe).height,
+                Is.EqualTo(SprintUiLayout.ProgressRailRect(reference).height), "rail thickness");
+        }
+
+        [Test]
+        public void ProgressRailIsTheOneElementThatSpansWidth()
+        {
+            // Deliberate exception to height-only sizing: the rail maps 0-100 m onto the
+            // screen's left-right axis, the same axis the runner moves along.
+            Rect narrow = SprintUiLayout.ProgressRailRect(new Rect(0f, 0f, 1728f, 1080f));
+            Rect wide = SprintUiLayout.ProgressRailRect(new Rect(0f, 0f, 2400f, 1080f));
+            Assert.That(wide.width, Is.GreaterThan(narrow.width),
+                "the rail must stretch with the screen, unlike every other element");
+            Assert.That(wide.height, Is.EqualTo(narrow.height).Within(.01f),
+                "but its thickness stays height-derived");
         }
 
         [Test]

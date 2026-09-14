@@ -51,6 +51,8 @@ namespace KMA.Gameplay
 
         public static bool FinishVisible(float distance) => distance >= FinishRevealDistance;
 
+        // The one deliberate exception to height-only sizing: the rail spans the screen
+        // because it maps 0-100 m onto the same left-right axis the runner moves along.
         public static Rect ProgressRailRect(Rect safe) => new Rect(
             safe.xMin + safe.width * RailInsetX,
             safe.yMin + safe.height * (RailTop - RailHeight),
