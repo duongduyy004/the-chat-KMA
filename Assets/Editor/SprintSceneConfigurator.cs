@@ -98,6 +98,56 @@ namespace KMA.EditorTools
             serializedRival.ApplyModifiedPropertiesWithoutUndo();
         }
 
+        [MenuItem("KMA/Sprint/Remove Legacy Metrics")]
+        public static void RemoveLegacyMetrics()
+        {
+            var scene = EditorSceneManager.OpenScene(ScenePath, OpenSceneMode.Single);
+            var removed = 0;
+
+            foreach (var root in scene.GetRootGameObjects())
+            {
+                foreach (var transform in root.GetComponentsInChildren<Transform>(true))
+                {
+                    if (transform == null || transform.name != "SprintMetrics")
+                        continue;
+
+                    UnityEngine.Object.DestroyImmediate(transform.gameObject);
+                    removed++;
+                    break;
+                }
+            }
+
+            if (removed == 0)
+                Debug.Log("SprintMetrics was already absent from MG_Sprint.");
+
+            // MG_Sprint also carries orphaned, unreferenced legacy HUD placeholders (e.g. "Timer",
+            // "Stamina") authored directly at the scene root, predating the shared HUD_Minigame
+            // prefab. They have no parent, no children, and nothing references them, so they are
+            // safe to delete outright; matching is restricted to scene-root objects so the
+            // still-shared elements nested inside the HUD_Minigame prefab instance (handled at
+            // runtime by SprintFestivalPresentation.DisableSharedMetrics) are never touched.
+            string[] strayLegacyRootNames =
+            {
+                "Timer", "Phase", "Score", "Status", "Progress", "Stamina", "HeartBar"
+            };
+            var strayRemoved = 0;
+            foreach (var root in scene.GetRootGameObjects())
+            {
+                if (Array.IndexOf(strayLegacyRootNames, root.name) < 0)
+                    continue;
+
+                UnityEngine.Object.DestroyImmediate(root);
+                strayRemoved++;
+            }
+
+            if (strayRemoved > 0)
+                Debug.Log($"Removed {strayRemoved} orphaned legacy HUD root object(s) from {ScenePath}.");
+
+            EditorSceneManager.MarkSceneDirty(scene);
+            EditorSceneManager.SaveScene(scene);
+            Debug.Log($"Removed {removed} legacy SprintMetrics group(s) from {ScenePath}.");
+        }
+
         static int RivalLane(MonoBehaviour rival) => new SerializedObject(rival).FindProperty("lane").intValue;
 
         static MonoBehaviour[] SceneComponents(Scene scene, string fullTypeName) => scene.GetRootGameObjects()

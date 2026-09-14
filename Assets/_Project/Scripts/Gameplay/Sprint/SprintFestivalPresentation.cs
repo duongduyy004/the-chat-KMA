@@ -269,13 +269,33 @@ namespace KMA.Gameplay
 
         static void DisableSharedMetrics(Transform safeArea)
         {
-            string[] obsolete = { "Time", "Phase", "Score", "Status", "Progress", "Stamina", "SprintMetrics" };
+            Transform canvasRoot = safeArea.parent != null ? safeArea.parent : safeArea;
+            string[] obsolete =
+            {
+                "Timer", "Phase", "Score", "Status", "Progress", "Stamina", "HeartBar", "SprintMetrics"
+            };
+
             for (int i = 0; i < obsolete.Length; i++)
             {
-                Transform metric = safeArea.Find(obsolete[i]);
-                if (metric != null)
-                    metric.gameObject.SetActive(false);
+                Transform found = FindDescendant(canvasRoot, obsolete[i]);
+                if (found != null)
+                    found.gameObject.SetActive(false);
             }
+        }
+
+        static Transform FindDescendant(Transform root, string name)
+        {
+            if (root.name == name)
+                return root;
+
+            for (int i = 0; i < root.childCount; i++)
+            {
+                Transform found = FindDescendant(root.GetChild(i), name);
+                if (found != null)
+                    return found;
+            }
+
+            return null;
         }
 
         static TMP_Text Metric(Transform parent, string name, TMP_FontAsset font, float fontSize, Color color,

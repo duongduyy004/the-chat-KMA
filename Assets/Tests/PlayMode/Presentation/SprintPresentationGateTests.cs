@@ -492,6 +492,23 @@ namespace KMA.Tests.Presentation
         }
 
         [UnityTest]
+        public IEnumerator SprintScene_ShowsNoLegacyHudChrome()
+        {
+            yield return LoadSprint();
+            var scene = SceneManager.GetActiveScene();
+
+            Assert.That(GameObject.Find("SprintMetrics"), Is.Null,
+                "The legacy SprintMetrics group must be deleted from MG_Sprint.unity.");
+            Assert.That(GameObject.Find("SprintFestivalChrome"), Is.Null);
+
+            foreach (string name in new[] { "Timer", "Phase", "Score", "Status", "Progress", "Stamina", "HeartBar" })
+            {
+                GameObject shared = GameObject.Find(name);
+                Assert.That(shared, Is.Null, $"Shared HUD element {name} must not be active in the Sprint scene.");
+            }
+        }
+
+        [UnityTest]
         public IEnumerator SprintResultPresentationStylesOutcomesAndKeepsSingleContinueDuringAnimation()
         {
             yield return LoadSprint();
