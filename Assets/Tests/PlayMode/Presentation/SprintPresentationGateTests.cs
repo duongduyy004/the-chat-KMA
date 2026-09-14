@@ -18,6 +18,7 @@ namespace KMA.Tests.Presentation
         public IEnumerator SprintSceneHasCompletePresentationContractAndUsesAutomaticStart()
         {
             yield return LoadSprint();
+            yield return new WaitForSeconds(.5f);
 
             var scene = SceneManager.GetActiveScene();
             var controllers = SceneObjects<SprintController>(scene);
@@ -47,6 +48,26 @@ namespace KMA.Tests.Presentation
 
             Transform tutorialBanner = GameObject.Find("SprintBroadcastChrome")?.transform
                 .Find("StartPresentation/TutorialBanner");
+            TMP_Text tutorialMessage = tutorialBanner?.Find("TutorialLabel")?.GetComponent<TMP_Text>();
+            Assert.That(tutorialBanner, Is.Not.Null);
+            Assert.That(tutorialBanner.gameObject.activeSelf, Is.True,
+                "The active Sprint tutorial phase must render its dedicated banner.");
+            Assert.That(tutorialMessage, Is.Not.Null);
+            Assert.That(tutorialMessage.text, Is.EqualTo("TRÁI     BẤM LUÂN PHIÊN ĐỂ CHẠY     PHẢI"));
+            Canvas.ForceUpdateCanvases();
+            RectTransform tutorialRect = tutorialBanner.GetComponent<RectTransform>();
+            RectTransform chromeRect = tutorialRect.parent.GetComponent<RectTransform>();
+            RectTransform safeAreaRect = chromeRect.parent.GetComponent<RectTransform>();
+            Assert.That(safeAreaRect.rect.width, Is.GreaterThan(100f));
+            Assert.That(chromeRect.rect.width, Is.GreaterThan(100f));
+            Assert.That(tutorialRect.rect.width, Is.GreaterThan(100f));
+            Assert.That(tutorialRect.rect.height, Is.GreaterThan(50f));
+            Rect tutorialBounds = ScreenRect(tutorialRect);
+            Assert.That(tutorialBounds.width, Is.GreaterThan(Screen.width * .5f));
+            Assert.That(tutorialBounds.center.y, Is.EqualTo(Screen.height * .5f).Within(Screen.height * .2f),
+                "The tutorial banner must occupy the visual center, not overlap the top scene content.");
+            RectTransform leftArrow = tutorialBanner?.Find("LeftArrow")?.GetComponent<RectTransform>();
+            RectTransform rightArrow = tutorialBanner?.Find("RightArrow")?.GetComponent<RectTransform>();
             RectTransform leftTipTop = tutorialBanner?.Find("LeftArrow/TipTop")
                 ?.GetComponent<RectTransform>();
             RectTransform leftTipBottom = tutorialBanner?.Find("LeftArrow/TipBottom")
@@ -59,10 +80,20 @@ namespace KMA.Tests.Presentation
             Assert.That(leftTipBottom, Is.Not.Null);
             Assert.That(rightTipTop, Is.Not.Null);
             Assert.That(rightTipBottom, Is.Not.Null);
+            Assert.That(leftArrow.anchorMax.x, Is.LessThan(.5f));
+            Assert.That(rightArrow.anchorMin.x, Is.GreaterThan(.5f));
+            Assert.That(leftTipTop.anchorMin.x, Is.LessThan(.5f));
+            Assert.That(leftTipBottom.anchorMin.x, Is.LessThan(.5f));
+            Assert.That(rightTipTop.anchorMin.x, Is.GreaterThan(.5f));
+            Assert.That(rightTipBottom.anchorMin.x, Is.GreaterThan(.5f));
             Assert.That(leftTipTop.anchoredPosition.y, Is.GreaterThan(leftTipBottom.anchoredPosition.y),
                 "Left-arrow tips must form a chevron, not an X.");
             Assert.That(rightTipTop.anchoredPosition.y, Is.GreaterThan(rightTipBottom.anchoredPosition.y),
                 "Right-arrow tips must form a chevron, not an X.");
+            Assert.That(SignedZAngle(leftTipTop), Is.EqualTo(45f).Within(.01f));
+            Assert.That(SignedZAngle(leftTipBottom), Is.EqualTo(-45f).Within(.01f));
+            Assert.That(SignedZAngle(rightTipTop), Is.EqualTo(-45f).Within(.01f));
+            Assert.That(SignedZAngle(rightTipBottom), Is.EqualTo(45f).Within(.01f));
 
             var pause = pauses[0];
             var player = GameObject.Find("Player");
@@ -534,5 +565,8 @@ namespace KMA.Tests.Presentation
             Assert.That(inner.xMax, Is.LessThanOrEqualTo(outer.xMax + tolerance));
             Assert.That(inner.yMax, Is.LessThanOrEqualTo(outer.yMax + tolerance));
         }
+
+        static float SignedZAngle(RectTransform transform) =>
+            Mathf.DeltaAngle(0f, transform.localEulerAngles.z);
     }
 }

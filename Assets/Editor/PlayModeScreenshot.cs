@@ -35,6 +35,7 @@ namespace KMA.EditorTools
         const string KeyCaptureAt = "KMA_PMS_CaptureAt";
         const string KeyPhase = "KMA_PMS_Phase";
         const string KeyFrames = "KMA_PMS_Frames";
+        const string KeyHoldSprintTutorial = "KMA_PMS_HoldSprintTutorial";
 
         [Serializable]
         class Request
@@ -43,11 +44,13 @@ namespace KMA.EditorTools
             public string scene;
             public string output;
             public float waitSeconds = 3f;
+            public bool holdSprintTutorial;
         }
 
         static PlayModeScreenshot()
         {
             EditorApplication.update += OnUpdate;
+            EditorApplication.playModeStateChanged += OnPlayModeStateChanged;
         }
 
         // Optional: -executeMethod entry point for a one-shot legacy invocation.
@@ -67,6 +70,9 @@ namespace KMA.EditorTools
 
         static void OnUpdate()
         {
+            if (Application.isBatchMode)
+                return;
+
             if (!SessionState.GetBool(KeyActive, false))
             {
                 PollForNewRequest();
@@ -118,9 +124,21 @@ namespace KMA.EditorTools
             SessionState.SetFloat(KeyCaptureAt, (float)(EditorApplication.timeSinceStartup + req.waitSeconds));
             SessionState.SetInt(KeyPhase, 0);
             SessionState.SetInt(KeyFrames, 0);
+            SessionState.SetBool(KeyHoldSprintTutorial, req.holdSprintTutorial);
             SessionState.SetBool(KeyActive, true);
 
             EditorApplication.isPlaying = true;
+        }
+
+        static void OnPlayModeStateChanged(PlayModeStateChange state)
+        {
+            if (state != PlayModeStateChange.EnteredPlayMode ||
+                !SessionState.GetBool(KeyHoldSprintTutorial, false))
+                return;
+
+            var presenter = UnityEngine.Object.FindFirstObjectByType<KMA.Gameplay.SprintStartPresentation>();
+            if (presenter != null)
+                presenter.enabled = false;
         }
 
         static void RunActiveCapture()
