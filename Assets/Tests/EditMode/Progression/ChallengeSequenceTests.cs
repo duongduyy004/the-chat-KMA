@@ -140,6 +140,8 @@ namespace KMA.Tests.Gameplay.Progression
 
             session.StartSubject(SubjectId.Sprint);
             session.SubmitResult(SubjectId.Sprint, Failed());
+            // Subject-mismatch is unreachable while punishment is retired: the constructor
+            // now throws "No punishment is active." first, so this duplicates the assertion above.
             Assert.Throws<InvalidOperationException>(() => new PunishmentController(session, SubjectId.Football,
                 ChallengeSequence.BossDefault()));
         }

@@ -7,7 +7,9 @@ namespace KMA.Gameplay
     public enum SessionRoute
     {
         Subject,
+        // Retired in place: the punishment leg is unreachable, and nothing emits this route.
         Punishment,
+        // Retired in place: the punishment leg is unreachable, and nothing emits this route.
         RetrySubject,
         Map,
         GameOver,
@@ -30,6 +32,10 @@ namespace KMA.Gameplay
         readonly Dictionary<SubjectId, SubjectRecord> records =
             new Dictionary<SubjectId, SubjectRecord>();
         SubjectId? active;
+        // Held at FirstVisit / false by every remaining assignment now that the punishment
+        // leg is retired; nothing in the repo ever sets visitAttempt to FinalVisit or
+        // awaitingPunishment to true. Kept only to hold the SaveData format stable. See
+        // docs/superpowers/specs/2026-09-14-remove-punishment-loss-route-design.md.
         int visitAttempt = FirstVisit;
         bool awaitingPunishment;
 
@@ -55,8 +61,11 @@ namespace KMA.Gameplay
         {
             if (!active.HasValue)
                 return SessionRoute.Map;
+            // Unreachable while punishment is retired: awaitingPunishment is never true.
             if (awaitingPunishment)
                 return SessionRoute.Punishment;
+            // The RetrySubject half is unreachable while punishment is retired: visitAttempt
+            // is never FinalVisit.
             return visitAttempt == FirstVisit ? SessionRoute.Subject : SessionRoute.RetrySubject;
         }
 
@@ -160,6 +169,8 @@ namespace KMA.Gameplay
             return SessionRoute.Subject;
         }
 
+        // Unreachable while punishment is retired: awaitingPunishment is never true, so this
+        // always throws.
         public SessionRoute CompletePunishment()
         {
             if (!awaitingPunishment || !active.HasValue)
@@ -213,6 +224,7 @@ namespace KMA.Gameplay
                 throw new InvalidOperationException($"Subject {id} is not active.");
             }
 
+            // Unreachable while punishment is retired: awaitingPunishment is never true.
             if (awaitingPunishment)
             {
                 throw new InvalidOperationException("Complete punishment before submitting attempt two.");
