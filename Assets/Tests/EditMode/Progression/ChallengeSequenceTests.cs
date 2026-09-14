@@ -49,6 +49,7 @@ namespace KMA.Tests.Gameplay.Progression
         }
 
         [Test]
+        [Ignore("Punishment is retired in place: no route sets PendingPunishmentSubject, so PunishmentController cannot be constructed from a live GameSession. Re-enable with the punishment leg — see docs/superpowers/specs/2026-09-14-remove-punishment-loss-route-design.md")]
         public void NonFiniteProgress_CannotAdvanceOrCompletePunishment()
         {
             var session = new GameSession();
@@ -70,6 +71,7 @@ namespace KMA.Tests.Gameplay.Progression
         }
 
         [Test]
+        [Ignore("Punishment is retired in place: no route sets PendingPunishmentSubject, so PunishmentController cannot be constructed from a live GameSession. Re-enable with the punishment leg — see docs/superpowers/specs/2026-09-14-remove-punishment-loss-route-design.md")]
         public void Controller_ActivatesAuthoredCueAndCounterplayAdapter()
         {
             var session = new GameSession();
@@ -99,6 +101,7 @@ namespace KMA.Tests.Gameplay.Progression
         }
 
         [Test]
+        [Ignore("Punishment is retired in place: no route sets PendingPunishmentSubject, so PunishmentController cannot be constructed from a live GameSession. Re-enable with the punishment leg — see docs/superpowers/specs/2026-09-14-remove-punishment-loss-route-design.md")]
         public void Controller_RequestsRetryOnceWithoutChangingLivesOrMutatingTheSession()
         {
             var session = new GameSession();

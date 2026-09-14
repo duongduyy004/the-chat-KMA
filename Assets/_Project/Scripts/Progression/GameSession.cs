@@ -189,24 +189,17 @@ namespace KMA.Gameplay
                 return route;
             }
 
-            if (visitAttempt == FirstVisit)
-            {
-                visitAttempt = FinalVisit;
-                awaitingPunishment = true;
-                return route;
-            }
-
             Lives--;
             records[id].RecordFailedVisit();
             ClearActiveSubject();
             return route;
         }
 
+        // Lives is read before SubmitResult decrements it, so "Lives <= 1" means
+        // "this loss empties the last life".
         SessionRoute RouteForResult(MinigameResult result) => result.Pass
             ? SessionRoute.Map
-            : visitAttempt == FirstVisit
-                ? SessionRoute.Punishment
-                : Lives <= 1 ? SessionRoute.GameOver : SessionRoute.Map;
+            : Lives <= 1 ? SessionRoute.GameOver : SessionRoute.Map;
 
         void RequireActive(SubjectId id)
         {

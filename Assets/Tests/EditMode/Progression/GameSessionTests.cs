@@ -16,31 +16,45 @@ namespace KMA.Tests.Gameplay.Progression
         }
 
         [Test]
-        public void StartSubject_CannotBypassPunishmentBeforeSecondFailure()
+        public void AnotherSubjectCanBeStartedAfterALoss()
         {
             var session = new GameSession();
             session.StartSubject(SubjectId.Sprint);
-            Assert.That(session.SubmitResult(SubjectId.Sprint, Failed()), Is.EqualTo(SessionRoute.Punishment));
 
-            Assert.Throws<InvalidOperationException>(() => session.StartSubject(SubjectId.Endurance));
-
-            Assert.That(session.CompletePunishment(), Is.EqualTo(SessionRoute.RetrySubject));
             Assert.That(session.SubmitResult(SubjectId.Sprint, Failed()), Is.EqualTo(SessionRoute.Map));
             Assert.That(session.Lives, Is.EqualTo(4));
             Assert.That(session.GetRecord(SubjectId.Sprint).FailedVisits, Is.EqualTo(1));
+
+            Assert.That(session.StartSubject(SubjectId.Endurance), Is.EqualTo(SessionRoute.Subject));
         }
 
         [Test]
-        public void FirstFail_RoutesPunishment_ThenSecondFailLosesLife()
+        public void EveryFailureCostsExactlyOneLifeAndRoutesToMap()
+        {
+            var session = new GameSession();
+
+            session.StartSubject(SubjectId.Sprint);
+            Assert.That(session.SubmitResult(SubjectId.Sprint, Failed()), Is.EqualTo(SessionRoute.Map));
+            Assert.That(session.Lives, Is.EqualTo(4));
+
+            session.StartSubject(SubjectId.Sprint);
+            Assert.That(session.SubmitResult(SubjectId.Sprint, Failed()), Is.EqualTo(SessionRoute.Map));
+            Assert.That(session.Lives, Is.EqualTo(3));
+            Assert.That(session.GetRecord(SubjectId.Sprint).FailedVisits, Is.EqualTo(2));
+        }
+
+        [Test]
+        public void AFailureNeverRoutesToPunishment()
         {
             var session = new GameSession();
             session.StartSubject(SubjectId.Sprint);
 
-            Assert.That(session.SubmitResult(SubjectId.Sprint, Failed()), Is.EqualTo(SessionRoute.Punishment));
-            Assert.That(session.CompletePunishment(), Is.EqualTo(SessionRoute.RetrySubject));
-            Assert.That(session.SubmitResult(SubjectId.Sprint, Failed()), Is.EqualTo(SessionRoute.Map));
-            Assert.That(session.Lives, Is.EqualTo(4));
-            Assert.That(session.GetRecord(SubjectId.Sprint).FailedVisits, Is.EqualTo(1));
+            SessionRoute route = session.SubmitResult(SubjectId.Sprint, Failed());
+
+            Assert.That(route, Is.Not.EqualTo(SessionRoute.Punishment));
+            Assert.That(route, Is.Not.EqualTo(SessionRoute.RetrySubject));
+            Assert.That(session.AwaitingPunishment, Is.False);
+            Assert.That(session.PendingPunishmentSubject, Is.Null);
         }
 
         [Test]
@@ -51,8 +65,6 @@ namespace KMA.Tests.Gameplay.Progression
             for (var attempt = 0; attempt < 5; attempt++)
             {
                 session.StartSubject(SubjectId.Sprint);
-                session.SubmitResult(SubjectId.Sprint, Failed());
-                session.CompletePunishment();
                 Assert.That(session.SubmitResult(SubjectId.Sprint, Failed()),
                     Is.EqualTo(attempt == 4 ? SessionRoute.GameOver : SessionRoute.Map));
             }
@@ -93,7 +105,7 @@ namespace KMA.Tests.Gameplay.Progression
 
             session.StartSubject(SubjectId.Sprint);
             Assert.That(session.SubmitResult(SubjectId.Sprint, new MinigameResult(false, 10f, Rank.S)),
-                Is.EqualTo(SessionRoute.Punishment));
+                Is.EqualTo(SessionRoute.Map));
 
             var bestResult = session.GetRecord(SubjectId.Sprint).BestResult;
             Assert.That(bestResult.Pass, Is.True);
@@ -108,7 +120,7 @@ namespace KMA.Tests.Gameplay.Progression
             session.StartSubject(SubjectId.Sprint);
 
             Assert.That(session.SubmitResult(SubjectId.Sprint, new MinigameResult(false, 10, Rank.S)),
-                Is.EqualTo(SessionRoute.Punishment));
+                Is.EqualTo(SessionRoute.Map));
             Assert.That(session.GetRecord(SubjectId.Sprint).Passed, Is.False);
             Assert.That(session.GetRecord(SubjectId.Sprint).BestScore, Is.Zero);
         }
