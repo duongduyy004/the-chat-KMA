@@ -63,14 +63,11 @@ namespace KMA.Gameplay
                 return;
             }
 
-            // A hitch (e.g. heavy synchronous scene/chrome construction) would otherwise leak a
-            // huge delta into the deterministic gate/countdown timers below and fast-forward
-            // them. Ignore any single frame that abnormal; TickForTest is unaffected since it
-            // calls Tick directly with a controlled value.
-            float dt = Time.unscaledDeltaTime;
-            if (dt > MaxAutomaticStepSeconds)
-                return;
-            Tick(dt);
+            // Bound, never drop: a hitch (heavy synchronous scene/chrome construction, GC) must not
+            // fast-forward the deterministic gate/countdown timers, but dropping the frame outright
+            // would stall the gate indefinitely on a device sustaining sub-10-FPS frames, and
+            // gateElapsed is the only thing that opens the input gate.
+            Tick(Mathf.Min(Time.unscaledDeltaTime, MaxAutomaticStepSeconds));
         }
 
         public void Configure(GameObject countdown, TMP_Text countdownText,
