@@ -304,13 +304,13 @@ namespace KMA.Tests.Presentation
             Transform marker = playerPresentation.Find("PlayerMarker");
             Assert.That(marker, Is.Not.Null);
             Assert.That(marker.IsChildOf(runnerRoots[1]), Is.True);
-            TextMesh markerLabel = marker.GetComponent<TextMesh>();
+            TextMesh markerLabel = marker.GetComponentInChildren<TextMesh>(true);
             Assert.That(markerLabel, Is.Not.Null);
             Assert.That(markerLabel.text, Is.EqualTo("PLAYER"));
 
             MonoBehaviour playerIdentity = FindIdentityOutline(playerPresentation);
             Assert.That(playerIdentity, Is.Not.Null);
-            Assert.That(ReadProperty<Color>(playerIdentity, "OutlineColor"), Is.EqualTo(Color.cyan));
+            Assert.That(ReadProperty<Color>(playerIdentity, "OutlineColor"), Is.EqualTo(SprintUiTheme.Player));
             Assert.That(ReadProperty<SpriteRenderer>(playerIdentity, "Source"), Is.SameAs(
                 runnerRoots[1].GetComponentInChildren<SpriteRenderer>(true)));
             for (int lane = 0; lane < runnerRoots.Length; lane++)
@@ -318,6 +318,48 @@ namespace KMA.Tests.Presentation
                 if (lane == 1) continue;
                 Assert.That(FindIdentityOutline(runnerRoots[lane]), Is.Null);
                 Assert.That(FindChildRecursive(runnerRoots[lane], "PlayerMarker"), Is.Null);
+            }
+        }
+
+        [UnityTest]
+        public IEnumerator SprintPlayer_IsMarkedWithLabelPlateAndChevron()
+        {
+            yield return LoadSprint();
+            var scene = SceneManager.GetActiveScene();
+
+            GameObject player = GameObject.Find("Player");
+            var label = player.GetComponentInChildren<TextMesh>(true);
+            Assert.That(label, Is.Not.Null, "player must carry a marker");
+            Assert.That(label.name, Is.EqualTo("Label"));
+
+            Transform markerRoot = label.transform.parent;
+            Assert.That(markerRoot.name, Is.EqualTo("PlayerMarker"));
+            Assert.That(markerRoot.localPosition.y, Is.GreaterThan(2f), "marker must clear the sprite's head");
+            Assert.That(markerRoot.Find("Plate"), Is.Not.Null, "marker needs a plate so cyan reads over sky");
+            Assert.That(markerRoot.Find("Chevron"), Is.Not.Null, "identity must not rely on colour alone");
+
+            Assert.That(label.text, Is.EqualTo("PLAYER"));
+            Assert.That(label.color, Is.EqualTo(SprintUiTheme.Player));
+
+            var outline = player.GetComponentInChildren<SprintPlayerIdentityOutline>(true);
+            Assert.That(outline, Is.Not.Null);
+            Assert.That(outline.OutlineColor, Is.EqualTo(SprintUiTheme.Player));
+            Assert.That(outline.Outline.transform.localScale.x,
+                Is.EqualTo(SprintPlayerIdentityOutline.OutlineScale).Within(.001f));
+        }
+
+        [UnityTest]
+        public IEnumerator SprintRivals_DoNotUseThePlayerAccentColour()
+        {
+            yield return LoadSprint();
+            var scene = SceneManager.GetActiveScene();
+
+            foreach (var rival in Object.FindObjectsByType<RivalRunnerAI>(FindObjectsSortMode.None))
+            {
+                Assert.That(rival.GetComponentInChildren<SprintPlayerIdentityOutline>(true), Is.Null,
+                    "cyan is reserved for the player");
+                Assert.That(rival.GetComponentInChildren<TextMesh>(true), Is.Null,
+                    "rivals carry no PLAYER marker");
             }
         }
 

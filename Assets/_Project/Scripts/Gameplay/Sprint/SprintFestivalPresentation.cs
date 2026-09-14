@@ -375,38 +375,54 @@ namespace KMA.Gameplay
                 return;
 
             Transform presentation = player.GetComponentInChildren<RunnerVisualPresenter>(true)?.transform ?? player;
-            Transform marker = presentation.Find("PlayerMarker");
-            if (marker == null)
-            {
-                marker = presentation.Find("PlayerLabel");
-                if (marker == null)
-                {
-                    marker = new GameObject("PlayerMarker").transform;
-                    marker.SetParent(presentation, false);
-                    marker.localPosition = new Vector3(0f, 1.65f, 0f);
-                }
-                else
-                {
-                    marker.name = "PlayerMarker";
-                }
-            }
 
-            TextMesh label = marker.GetComponent<TextMesh>() ?? marker.gameObject.AddComponent<TextMesh>();
+            Transform stale = presentation.Find("PlayerLabel");
+            if (stale != null)
+                Object.DestroyImmediate(stale.gameObject);
+            Transform existing = presentation.Find("PlayerMarker");
+            if (existing != null)
+                Object.DestroyImmediate(existing.gameObject);
+
+            var marker = new GameObject("PlayerMarker").transform;
+            marker.SetParent(presentation, false);
+            marker.localPosition = new Vector3(0f, 2.15f, 0f);
+
+            var plate = new GameObject("Plate", typeof(SpriteRenderer)).transform;
+            plate.SetParent(marker, false);
+            plate.localScale = new Vector3(1.35f, .42f, 1f);
+            var plateRenderer = plate.GetComponent<SpriteRenderer>();
+            plateRenderer.sprite = SprintUiShapes.RoundedRect(8);
+            plateRenderer.color = SprintUiTheme.WithAlpha(SprintUiTheme.Surface, .85f);
+            plateRenderer.sortingOrder = 19;
+
+            var labelObject = new GameObject("Label");
+            labelObject.transform.SetParent(marker, false);
+            var label = labelObject.AddComponent<TextMesh>();
             label.text = "PLAYER";
             label.fontSize = 48;
-            label.characterSize = .065f;
+            label.characterSize = .055f;
             label.anchor = TextAnchor.MiddleCenter;
-            label.color = Color.cyan;
-            MeshRenderer labelRenderer = marker.GetComponent<MeshRenderer>();
+            label.color = SprintUiTheme.Player;
+            var labelRenderer = labelObject.GetComponent<MeshRenderer>();
             if (labelRenderer != null)
                 labelRenderer.sortingOrder = 20;
 
+            var chevron = new GameObject("Chevron", typeof(SpriteRenderer)).transform;
+            chevron.SetParent(marker, false);
+            chevron.localPosition = new Vector3(0f, -.30f, 0f);
+            chevron.localScale = new Vector3(.22f, .22f, 1f);
+            chevron.localRotation = Quaternion.Euler(0f, 0f, 45f);
+            var chevronRenderer = chevron.GetComponent<SpriteRenderer>();
+            chevronRenderer.sprite = SprintUiShapes.RoundedRect(2);
+            chevronRenderer.color = SprintUiTheme.Player;
+            chevronRenderer.sortingOrder = 20;
+
             SpriteRenderer playerVisual = presentation.GetComponentInChildren<SpriteRenderer>(true);
-            if (playerVisual != null)
+            if (playerVisual != null && playerVisual.transform != plate && playerVisual.transform != chevron)
             {
                 var identity = presentation.GetComponent<SprintPlayerIdentityOutline>()
                     ?? presentation.gameObject.AddComponent<SprintPlayerIdentityOutline>();
-                identity.Bind(playerVisual, Color.cyan);
+                identity.Bind(playerVisual, SprintUiTheme.Player);
             }
         }
 
@@ -494,6 +510,8 @@ namespace KMA.Gameplay
 
     public sealed class SprintPlayerIdentityOutline : MonoBehaviour
     {
+        public const float OutlineScale = 1.12f;
+
         [SerializeField] SpriteRenderer source;
         [SerializeField] SpriteRenderer outline;
         [SerializeField] Color outlineColor = Color.cyan;
@@ -531,7 +549,7 @@ namespace KMA.Gameplay
             {
                 var outlineObject = new GameObject("PlayerIdentityOutline");
                 outlineObject.transform.SetParent(source.transform, false);
-                outlineObject.transform.localScale = new Vector3(1.16f, 1.16f, 1f);
+                outlineObject.transform.localScale = new Vector3(OutlineScale, OutlineScale, 1f);
                 outline = outlineObject.AddComponent<SpriteRenderer>();
             }
 
