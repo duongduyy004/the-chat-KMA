@@ -134,7 +134,7 @@ namespace KMA.Tests.Gameplay.Progression
                 yield return new WaitForFixedUpdate();
             Assert.That(controller.Ball.Snapshot.IsInFlight, Is.True, "The AI never launched the alley-oop.");
 
-            while (controller.Ball.Body.velocity.y > 0f && Time.unscaledTime < guard)
+            while (controller.Ball.Body.linearVelocity.y > 0f && Time.unscaledTime < guard)
                 yield return new WaitForFixedUpdate();
 
             router.FeedPointerDownForTest(start, 30d);

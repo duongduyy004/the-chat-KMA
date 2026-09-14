@@ -164,7 +164,7 @@ namespace KMA.Tests.Gameplay.Progression
             ball.Body.position = context == BallContext.ApexNearNet
                 ? new Vector2(reachCentre.x + 2f, reachCentre.y + 1.5f)
                 : new Vector2(reachCentre.x, reachCentre.y);
-            ball.Body.velocity = context switch
+            ball.Body.linearVelocity = context switch
             {
                 BallContext.Low => new Vector2(0f, -2f),
                 BallContext.Rising => new Vector2(0f, 2f),
