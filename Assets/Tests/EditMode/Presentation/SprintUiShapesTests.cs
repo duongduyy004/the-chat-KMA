@@ -42,15 +42,22 @@ namespace KMA.Tests.Presentation
         public void RoundedRect_HasASoftenedCornerRatherThanAHardStep()
         {
             Texture2D texture = SprintUiShapes.RoundedRect(24).texture;
-            // Walking the diagonal out of the corner must cross at least one partial pixel.
-            bool sawPartial = false;
-            for (int i = 0; i < 24; i++)
+            // The one-pixel coverage ramp follows the corner arc. Scan the whole corner
+            // block rather than the 45-degree diagonal, where the ramp is sqrt(2)x steeper
+            // and falls entirely between integer samples.
+            int partial = 0;
+            for (int y = 0; y <= 24; y++)
             {
-                float alpha = texture.GetPixel(i, i).a;
-                if (alpha > .05f && alpha < .95f)
-                    sawPartial = true;
+                for (int x = 0; x <= 24; x++)
+                {
+                    float alpha = texture.GetPixel(x, y).a;
+                    if (alpha > .05f && alpha < .95f)
+                        partial++;
+                }
             }
-            Assert.That(sawPartial, Is.True, "corner should be antialiased, not a hard step");
+
+            Assert.That(partial, Is.GreaterThanOrEqualTo(4),
+                "corner should be antialiased along the arc, not a hard step");
         }
 
         [Test]
