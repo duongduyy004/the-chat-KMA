@@ -1,4 +1,5 @@
 using System.Collections;
+using System.Collections.Generic;
 using KMA.Gameplay;
 using KMA.Gameplay.UI;
 using KMA.Input;
@@ -450,6 +451,87 @@ namespace KMA.Tests.Presentation
             Assert.That(presenter.LeftScale, Is.EqualTo(1f).Within(.001f));
             Assert.That(controller.Snapshot.Distance, Is.EqualTo(distanceBefore));
             Assert.That(controller.CadenceCombo, Is.EqualTo(comboBefore));
+        }
+
+        [UnityTest]
+        public IEnumerator SprintFinishLineRevealsExactlyAtSeventyMetersWithoutBlockingInput()
+        {
+            yield return LoadSprint();
+
+            var scene = SceneManager.GetActiveScene();
+            var controller = SceneObjects<SprintController>(scene)[0];
+            var finish = SceneObjects<SprintFinishLinePresenter>(scene)[0];
+            Transform chrome = GameObject.Find("SprintBroadcastChrome").transform;
+            Transform finishLine = chrome.Find("FinishLine");
+            Assert.That(finishLine, Is.Not.Null);
+
+            RectTransform finishRect = finishLine.GetComponent<RectTransform>();
+            Assert.That(finishRect.anchorMin.y, Is.EqualTo(0f));
+            Assert.That(finishRect.anchorMax.y, Is.EqualTo(1f));
+
+            Image[] squares = finishLine.GetComponentsInChildren<Image>(true);
+            Assert.That(squares.Length, Is.GreaterThan(1));
+            for (int i = 0; i < squares.Length; i++)
+                Assert.That(squares[i].raycastTarget, Is.False);
+
+            controller.ConfigureForTest(.8f);
+            controller.AdvanceToDistance(69.9f);
+            finish.RefreshForTest();
+            Assert.That(finish.IsVisible, Is.False);
+            Assert.That(finishLine.gameObject.activeSelf, Is.False);
+
+            controller.AdvanceToDistance(70f);
+            finish.RefreshForTest();
+            Assert.That(finish.IsVisible, Is.True);
+            Assert.That(finishLine.gameObject.activeSelf, Is.True);
+
+            controller.AdvanceToDistance(100f);
+            finish.RefreshForTest();
+            Assert.That(finish.IsVisible, Is.True);
+            Assert.That(finishLine.gameObject.activeSelf, Is.True);
+        }
+
+        [UnityTest]
+        public IEnumerator SprintResultPresentationStylesOutcomesAndKeepsSingleContinueDuringAnimation()
+        {
+            yield return LoadSprint();
+
+            var scene = SceneManager.GetActiveScene();
+            var panel = SceneObjects<ResultPanel>(scene)[0];
+            var presentation = SceneObjects<SprintResultPresentation>(scene)[0];
+            Transform content = panel.transform.Find("Content");
+            TMP_Text title = content.Find("StatusLabel").GetComponent<TMP_Text>();
+            TMP_Text score = content.Find("ScoreLabel").GetComponent<TMP_Text>();
+            TMP_Text rank = content.Find("RankLabel").GetComponent<TMP_Text>();
+            Button action = content.Find("ActionButton").GetComponent<Button>();
+
+            var routes = new List<string>();
+            panel.ActionRequested += routes.Add;
+
+            panel.Show(new MinigameResult(false, 0f, Rank.F), "Punishment");
+            presentation.ShowForTest(panel.CurrentResult);
+
+            Assert.That(title.text, Is.EqualTo("THẤT BẠI"));
+            AssertColor32(title.color, new Color32(255, 89, 94, 255));
+            Assert.That(score.text, Is.EqualTo("0"));
+            Assert.That(rank.text, Is.EqualTo("F"));
+            Assert.That(action.interactable, Is.True);
+
+            panel.Continue();
+            panel.Continue();
+            Assert.That(routes.Count, Is.EqualTo(1));
+            Assert.That(routes[0], Is.EqualTo("Punishment"));
+
+            panel.Show(new MinigameResult(true, 8.4f, Rank.A), "Map");
+            presentation.ShowForTest(panel.CurrentResult);
+
+            Assert.That(title.text, Is.EqualTo("HOÀN THÀNH!"));
+            AssertColor32(title.color, new Color32(94, 222, 140, 255));
+            Assert.That(score.text, Is.EqualTo("8"));
+            Assert.That(rank.text, Is.EqualTo("A"));
+            Assert.That(action.interactable, Is.True);
+
+            yield return null;
         }
 
         static IEnumerator LoadSprint()

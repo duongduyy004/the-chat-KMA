@@ -103,6 +103,46 @@ namespace KMA.Gameplay
             PrepareTapArea("LeftTap");
             PrepareTapArea("RightTap");
             EnsurePlayerIdentity(root);
+            EnsureFinishLine(root);
+            EnsureResultPresentation();
+        }
+
+        static void EnsureFinishLine(RectTransform root)
+        {
+            RectTransform finish = Rect(root, "FinishLine");
+            finish.anchorMin = new Vector2(.84f, 0f);
+            finish.anchorMax = new Vector2(.9f, 1f);
+            finish.offsetMin = Vector2.zero;
+            finish.offsetMax = Vector2.zero;
+
+            const int squareCount = 10;
+            for (int i = 0; i < squareCount; i++)
+            {
+                RectTransform square = Rect(finish, $"Square{i}");
+                square.anchorMin = new Vector2(0f, (float)i / squareCount);
+                square.anchorMax = new Vector2(1f, (float)(i + 1) / squareCount);
+                square.offsetMin = Vector2.zero;
+                square.offsetMax = Vector2.zero;
+                Image image = square.gameObject.AddComponent<Image>();
+                image.color = i % 2 == 0 ? Color.black : Color.white;
+                image.raycastTarget = false;
+            }
+
+            var presenter = root.GetComponent<SprintFinishLinePresenter>()
+                ?? root.gameObject.AddComponent<SprintFinishLinePresenter>();
+            presenter.Configure(Object.FindFirstObjectByType<SprintController>(), finish.gameObject);
+        }
+
+        static void EnsureResultPresentation()
+        {
+            KMA.Gameplay.UI.ResultPanel panel =
+                Object.FindFirstObjectByType<KMA.Gameplay.UI.ResultPanel>(FindObjectsInactive.Include);
+            if (panel == null)
+                return;
+
+            var presenter = panel.GetComponent<SprintResultPresentation>()
+                ?? panel.gameObject.AddComponent<SprintResultPresentation>();
+            presenter.Bind(panel, Object.FindFirstObjectByType<SprintController>());
         }
 
         static void EnsureStartPresentation(RectTransform parent, TMP_FontAsset font)

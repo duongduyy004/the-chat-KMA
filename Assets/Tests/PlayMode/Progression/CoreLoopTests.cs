@@ -40,6 +40,34 @@ namespace KMA.Tests.Gameplay.Progression
         }
 
         [Test]
+        public void ResultPanel_ContinueEmitsActionOnlyOnceWithSprintResultPresentationAttached()
+        {
+            var root = new GameObject("result-panel");
+            var panel = root.AddComponent<ResultPanel>();
+            var presentation = root.AddComponent<SprintResultPresentation>();
+            try
+            {
+                var calls = 0;
+                string route = null;
+                panel.ActionRequested += r => { calls++; route = r; };
+
+                panel.Show(new MinigameResult(false, 0f, Rank.F), "Punishment");
+                presentation.Bind(panel, null);
+                presentation.ShowForTest(panel.CurrentResult);
+
+                panel.Continue();
+                panel.Continue();
+
+                Assert.That(calls, Is.EqualTo(1));
+                Assert.That(route, Is.EqualTo("Punishment"));
+            }
+            finally
+            {
+                Object.DestroyImmediate(root);
+            }
+        }
+
+        [Test]
         public void ResultPanel_ShowActivatesAnInactivePanelRoot()
         {
             var root = new GameObject("result-panel");
