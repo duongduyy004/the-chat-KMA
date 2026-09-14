@@ -130,6 +130,22 @@ namespace KMA.Tests.Presentation
                 Is.GreaterThan(safe.yMin + safe.height * .76f), "scoreboard must clear the top lane");
         }
 
+        [TestCaseSource(nameof(LandscapeSafeAreas))]
+        public void ScoreboardFitsItsWidestRow(Rect safe)
+        {
+            // Worst case row 1 is "100 / 100 m" at Title size beside the rank pill.
+            // Budget in canvas units, measured against the panel's inner width.
+            const float distanceGlyphs = 11f;          // "100 / 100 m"
+            const float titleAdvance = SprintUiTheme.Title * .55f;   // conservative advance per glyph
+            const float rankPill = SprintUiTheme.Headline * 2.4f;
+            const float padding = SprintUiTheme.SpaceLg;
+            const float gap = SprintUiTheme.SpaceMd;
+
+            float required = distanceGlyphs * titleAdvance + gap + rankPill + padding;
+            Assert.That(SprintUiLayout.ScoreboardRect(safe).width, Is.GreaterThanOrEqualTo(required),
+                $"scoreboard is too narrow for its widest row at {safe.width}x{safe.height}");
+        }
+
         [Test]
         public void RaceRectsAreTheStartStateRectsWithoutCountdownAndInstruction()
         {
