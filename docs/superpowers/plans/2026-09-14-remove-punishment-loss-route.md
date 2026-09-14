@@ -258,25 +258,88 @@ Co-Authored-By: Claude Opus 5 (1M context) <noreply@anthropic.com>"
 
 - [ ] **Step 1: Write the failing tests**
 
+**Read this first.** After Task 1, `SubmitResult(fail)` clears the active subject, so any following `CompletePunishment()` throws `InvalidOperationException("No punishment is active.")`. Several tests in this file use exactly that pair as *setup*. Fixing their assertions alone is not enough — the setup itself must go. The list below is exhaustive: every test in `GameSessionPersistenceTests.cs` is named with its fate, so do not improvise on ones marked unchanged.
+
 In `Assets/Tests/EditMode/Progression/GameSessionPersistenceTests.cs`:
 
-Rename the test at line 11 from `RoundTrip_AfterFirstFailure_KeepsActiveAttemptAndPendingPunishment` to `RoundTrip_AfterAFailure_KeepsNoPendingPunishment`, and change its line 20 assertion from `Is.EqualTo(SubjectId.Sprint)` to `Is.Null`.
+**Unchanged — do not touch:** `ResumeRoute_WithoutAnAttempt_IsMap`, `RoundTrip_DuringAttemptOne_ResumesTheSubjectWithRecordsAndLives`, `RoundTrip_WithoutAnAttempt_ResumesMap`, `Restore_OutOfRangeVisitAttempt_FallsBackToNoActiveAttempt`, `Restore_PunishmentStateWithoutAnActiveSubject_FallsBackToNoActiveAttempt`, `Restore_UndefinedActiveSubject_FallsBackToNoActiveAttempt`, `Restore_AwaitingPunishmentOnAttemptOne_FallsBackToNoActiveAttempt`, `Restore_ActiveAttemptWithoutLives_FallsBackToNoActiveAttempt`. The two guards they exercise survive this change deliberately.
 
-Rename the test at line 69 from `RoundTrip_AwaitingPunishment_ResumesPunishmentWithRecordsAndLives` to `RoundTrip_LegacyAwaitingPunishment_ResumesTheSubjectInstead`, and change its assertions at lines 81-85 to:
+**Delete outright** — both exist only to assert the retry leg, and both open with a `CompletePunishment()` that now throws: `RoundTrip_AfterPunishment_KeepsTheRetryAttemptActive` and `RoundTrip_DuringAttemptTwo_ResumesRetryAndStillCostsALifeOnFailure`.
+
+**Replace** `RoundTrip_AfterFirstFailure_KeepsActiveAttemptAndPendingPunishment` with:
 
 ```csharp
-            Assert.That(restored.ResumeRoute(), Is.EqualTo(SessionRoute.Subject));
-            Assert.That(restored.ActiveSubject, Is.EqualTo(SubjectId.Endurance));
+        [Test]
+        public void RoundTrip_AfterAFailure_KeepsNoActiveAttempt()
+        {
+            var original = new GameSession();
+            original.StartSubject(SubjectId.Sprint);
+            original.SubmitResult(SubjectId.Sprint, Failed());
+
+            GameSession restored = RoundTrip(original);
+
+            Assert.That(restored.ActiveSubject, Is.Null);
             Assert.That(restored.PendingPunishmentSubject, Is.Null);
-            Assert.That(restored.VisitAttempt, Is.EqualTo(1));
-            Assert.That(restored.AwaitingPunishment, Is.False);
+            Assert.That(restored.Lives, Is.EqualTo(4));
+            Assert.That(restored.ResumeRoute(), Is.EqualTo(SessionRoute.Map));
+        }
 ```
 
-At lines 102-103, change `restored.VisitAttempt` expected from `2` to `1`, leaving `AwaitingPunishment` expected `False`.
+**Replace** `RoundTrip_AwaitingPunishment_ResumesPunishmentWithRecordsAndLives` with:
 
-At lines 217-222, in the test that builds `active.visitAttempt = 2; active.awaitingPunishment = true;`, change the expected resume route from `SessionRoute.Punishment` to `SessionRoute.Subject`.
+```csharp
+        [Test]
+        public void RoundTrip_AfterFailingTwoSubjects_KeepsRecordsAndLives()
+        {
+            var original = new GameSession();
+            original.StartSubject(SubjectId.Sprint);
+            original.SubmitResult(SubjectId.Sprint, Failed());
+            original.StartSubject(SubjectId.Endurance);
+            original.SubmitResult(SubjectId.Endurance, Failed());
 
-Append this new test to the same class:
+            GameSession restored = RoundTrip(original);
+
+            Assert.That(restored.ResumeRoute(), Is.EqualTo(SessionRoute.Map));
+            Assert.That(restored.ActiveSubject, Is.Null);
+            Assert.That(restored.PendingPunishmentSubject, Is.Null);
+            Assert.That(restored.AwaitingPunishment, Is.False);
+            Assert.That(restored.Lives, Is.EqualTo(3));
+            Assert.That(restored.GetRecord(SubjectId.Sprint).FailedVisits, Is.EqualTo(1));
+            Assert.That(restored.GetRecord(SubjectId.Endurance).FailedVisits, Is.EqualTo(1));
+        }
+```
+
+**Replace** `ToSaveData_ExportsTheActiveAttemptFields` with — note the export is now taken while the attempt is still live, because a failure no longer leaves one:
+
+```csharp
+        [Test]
+        public void ToSaveData_ExportsTheActiveAttemptFields()
+        {
+            var session = new GameSession();
+            session.StartSubject(SubjectId.PingPong);
+
+            SaveData exported = session.ToSaveData();
+
+            Assert.That(exported.version, Is.EqualTo(SaveData.CurrentVersion));
+            Assert.That(exported.hasActiveSubject, Is.True);
+            Assert.That(exported.activeSubject, Is.EqualTo(SubjectId.PingPong));
+            Assert.That(exported.visitAttempt, Is.EqualTo(1));
+            Assert.That(exported.awaitingPunishment, Is.False);
+
+            session.SubmitResult(SubjectId.PingPong, new MinigameResult(true, 6f, Rank.C));
+            SaveData cleared = session.ToSaveData();
+
+            Assert.That(cleared.hasActiveSubject, Is.False);
+            Assert.That(cleared.visitAttempt, Is.EqualTo(1));
+            Assert.That(cleared.awaitingPunishment, Is.False);
+        }
+```
+
+**In** `Restore_ReplacesAPreviouslyRestoredAttempt`, change the single expected resume route from `SessionRoute.Punishment` to `SessionRoute.Subject`. Every other line of that test stands.
+
+**In** `ToSaveDataAndRestore_PreserveCampaignState`, delete the `original.CompletePunishment();` line and the second `original.SubmitResult(SubjectId.Endurance, Failed());` that follows it. One failure remains, and `FailedVisits` for Endurance is still `1` — under the old rule the first failure recorded nothing and the second recorded one, so the count is unchanged. Leave every assertion in that test alone.
+
+**Append** this new test to the class:
 
 ```csharp
         [Test]
@@ -483,7 +546,23 @@ Delete the harness method at line 466, `public void CompletePunishment() => Rout
 
 - [ ] **Step 4: Realign S5NewGameTests**
 
-Rename the test at line 422 from `Continue_AwaitingPunishment_RequestsPunishmentOnly` to `Continue_AfterALoss_RequestsSubjectSelectOnly`. At line 430 change the expected route/scene triple to `SessionRoute.Map, SubjectId.Sprint, "Map"`. Delete the `session.CompletePunishment();` at line 441 and replace it with `session.StartSubject(SubjectId.Endurance);`, leaving line 443's expectation as `SessionRoute.Subject, SubjectId.Endurance, "MG_Endurance"`.
+Replace `Continue_AwaitingPunishment_RequestsPunishmentOnly` with — note the expected subject is `null`, because a loss now clears the active attempt, and `AssertContinueRequests` takes a `SubjectId?`:
+
+```csharp
+        [UnityTest]
+        public IEnumerator Continue_AfterALoss_RequestsMapOnly()
+        {
+            yield return AssertContinueRequests(
+                Arrange(session =>
+                {
+                    session.StartSubject(SubjectId.Sprint);
+                    session.SubmitResult(SubjectId.Sprint, new MinigameResult(false, 0f, Rank.F));
+                }),
+                SessionRoute.Map, null, "Map");
+        }
+```
+
+Delete `Continue_DuringAttemptTwo_RequestsTheRetryOnly` outright. Its arrangement calls `session.CompletePunishment()`, which now throws, and its whole subject is the retry leg. Do not try to rescue it by starting a fresh attempt instead — `Continue_DuringAttemptOne_RequestsTheSubjectOnly` already covers that case.
 
 At lines 554-555, the test seeds a legacy save with `visitAttempt = 2; awaitingPunishment = true;`. Keep that seed — it is now exactly the legacy-save case Task 2 guards — and confirm lines 576-577 still expect `visitAttempt` `1` and `awaitingPunishment` `false`. They should now pass for the new reason.
 
