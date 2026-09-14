@@ -36,6 +36,8 @@ namespace KMA.EditorTools
         const string KeyPhase = "KMA_PMS_Phase";
         const string KeyFrames = "KMA_PMS_Frames";
         const string KeyHoldSprintTutorial = "KMA_PMS_HoldSprintTutorial";
+        const string KeyForceSprintDistance = "KMA_PMS_ForceSprintDistance";
+        const string KeyForceSprintResult = "KMA_PMS_ForceSprintResult";
 
         [Serializable]
         class Request
@@ -45,6 +47,11 @@ namespace KMA.EditorTools
             public string output;
             public float waitSeconds = 3f;
             public bool holdSprintTutorial;
+            // QA-only: drive SprintController/ResultPanel through their existing public test
+            // seams so a screenshot can show a late-race or result state without simulating
+            // real taps. Never touches production state flow otherwise.
+            public float forceSprintDistance = -1f;
+            public string forceSprintResult = "";
         }
 
         static PlayModeScreenshot()
@@ -125,6 +132,8 @@ namespace KMA.EditorTools
             SessionState.SetInt(KeyPhase, 0);
             SessionState.SetInt(KeyFrames, 0);
             SessionState.SetBool(KeyHoldSprintTutorial, req.holdSprintTutorial);
+            SessionState.SetFloat(KeyForceSprintDistance, req.forceSprintDistance);
+            SessionState.SetString(KeyForceSprintResult, req.forceSprintResult ?? "");
             SessionState.SetBool(KeyActive, true);
 
             EditorApplication.isPlaying = true;
@@ -132,13 +141,36 @@ namespace KMA.EditorTools
 
         static void OnPlayModeStateChanged(PlayModeStateChange state)
         {
-            if (state != PlayModeStateChange.EnteredPlayMode ||
-                !SessionState.GetBool(KeyHoldSprintTutorial, false))
+            if (state != PlayModeStateChange.EnteredPlayMode)
                 return;
 
-            var presenter = UnityEngine.Object.FindFirstObjectByType<KMA.Gameplay.SprintStartPresentation>();
-            if (presenter != null)
-                presenter.enabled = false;
+            if (SessionState.GetBool(KeyHoldSprintTutorial, false))
+            {
+                var presenter = UnityEngine.Object.FindFirstObjectByType<KMA.Gameplay.SprintStartPresentation>();
+                if (presenter != null)
+                    presenter.enabled = false;
+            }
+
+            float forceDistance = SessionState.GetFloat(KeyForceSprintDistance, -1f);
+            if (forceDistance >= 0f)
+            {
+                var controller = UnityEngine.Object.FindFirstObjectByType<KMA.Gameplay.SprintController>();
+                if (controller != null)
+                    controller.AdvanceToDistance(forceDistance);
+            }
+
+            string forceResult = SessionState.GetString(KeyForceSprintResult, "");
+            if (!string.IsNullOrEmpty(forceResult))
+            {
+                var panel = UnityEngine.Object.FindFirstObjectByType<KMA.Gameplay.UI.ResultPanel>(FindObjectsInactive.Include);
+                if (panel != null)
+                {
+                    bool pass = forceResult == "pass";
+                    var result = new KMA.Gameplay.MinigameResult(pass, pass ? 8.4f : 0f,
+                        pass ? KMA.Gameplay.Rank.A : KMA.Gameplay.Rank.F);
+                    panel.Show(result, pass ? "Map" : "Punishment");
+                }
+            }
         }
 
         static void RunActiveCapture()
