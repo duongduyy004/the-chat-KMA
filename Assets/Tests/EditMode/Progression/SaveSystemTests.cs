@@ -170,8 +170,8 @@ namespace KMA.Tests.Gameplay.Progression
 
             var restored = new GameSession();
             restored.Restore(actual);
-            Assert.That(restored.ResumeRoute(), Is.EqualTo(SessionRoute.Punishment));
-            Assert.That(restored.PendingPunishmentSubject, Is.EqualTo(SubjectId.Badminton));
+            Assert.That(restored.ResumeRoute(), Is.EqualTo(SessionRoute.Subject));
+            Assert.That(restored.ActiveSubject, Is.EqualTo(SubjectId.Badminton));
         }
 
         [Test]

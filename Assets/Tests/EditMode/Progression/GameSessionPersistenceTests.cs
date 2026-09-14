@@ -8,7 +8,7 @@ namespace KMA.Tests.Gameplay.Progression
     public sealed class GameSessionPersistenceTests
     {
         [Test]
-        public void RoundTrip_AfterFirstFailure_KeepsActiveAttemptAndPendingPunishment()
+        public void RoundTrip_AfterAFailure_KeepsNoActiveAttempt()
         {
             var original = new GameSession();
             original.StartSubject(SubjectId.Sprint);
@@ -16,23 +16,10 @@ namespace KMA.Tests.Gameplay.Progression
 
             GameSession restored = RoundTrip(original);
 
-            Assert.That(restored.ActiveSubject, Is.EqualTo(SubjectId.Sprint));
-            Assert.That(restored.PendingPunishmentSubject, Is.EqualTo(SubjectId.Sprint));
-            Assert.That(restored.Lives, Is.EqualTo(5));
-        }
-
-        [Test]
-        public void RoundTrip_AfterPunishment_KeepsTheRetryAttemptActive()
-        {
-            var original = new GameSession();
-            original.StartSubject(SubjectId.Endurance);
-            original.SubmitResult(SubjectId.Endurance, Failed());
-            original.CompletePunishment();
-
-            GameSession restored = RoundTrip(original);
-
-            Assert.That(restored.ActiveSubject, Is.EqualTo(SubjectId.Endurance));
+            Assert.That(restored.ActiveSubject, Is.Null);
             Assert.That(restored.PendingPunishmentSubject, Is.Null);
+            Assert.That(restored.Lives, Is.EqualTo(4));
+            Assert.That(restored.ResumeRoute(), Is.EqualTo(SessionRoute.Map));
         }
 
         [Test]
@@ -66,47 +53,23 @@ namespace KMA.Tests.Gameplay.Progression
         }
 
         [Test]
-        public void RoundTrip_AwaitingPunishment_ResumesPunishmentWithRecordsAndLives()
+        public void RoundTrip_AfterFailingTwoSubjects_KeepsRecordsAndLives()
         {
             var original = new GameSession();
             original.StartSubject(SubjectId.Sprint);
-            original.SubmitResult(SubjectId.Sprint, Failed());
-            original.CompletePunishment();
             original.SubmitResult(SubjectId.Sprint, Failed());
             original.StartSubject(SubjectId.Endurance);
             original.SubmitResult(SubjectId.Endurance, Failed());
 
             GameSession restored = RoundTrip(original);
 
-            Assert.That(restored.ResumeRoute(), Is.EqualTo(SessionRoute.Punishment));
-            Assert.That(restored.ActiveSubject, Is.EqualTo(SubjectId.Endurance));
-            Assert.That(restored.PendingPunishmentSubject, Is.EqualTo(SubjectId.Endurance));
-            Assert.That(restored.VisitAttempt, Is.EqualTo(2));
-            Assert.That(restored.AwaitingPunishment, Is.True);
-            Assert.That(restored.Lives, Is.EqualTo(4));
-            Assert.That(restored.GetRecord(SubjectId.Sprint).FailedVisits, Is.EqualTo(1));
-        }
-
-        [Test]
-        public void RoundTrip_DuringAttemptTwo_ResumesRetryAndStillCostsALifeOnFailure()
-        {
-            var original = new GameSession();
-            original.StartSubject(SubjectId.Badminton);
-            original.SubmitResult(SubjectId.Badminton, Failed());
-            original.CompletePunishment();
-
-            GameSession restored = RoundTrip(original);
-
-            Assert.That(restored.ResumeRoute(), Is.EqualTo(SessionRoute.RetrySubject));
-            Assert.That(restored.ActiveSubject, Is.EqualTo(SubjectId.Badminton));
-            Assert.That(restored.VisitAttempt, Is.EqualTo(2));
-            Assert.That(restored.AwaitingPunishment, Is.False);
-            Assert.That(restored.Lives, Is.EqualTo(5));
-
-            Assert.That(restored.SubmitResult(SubjectId.Badminton, Failed()), Is.EqualTo(SessionRoute.Map));
-            Assert.That(restored.Lives, Is.EqualTo(4));
-            Assert.That(restored.GetRecord(SubjectId.Badminton).FailedVisits, Is.EqualTo(1));
             Assert.That(restored.ResumeRoute(), Is.EqualTo(SessionRoute.Map));
+            Assert.That(restored.ActiveSubject, Is.Null);
+            Assert.That(restored.PendingPunishmentSubject, Is.Null);
+            Assert.That(restored.AwaitingPunishment, Is.False);
+            Assert.That(restored.Lives, Is.EqualTo(3));
+            Assert.That(restored.GetRecord(SubjectId.Sprint).FailedVisits, Is.EqualTo(1));
+            Assert.That(restored.GetRecord(SubjectId.Endurance).FailedVisits, Is.EqualTo(1));
         }
 
         [Test]
@@ -129,17 +92,15 @@ namespace KMA.Tests.Gameplay.Progression
         {
             var session = new GameSession();
             session.StartSubject(SubjectId.PingPong);
-            session.SubmitResult(SubjectId.PingPong, Failed());
 
             SaveData exported = session.ToSaveData();
 
             Assert.That(exported.version, Is.EqualTo(SaveData.CurrentVersion));
             Assert.That(exported.hasActiveSubject, Is.True);
             Assert.That(exported.activeSubject, Is.EqualTo(SubjectId.PingPong));
-            Assert.That(exported.visitAttempt, Is.EqualTo(2));
-            Assert.That(exported.awaitingPunishment, Is.True);
+            Assert.That(exported.visitAttempt, Is.EqualTo(1));
+            Assert.That(exported.awaitingPunishment, Is.False);
 
-            session.CompletePunishment();
             session.SubmitResult(SubjectId.PingPong, new MinigameResult(true, 6f, Rank.C));
             SaveData cleared = session.ToSaveData();
 
@@ -219,7 +180,7 @@ namespace KMA.Tests.Gameplay.Progression
 
             var session = new GameSession();
             session.Restore(active);
-            Assert.That(session.ResumeRoute(), Is.EqualTo(SessionRoute.Punishment));
+            Assert.That(session.ResumeRoute(), Is.EqualTo(SessionRoute.Subject));
 
             session.Restore(SaveData.CreateDefault());
 
@@ -236,8 +197,6 @@ namespace KMA.Tests.Gameplay.Progression
             original.StartSubject(SubjectId.Sprint);
             original.SubmitResult(SubjectId.Sprint, new MinigameResult(true, 8f, Rank.A));
             original.StartSubject(SubjectId.Endurance);
-            original.SubmitResult(SubjectId.Endurance, Failed());
-            original.CompletePunishment();
             original.SubmitResult(SubjectId.Endurance, Failed());
 
             var data = original.ToSaveData();
@@ -385,6 +344,27 @@ namespace KMA.Tests.Gameplay.Progression
             Assert.That(record.FailedVisits, Is.EqualTo(3));
             Assert.That(record.BestResult, Is.Not.Null);
             Assert.That(record.BestResult.Pass, Is.True);
+        }
+
+        [Test]
+        public void Restore_LegacyPunishmentSave_NeverResumesIntoPunishment()
+        {
+            SaveData data = SaveData.CreateDefault();
+            data.lives = 3;
+            data.hasActiveSubject = true;
+            data.activeSubject = SubjectId.Sprint;
+            data.visitAttempt = 2;
+            data.awaitingPunishment = true;
+
+            var session = new GameSession();
+            session.Restore(data);
+
+            Assert.That(session.AwaitingPunishment, Is.False);
+            Assert.That(session.PendingPunishmentSubject, Is.Null);
+            Assert.That(session.VisitAttempt, Is.EqualTo(1));
+            Assert.That(session.ResumeRoute(), Is.EqualTo(SessionRoute.Subject));
+            Assert.That(session.ActiveSubject, Is.EqualTo(SubjectId.Sprint));
+            Assert.That(session.Lives, Is.EqualTo(3));
         }
 
         static MinigameResult Failed() => new MinigameResult(false, 0f, Rank.F);

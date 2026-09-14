@@ -132,9 +132,14 @@ namespace KMA.Gameplay
             if (data.awaitingPunishment && data.visitAttempt != FinalVisit)
                 return;
 
+            // The punishment leg is no longer routable. A save written before it was removed
+            // can carry awaitingPunishment and FinalVisit; restoring those verbatim would send
+            // the player to a scene nothing can complete. Resume the subject attempt instead.
+            // The two guards above still stand so a malformed save keeps falling back to no
+            // active attempt.
             active = data.activeSubject;
-            visitAttempt = data.visitAttempt;
-            awaitingPunishment = data.awaitingPunishment;
+            visitAttempt = FirstVisit;
+            awaitingPunishment = false;
         }
 
         public SessionRoute StartSubject(SubjectId id)
