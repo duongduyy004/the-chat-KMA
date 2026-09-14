@@ -190,9 +190,9 @@ namespace KMA.Tests.Presentation
             Assert.That(GameObject.Find("SprintFestivalChrome"), Is.Null);
 
             TMP_Text distance = chrome.Find("Scoreboard/Distance")?.GetComponent<TMP_Text>();
-            TMP_Text rank = chrome.Find("Scoreboard/Rank")?.GetComponent<TMP_Text>();
+            TMP_Text rank = chrome.Find("Scoreboard/RankBadge/RankLabel")?.GetComponent<TMP_Text>();
             TMP_Text cadence = chrome.Find("Scoreboard/Combo")?.GetComponent<TMP_Text>();
-            Image distanceFill = chrome.Find("Scoreboard/ProgressTrack/ProgressFill")?.GetComponent<Image>();
+            Image distanceFill = chrome.Find("ProgressRail/RailFill")?.GetComponent<Image>();
 
             Assert.That(sprintHud.HasBoundVisuals, Is.True);
             Assert.That(distance, Is.Not.Null);
@@ -549,6 +549,69 @@ namespace KMA.Tests.Presentation
             Assert.That(action.interactable, Is.True);
 
             yield return null;
+        }
+
+        [UnityTest]
+        public IEnumerator SprintScene_BuildsTheApprovedScoreboardAndRail()
+        {
+            yield return LoadSprint();
+            var scene = SceneManager.GetActiveScene();
+
+            Transform chrome = GameObject.Find("SprintBroadcastChrome").transform;
+            Assert.That(chrome.GetComponentInParent<KMA.Gameplay.UI.SafeAreaFitter>(), Is.Not.Null);
+
+            Assert.That(chrome.Find("Scoreboard/Distance").GetComponent<TMP_Text>().text, Is.EqualTo("0 / 100 m"));
+            Assert.That(chrome.Find("Scoreboard/RankBadge/RankLabel").GetComponent<TMP_Text>().text, Is.EqualTo("1st"));
+            Assert.That(chrome.Find("Scoreboard/Combo").GetComponent<TMP_Text>().text, Is.EqualTo("COMBO ×0"));
+            Assert.That(chrome.Find("ModeLabel").GetComponent<TMP_Text>().text, Is.EqualTo("CHẠY NƯỚC RÚT · 100M"));
+
+            Image railFill = chrome.Find("ProgressRail/RailFill").GetComponent<Image>();
+            Assert.That(railFill.type, Is.EqualTo(Image.Type.Filled));
+            Assert.That(railFill.fillAmount, Is.EqualTo(0f).Within(.001f));
+            Assert.That(railFill.color, Is.EqualTo(SprintUiTheme.Accent));
+
+            Image pip = chrome.Find("ProgressRail/PlayerPip").GetComponent<Image>();
+            Assert.That(pip.color, Is.EqualTo(SprintUiTheme.Player));
+
+            Assert.That(chrome.Find("Scoreboard").GetComponent<Image>().sprite, Is.Not.Null,
+                "The scoreboard must use a generated rounded sprite, not the default square.");
+            Assert.That(chrome.Find("Scoreboard").GetComponent<Outline>(), Is.Null,
+                "Outline is replaced by Shadow.");
+            Assert.That(chrome.Find("Scoreboard").GetComponent<Shadow>(), Is.Not.Null);
+        }
+
+        [UnityTest]
+        public IEnumerator SprintHud_ReflectsDistanceRankAndCombo()
+        {
+            yield return LoadSprint();
+            var scene = SceneManager.GetActiveScene();
+
+            var controller = SceneObjects<SprintController>(scene)[0];
+            var hud = SceneObjects<SprintHud>(scene)[0];
+            Assert.That(hud.HasBoundVisuals, Is.True);
+
+            controller.AdvanceToDistance(42f);
+            hud.Refresh();
+
+            Transform chrome = GameObject.Find("SprintBroadcastChrome").transform;
+            Assert.That(chrome.Find("Scoreboard/Distance").GetComponent<TMP_Text>().text, Is.EqualTo("42 / 100 m"));
+            Assert.That(chrome.Find("ProgressRail/RailFill").GetComponent<Image>().fillAmount,
+                Is.EqualTo(.42f).Within(.001f));
+            // Anchors collapse to 0 under batchmode's zero-sized safe rect (see CONTROLLER RULING #1),
+            // so progress is asserted through the dedicated field instead of the anchor position.
+            Assert.That(hud.PipProgress, Is.EqualTo(.42f).Within(.001f));
+        }
+
+        [UnityTest]
+        public IEnumerator SprintChrome_RegistersEveryElementForRelayout()
+        {
+            yield return LoadSprint();
+            var scene = SceneManager.GetActiveScene();
+
+            var layout = SceneObjects<SprintChromeLayout>(scene)[0];
+            Assert.That(layout, Is.Not.Null, "chrome must own a relayout component");
+            Assert.That(layout.ElementCount, Is.GreaterThanOrEqualTo(4),
+                "rail, scoreboard, mode chip and pause must all be registered");
         }
 
         static IEnumerator LoadSprint()

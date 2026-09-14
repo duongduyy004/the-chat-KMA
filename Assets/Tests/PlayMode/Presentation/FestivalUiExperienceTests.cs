@@ -96,14 +96,8 @@ namespace KMA.Tests.Presentation
             Transform chrome = GameObject.Find("SprintBroadcastChrome")?.transform;
             Assert.That(chrome, Is.Not.Null, "Automatic Sprint broadcast chrome install failed.");
             TMP_Text modeLabel = chrome.Find("ModeLabel").GetComponent<TMP_Text>();
-            TMP_Text leftPrompt = chrome.Find("TouchPrompts/LeftPrompt").GetComponent<TMP_Text>();
-            TMP_Text rightPrompt = chrome.Find("TouchPrompts/RightPrompt").GetComponent<TMP_Text>();
-            Assert.That(modeLabel.text, Is.EqualTo("CHẠY NƯỚC RÚT · 100 M"));
-            Assert.That(leftPrompt.text, Is.EqualTo("CHẠM TRÁI"));
-            Assert.That(rightPrompt.text, Is.EqualTo("CHẠM PHẢI"));
+            Assert.That(modeLabel.text, Is.EqualTo("CHẠY NƯỚC RÚT · 100M"));
             Assert.That(modeLabel.font, Is.Not.Null);
-            Assert.That(leftPrompt.font, Is.Not.Null);
-            Assert.That(rightPrompt.font, Is.Not.Null);
 
             SprintStartPresentation start = Object.FindFirstObjectByType<SprintStartPresentation>();
             Assert.That(start, Is.Not.Null);

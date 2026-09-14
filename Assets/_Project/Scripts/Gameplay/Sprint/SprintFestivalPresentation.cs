@@ -6,12 +6,6 @@ namespace KMA.Gameplay
 {
     public static class SprintFestivalPresentation
     {
-        static readonly Color Navy = new Color32(8, 35, 61, 242);
-        static readonly Color Coral = new Color32(255, 89, 94, 235);
-        static readonly Color Gold = new Color32(255, 202, 58, 235);
-        static readonly Color Cream = new Color32(255, 249, 231, 255);
-        static readonly Color ControlNavy = new Color32(7, 28, 49, 128);
-
         public static void Build()
         {
             if (GameObject.Find("SprintBroadcastChrome") != null)
@@ -38,66 +32,68 @@ namespace KMA.Gameplay
             RectTransform root = Rect(safeArea, "SprintBroadcastChrome");
             Stretch(root);
             root.SetAsLastSibling();
-            EnsurePause(root, font);
 
-            RectTransform scoreboard = Rect(root, "Scoreboard");
-            scoreboard.anchorMin = new Vector2(.025f, .72f);
-            scoreboard.anchorMax = new Vector2(.31f, .965f);
-            scoreboard.offsetMin = Vector2.zero;
-            scoreboard.offsetMax = Vector2.zero;
-            Image scoreboardImage = scoreboard.gameObject.AddComponent<Image>();
-            scoreboardImage.color = Navy;
-            scoreboardImage.raycastTarget = false;
-            Outline scoreboardOutline = scoreboard.gameObject.AddComponent<Outline>();
-            scoreboardOutline.effectColor = new Color32(3, 18, 33, 255);
-            scoreboardOutline.effectDistance = new Vector2(3f, -3f);
+            RectTransform safeRect = (RectTransform)safeArea;
+            Rect safe = SafeRect(safeRect);
 
-            TMP_Text distance = Metric(scoreboard, "Distance", font, 30f, Cream,
-                new Vector2(.08f, .64f), new Vector2(.92f, .94f));
-            TMP_Text rank = Metric(scoreboard, "Rank", font, 30f, Gold,
-                new Vector2(.08f, .35f), new Vector2(.92f, .64f));
-            TMP_Text combo = Metric(scoreboard, "Combo", font, 24f, Coral,
-                new Vector2(.08f, .13f), new Vector2(.92f, .36f));
+            var chromeLayout = root.gameObject.AddComponent<SprintChromeLayout>();
+            chromeLayout.Bind(safeRect);
+
+            // Progress rail
+            Image railTrack = Panel(root, "ProgressRail", SprintUiTheme.WithAlpha(Color.white, .22f),
+                Mathf.RoundToInt(safe.height * .015f));
+            ApplyRect(railTrack.rectTransform, safe, SprintUiLayout.ProgressRailRect(safe));
+            chromeLayout.Register(railTrack.rectTransform, SprintUiLayout.ProgressRailRect);
+            Image railFill = Panel(railTrack.transform, "RailFill", SprintUiTheme.Accent,
+                Mathf.RoundToInt(safe.height * .015f));
+            Stretch(railFill.rectTransform);
+            railFill.type = Image.Type.Filled;
+            railFill.fillMethod = Image.FillMethod.Horizontal;
+            railFill.fillOrigin = (int)Image.OriginHorizontal.Left;
+            railFill.fillAmount = 0f;
+            Image pip = Panel(railTrack.transform, "PlayerPip", SprintUiTheme.Player, 4);
+            pip.rectTransform.anchorMin = new Vector2(0f, -.35f);
+            pip.rectTransform.anchorMax = new Vector2(0f, 1.35f);
+            pip.rectTransform.pivot = new Vector2(.5f, .5f);
+            pip.rectTransform.sizeDelta = new Vector2(safe.height * .014f, 0f);
+            pip.rectTransform.anchoredPosition = Vector2.zero;
+
+            // Scoreboard
+            Image scoreboard = Panel(root, "Scoreboard", SprintUiTheme.WithAlpha(SprintUiTheme.Surface, .92f),
+                Mathf.RoundToInt(SprintUiTheme.RadiusPanel));
+            ApplyRect(scoreboard.rectTransform, safe, SprintUiLayout.ScoreboardRect(safe));
+            chromeLayout.Register(scoreboard.rectTransform, SprintUiLayout.ScoreboardRect);
+            AddShadow(scoreboard);
+
+            TMP_Text distance = Metric(scoreboard.transform, "Distance", font, SprintUiTheme.Title,
+                SprintUiTheme.TextPrimary, new Vector2(.05f, .46f), new Vector2(.62f, .92f));
+            distance.alignment = TextAlignmentOptions.Left;
             distance.text = "0 / 100 m";
-            rank.text = "1st";
+
+            Image rankBadge = Panel(scoreboard.transform, "RankBadge",
+                SprintUiTheme.WithAlpha(SprintUiTheme.Accent, .22f), Mathf.RoundToInt(SprintUiTheme.RadiusPanel));
+            rankBadge.rectTransform.anchorMin = new Vector2(.66f, .46f);
+            rankBadge.rectTransform.anchorMax = new Vector2(.95f, .92f);
+            rankBadge.rectTransform.offsetMin = Vector2.zero;
+            rankBadge.rectTransform.offsetMax = Vector2.zero;
+            TMP_Text rank = Text(rankBadge.transform, "RankLabel", "1st", font, SprintUiTheme.Headline,
+                SprintUiTheme.Accent, TextAlignmentOptions.Center);
+            Stretch(rank.rectTransform);
+
+            TMP_Text combo = Metric(scoreboard.transform, "Combo", font, SprintUiTheme.Body,
+                SprintUiTheme.Energy, new Vector2(.05f, .10f), new Vector2(.62f, .42f));
+            combo.alignment = TextAlignmentOptions.Left;
             combo.text = "COMBO ×0";
 
-            RectTransform progressTrack = Rect(scoreboard, "ProgressTrack");
-            progressTrack.anchorMin = new Vector2(.08f, .05f);
-            progressTrack.anchorMax = new Vector2(.92f, .11f);
-            progressTrack.offsetMin = Vector2.zero;
-            progressTrack.offsetMax = Vector2.zero;
-            Image trackImage = progressTrack.gameObject.AddComponent<Image>();
-            trackImage.color = new Color(1f, 1f, 1f, .22f);
-            trackImage.raycastTarget = false;
-            Image progressFill = Rect(progressTrack, "ProgressFill").gameObject.AddComponent<Image>();
-            progressFill.type = Image.Type.Filled;
-            progressFill.fillMethod = Image.FillMethod.Horizontal;
-            progressFill.fillOrigin = (int)Image.OriginHorizontal.Left;
-            progressFill.fillAmount = 0f;
-            progressFill.color = Gold;
-            progressFill.raycastTarget = false;
+            // Mode chip
+            TMP_Text mode = Text(root, "ModeLabel", "CHẠY NƯỚC RÚT · 100M", font, SprintUiTheme.Caption,
+                SprintUiTheme.WithAlpha(SprintUiTheme.TextPrimary, .6f), TextAlignmentOptions.Center);
+            ApplyRect(mode.rectTransform, safe, SprintUiLayout.ModeChipRect(safe));
+            chromeLayout.Register(mode.rectTransform, SprintUiLayout.ModeChipRect);
 
-            TMP_Text mode = Text(root, "ModeLabel", "CHẠY NƯỚC RÚT · 100 M", font, 28f,
-                Cream, TextAlignmentOptions.Center);
-            mode.rectTransform.anchorMin = new Vector2(.33f, .92f);
-            mode.rectTransform.anchorMax = new Vector2(.67f, .985f);
-            mode.rectTransform.offsetMin = Vector2.zero;
-            mode.rectTransform.offsetMax = Vector2.zero;
+            EnsurePause(root, font, safe, chromeLayout);
 
             EnsureStartPresentation(root, font);
-
-            RectTransform prompts = Rect(root, "TouchPrompts");
-            prompts.anchorMin = new Vector2(0f, .02f);
-            prompts.anchorMax = new Vector2(1f, .16f);
-            prompts.offsetMin = Vector2.zero;
-            prompts.offsetMax = Vector2.zero;
-            TMP_Text left = Prompt(prompts, "LeftPrompt", "CHẠM TRÁI", font, Coral,
-                new Vector2(.035f, .08f), new Vector2(.455f, .92f));
-            TMP_Text right = Prompt(prompts, "RightPrompt", "CHẠM PHẢI", font, Gold,
-                new Vector2(.545f, .08f), new Vector2(.965f, .92f));
-            left.alignment = TextAlignmentOptions.Center;
-            right.alignment = TextAlignmentOptions.Center;
 
             EnsureControls(root);
             PrepareTapArea("LeftTap");
@@ -105,6 +101,45 @@ namespace KMA.Gameplay
             EnsurePlayerIdentity(root);
             EnsureFinishLine(root);
             EnsureResultPresentation();
+        }
+
+        /// Positions a RectTransform from an absolute rect expressed in the safe area's own space.
+        static void ApplyRect(RectTransform rect, Rect safe, Rect target)
+        {
+            rect.anchorMin = new Vector2(
+                Mathf.InverseLerp(safe.xMin, safe.xMax, target.xMin),
+                Mathf.InverseLerp(safe.yMin, safe.yMax, target.yMin));
+            rect.anchorMax = new Vector2(
+                Mathf.InverseLerp(safe.xMin, safe.xMax, target.xMax),
+                Mathf.InverseLerp(safe.yMin, safe.yMax, target.yMax));
+            rect.offsetMin = Vector2.zero;
+            rect.offsetMax = Vector2.zero;
+        }
+
+        /// Reachable from SprintChromeLayout, which lives outside this static class.
+        internal static void ApplyRectPublic(RectTransform rect, Rect safe, Rect target) =>
+            ApplyRect(rect, safe, target);
+
+        static Rect SafeRect(RectTransform safeArea) =>
+            new Rect(0f, 0f, safeArea.rect.width, safeArea.rect.height);
+
+        static Image Panel(Transform parent, string name, Color color, int radius)
+        {
+            RectTransform root = Rect(parent, name);
+            Image image = root.gameObject.AddComponent<Image>();
+            image.sprite = SprintUiShapes.RoundedRect(radius);
+            image.type = Image.Type.Sliced;
+            image.pixelsPerUnitMultiplier = 1f;
+            image.color = color;
+            image.raycastTarget = false;
+            return image;
+        }
+
+        static void AddShadow(Component target)
+        {
+            var shadow = target.gameObject.AddComponent<Shadow>();
+            shadow.effectColor = SprintUiTheme.ShadowColor;
+            shadow.effectDistance = SprintUiTheme.ShadowOffset;
         }
 
         static void EnsureFinishLine(RectTransform root)
@@ -157,25 +192,23 @@ namespace KMA.Gameplay
             tutorial.offsetMin = Vector2.zero;
             tutorial.offsetMax = Vector2.zero;
             Image tutorialSurface = tutorial.gameObject.AddComponent<Image>();
-            tutorialSurface.color = Navy;
+            tutorialSurface.color = SprintUiTheme.Surface;
             tutorialSurface.raycastTarget = false;
-            Outline tutorialOutline = tutorial.gameObject.AddComponent<Outline>();
-            tutorialOutline.effectColor = Gold;
-            tutorialOutline.effectDistance = new Vector2(3f, -3f);
+            AddShadow(tutorialSurface);
             TMP_Text tutorialLabel = Text(tutorial, "TutorialLabel", "TRÁI     BẤM LUÂN PHIÊN ĐỂ CHẠY     PHẢI",
-                font, 35f, Cream, TextAlignmentOptions.Center);
+                font, 35f, SprintUiTheme.TextPrimary, TextAlignmentOptions.Center);
             Stretch(tutorialLabel.rectTransform, new Vector2(20f, 12f), new Vector2(-20f, -12f));
             Arrow(tutorial, "LeftArrow", true);
             Arrow(tutorial, "RightArrow", false);
 
-            TMP_Text countdown = Text(root, "CountdownLabel", string.Empty, font, 88f, Gold,
+            TMP_Text countdown = Text(root, "CountdownLabel", string.Empty, font, 88f, SprintUiTheme.Accent,
                 TextAlignmentOptions.Center);
             countdown.rectTransform.anchorMin = new Vector2(.35f, .36f);
             countdown.rectTransform.anchorMax = new Vector2(.65f, .68f);
             countdown.rectTransform.offsetMin = Vector2.zero;
             countdown.rectTransform.offsetMax = Vector2.zero;
 
-            TMP_Text instruction = Text(root, "InstructionLabel", string.Empty, font, 56f, Coral,
+            TMP_Text instruction = Text(root, "InstructionLabel", string.Empty, font, 56f, SprintUiTheme.Energy,
                 TextAlignmentOptions.Center);
             instruction.rectTransform.anchorMin = new Vector2(.25f, .28f);
             instruction.rectTransform.anchorMax = new Vector2(.75f, .45f);
@@ -213,7 +246,7 @@ namespace KMA.Gameplay
             arrow.offsetMax = Vector2.zero;
 
             Image shaft = Rect(arrow, "Shaft").gameObject.AddComponent<Image>();
-            shaft.color = Gold;
+            shaft.color = SprintUiTheme.Accent;
             shaft.raycastTarget = false;
             shaft.rectTransform.anchorMin = new Vector2(.18f, .42f);
             shaft.rectTransform.anchorMax = new Vector2(.82f, .58f);
@@ -227,7 +260,7 @@ namespace KMA.Gameplay
         static void CreateArrowTip(RectTransform parent, string name, bool pointsLeft, bool top)
         {
             Image tip = Rect(parent, name).gameObject.AddComponent<Image>();
-            tip.color = Gold;
+            tip.color = SprintUiTheme.Accent;
             tip.raycastTarget = false;
             tip.rectTransform.anchorMin = tip.rectTransform.anchorMax =
                 new Vector2(pointsLeft ? .38f : .62f, .5f);
@@ -255,11 +288,14 @@ namespace KMA.Gameplay
             presenter.BindPressFeedback(leftTap, rightTap);
         }
 
+        // SprintControlPresenter reads this Outline directly to drive the highlight glow
+        // (see ApplyHighlight), so it stays an Outline rather than the Shadow helper used
+        // elsewhere in this file; Task 6 owns any further rework of the control visuals.
         static Image Control(Transform parent, string name)
         {
             RectTransform root = Rect(parent, name);
             Image image = root.gameObject.AddComponent<Image>();
-            image.color = ControlNavy;
+            image.color = new Color32(7, 28, 49, 128);
             image.raycastTarget = false;
             Outline outline = root.gameObject.AddComponent<Outline>();
             outline.effectColor = new Color(1f, .79f, .23f, .16f);
@@ -355,48 +391,31 @@ namespace KMA.Gameplay
             }
         }
 
-        static void EnsurePause(Transform parent, TMP_FontAsset font)
+        static void EnsurePause(RectTransform parent, TMP_FontAsset font, Rect safe, SprintChromeLayout chromeLayout)
         {
             if (Object.FindFirstObjectByType<KMA.Gameplay.UI.PausePanel>() != null)
                 return;
-            GameObject root = new GameObject("PausePanel", typeof(RectTransform), typeof(Image), typeof(Button));
-            root.transform.SetParent(parent, false);
-            RectTransform rect = root.GetComponent<RectTransform>();
-            rect.anchorMin = rect.anchorMax = rect.pivot = Vector2.one;
-            rect.anchoredPosition = new Vector2(-28f, -28f);
-            rect.sizeDelta = new Vector2(142f, 58f);
-            Image image = root.GetComponent<Image>();
-            image.color = Navy;
-            Outline outline = root.AddComponent<Outline>();
-            outline.effectColor = new Color32(3, 18, 33, 255);
-            outline.effectDistance = new Vector2(3f, -3f);
-            root.AddComponent<KMA.Gameplay.UI.PausePanel>();
-            TMP_Text label = Text(root.transform, "Label", "TẠM DỪNG", font, 18f,
-                Cream, TextAlignmentOptions.Center);
-            Stretch(label.rectTransform, new Vector2(8f, 5f), new Vector2(-8f, -5f));
+
+            Image button = Panel(parent, "PausePanel",
+                SprintUiTheme.WithAlpha(SprintUiTheme.Surface, .92f), Mathf.RoundToInt(SprintUiTheme.RadiusPause));
+            button.raycastTarget = true;
+            ApplyRect(button.rectTransform, safe, SprintUiLayout.PauseRect(safe));
+            chromeLayout.Register(button.rectTransform, SprintUiLayout.PauseRect);
+            AddShadow(button);
+            button.gameObject.AddComponent<Button>();
+            button.gameObject.AddComponent<KMA.Gameplay.UI.PausePanel>();
+
+            PauseBar(button.transform, "BarLeft", .28f, .44f);
+            PauseBar(button.transform, "BarRight", .56f, .72f);
         }
 
-        static TMP_Text Prompt(Transform parent, string name, string value, TMP_FontAsset font,
-            Color color, Vector2 min, Vector2 max)
+        static void PauseBar(Transform parent, string name, float minX, float maxX)
         {
-            RectTransform root = Rect(parent, name);
-            root.anchorMin = min;
-            root.anchorMax = max;
-            root.offsetMin = Vector2.zero;
-            root.offsetMax = Vector2.zero;
-            root.gameObject.SetActive(false);
-            TextMeshProUGUI text = root.gameObject.AddComponent<TextMeshProUGUI>();
-            text.text = value;
-            text.font = font;
-            text.fontSize = 25f;
-            text.fontStyle = FontStyles.Bold;
-            text.color = color;
-            text.raycastTarget = false;
-            Outline outline = root.gameObject.AddComponent<Outline>();
-            outline.effectColor = new Color(0f, 0f, 0f, .85f);
-            outline.effectDistance = new Vector2(2f, -2f);
-            root.gameObject.SetActive(true);
-            return text;
+            Image bar = Panel(parent, name, SprintUiTheme.TextPrimary, 2);
+            bar.rectTransform.anchorMin = new Vector2(minX, .26f);
+            bar.rectTransform.anchorMax = new Vector2(maxX, .74f);
+            bar.rectTransform.offsetMin = Vector2.zero;
+            bar.rectTransform.offsetMax = Vector2.zero;
         }
 
         static void PrepareTapArea(string name)

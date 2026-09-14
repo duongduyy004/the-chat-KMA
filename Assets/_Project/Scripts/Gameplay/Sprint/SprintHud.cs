@@ -12,12 +12,12 @@ namespace KMA.Gameplay
         [SerializeField] TMP_Text rankLabel;
         [SerializeField] TMP_Text cadenceLabel;
         [SerializeField] Image distanceFill;
+        [SerializeField] RectTransform playerPip;
 
-        public string TimerText { get; private set; } = string.Empty;
-        public string StaminaText { get; private set; } = string.Empty;
         public string DistanceText { get; private set; } = string.Empty;
         public string RankText { get; private set; } = string.Empty;
         public string CadenceText { get; private set; } = string.Empty;
+        public float PipProgress { get; private set; }
 
         void Awake()
         {
@@ -34,21 +34,30 @@ namespace KMA.Gameplay
         {
             if (controller == null)
                 return;
-            var state = controller.ReadHudState();
+
             var snapshot = controller.Snapshot;
-            TimerText = Mathf.CeilToInt(state.timeRemaining).ToString();
-            StaminaText = $"STAMINA {Mathf.RoundToInt(snapshot.Stamina)}%";
+            float progress = Mathf.Clamp01(snapshot.Distance / 100f);
+
             DistanceText = $"{Mathf.RoundToInt(snapshot.Distance)} / 100 m";
             RankText = controller.RankText;
             CadenceText = $"COMBO ×{controller.CadenceCombo}";
+            PipProgress = progress;
+
             if (distanceLabel != null) distanceLabel.text = DistanceText;
             if (rankLabel != null) rankLabel.text = RankText;
             if (cadenceLabel != null) cadenceLabel.text = CadenceText;
-            if (distanceFill != null) distanceFill.fillAmount = Mathf.Clamp01(snapshot.Distance / 100f);
+            if (distanceFill != null) distanceFill.fillAmount = progress;
+            if (playerPip != null)
+            {
+                Vector2 min = playerPip.anchorMin;
+                Vector2 max = playerPip.anchorMax;
+                playerPip.anchorMin = new Vector2(progress, min.y);
+                playerPip.anchorMax = new Vector2(progress, max.y);
+            }
         }
 
         public bool HasBoundVisuals => metricsRoot != null && distanceLabel != null && rankLabel != null &&
-            cadenceLabel != null && distanceFill != null;
+            cadenceLabel != null && distanceFill != null && playerPip != null;
 
         void CacheVisuals()
         {
@@ -65,9 +74,10 @@ namespace KMA.Gameplay
                 return;
 
             distanceLabel = metricsRoot.Find("Distance")?.GetComponent<TMP_Text>();
-            rankLabel = metricsRoot.Find("Rank")?.GetComponent<TMP_Text>();
+            rankLabel = metricsRoot.Find("RankBadge/RankLabel")?.GetComponent<TMP_Text>();
             cadenceLabel = metricsRoot.Find("Combo")?.GetComponent<TMP_Text>();
-            distanceFill = metricsRoot.Find("ProgressTrack/ProgressFill")?.GetComponent<Image>();
+            distanceFill = chrome.Find("ProgressRail/RailFill")?.GetComponent<Image>();
+            playerPip = chrome.Find("ProgressRail/PlayerPip") as RectTransform;
         }
     }
 }
