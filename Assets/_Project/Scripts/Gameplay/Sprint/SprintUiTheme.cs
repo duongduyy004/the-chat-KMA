@@ -10,6 +10,7 @@ namespace KMA.Gameplay
         public static readonly Color Accent = new Color32(255, 202, 58, 255);
         public static readonly Color Player = new Color32(58, 230, 255, 255);
         public static readonly Color Energy = new Color32(255, 89, 94, 255);
+        public static readonly Color TextOutline = new Color32(3, 18, 33, 255);
 
         public const float Display = 160f;
         public const float Title = 54f;

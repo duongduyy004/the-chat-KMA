@@ -9,7 +9,7 @@ namespace KMA.Gameplay
     {
         const string SuccessTitle = "HOÀN THÀNH!";
         const string FailureTitle = "THẤT BẠI";
-        static readonly Color32 FailColor = new Color32(255, 89, 94, 255);
+        static readonly Color32 FailColor = (Color32)SprintUiTheme.Energy;
         static readonly Color32 SuccessColor = new Color32(94, 222, 140, 255);
 
         const float ScrimDuration = .12f;

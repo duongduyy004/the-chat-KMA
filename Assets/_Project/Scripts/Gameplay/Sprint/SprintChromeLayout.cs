@@ -11,10 +11,12 @@ namespace KMA.Gameplay
     public sealed class SprintChromeLayout : MonoBehaviour
     {
         readonly List<(RectTransform target, Func<Rect, Rect> layout)> elements = new();
+        readonly List<Action<Rect>> actions = new();
         RectTransform safeArea;
         Vector2 appliedSize = new Vector2(-1f, -1f);
 
         public int ElementCount => elements.Count;
+        public int ActionCount => actions.Count;
         public bool HasAppliedLayout => appliedSize.x > 0f && appliedSize.y > 0f;
 
         public void Bind(RectTransform safeAreaRect)
@@ -27,6 +29,14 @@ namespace KMA.Gameplay
         {
             if (target != null && layout != null)
                 elements.Add((target, layout));
+        }
+
+        /// Registers arbitrary safe-area-derived work (e.g. recomputing a corner radius or a
+        /// sizeDelta) to re-run whenever the safe area's size changes, alongside the rect pass.
+        public void Register(Action<Rect> apply)
+        {
+            if (apply != null)
+                actions.Add(apply);
         }
 
         void LateUpdate() => ApplyIfChanged();
@@ -52,6 +62,9 @@ namespace KMA.Gameplay
                 if (target != null)
                     SprintFestivalPresentation.ApplyRectPublic(target, safe, layout(safe));
             }
+
+            for (int i = 0; i < actions.Count; i++)
+                actions[i]?.Invoke(safe);
         }
     }
 }

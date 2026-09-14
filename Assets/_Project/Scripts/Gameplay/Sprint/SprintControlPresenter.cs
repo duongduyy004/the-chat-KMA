@@ -148,9 +148,27 @@ namespace KMA.Gameplay
             if (pressRemaining > 0f)
                 return;
 
+            Side restingSide = HighlightedSide == Side.Left ? Side.Right : Side.Left;
+            bool finished = controller != null && controller.PresentationPhase == MinigamePhase.Resolve;
+            if (finished)
+            {
+                SetScaleIfChanged(HighlightedSide, 1f);
+                SetScaleIfChanged(restingSide, 1f);
+                return;
+            }
+
             float pulse = 1f + Mathf.Sin(breathePhase) * .5f * BreatheAmount + .5f * BreatheAmount;
             SetScale(HighlightedSide, pulse);
-            SetScale(HighlightedSide == Side.Left ? Side.Right : Side.Left, 1f);
+            SetScaleIfChanged(restingSide, 1f);
+        }
+
+        void SetScaleIfChanged(Side side, float scale)
+        {
+            float current = side == Side.Left ? LeftScale : RightScale;
+            if (current == scale)
+                return;
+
+            SetScale(side, scale);
         }
 
         void SetScale(Side side, float scale)

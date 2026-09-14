@@ -679,8 +679,11 @@ namespace KMA.Tests.Presentation
 
             var layout = SceneObjects<SprintChromeLayout>(scene)[0];
             Assert.That(layout, Is.Not.Null, "chrome must own a relayout component");
-            Assert.That(layout.ElementCount, Is.GreaterThanOrEqualTo(4),
-                "rail, scoreboard, mode chip and pause must all be registered");
+            Assert.That(layout.ElementCount, Is.EqualTo(8),
+                "rail, scoreboard, mode chip, pause, countdown, instruction plate and both tap " +
+                "areas must all be registered as rects");
+            Assert.That(layout.ActionCount, Is.EqualTo(1),
+                "the rail radius/pip-width re-derivation must be registered as an action");
         }
 
         static IEnumerator LoadSprint()

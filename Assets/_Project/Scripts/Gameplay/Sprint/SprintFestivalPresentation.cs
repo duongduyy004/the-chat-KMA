@@ -58,6 +58,18 @@ namespace KMA.Gameplay
             pip.rectTransform.sizeDelta = new Vector2(safe.height * .014f, 0f);
             pip.rectTransform.anchoredPosition = Vector2.zero;
 
+            // The rail's corner radius and the pip's width are derived from safe.height at build
+            // time; if the Canvas has not laid out yet (safe.height == 0) they'd be stuck square
+            // and invisible forever, since SprintChromeLayout's rect pass never re-touches them.
+            // Re-derive them here whenever the safe area's size changes.
+            chromeLayout.Register(liveSafe =>
+            {
+                int railRadius = Mathf.RoundToInt(liveSafe.height * .015f);
+                railTrack.sprite = SprintUiShapes.RoundedRect(railRadius);
+                railFill.sprite = SprintUiShapes.RoundedRect(railRadius);
+                pip.rectTransform.sizeDelta = new Vector2(liveSafe.height * .014f, pip.rectTransform.sizeDelta.y);
+            });
+
             // Scoreboard
             Image scoreboard = Panel(root, "Scoreboard", SprintUiTheme.WithAlpha(SprintUiTheme.Surface, .92f),
                 Mathf.RoundToInt(SprintUiTheme.RadiusPanel));
@@ -189,7 +201,7 @@ namespace KMA.Gameplay
             if (safe.width > 0f && safe.height > 0f)
                 ApplyRect(countdown.rectTransform, safe, SprintUiLayout.CountdownRect(safe));
             countdown.outlineWidth = .2f;
-            countdown.outlineColor = new Color32(3, 18, 33, 255);
+            countdown.outlineColor = (Color32)SprintUiTheme.TextOutline;
 
             RectTransform instructionRoot = Rect(root, "InstructionPlate");
             if (safe.width > 0f && safe.height > 0f)
