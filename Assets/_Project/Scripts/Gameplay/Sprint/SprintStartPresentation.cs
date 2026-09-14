@@ -4,14 +4,28 @@ using KMA.Gameplay.UI;
 
 namespace KMA.Gameplay
 {
+    /// Sprint-only start flow: a 1.5 s input gate, a 3-2-1-GO! countdown, and one
+    /// instruction line that persists across both and fades shortly after GO!.
     public sealed class SprintStartPresentation : MonoBehaviour, ISprintStartPresentation
     {
-        const float TutorialDuration = 1.5f;
-        const float PlayInstructionDuration = .25f;
-        const float GoDuration = .25f;
+        public const string InstructionCopy = "BẤM TRÁI VÀ PHẢI LUÂN PHIÊN ĐỂ CHẠY";
 
-        [SerializeField] GameObject tutorialRoot;
-        [SerializeField] TMP_Text tutorialLabel;
+        const float GateDuration = 1.5f;
+        const float GoDuration = .5f;
+        const float InstructionFadeDuration = .4f;
+        const float DigitPopDuration = .15f;
+        const float DigitPopScale = 1.25f;
+        const float GoPopScale = 1.4f;
+        const float GoPopDuration = .2f;
+        const float MaxAutomaticStepSeconds = .1f;
+        // Bind() typically runs mid-frame (from a scene bootstrapper's Awake), so the automatic
+        // Update() can still fire once or twice more before a caller gets a chance to drive the
+        // gate manually (e.g. a test's very next line); one of those frames also reports whatever
+        // heavy synchronous scene/chrome construction happened earlier that frame as its delta.
+        // Skip a small, fixed number of automatic ticks right after Bind() so that noise never
+        // steals part of the deterministic gate/countdown window.
+        const int AutomaticTicksToSuppressAfterBind = 3;
+
         [SerializeField] GameObject countdownRoot;
         [SerializeField] TMP_Text countdownLabel;
         [SerializeField] GameObject instructionRoot;
@@ -19,72 +33,90 @@ namespace KMA.Gameplay
 
         SprintController controller;
         CanvasGroup instructionCanvasGroup;
-        float tutorialElapsed;
+        float gateElapsed;
         float countdownElapsed;
-        float instructionRemaining;
         float goRemaining;
-        bool tutorialReleased;
-        string countdownText = string.Empty;
-        string instructionText = string.Empty;
+        float fadeRemaining;
+        bool gateReleased;
+        bool fading;
+        string lastDigit = string.Empty;
+        float popRemaining;
+        float popFrom = 1f;
+        int automaticTicksToSuppress;
 
-        public bool TutorialVisible => controller != null && !tutorialReleased &&
-            controller.PresentationPhase == MinigamePhase.Tutorial;
-        public string TutorialText => TutorialCopy;
-        public string CountdownText => countdownLabel == null ? countdownText : countdownLabel.text;
-        public bool InstructionVisible => controller != null && instructionRemaining > 0f &&
-            controller.PresentationPhase == MinigamePhase.Play;
-        public string InstructionText => instructionLabel == null ? instructionText : instructionLabel.text;
-        public const string TutorialCopy = "← TRÁI     BẤM LUÂN PHIÊN ĐỂ CHẠY     PHẢI →";
+        public string CountdownText => countdownLabel == null ? string.Empty : countdownLabel.text;
+        public string InstructionText => instructionLabel == null ? string.Empty : instructionLabel.text;
+        public bool InstructionVisible =>
+            instructionRoot != null && instructionRoot.activeSelf &&
+            (instructionCanvasGroup == null || instructionCanvasGroup.alpha > .001f);
+        public float CountdownScale =>
+            countdownRoot == null ? 1f : countdownRoot.transform.localScale.x;
 
         void OnDisable() => Unsubscribe();
         void OnDestroy() => Unsubscribe();
-        void Update() => Tick(Time.unscaledDeltaTime);
 
-        public void Configure(GameObject tutorial, TMP_Text tutorialText, GameObject countdown,
-            TMP_Text countdownText, GameObject instruction, TMP_Text instructionText)
+        void Update()
         {
-            tutorialRoot = tutorial;
-            tutorialLabel = tutorialText;
+            if (automaticTicksToSuppress > 0)
+            {
+                automaticTicksToSuppress--;
+                return;
+            }
+
+            // A hitch (e.g. heavy synchronous scene/chrome construction) would otherwise leak a
+            // huge delta into the deterministic gate/countdown timers below and fast-forward
+            // them. Ignore any single frame that abnormal; TickForTest is unaffected since it
+            // calls Tick directly with a controlled value.
+            float dt = Time.unscaledDeltaTime;
+            if (dt > MaxAutomaticStepSeconds)
+                return;
+            Tick(dt);
+        }
+
+        public void Configure(GameObject countdown, TMP_Text countdownText,
+            GameObject instruction, TMP_Text instructionText)
+        {
             countdownRoot = countdown;
             countdownLabel = countdownText;
             instructionRoot = instruction;
             instructionLabel = instructionText;
             instructionCanvasGroup = instructionRoot == null ? null :
                 instructionRoot.GetComponent<CanvasGroup>() ?? instructionRoot.AddComponent<CanvasGroup>();
-            SetActive(tutorialRoot, false);
+
+            if (instructionLabel != null)
+                instructionLabel.text = InstructionCopy;
             SetActive(countdownRoot, false);
-            SetInstructionActive(false);
         }
 
         public void Bind(SprintController source)
         {
             Unsubscribe();
             controller = source;
-            tutorialElapsed = 0f;
+            gateElapsed = 0f;
             countdownElapsed = 0f;
-            instructionRemaining = 0f;
             goRemaining = 0f;
-            tutorialReleased = false;
-            countdownText = string.Empty;
-            instructionText = string.Empty;
+            fadeRemaining = 0f;
+            gateReleased = false;
+            fading = false;
+            lastDigit = string.Empty;
+            popRemaining = 0f;
+            automaticTicksToSuppress = AutomaticTicksToSuppressAfterBind;
 
             if (controller == null)
             {
-                SetActive(tutorialRoot, false);
                 SetActive(countdownRoot, false);
-                SetInstructionActive(false);
+                SetInstructionAlpha(0f);
                 return;
             }
 
             controller.PhaseChanged += ApplyPhase;
             controller.SetTutorialGate(true);
+            SetActive(instructionRoot, true);
+            SetInstructionAlpha(1f);
             ApplyPhase(controller.PresentationPhase);
         }
 
-        void ISprintStartPresentation.Bind(MinigameBase source)
-        {
-            Bind(source as SprintController);
-        }
+        void ISprintStartPresentation.Bind(MinigameBase source) => Bind(source as SprintController);
 
         public void TickForTest(float deltaTime) => Tick(deltaTime);
 
@@ -94,96 +126,114 @@ namespace KMA.Gameplay
                 return;
 
             float elapsed = Mathf.Max(0f, deltaTime);
-            if (!tutorialReleased)
+            // If the gate releases mid-tick, only the overshoot past GateDuration has actually
+            // elapsed inside Countdown; crediting the whole tick would skip a digit.
+            float countdownContribution = elapsed;
+
+            if (!gateReleased)
             {
-                tutorialElapsed += elapsed;
-                if (tutorialElapsed >= TutorialDuration)
+                gateElapsed += elapsed;
+                if (gateElapsed >= GateDuration)
                 {
-                    tutorialReleased = true;
-                    SetActive(tutorialRoot, false);
+                    gateReleased = true;
+                    countdownContribution = gateElapsed - GateDuration;
                     controller.SetTutorialGate(false);
+                }
+                else
+                {
+                    countdownContribution = 0f;
                 }
             }
 
             if (controller.PresentationPhase == MinigamePhase.Countdown)
             {
-                countdownElapsed += elapsed;
+                countdownElapsed += countdownContribution;
                 RefreshCountdown();
-            }
-
-            if (instructionRemaining <= 0f)
-            {
-                if (goRemaining <= 0f)
-                    return;
-            }
-
-            if (instructionRemaining > 0f)
-            {
-                instructionRemaining = Mathf.Max(0f, instructionRemaining - elapsed);
-                if (instructionCanvasGroup != null)
-                    instructionCanvasGroup.alpha = instructionRemaining / PlayInstructionDuration;
-                if (instructionRemaining <= 0f)
-                    SetInstructionActive(false);
             }
 
             if (goRemaining > 0f)
             {
                 goRemaining = Mathf.Max(0f, goRemaining - elapsed);
                 if (goRemaining <= 0f)
+                {
+                    if (countdownLabel != null)
+                        countdownLabel.text = string.Empty;
                     SetActive(countdownRoot, false);
+                }
             }
+
+            if (fading)
+            {
+                fadeRemaining = Mathf.Max(0f, fadeRemaining - elapsed);
+                SetInstructionAlpha(fadeRemaining / InstructionFadeDuration);
+                if (fadeRemaining <= 0f)
+                {
+                    fading = false;
+                    SetActive(instructionRoot, false);
+                }
+            }
+
+            TickPop(elapsed);
         }
 
         void ApplyPhase(MinigamePhase phase)
         {
-            if (phase == MinigamePhase.Tutorial)
-            {
-                if (tutorialLabel != null)
-                    tutorialLabel.text = TutorialMessage;
-                SetActive(tutorialRoot, !tutorialReleased);
-                SetActive(countdownRoot, false);
-                SetInstructionActive(false);
-                countdownText = string.Empty;
-                instructionText = string.Empty;
-                return;
-            }
-
             if (phase == MinigamePhase.Countdown)
             {
                 countdownElapsed = 0f;
-                SetActive(tutorialRoot, false);
                 SetActive(countdownRoot, true);
-                SetInstructionActive(false);
                 RefreshCountdown();
                 return;
             }
 
-            SetActive(tutorialRoot, false);
             if (phase == MinigamePhase.Play)
             {
-                countdownText = "GO!";
                 if (countdownLabel != null)
-                    countdownLabel.text = countdownText;
-                goRemaining = GoDuration;
+                    countdownLabel.text = "GO!";
                 SetActive(countdownRoot, true);
-                instructionText = "TĂNG TỐC!";
-                if (instructionLabel != null)
-                    instructionLabel.text = instructionText;
-                instructionRemaining = PlayInstructionDuration;
-                SetInstructionActive(true);
+                goRemaining = GoDuration;
+                Pop(GoPopScale, GoPopDuration);
+                fading = true;
+                fadeRemaining = InstructionFadeDuration;
                 return;
             }
 
-            SetActive(countdownRoot, false);
-            SetInstructionActive(false);
+            if (phase != MinigamePhase.Tutorial)
+            {
+                SetActive(countdownRoot, false);
+                SetActive(instructionRoot, false);
+            }
         }
 
         void RefreshCountdown()
         {
-            int remaining = Mathf.Clamp(Mathf.CeilToInt(3f - countdownElapsed), 1, 3);
-            countdownText = remaining.ToString();
+            string digit = Mathf.Clamp(Mathf.CeilToInt(3f - countdownElapsed), 1, 3).ToString();
+            if (digit == lastDigit)
+                return;
+
+            lastDigit = digit;
             if (countdownLabel != null)
-                countdownLabel.text = countdownText;
+                countdownLabel.text = digit;
+            Pop(DigitPopScale, DigitPopDuration);
+        }
+
+        void Pop(float fromScale, float duration)
+        {
+            popFrom = fromScale;
+            popRemaining = duration;
+            if (countdownRoot != null)
+                countdownRoot.transform.localScale = Vector3.one * fromScale;
+        }
+
+        void TickPop(float deltaTime)
+        {
+            if (popRemaining <= 0f || countdownRoot == null)
+                return;
+
+            popRemaining = Mathf.Max(0f, popRemaining - deltaTime);
+            float duration = popFrom == GoPopScale ? GoPopDuration : DigitPopDuration;
+            float t = duration <= 0f ? 1f : 1f - popRemaining / duration;
+            countdownRoot.transform.localScale = Vector3.one * Mathf.Lerp(popFrom, 1f, t);
         }
 
         void Unsubscribe()
@@ -193,19 +243,16 @@ namespace KMA.Gameplay
             controller = null;
         }
 
+        void SetInstructionAlpha(float alpha)
+        {
+            if (instructionCanvasGroup != null)
+                instructionCanvasGroup.alpha = Mathf.Clamp01(alpha);
+        }
+
         static void SetActive(GameObject target, bool active)
         {
             if (target != null)
                 target.SetActive(active);
         }
-
-        void SetInstructionActive(bool active)
-        {
-            if (instructionCanvasGroup != null)
-                instructionCanvasGroup.alpha = active ? 1f : 0f;
-            SetActive(instructionRoot, active);
-        }
-
-        const string TutorialMessage = "TRÁI     BẤM LUÂN PHIÊN ĐỂ CHẠY     PHẢI";
     }
 }

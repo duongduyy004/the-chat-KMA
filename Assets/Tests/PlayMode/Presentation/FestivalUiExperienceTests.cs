@@ -101,8 +101,7 @@ namespace KMA.Tests.Presentation
 
             SprintStartPresentation start = Object.FindFirstObjectByType<SprintStartPresentation>();
             Assert.That(start, Is.Not.Null);
-            Assert.That(start.TutorialText,
-                Is.EqualTo("← TRÁI     BẤM LUÂN PHIÊN ĐỂ CHẠY     PHẢI →"));
+            Assert.That(start.InstructionText, Is.EqualTo(SprintStartPresentation.InstructionCopy));
         }
 
         static Button FindButton(string name) => Object.FindObjectsByType<Button>(

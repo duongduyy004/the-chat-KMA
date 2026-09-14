@@ -123,7 +123,7 @@ namespace KMA.Tests.Presentation
                 "Sprint must use the shared safe-area root for its mobile presentation.");
             Assert.That(safeArea.Find("SprintBroadcastChrome"), Is.Not.Null,
                 "The Sprint-specific broadcast chrome must replace generic HUD content.");
-            Assert.That(GameObject.Find("SprintMetrics"), Is.Not.Null,
+            Assert.That(safeArea.Find("SprintBroadcastChrome/Scoreboard"), Is.Not.Null,
                 "Sprint-specific race metrics must remain visible.");
         }
 

@@ -43,58 +43,17 @@ namespace KMA.Tests.Presentation
             var start = starts[0];
             Assert.That(overlays[0].ShouldShow, Is.False,
                 "Sprint must not open the shared multi-page tutorial.");
-            Assert.That(start.TutorialVisible, Is.True);
-            Assert.That(start.TutorialText,
-                Is.EqualTo("← TRÁI     BẤM LUÂN PHIÊN ĐỂ CHẠY     PHẢI →"));
+            Assert.That(start.InstructionVisible, Is.True);
+            Assert.That(start.InstructionText, Is.EqualTo(SprintStartPresentation.InstructionCopy));
 
-            Transform tutorialBanner = GameObject.Find("SprintBroadcastChrome")?.transform
-                .Find("StartPresentation/TutorialBanner");
-            TMP_Text tutorialMessage = tutorialBanner?.Find("TutorialLabel")?.GetComponent<TMP_Text>();
-            Assert.That(tutorialBanner, Is.Not.Null);
-            Assert.That(tutorialBanner.gameObject.activeSelf, Is.True,
-                "The active Sprint tutorial phase must render its dedicated banner.");
-            Assert.That(tutorialMessage, Is.Not.Null);
-            Assert.That(tutorialMessage.text, Is.EqualTo("TRÁI     BẤM LUÂN PHIÊN ĐỂ CHẠY     PHẢI"));
-            Canvas.ForceUpdateCanvases();
-            RectTransform tutorialRect = tutorialBanner.GetComponent<RectTransform>();
-            RectTransform chromeRect = tutorialRect.parent.GetComponent<RectTransform>();
-            RectTransform safeAreaRect = chromeRect.parent.GetComponent<RectTransform>();
-            Assert.That(safeAreaRect.rect.width, Is.GreaterThan(100f));
-            Assert.That(chromeRect.rect.width, Is.GreaterThan(100f));
-            Assert.That(tutorialRect.rect.width, Is.GreaterThan(100f));
-            Assert.That(tutorialRect.rect.height, Is.GreaterThan(50f));
-            Rect tutorialBounds = ScreenRect(tutorialRect);
-            Assert.That(tutorialBounds.width, Is.GreaterThan(Screen.width * .5f));
-            Assert.That(tutorialBounds.center.y, Is.EqualTo(Screen.height * .5f).Within(Screen.height * .2f),
-                "The tutorial banner must occupy the visual center, not overlap the top scene content.");
-            RectTransform leftArrow = tutorialBanner?.Find("LeftArrow")?.GetComponent<RectTransform>();
-            RectTransform rightArrow = tutorialBanner?.Find("RightArrow")?.GetComponent<RectTransform>();
-            RectTransform leftTipTop = tutorialBanner?.Find("LeftArrow/TipTop")
-                ?.GetComponent<RectTransform>();
-            RectTransform leftTipBottom = tutorialBanner?.Find("LeftArrow/TipBottom")
-                ?.GetComponent<RectTransform>();
-            RectTransform rightTipTop = tutorialBanner?.Find("RightArrow/TipTop")
-                ?.GetComponent<RectTransform>();
-            RectTransform rightTipBottom = tutorialBanner?.Find("RightArrow/TipBottom")
-                ?.GetComponent<RectTransform>();
-            Assert.That(leftTipTop, Is.Not.Null);
-            Assert.That(leftTipBottom, Is.Not.Null);
-            Assert.That(rightTipTop, Is.Not.Null);
-            Assert.That(rightTipBottom, Is.Not.Null);
-            Assert.That(leftArrow.anchorMax.x, Is.LessThan(.5f));
-            Assert.That(rightArrow.anchorMin.x, Is.GreaterThan(.5f));
-            Assert.That(leftTipTop.anchorMin.x, Is.LessThan(.5f));
-            Assert.That(leftTipBottom.anchorMin.x, Is.LessThan(.5f));
-            Assert.That(rightTipTop.anchorMin.x, Is.GreaterThan(.5f));
-            Assert.That(rightTipBottom.anchorMin.x, Is.GreaterThan(.5f));
-            Assert.That(leftTipTop.anchoredPosition.y, Is.GreaterThan(leftTipBottom.anchoredPosition.y),
-                "Left-arrow tips must form a chevron, not an X.");
-            Assert.That(rightTipTop.anchoredPosition.y, Is.GreaterThan(rightTipBottom.anchoredPosition.y),
-                "Right-arrow tips must form a chevron, not an X.");
-            Assert.That(SignedZAngle(leftTipTop), Is.EqualTo(45f).Within(.01f));
-            Assert.That(SignedZAngle(leftTipBottom), Is.EqualTo(-45f).Within(.01f));
-            Assert.That(SignedZAngle(rightTipTop), Is.EqualTo(-45f).Within(.01f));
-            Assert.That(SignedZAngle(rightTipBottom), Is.EqualTo(45f).Within(.01f));
+            Transform instructionPlate = GameObject.Find("SprintBroadcastChrome")?.transform
+                .Find("StartPresentation/InstructionPlate");
+            TMP_Text instructionMessage = instructionPlate?.Find("InstructionLabel")?.GetComponent<TMP_Text>();
+            Assert.That(instructionPlate, Is.Not.Null);
+            Assert.That(instructionPlate.gameObject.activeSelf, Is.True,
+                "The active Sprint start phase must render its instruction plate.");
+            Assert.That(instructionMessage, Is.Not.Null);
+            Assert.That(instructionMessage.text, Is.EqualTo(SprintStartPresentation.InstructionCopy));
 
             var pause = pauses[0];
             var player = GameObject.Find("Player");
@@ -132,6 +91,69 @@ namespace KMA.Tests.Presentation
             Assert.That(rightRect.anchorMax.x, Is.EqualTo(.99f));
             Assert.That(1920f * (leftRect.anchorMax.x - leftRect.anchorMin.x) + leftRect.sizeDelta.x, Is.GreaterThanOrEqualTo(140f));
             Assert.That(1920f * (rightRect.anchorMax.x - rightRect.anchorMin.x) + rightRect.sizeDelta.x, Is.GreaterThanOrEqualTo(140f));
+        }
+
+        [UnityTest]
+        public IEnumerator SprintStart_ShowsOneInstructionAcrossTutorialAndCountdown()
+        {
+            yield return LoadSprint();
+            var scene = SceneManager.GetActiveScene();
+
+            var controller = SceneObjects<SprintController>(scene)[0];
+            var start = SceneObjects<SprintStartPresentation>(scene)[0];
+
+            Assert.That(start.InstructionVisible, Is.True, "instruction shows immediately");
+            Assert.That(start.InstructionText, Is.EqualTo(SprintStartPresentation.InstructionCopy));
+            Assert.That(start.InstructionText, Is.EqualTo("BẤM TRÁI VÀ PHẢI LUÂN PHIÊN ĐỂ CHẠY"));
+
+            start.TickForTest(1.49f);
+            Assert.That(controller.PresentationPhase, Is.EqualTo(MinigamePhase.Tutorial));
+            Assert.That(start.InstructionVisible, Is.True, "instruction persists through the gate");
+
+            start.TickForTest(.02f);
+            Assert.That(controller.PresentationPhase, Is.Not.EqualTo(MinigamePhase.Tutorial),
+                "the gate auto-releases at 1.5 s");
+        }
+
+        [UnityTest]
+        public IEnumerator SprintStart_CountsDownThreeTwoOneThenGo()
+        {
+            yield return LoadSprint();
+            var scene = SceneManager.GetActiveScene();
+
+            var controller = SceneObjects<SprintController>(scene)[0];
+            var start = SceneObjects<SprintStartPresentation>(scene)[0];
+            start.TickForTest(1.51f);
+
+            Assert.That(start.CountdownText, Is.EqualTo("3"));
+            start.TickForTest(1f);
+            Assert.That(start.CountdownText, Is.EqualTo("2"));
+            start.TickForTest(1f);
+            Assert.That(start.CountdownText, Is.EqualTo("1"));
+
+            controller.Simulate(1f);
+            controller.Simulate(1f);
+            controller.Simulate(1f);
+            Assert.That(start.CountdownText, Is.EqualTo("GO!"));
+            Assert.That(start.CountdownScale, Is.GreaterThan(1f), "GO! pops before settling");
+
+            start.TickForTest(.51f);
+            Assert.That(start.CountdownText, Is.Empty.Or.Null, "GO! clears after 0.5 s");
+
+            start.TickForTest(.41f);
+            Assert.That(start.InstructionVisible, Is.False, "instruction fades 0.4 s after GO");
+        }
+
+        [UnityTest]
+        public IEnumerator SprintStart_BlocksInputUntilPlay()
+        {
+            yield return LoadSprint();
+            var scene = SceneManager.GetActiveScene();
+
+            var controller = SceneObjects<SprintController>(scene)[0];
+            controller.OnLeftTap();
+            Assert.That(controller.Snapshot.Distance, Is.EqualTo(0f).Within(.0001f),
+                "taps before Play must not move the runner");
         }
 
         [UnityTest]
@@ -670,22 +692,6 @@ namespace KMA.Tests.Presentation
         static T ReadProperty<T>(MonoBehaviour component, string propertyName) =>
             (T)component.GetType().GetProperty(propertyName).GetValue(component);
 
-        static Rect ScreenRect(RectTransform rect)
-        {
-            Vector3[] corners = new Vector3[4];
-            rect.GetWorldCorners(corners);
-            Camera camera = rect.GetComponentInParent<Canvas>().worldCamera;
-            Vector2 min = RectTransformUtility.WorldToScreenPoint(camera, corners[0]);
-            Vector2 max = min;
-            for (int i = 1; i < corners.Length; i++)
-            {
-                Vector2 point = RectTransformUtility.WorldToScreenPoint(camera, corners[i]);
-                min = Vector2.Min(min, point);
-                max = Vector2.Max(max, point);
-            }
-            return Rect.MinMaxRect(min.x, min.y, max.x, max.y);
-        }
-
         static void AssertColor32(Color color, Color32 expected)
         {
             Color32 actual = color;
@@ -694,8 +700,5 @@ namespace KMA.Tests.Presentation
             Assert.That(actual.b, Is.EqualTo(expected.b));
             Assert.That(actual.a, Is.EqualTo(expected.a));
         }
-
-        static float SignedZAngle(RectTransform transform) =>
-            Mathf.DeltaAngle(0f, transform.localEulerAngles.z);
     }
 }

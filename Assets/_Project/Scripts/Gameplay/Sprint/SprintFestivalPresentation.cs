@@ -93,7 +93,7 @@ namespace KMA.Gameplay
 
             EnsurePause(root, font, safe, chromeLayout);
 
-            EnsureStartPresentation(root, font);
+            EnsureStartPresentation(root, font, safe);
 
             EnsureControls(root, safe);
             EnsurePlayerIdentity(root);
@@ -178,47 +178,48 @@ namespace KMA.Gameplay
             presenter.Bind(panel, Object.FindFirstObjectByType<SprintController>());
         }
 
-        static void EnsureStartPresentation(RectTransform parent, TMP_FontAsset font)
+        static void EnsureStartPresentation(RectTransform parent, TMP_FontAsset font, Rect safe)
         {
             RectTransform root = Rect(parent, "StartPresentation");
             Stretch(root);
             root.SetAsLastSibling();
 
-            RectTransform tutorial = Rect(root, "TutorialBanner");
-            tutorial.anchorMin = new Vector2(.16f, .43f);
-            tutorial.anchorMax = new Vector2(.84f, .59f);
-            tutorial.offsetMin = Vector2.zero;
-            tutorial.offsetMax = Vector2.zero;
-            Image tutorialSurface = tutorial.gameObject.AddComponent<Image>();
-            tutorialSurface.color = SprintUiTheme.Surface;
-            tutorialSurface.raycastTarget = false;
-            AddShadow(tutorialSurface);
-            TMP_Text tutorialLabel = Text(tutorial, "TutorialLabel", "TRÁI     BẤM LUÂN PHIÊN ĐỂ CHẠY     PHẢI",
-                font, 35f, SprintUiTheme.TextPrimary, TextAlignmentOptions.Center);
-            Stretch(tutorialLabel.rectTransform, new Vector2(20f, 12f), new Vector2(-20f, -12f));
-            Arrow(tutorial, "LeftArrow", true);
-            Arrow(tutorial, "RightArrow", false);
+            TMP_Text countdown = Text(root, "CountdownLabel", string.Empty, font, SprintUiTheme.Display,
+                SprintUiTheme.Accent, TextAlignmentOptions.Center);
+            if (safe.width > 0f && safe.height > 0f)
+                ApplyRect(countdown.rectTransform, safe, SprintUiLayout.CountdownRect(safe));
+            countdown.outlineWidth = .2f;
+            countdown.outlineColor = new Color32(3, 18, 33, 255);
 
-            TMP_Text countdown = Text(root, "CountdownLabel", string.Empty, font, 88f, SprintUiTheme.Accent,
-                TextAlignmentOptions.Center);
-            countdown.rectTransform.anchorMin = new Vector2(.35f, .36f);
-            countdown.rectTransform.anchorMax = new Vector2(.65f, .68f);
-            countdown.rectTransform.offsetMin = Vector2.zero;
-            countdown.rectTransform.offsetMax = Vector2.zero;
+            RectTransform instructionRoot = Rect(root, "InstructionPlate");
+            if (safe.width > 0f && safe.height > 0f)
+                ApplyRect(instructionRoot, safe, SprintUiLayout.InstructionRect(safe));
+            Image plate = instructionRoot.gameObject.AddComponent<Image>();
+            plate.sprite = SprintUiShapes.RoundedRect(Mathf.RoundToInt(SprintUiTheme.RadiusPanel));
+            plate.type = Image.Type.Sliced;
+            plate.pixelsPerUnitMultiplier = 1f;
+            plate.color = SprintUiTheme.WithAlpha(SprintUiTheme.Surface, .82f);
+            plate.raycastTarget = false;
+            AddShadow(plate);
 
-            TMP_Text instruction = Text(root, "InstructionLabel", string.Empty, font, 56f, SprintUiTheme.Energy,
-                TextAlignmentOptions.Center);
-            instruction.rectTransform.anchorMin = new Vector2(.25f, .28f);
-            instruction.rectTransform.anchorMax = new Vector2(.75f, .45f);
-            instruction.rectTransform.offsetMin = Vector2.zero;
-            instruction.rectTransform.offsetMax = Vector2.zero;
+            TMP_Text instruction = Text(instructionRoot, "InstructionLabel",
+                SprintStartPresentation.InstructionCopy, font, SprintUiTheme.BodyLarge,
+                SprintUiTheme.TextPrimary, TextAlignmentOptions.Center);
+            Stretch(instruction.rectTransform, new Vector2(SprintUiTheme.SpaceMd, SprintUiTheme.SpaceXs),
+                new Vector2(-SprintUiTheme.SpaceMd, -SprintUiTheme.SpaceXs));
 
             SprintStartPresentation presenter = Object.FindFirstObjectByType<SprintStartPresentation>();
             if (presenter == null)
                 presenter = root.gameObject.AddComponent<SprintStartPresentation>();
-            presenter.Configure(tutorial.gameObject, tutorialLabel, countdown.gameObject, countdown,
-                instruction.gameObject, instruction);
+            presenter.Configure(countdown.gameObject, countdown, instructionRoot.gameObject, instruction);
             presenter.Bind(Object.FindFirstObjectByType<SprintController>());
+
+            var chromeLayout = parent.GetComponent<SprintChromeLayout>();
+            if (chromeLayout != null)
+            {
+                chromeLayout.Register(countdown.rectTransform, SprintUiLayout.CountdownRect);
+                chromeLayout.Register(instructionRoot, SprintUiLayout.InstructionRect);
+            }
         }
 
         static void PrepareSafeArea(Transform safeArea)
@@ -233,39 +234,6 @@ namespace KMA.Gameplay
                 rectTransform.offsetMin = Vector2.zero;
                 rectTransform.offsetMax = Vector2.zero;
             }
-        }
-
-        static void Arrow(RectTransform parent, string name, bool pointsLeft)
-        {
-            RectTransform arrow = Rect(parent, name);
-            arrow.anchorMin = pointsLeft ? new Vector2(.025f, .25f) : new Vector2(.905f, .25f);
-            arrow.anchorMax = pointsLeft ? new Vector2(.115f, .75f) : new Vector2(.995f, .75f);
-            arrow.offsetMin = Vector2.zero;
-            arrow.offsetMax = Vector2.zero;
-
-            Image shaft = Rect(arrow, "Shaft").gameObject.AddComponent<Image>();
-            shaft.color = SprintUiTheme.Accent;
-            shaft.raycastTarget = false;
-            shaft.rectTransform.anchorMin = new Vector2(.18f, .42f);
-            shaft.rectTransform.anchorMax = new Vector2(.82f, .58f);
-            shaft.rectTransform.offsetMin = Vector2.zero;
-            shaft.rectTransform.offsetMax = Vector2.zero;
-
-            CreateArrowTip(arrow, "TipTop", pointsLeft, true);
-            CreateArrowTip(arrow, "TipBottom", pointsLeft, false);
-        }
-
-        static void CreateArrowTip(RectTransform parent, string name, bool pointsLeft, bool top)
-        {
-            Image tip = Rect(parent, name).gameObject.AddComponent<Image>();
-            tip.color = SprintUiTheme.Accent;
-            tip.raycastTarget = false;
-            tip.rectTransform.anchorMin = tip.rectTransform.anchorMax =
-                new Vector2(pointsLeft ? .38f : .62f, .5f);
-            tip.rectTransform.sizeDelta = new Vector2(42f, 8f);
-            tip.rectTransform.anchoredPosition = new Vector2(0f, top ? 12f : -12f);
-            float angle = pointsLeft == top ? 45f : -45f;
-            tip.rectTransform.localRotation = Quaternion.Euler(0f, 0f, angle);
         }
 
         static void EnsureControls(RectTransform root, Rect safe)
@@ -450,7 +418,21 @@ namespace KMA.Gameplay
             Image button = Panel(parent, "PausePanel",
                 SprintUiTheme.WithAlpha(SprintUiTheme.Surface, .92f), Mathf.RoundToInt(SprintUiTheme.RadiusPause));
             button.raycastTarget = true;
-            ApplyRect(button.rectTransform, safe, SprintUiLayout.PauseRect(safe));
+            if (safe.width > 0f && safe.height > 0f)
+            {
+                ApplyRect(button.rectTransform, safe, SprintUiLayout.PauseRect(safe));
+            }
+            else
+            {
+                // A degenerate first-frame safe rect (batchmode's headless canvas) collapses the
+                // usual spread-anchor math to (0,0); pin to the top-right corner instead.
+                // SprintChromeLayout re-applies the real anchors once safe becomes valid.
+                button.rectTransform.anchorMin = Vector2.one;
+                button.rectTransform.anchorMax = Vector2.one;
+                button.rectTransform.pivot = Vector2.one;
+                button.rectTransform.sizeDelta = new Vector2(96f, 96f);
+                button.rectTransform.anchoredPosition = new Vector2(-38f, -65f);
+            }
             chromeLayout.Register(button.rectTransform, SprintUiLayout.PauseRect);
             AddShadow(button);
             button.gameObject.AddComponent<Button>();
