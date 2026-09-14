@@ -41,7 +41,9 @@ Tasks 1 and 2 change production behaviour that PlayMode tests still assert the o
 | `Assets/Tests/PlayMode/Core/GameManagerStartupTests.cs` | One `CompletePunishment()` setup call to replace. | 3 |
 | `docs/qa/loss-route-gate.md` | Records the verification run, matching the repo's existing gate docs. | 4 |
 
-**Not modified:** `Assets/Tests/EditMode/Progression/SaveDataTests.cs` and `Assets/Tests/EditMode/Progression/ChallengeSequenceTests.cs`. Both assert data-level behaviour that this change preserves. If either fails, stop and report — it means an assumption in this plan is wrong.
+`Assets/Tests/EditMode/Progression/ChallengeSequenceTests.cs` gains three `[Ignore]` attributes in Task 1 Step 7b and nothing else — `PunishmentController` can no longer be constructed from a live session, so the three tests that build that fixture are parked rather than deleted.
+
+**Not modified:** `Assets/Tests/EditMode/Progression/SaveDataTests.cs`. It asserts data-level behaviour that this change preserves. If it fails, stop and report — it means an assumption in this plan is wrong.
 
 ---
 
@@ -226,11 +228,40 @@ grep -o 'result="[A-Za-z]*"' Builds/TestResults/task1-coreloop.xml | sort | uniq
 
 Expected: PASS, zero `result="Failed"`.
 
+- [ ] **Step 7b: Park the three challenge tests that need a live punishment**
+
+`PunishmentController`'s constructor requires `session.PendingPunishmentSubject.HasValue`. Nothing can produce that state any more, so three tests in `Assets/Tests/EditMode/Progression/ChallengeSequenceTests.cs` can no longer construct their fixture. This is a direct consequence of the rule change, not a mistake — an earlier version of this plan wrongly listed the file as unaffected.
+
+The project owner chose to retire punishment code in place rather than delete it. Apply the same treatment to its tests: park them, do not delete them. Add an `[Ignore]` attribute directly beneath the `[Test]` attribute of each of these three, and change nothing else inside them:
+
+```csharp
+        [Ignore("Punishment is retired in place: no route sets PendingPunishmentSubject, so PunishmentController cannot be constructed from a live GameSession. Re-enable with the punishment leg — see docs/superpowers/specs/2026-09-14-remove-punishment-loss-route-design.md")]
+```
+
+- `NonFiniteProgress_CannotAdvanceOrCompletePunishment`
+- `Controller_ActivatesAuthoredCueAndCounterplayAdapter`
+- `Controller_RequestsRetryOnceWithoutChangingLivesOrMutatingTheSession`
+
+Leave `Controller_RejectsInvalidTransitions` running. It only asserts that the constructor throws, and it still does — now because no punishment is ever active rather than because the subject mismatched. Leave every pure `ChallengeStep` and `ChallengeSequence` test running; they never touch `GameSession`.
+
+Re-run the file to confirm it is green with three ignored:
+
+```bash
+"/c/Program Files/Unity/Hub/Editor/6000.3.23f1/Editor/Unity.exe" -batchmode -nographics \
+  -projectPath "D:/project/the-chat-KMA" -runTests -testPlatform EditMode \
+  -testFilter "KMA.Tests.Gameplay.Progression.ChallengeSequenceTests" \
+  -testResults Builds/TestResults/task1-challenge.xml -logFile Builds/TestResults/task1-challenge.log
+grep -o 'result="[A-Za-z]*"' Builds/TestResults/task1-challenge.xml | sort | uniq -c
+```
+
+Expected: zero `result="Failed"`, three `result="Skipped"`.
+
 - [ ] **Step 8: Commit**
 
 ```bash
 git add Assets/_Project/Scripts/Progression/GameSession.cs \
         Assets/Tests/EditMode/Progression/GameSessionTests.cs \
+        Assets/Tests/EditMode/Progression/ChallengeSequenceTests.cs \
         Assets/Tests/PlayMode/Progression/CoreLoopTests.cs
 git commit -m "feat: charge one life per loss and drop the punishment route
 
