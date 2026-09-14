@@ -111,12 +111,6 @@ namespace KMA.Gameplay
             return all;
         }
 
-        // Retained only until Task 6 rewrites SprintControlPresenter; both now resolve to the
-        // single authoritative control rect.
-        public static Rect VisibleControlRect(Rect safe, bool left) => ControlRect(safe, left);
-
-        public static Rect HitAreaRect(Rect safe, bool left) => ControlRect(safe, left);
-
         static Rect Centered(Rect safe, float width01H, float height01H, float centerY01H)
         {
             float width = safe.height * width01H;

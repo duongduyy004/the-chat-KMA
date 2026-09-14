@@ -95,9 +95,7 @@ namespace KMA.Gameplay
 
             EnsureStartPresentation(root, font);
 
-            EnsureControls(root);
-            PrepareTapArea("LeftTap");
-            PrepareTapArea("RightTap");
+            EnsureControls(root, safe);
             EnsurePlayerIdentity(root);
             EnsureFinishLine(root);
             EnsureResultPresentation();
@@ -270,37 +268,90 @@ namespace KMA.Gameplay
             tip.rectTransform.localRotation = Quaternion.Euler(0f, 0f, angle);
         }
 
-        static void EnsureControls(RectTransform root)
+        static void EnsureControls(RectTransform root, Rect safe)
         {
             KMA.Input.ScreenTapArea leftTap = FindTapArea("LeftTap");
             KMA.Input.ScreenTapArea rightTap = FindTapArea("RightTap");
             if (leftTap == null || rightTap == null)
                 return;
 
-            RectTransform controls = Rect(root, "Controls");
-            Stretch(controls);
-            Image left = Control(controls, "LeftControl");
-            Image right = Control(controls, "RightControl");
-            var presenter = controls.gameObject.AddComponent<SprintControlPresenter>();
-            presenter.Configure(Object.FindFirstObjectByType<SprintController>(), left.rectTransform,
-                right.rectTransform, left, right);
-            presenter.ConfigureLayout(leftTap.GetComponent<RectTransform>(), rightTap.GetComponent<RectTransform>());
+            ControlVisual left = BuildControl(leftTap, safe, true);
+            ControlVisual right = BuildControl(rightTap, safe, false);
+
+            var presenter = root.GetComponent<SprintControlPresenter>()
+                ?? root.gameObject.AddComponent<SprintControlPresenter>();
+            presenter.Configure(Object.FindFirstObjectByType<SprintController>(),
+                left.Visual, right.Visual, left.Background, right.Background, left.Border, right.Border);
             presenter.BindPressFeedback(leftTap, rightTap);
+
+            var chromeLayout = root.GetComponent<SprintChromeLayout>();
+            if (chromeLayout != null)
+            {
+                chromeLayout.Register(leftTap.GetComponent<RectTransform>(), safeRect => SprintUiLayout.ControlRect(safeRect, true));
+                chromeLayout.Register(rightTap.GetComponent<RectTransform>(), safeRect => SprintUiLayout.ControlRect(safeRect, false));
+            }
         }
 
-        // SprintControlPresenter reads this Outline directly to drive the highlight glow
-        // (see ApplyHighlight), so it stays an Outline rather than the Shadow helper used
-        // elsewhere in this file; Task 6 owns any further rework of the control visuals.
-        static Image Control(Transform parent, string name)
+        readonly struct ControlVisual
         {
-            RectTransform root = Rect(parent, name);
-            Image image = root.gameObject.AddComponent<Image>();
-            image.color = new Color32(7, 28, 49, 128);
-            image.raycastTarget = false;
-            Outline outline = root.gameObject.AddComponent<Outline>();
-            outline.effectColor = new Color(1f, .79f, .23f, .16f);
-            outline.effectDistance = new Vector2(2f, -2f);
-            return image;
+            public readonly RectTransform Visual;
+            public readonly Image Background;
+            public readonly Image Border;
+
+            public ControlVisual(RectTransform visual, Image background, Image border)
+            {
+                Visual = visual;
+                Background = background;
+                Border = border;
+            }
+        }
+
+        static ControlVisual BuildControl(KMA.Input.ScreenTapArea tapArea, Rect safe, bool left)
+        {
+            var tapRect = tapArea.GetComponent<RectTransform>();
+            // A degenerate safe rect (batchmode's headless canvas, or the first frame before
+            // Canvas layout runs) would collapse InverseLerp to a zero-size anchor pin. Skip and
+            // keep the authored tap-area rect; SprintChromeLayout re-applies once safe is valid.
+            if (safe.width > 0f && safe.height > 0f)
+                ApplyRect(tapRect, safe, SprintUiLayout.ControlRect(safe, left));
+
+            Image tapImage = tapArea.GetComponent<Image>() ?? tapArea.gameObject.AddComponent<Image>();
+            tapImage.color = new Color(1f, 1f, 1f, 0f);
+            tapImage.raycastTarget = true;
+
+            Transform existing = tapRect.Find("Visual");
+            if (existing != null)
+                Object.DestroyImmediate(existing.gameObject);
+
+            RectTransform visual = Rect(tapRect, "Visual");
+            Stretch(visual);
+
+            int radius = Mathf.RoundToInt(SprintUiTheme.RadiusControl);
+            Image border = Panel(visual, "Border", SprintUiTheme.WithAlpha(SprintUiTheme.Accent, .25f), radius);
+            Stretch(border.rectTransform);
+            AddShadow(border);
+
+            Image background = Panel(visual, "Background",
+                SprintUiTheme.WithAlpha(SprintUiTheme.Surface, .42f), radius);
+            float inset = SprintUiTheme.BorderWidth;
+            Stretch(background.rectTransform, new Vector2(inset, inset), new Vector2(-inset, -inset));
+
+            TMP_FontAsset font = Object.FindFirstObjectByType<TMP_Text>()?.font;
+            TMP_Text arrow = Text(visual, "Arrow", left ? "←" : "→", font,
+                SprintUiTheme.BodyLarge * 1.6f, SprintUiTheme.TextPrimary, TextAlignmentOptions.Center);
+            arrow.rectTransform.anchorMin = new Vector2(.1f, .44f);
+            arrow.rectTransform.anchorMax = new Vector2(.9f, .88f);
+            arrow.rectTransform.offsetMin = Vector2.zero;
+            arrow.rectTransform.offsetMax = Vector2.zero;
+
+            TMP_Text label = Text(visual, "Label", left ? "TRÁI" : "PHẢI", font,
+                SprintUiTheme.BodyLarge, SprintUiTheme.TextPrimary, TextAlignmentOptions.Center);
+            label.rectTransform.anchorMin = new Vector2(.1f, .12f);
+            label.rectTransform.anchorMax = new Vector2(.9f, .46f);
+            label.rectTransform.offsetMin = Vector2.zero;
+            label.rectTransform.offsetMax = Vector2.zero;
+
+            return new ControlVisual(visual, background, border);
         }
 
         static void DisableSharedMetrics(Transform safeArea)
@@ -416,16 +467,6 @@ namespace KMA.Gameplay
             bar.rectTransform.anchorMax = new Vector2(maxX, .74f);
             bar.rectTransform.offsetMin = Vector2.zero;
             bar.rectTransform.offsetMax = Vector2.zero;
-        }
-
-        static void PrepareTapArea(string name)
-        {
-            GameObject target = GameObject.Find(name);
-            if (target == null)
-                return;
-            Image image = target.GetComponent<Image>();
-            if (image != null)
-                image.color = new Color(1f, 1f, 1f, 0f);
         }
 
         static KMA.Input.ScreenTapArea FindTapArea(string name)

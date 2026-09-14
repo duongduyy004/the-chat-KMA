@@ -88,7 +88,7 @@ namespace KMA.Tests.Presentation
         }
 
         [UnityTest]
-        public IEnumerator SprintUsesAutomaticVietnameseStartBannerAndExplicitTouchPrompts()
+        public IEnumerator SprintUsesAutomaticVietnameseStartBanner()
         {
             yield return SceneManager.LoadSceneAsync("MG_Sprint", LoadSceneMode.Single);
             yield return null;

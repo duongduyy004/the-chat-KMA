@@ -300,137 +300,75 @@ namespace KMA.Tests.Presentation
         }
 
         [UnityTest]
-        public IEnumerator SprintControlsUseSmallTranslucentVisualsInsideDisjointAuthoritativeTapAreas()
+        public IEnumerator SprintControls_AreRealButtonsMatchingTheirHitAreas()
         {
             yield return LoadSprint();
-
             var scene = SceneManager.GetActiveScene();
-            var controller = SceneObjects<SprintController>(scene)[0];
-            var presenter = SceneObjects<SprintControlPresenter>(scene)[0];
-            var leftTap = FindNamed<ScreenTapArea>(scene, "LeftTap");
-            var rightTap = FindNamed<ScreenTapArea>(scene, "RightTap");
-            Image leftVisual = FindNamed<Image>(scene, "LeftControl");
-            Image rightVisual = FindNamed<Image>(scene, "RightControl");
-            Transform safeAreaRoot = GameObject.Find("SafeAreaRoot")?.transform;
-            Transform chrome = GameObject.Find("SprintBroadcastChrome")?.transform;
-            Transform inputCanvas = GameObject.Find("Input")?.transform;
-            Color32 navyControl = new Color32(7, 28, 49, 128);
 
-            Assert.That(presenter, Is.Not.Null);
-            Assert.That(leftVisual, Is.Not.Null);
-            Assert.That(rightVisual, Is.Not.Null);
-            Assert.That(safeAreaRoot, Is.Not.Null);
-            Assert.That(chrome, Is.Not.Null);
-            Assert.That(chrome.parent, Is.EqualTo(safeAreaRoot));
-            Assert.That(inputCanvas, Is.Not.Null);
-            Assert.That(leftTap.transform.IsChildOf(inputCanvas), Is.True);
-            Assert.That(rightTap.transform.IsChildOf(inputCanvas), Is.True);
-            Assert.That(leftTap.transform.IsChildOf(chrome), Is.False);
-            Assert.That(rightTap.transform.IsChildOf(chrome), Is.False);
-            Assert.That(leftVisual.transform.IsChildOf(chrome), Is.True);
-            Assert.That(rightVisual.transform.IsChildOf(chrome), Is.True);
-            Assert.That(leftVisual.GetComponentInParent<SafeAreaFitter>(), Is.Not.Null);
-            Assert.That(rightVisual.GetComponentInParent<SafeAreaFitter>(), Is.Not.Null);
-            Assert.That(leftVisual.raycastTarget, Is.False);
-            Assert.That(rightVisual.raycastTarget, Is.False);
-            AssertColor32(leftVisual.color, navyControl);
-            AssertColor32(rightVisual.color, navyControl);
-            Assert.That(leftVisual.rectTransform.rect.width, Is.EqualTo(rightVisual.rectTransform.rect.width).Within(.01f));
-            Assert.That(leftVisual.rectTransform.rect.height, Is.EqualTo(rightVisual.rectTransform.rect.height).Within(.01f));
+            foreach (string tapName in new[] { "LeftTap", "RightTap" })
+            {
+                var tap = GameObject.Find(tapName).GetComponent<RectTransform>();
+                var visual = tap.Find("Visual") as RectTransform;
+                Assert.That(visual, Is.Not.Null, $"{tapName} must own a Visual child.");
 
-            Rect leftHit = ScreenRect(leftTap.GetComponent<RectTransform>());
-            Rect rightHit = ScreenRect(rightTap.GetComponent<RectTransform>());
-            Rect leftVisualBounds = ScreenRect(leftVisual.rectTransform);
-            Rect rightVisualBounds = ScreenRect(rightVisual.rectTransform);
-            Assert.That(leftHit.Overlaps(rightHit), Is.False);
-            Assert.That(leftHit.width, Is.EqualTo(rightHit.width).Within(.01f));
-            Assert.That(leftHit.height, Is.EqualTo(rightHit.height).Within(.01f));
-            Assert.That(leftVisualBounds.xMin, Is.GreaterThanOrEqualTo(leftHit.xMin - .01f));
-            Assert.That(leftVisualBounds.yMin, Is.GreaterThanOrEqualTo(leftHit.yMin - .01f));
-            Assert.That(leftVisualBounds.xMax, Is.LessThanOrEqualTo(leftHit.xMax + .01f));
-            Assert.That(leftVisualBounds.yMax, Is.LessThanOrEqualTo(leftHit.yMax + .01f));
-            Assert.That(rightVisualBounds.xMin, Is.GreaterThanOrEqualTo(rightHit.xMin - .01f));
-            Assert.That(rightVisualBounds.yMin, Is.GreaterThanOrEqualTo(rightHit.yMin - .01f));
-            Assert.That(rightVisualBounds.xMax, Is.LessThanOrEqualTo(rightHit.xMax + .01f));
-            Assert.That(rightVisualBounds.yMax, Is.LessThanOrEqualTo(rightHit.yMax + .01f));
+                Assert.That(visual.anchorMin, Is.EqualTo(Vector2.zero));
+                Assert.That(visual.anchorMax, Is.EqualTo(Vector2.one));
+                Assert.That(visual.offsetMin, Is.EqualTo(Vector2.zero));
+                Assert.That(visual.offsetMax, Is.EqualTo(Vector2.zero));
 
-            controller.ConfigureForTest(.8f);
-            presenter.RefreshForTest();
-            Assert.That(presenter.HighlightedSide, Is.EqualTo(KMA.Gameplay.Side.Left));
-            AssertColor32(leftVisual.color, navyControl);
-            AssertColor32(rightVisual.color, navyControl);
-            AssertOutlineGlow(leftVisual.GetComponent<Outline>(), true);
-            AssertOutlineGlow(rightVisual.GetComponent<Outline>(), false);
-            controller.OnLeftTap();
-            presenter.RefreshForTest();
-            Assert.That(presenter.HighlightedSide, Is.EqualTo(KMA.Gameplay.Side.Right));
-            AssertColor32(leftVisual.color, navyControl);
-            AssertColor32(rightVisual.color, navyControl);
-            AssertOutlineGlow(leftVisual.GetComponent<Outline>(), false);
-            AssertOutlineGlow(rightVisual.GetComponent<Outline>(), true);
-            Assert.That(controller.CadenceCombo, Is.EqualTo(1));
+                Assert.That(tap.GetComponent<Image>().raycastTarget, Is.True, $"{tapName} must receive taps.");
+                Assert.That(visual.Find("Border").GetComponent<Image>().sprite, Is.Not.Null);
+                Assert.That(visual.Find("Background").GetComponent<Image>().sprite, Is.Not.Null);
+            }
+
+            Assert.That(GameObject.Find("LeftTap").transform.Find("Visual/Label").GetComponent<TMP_Text>().text,
+                Is.EqualTo("TRÁI"));
+            Assert.That(GameObject.Find("RightTap").transform.Find("Visual/Label").GetComponent<TMP_Text>().text,
+                Is.EqualTo("PHẢI"));
+            Assert.That(GameObject.Find("LeftTap").transform.Find("Visual/Arrow").GetComponent<TMP_Text>().text,
+                Is.EqualTo("←"));
+            Assert.That(GameObject.Find("RightTap").transform.Find("Visual/Arrow").GetComponent<TMP_Text>().text,
+                Is.EqualTo("→"));
         }
 
         [UnityTest]
-        public IEnumerator SprintControlsFollowSingleRootSafeAreaWithoutMovingAuthoritativeTapAreas()
+        public IEnumerator SprintControls_HighlightTheExpectedSideWithoutTouchingGameplay()
         {
             yield return LoadSprint();
-
             var scene = SceneManager.GetActiveScene();
-            var leftTap = FindNamed<ScreenTapArea>(scene, "LeftTap");
-            var rightTap = FindNamed<ScreenTapArea>(scene, "RightTap");
-            Image leftVisual = FindNamed<Image>(scene, "LeftControl");
-            Image rightVisual = FindNamed<Image>(scene, "RightControl");
+
+            var controller = SceneObjects<SprintController>(scene)[0];
             var presenter = SceneObjects<SprintControlPresenter>(scene)[0];
-            RectTransform canvasRoot = GameObject.Find("S2_HUD_Minigame")?.GetComponent<RectTransform>();
-            RectTransform safeAreaRoot = canvasRoot == null
-                ? null
-                : canvasRoot.Find("SafeAreaRoot")?.GetComponent<RectTransform>();
-            var rootSafeAreaFitter = canvasRoot?.GetComponent<SafeAreaFitter>();
-            var nestedSafeAreaFitter = safeAreaRoot?.GetComponent<SafeAreaFitter>();
-            RectTransform leftTapRect = leftTap.GetComponent<RectTransform>();
-            RectTransform rightTapRect = rightTap.GetComponent<RectTransform>();
-            Rect leftHitBefore = ScreenRect(leftTapRect);
-            Rect rightHitBefore = ScreenRect(rightTapRect);
-            Rect leftVisualBefore = ScreenRect(leftVisual.rectTransform);
-            Rect rightVisualBefore = ScreenRect(rightVisual.rectTransform);
+            controller.Simulate(1f);
+            controller.Simulate(1f);
+            controller.Simulate(1f);
+            presenter.RefreshForTest();
 
-            Assert.That(presenter, Is.Not.Null);
-            Assert.That(canvasRoot, Is.Not.Null);
-            Assert.That(safeAreaRoot, Is.Not.Null);
-            Assert.That(rootSafeAreaFitter, Is.Not.Null);
-            Assert.That(rootSafeAreaFitter.enabled, Is.True);
-            Assert.That(nestedSafeAreaFitter == null || nestedSafeAreaFitter.enabled, Is.False);
-            Assert.That(EnabledSafeAreaFitterCountInAncestors(leftVisual.transform), Is.EqualTo(1));
-            Assert.That(EnabledSafeAreaFitterCountInAncestors(rightVisual.transform), Is.EqualTo(1));
+            Assert.That(presenter.HighlightedSide, Is.EqualTo(controller.ExpectedSide));
 
-            Vector2Int screenSize = new Vector2Int(Screen.width, Screen.height);
-            Rect safeArea = new Rect(screenSize.x * .08f, screenSize.y * .04f,
-                screenSize.x * .84f, screenSize.y * .92f);
-            Canvas.ForceUpdateCanvases();
-            rootSafeAreaFitter.Apply(safeArea, screenSize);
-            Canvas.ForceUpdateCanvases();
-            presenter.ConfigureLayout(leftTapRect, rightTapRect);
+            int comboBefore = controller.CadenceCombo;
+            presenter.RefreshForTest();
+            Assert.That(controller.CadenceCombo, Is.EqualTo(comboBefore),
+                "The presenter must never advance gameplay state.");
+        }
 
-            Rect safeBounds = ScreenRect(canvasRoot);
-            Rect leftHitAfter = ScreenRect(leftTapRect);
-            Rect rightHitAfter = ScreenRect(rightTapRect);
-            Rect leftVisualAfter = ScreenRect(leftVisual.rectTransform);
-            Rect rightVisualAfter = ScreenRect(rightVisual.rectTransform);
-            var expectedOffsets = rootSafeAreaFitter.CalculateOffsets(safeArea, screenSize);
+        [UnityTest]
+        public IEnumerator SprintControls_ShrinkOnPressAndRecover()
+        {
+            yield return LoadSprint();
+            var scene = SceneManager.GetActiveScene();
 
-            AssertRectClose(leftHitAfter, leftHitBefore, .01f);
-            AssertRectClose(rightHitAfter, rightHitBefore, .01f);
-            Assert.That(canvasRoot.offsetMin.x, Is.EqualTo(expectedOffsets.left).Within(.01f));
-            Assert.That(canvasRoot.offsetMin.y, Is.EqualTo(expectedOffsets.bottom).Within(.01f));
-            Assert.That(canvasRoot.offsetMax.x, Is.EqualTo(-expectedOffsets.right).Within(.01f));
-            Assert.That(canvasRoot.offsetMax.y, Is.EqualTo(-expectedOffsets.top).Within(.01f));
-            Assert.That(safeAreaRoot.offsetMin, Is.EqualTo(Vector2.zero));
-            Assert.That(safeAreaRoot.offsetMax, Is.EqualTo(Vector2.zero));
-            AssertRectInside(leftVisualAfter, safeBounds, 3f);
-            AssertRectInside(rightVisualAfter, safeBounds, 3f);
-            Assert.That(leftVisualAfter.xMin, Is.GreaterThan(leftVisualBefore.xMin + 1f));
-            Assert.That(rightVisualAfter.xMax, Is.LessThan(rightVisualBefore.xMax - 1f));
+            var controller = SceneObjects<SprintController>(scene)[0];
+            var presenter = SceneObjects<SprintControlPresenter>(scene)[0];
+            float distanceBefore = controller.Snapshot.Distance;
+
+            presenter.PressForTest(KMA.Gameplay.Side.Left);
+            Assert.That(presenter.LeftScale, Is.EqualTo(.94f).Within(.001f));
+            Assert.That(presenter.RightScale, Is.EqualTo(1f).Within(.001f));
+
+            presenter.TickForTest(.091f);
+            Assert.That(presenter.LeftScale, Is.EqualTo(1f).Within(.001f));
+            Assert.That(controller.Snapshot.Distance, Is.EqualTo(distanceBefore).Within(.0001f));
         }
 
         [UnityTest]
@@ -681,18 +619,6 @@ namespace KMA.Tests.Presentation
             return Rect.MinMaxRect(min.x, min.y, max.x, max.y);
         }
 
-        static int EnabledSafeAreaFitterCountInAncestors(Transform leaf)
-        {
-            int count = 0;
-            for (Transform current = leaf; current != null; current = current.parent)
-            {
-                var fitter = current.GetComponent<SafeAreaFitter>();
-                if (fitter != null && fitter.enabled)
-                    count++;
-            }
-            return count;
-        }
-
         static void AssertColor32(Color color, Color32 expected)
         {
             Color32 actual = color;
@@ -700,32 +626,6 @@ namespace KMA.Tests.Presentation
             Assert.That(actual.g, Is.EqualTo(expected.g));
             Assert.That(actual.b, Is.EqualTo(expected.b));
             Assert.That(actual.a, Is.EqualTo(expected.a));
-        }
-
-        static void AssertOutlineGlow(Outline outline, bool highlighted)
-        {
-            Assert.That(outline, Is.Not.Null);
-            Color color = outline.effectColor;
-            Assert.That(color.r, Is.EqualTo(1f).Within(.001f));
-            Assert.That(color.g, Is.EqualTo(.79f).Within(.001f));
-            Assert.That(color.b, Is.EqualTo(.23f).Within(.001f));
-            Assert.That(color.a, Is.EqualTo(highlighted ? .45f : .16f).Within(.001f));
-        }
-
-        static void AssertRectClose(Rect actual, Rect expected, float tolerance)
-        {
-            Assert.That(actual.xMin, Is.EqualTo(expected.xMin).Within(tolerance));
-            Assert.That(actual.yMin, Is.EqualTo(expected.yMin).Within(tolerance));
-            Assert.That(actual.xMax, Is.EqualTo(expected.xMax).Within(tolerance));
-            Assert.That(actual.yMax, Is.EqualTo(expected.yMax).Within(tolerance));
-        }
-
-        static void AssertRectInside(Rect inner, Rect outer, float tolerance)
-        {
-            Assert.That(inner.xMin, Is.GreaterThanOrEqualTo(outer.xMin - tolerance));
-            Assert.That(inner.yMin, Is.GreaterThanOrEqualTo(outer.yMin - tolerance));
-            Assert.That(inner.xMax, Is.LessThanOrEqualTo(outer.xMax + tolerance));
-            Assert.That(inner.yMax, Is.LessThanOrEqualTo(outer.yMax + tolerance));
         }
 
         static float SignedZAngle(RectTransform transform) =>
