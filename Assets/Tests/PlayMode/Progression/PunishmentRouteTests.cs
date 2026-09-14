@@ -4,28 +4,22 @@ using KMA.Gameplay.Boss;
 using KMA.Gameplay.Core;
 using NUnit.Framework;
 using UnityEngine;
-using UnityEngine.InputSystem;
 using UnityEngine.SceneManagement;
 using UnityEngine.TestTools;
 
 namespace KMA.Tests.Gameplay.Progression
 {
-    public sealed class PunishmentRouteTests : InputTestFixture
+    public sealed class PunishmentRouteTests
     {
-        Keyboard testKeyboard;
-
-        public override void Setup()
+        [SetUp]
+        public void SetUp()
         {
-            base.Setup();
             BossSceneSessionHandoff.ClearPendingSession();
         }
 
-        public override void TearDown()
+        [TearDown]
+        public void TearDown()
         {
-            if (testKeyboard != null && testKeyboard.added)
-                InputSystem.RemoveDevice(testKeyboard);
-            testKeyboard = null;
-
             foreach (var router in Object.FindObjectsByType<SceneRouter>(
                 FindObjectsInactive.Include, FindObjectsSortMode.None))
             {
@@ -33,54 +27,30 @@ namespace KMA.Tests.Gameplay.Progression
             }
 
             BossSceneSessionHandoff.ClearPendingSession();
-            base.TearDown();
         }
 
         [UnityTest]
-        public IEnumerator KeyboardInput_CompletesLivePunishmentAndRoutesSprintRetry()
+        public IEnumerator SprintLoss_ReturnsToSubjectSelect_WithoutEnteringPunishment()
         {
             var router = SceneRouter.EnsurePersistentInstance();
+            int livesBefore = router.Session.Lives;
             Assert.That(router.StartSubject(SubjectId.Sprint), Is.True);
             yield return WaitForScene("MG_Sprint");
 
             Assert.That(router.SubmitSubjectResult(SubjectId.Sprint,
                 new MinigameResult(false, 0f, Rank.F)), Is.True);
-            yield return WaitForScene("Punishment");
-            Assert.That(router.Session.PendingPunishmentSubject, Is.EqualTo(SubjectId.Sprint));
+            yield return WaitForScene("Map");
 
-            testKeyboard = InputSystem.AddDevice<Keyboard>();
-            for (var tap = 0; tap < 3; tap++)
-                yield return PressKey(Key.Space);
-            yield return HoldKey(Key.H, .51f);
-            yield return PressKey(Key.LeftArrow);
-            yield return PressKey(Key.RightArrow);
-
-            yield return new WaitForSeconds(.25f);
-            Assert.That(SceneManager.GetActiveScene().name, Is.EqualTo("MG_Sprint"));
+            Assert.That(SceneManager.GetActiveScene().name, Is.EqualTo("Map"));
             Assert.That(router.Session.PendingPunishmentSubject, Is.Null);
+            Assert.That(router.Session.AwaitingPunishment, Is.False);
+            Assert.That(router.Session.Lives, Is.EqualTo(livesBefore - 1));
         }
 
         static IEnumerator WaitForScene(string sceneName)
         {
             while (SceneManager.GetActiveScene().name != sceneName)
                 yield return null;
-            yield return null;
-        }
-
-        IEnumerator PressKey(Key key)
-        {
-            Press(testKeyboard[key], queueEventOnly: true);
-            yield return null;
-            Release(testKeyboard[key], queueEventOnly: true);
-            yield return null;
-        }
-
-        IEnumerator HoldKey(Key key, float duration)
-        {
-            Press(testKeyboard[key], queueEventOnly: true);
-            yield return null;
-            yield return new WaitForSeconds(duration);
-            Release(testKeyboard[key], queueEventOnly: true);
             yield return null;
         }
     }

@@ -189,8 +189,6 @@ namespace KMA.Tests.Gameplay.Core
             GameManager manager = CreateInitializedManager(router, _ => saves++);
 
             router.Session.StartSubject(SubjectId.Sprint);
-            router.Session.SubmitResult(SubjectId.Sprint, new MinigameResult(false, 0f, Rank.F));
-            router.Session.CompletePunishment();
             router.SubmitSubjectResult(SubjectId.Sprint, new MinigameResult(false, 0f, Rank.F));
 
             Assert.That(manager.Session.Lives, Is.EqualTo(4));

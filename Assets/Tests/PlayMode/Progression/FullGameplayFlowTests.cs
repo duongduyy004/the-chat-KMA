@@ -51,15 +51,15 @@ namespace KMA.Tests.Gameplay.Progression
             harness.Start(SubjectId.Sprint);
             harness.CompleteTransition();
             harness.Fail();
-            Assert.That(harness.Route, Is.EqualTo(SessionRoute.Punishment));
+            Assert.That(harness.Route, Is.EqualTo(SessionRoute.Map));
             harness.CompleteTransition();
 
-            harness.CompletePunishment();
-            Assert.That(harness.Route, Is.EqualTo(SessionRoute.RetrySubject));
+            harness.Start(SubjectId.Sprint);
+            Assert.That(harness.Route, Is.EqualTo(SessionRoute.Subject));
             harness.CompleteTransition();
 
             harness.Fail();
-            Assert.That(harness.Session.Lives, Is.EqualTo(4));
+            Assert.That(harness.Session.Lives, Is.EqualTo(3));
             Assert.That(harness.Route, Is.EqualTo(SessionRoute.Map));
             harness.CompleteTransition();
 
@@ -103,7 +103,7 @@ namespace KMA.Tests.Gameplay.Progression
             harness.CompleteTransition();
             harness.Fail(new MinigameResult(false, 10f, Rank.S));
             harness.CompleteTransition();
-            harness.CompletePunishment();
+            harness.Start(SubjectId.Sprint);
             harness.CompleteTransition();
             harness.Fail(new MinigameResult(false, 10f, Rank.S));
 
@@ -111,7 +111,7 @@ namespace KMA.Tests.Gameplay.Progression
             Assert.That(record.Passed, Is.False);
             Assert.That(record.BestScore, Is.Zero);
             Assert.That(record.BestRank, Is.EqualTo(Rank.F));
-            Assert.That(record.FailedVisits, Is.EqualTo(1));
+            Assert.That(record.FailedVisits, Is.EqualTo(2));
         }
 
         [Test]
@@ -135,13 +135,11 @@ namespace KMA.Tests.Gameplay.Progression
             var router = SceneRouter.EnsurePersistentInstance();
 
             AssertRoute(router, SessionRoute.Map, null);
-            AssertRoute(router, SessionRoute.Punishment, SubjectId.Sprint);
+            AssertRoute(router, SessionRoute.Map, SubjectId.Sprint);
             AssertRoute(router, SessionRoute.GameOver, null);
             AssertRoute(router, SessionRoute.Boss, null);
             AssertRoute(router, SessionRoute.Subject, SubjectId.Sprint);
-            AssertRoute(router, SessionRoute.RetrySubject, SubjectId.Sprint);
             AssertRoute(router, SessionRoute.Subject, SubjectId.Endurance);
-            AssertRoute(router, SessionRoute.RetrySubject, SubjectId.Endurance);
 
             foreach (var subject in new[]
             {
@@ -153,7 +151,6 @@ namespace KMA.Tests.Gameplay.Progression
             })
             {
                 AssertRoute(router, SessionRoute.Subject, subject);
-                AssertRoute(router, SessionRoute.RetrySubject, subject);
             }
         }
 
@@ -265,7 +262,7 @@ namespace KMA.Tests.Gameplay.Progression
         }
 
         [UnityTest]
-        public IEnumerator Continue_AfterFirstFailure_ResumesPunishmentForTheSameSubjectAcrossRelaunch()
+        public IEnumerator Continue_AfterFirstFailure_ResumesAtSubjectSelectAcrossRelaunch()
         {
             SaveData persisted = SaveData.CreateDefault();
             SceneRouter router = SceneRouter.EnsurePersistentInstance();
@@ -275,13 +272,12 @@ namespace KMA.Tests.Gameplay.Progression
             yield return WaitForRoutedScene(router, "MG_Sprint");
             Assert.That(router.SubmitSubjectResult(SubjectId.Sprint, new MinigameResult(false, 0f, Rank.F)),
                 Is.True);
-            yield return WaitForRoutedScene(router, "Punishment");
+            yield return WaitForRoutedScene(router, "Map");
 
-            Assert.That(persisted.hasActiveSubject, Is.True);
-            Assert.That(persisted.activeSubject, Is.EqualTo(SubjectId.Sprint));
-            Assert.That(persisted.visitAttempt, Is.EqualTo(2));
-            Assert.That(persisted.awaitingPunishment, Is.True);
-            Assert.That(persisted.lives, Is.EqualTo(5));
+            Assert.That(persisted.hasActiveSubject, Is.False);
+            Assert.That(persisted.visitAttempt, Is.EqualTo(1));
+            Assert.That(persisted.awaitingPunishment, Is.False);
+            Assert.That(persisted.lives, Is.EqualTo(4));
 
             DestroyAll<GameManager>();
             DestroyAll<SceneRouter>();
@@ -289,7 +285,7 @@ namespace KMA.Tests.Gameplay.Progression
 
             SceneRouter relaunched = SceneRouter.EnsurePersistentInstance();
             GameManager relaunchedManager = CreateManager(relaunched, () => persisted, data => persisted = data);
-            Assert.That(relaunchedManager.Session.ResumeRoute(), Is.EqualTo(SessionRoute.Punishment));
+            Assert.That(relaunchedManager.Session.ResumeRoute(), Is.EqualTo(SessionRoute.Map));
 
             var transitions = new List<SceneRouteTransition>();
             relaunched.TransitionStarted += transitions.Add;
@@ -300,51 +296,14 @@ namespace KMA.Tests.Gameplay.Progression
             menu.Continue();
 
             Assert.That(transitions, Has.Count.EqualTo(1));
-            Assert.That(transitions[0].Route, Is.EqualTo(SessionRoute.Punishment));
-            Assert.That(transitions[0].Subject, Is.EqualTo(SubjectId.Sprint));
-            Assert.That(relaunched.Session.PendingPunishmentSubject, Is.EqualTo(SubjectId.Sprint));
-            Assert.That(relaunched.Session.VisitAttempt, Is.EqualTo(2));
-            Assert.That(relaunched.Session.Lives, Is.EqualTo(5));
+            Assert.That(transitions[0].Route, Is.EqualTo(SessionRoute.Map));
+            Assert.That(transitions[0].Subject, Is.Null);
+            Assert.That(relaunched.Session.PendingPunishmentSubject, Is.Null);
+            Assert.That(relaunched.Session.ActiveSubject, Is.Null);
+            Assert.That(relaunched.Session.VisitAttempt, Is.EqualTo(1));
+            Assert.That(relaunched.Session.Lives, Is.EqualTo(4));
 
-            yield return WaitForRoutedScene(relaunched, "Punishment");
-
-            Assert.That(relaunched.ExitActiveSubjectToMap(), Is.True);
             yield return WaitForRoutedScene(relaunched, "Map");
-        }
-
-        [UnityTest]
-        public IEnumerator CompletingProductionPunishment_PersistsTheRetryAttemptAcrossRelaunch()
-        {
-            SaveData persisted = SaveData.CreateDefault();
-            SceneRouter router = SceneRouter.EnsurePersistentInstance();
-            CreateManager(router, () => persisted, data => persisted = data);
-
-            Assert.That(router.StartSubject(SubjectId.Sprint), Is.True);
-            yield return WaitForRoutedScene(router, "MG_Sprint");
-            Assert.That(router.SubmitSubjectResult(SubjectId.Sprint, new MinigameResult(false, 0f, Rank.F)),
-                Is.True);
-            yield return WaitForRoutedScene(router, "Punishment");
-
-            var punishment = UnityEngine.Object.FindFirstObjectByType<PunishmentSceneController>();
-            Assert.That(punishment, Is.Not.Null);
-            for (var tap = 0; tap < 5; tap++)
-                punishment.SubmitTap();
-            punishment.SubmitRhythmHold(.5f);
-            punishment.SubmitAlternateTap(true);
-            punishment.SubmitAlternateTap(false);
-            yield return WaitForRoutedScene(router, "MG_Sprint");
-
-            Assert.That(persisted.activeSubject, Is.EqualTo(SubjectId.Sprint));
-            Assert.That(persisted.visitAttempt, Is.EqualTo(2));
-            Assert.That(persisted.awaitingPunishment, Is.False);
-
-            DestroyAll<GameManager>();
-            DestroyAll<SceneRouter>();
-            yield return null;
-
-            SceneRouter relaunched = SceneRouter.EnsurePersistentInstance();
-            GameManager manager = CreateManager(relaunched, () => persisted, data => persisted = data);
-            Assert.That(manager.Session.ResumeRoute(), Is.EqualTo(SessionRoute.RetrySubject));
         }
 
         [UnityTest]
@@ -462,8 +421,6 @@ namespace KMA.Tests.Gameplay.Progression
                 lastCompletion = result;
                 RouteSession(Session.SubmitResult(active, result), active);
             }
-
-            public void CompletePunishment() => RouteSession(Session.CompletePunishment(), active);
 
             public void StartBoss()
             {

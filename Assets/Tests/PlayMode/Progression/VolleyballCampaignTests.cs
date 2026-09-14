@@ -74,31 +74,23 @@ namespace KMA.Tests.Gameplay.Progression
         }
 
         [UnityTest]
-        public IEnumerator VolleyballFirstFailure_RoutesToPunishmentAndKeepsTheAttemptActive()
+        public IEnumerator VolleyballFailure_ReturnsToSubjectSelectAndSpendsALife()
         {
             var router = SceneRouter.EnsurePersistentInstance();
             Assert.That(router.StartSubject(SubjectId.Volleyball), Is.True);
             yield return WaitForRoute(router, SceneName);
 
+            int livesBefore = router.Session.Lives;
             Assert.That(router.SubmitSubjectResult(SubjectId.Volleyball,
                 new MinigameResult(false, 0f, Rank.F)), Is.True);
-            yield return WaitForRoute(router, "Punishment");
-
-            Assert.That(router.Session.PendingPunishmentSubject, Is.EqualTo(SubjectId.Volleyball));
-            Assert.That(router.Session.VisitAttempt, Is.EqualTo(2),
-                "A first failure promotes the attempt to the final visit of the two-attempt rule.");
-            SaveData saved = router.Session.ToSaveData();
-            Assert.That(saved.hasActiveSubject, Is.True);
-            Assert.That(saved.activeSubject, Is.EqualTo(SubjectId.Volleyball));
-            Assert.That(saved.awaitingPunishment, Is.True);
-
-            Assert.That(router.CompletePunishment(SubjectId.Volleyball), Is.True);
-            yield return WaitForRoute(router, SceneName);
+            yield return WaitForRoute(router, "Map");
 
             Assert.That(router.Session.PendingPunishmentSubject, Is.Null);
-            Assert.That(router.Session.VisitAttempt, Is.EqualTo(2),
-                "Completing Punishment retries the same final attempt without spending a life.");
-            Assert.That(router.Session.Lives, Is.EqualTo(GameSession.MaxLives));
+            Assert.That(router.Session.ActiveSubject, Is.Null);
+            SaveData saved = router.Session.ToSaveData();
+            Assert.That(saved.hasActiveSubject, Is.False);
+            Assert.That(saved.awaitingPunishment, Is.False);
+            Assert.That(router.Session.Lives, Is.EqualTo(livesBefore - 1));
         }
 
         // The player owns the tutorial gate, so the route reaches Play only after Skip. The

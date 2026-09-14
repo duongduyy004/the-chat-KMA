@@ -70,26 +70,23 @@ namespace KMA.Tests.Gameplay.Progression
         }
 
         [UnityTest]
-        public IEnumerator BasketballFirstFailure_RoutesToPunishmentAndKeepsTheAttemptActive()
+        public IEnumerator BasketballFailure_ReturnsToSubjectSelectAndSpendsALife()
         {
             var router = SceneRouter.EnsurePersistentInstance();
             Assert.That(router.StartSubject(SubjectId.Basketball), Is.True);
             yield return WaitForRoute(router, SceneName);
 
+            int livesBefore = router.Session.Lives;
             Assert.That(router.SubmitSubjectResult(SubjectId.Basketball,
                 new MinigameResult(false, 0f, Rank.F)), Is.True);
-            yield return WaitForRoute(router, "Punishment");
-
-            Assert.That(router.Session.PendingPunishmentSubject, Is.EqualTo(SubjectId.Basketball));
-            Assert.That(router.Session.VisitAttempt, Is.EqualTo(2));
-            SaveData saved = router.Session.ToSaveData();
-            Assert.That(saved.awaitingPunishment, Is.True);
-
-            Assert.That(router.CompletePunishment(SubjectId.Basketball), Is.True);
-            yield return WaitForRoute(router, SceneName);
+            yield return WaitForRoute(router, "Map");
 
             Assert.That(router.Session.PendingPunishmentSubject, Is.Null);
-            Assert.That(router.Session.Lives, Is.EqualTo(GameSession.MaxLives));
+            Assert.That(router.Session.ActiveSubject, Is.Null);
+            SaveData saved = router.Session.ToSaveData();
+            Assert.That(saved.awaitingPunishment, Is.False);
+            Assert.That(saved.hasActiveSubject, Is.False);
+            Assert.That(router.Session.Lives, Is.EqualTo(livesBefore - 1));
         }
 
         [Test]

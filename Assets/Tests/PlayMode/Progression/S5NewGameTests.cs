@@ -419,7 +419,7 @@ namespace KMA.Tests.Gameplay.Progression
         }
 
         [UnityTest]
-        public IEnumerator Continue_AwaitingPunishment_RequestsPunishmentOnly()
+        public IEnumerator Continue_AfterALoss_RequestsMapOnly()
         {
             yield return AssertContinueRequests(
                 Arrange(session =>
@@ -427,20 +427,7 @@ namespace KMA.Tests.Gameplay.Progression
                     session.StartSubject(SubjectId.Sprint);
                     session.SubmitResult(SubjectId.Sprint, new MinigameResult(false, 0f, Rank.F));
                 }),
-                SessionRoute.Punishment, SubjectId.Sprint, "Punishment");
-        }
-
-        [UnityTest]
-        public IEnumerator Continue_DuringAttemptTwo_RequestsTheRetryOnly()
-        {
-            yield return AssertContinueRequests(
-                Arrange(session =>
-                {
-                    session.StartSubject(SubjectId.Endurance);
-                    session.SubmitResult(SubjectId.Endurance, new MinigameResult(false, 0f, Rank.F));
-                    session.CompletePunishment();
-                }),
-                SessionRoute.RetrySubject, SubjectId.Endurance, "MG_Endurance");
+                SessionRoute.Map, null, "Map");
         }
 
         [UnityTest]
@@ -511,11 +498,7 @@ namespace KMA.Tests.Gameplay.Progression
         [UnityTest]
         public IEnumerator Play_AfterRestoringAnActiveAttempt_ClearsItSoTheMapStaysUsable()
         {
-            SaveData persisted = Arrange(session =>
-            {
-                session.StartSubject(SubjectId.Sprint);
-                session.SubmitResult(SubjectId.Sprint, new MinigameResult(false, 0f, Rank.F));
-            });
+            SaveData persisted = Arrange(session => session.StartSubject(SubjectId.Sprint));
 
             SceneRouter router = CreateRouter();
             SaveData saved = null;
