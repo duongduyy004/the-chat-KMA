@@ -81,19 +81,23 @@ tenth skip to account for.
   `GameSession.RestoreActiveAttempt` explicitly discards `awaitingPunishment` and resets
   `visitAttempt` to `FirstVisit` when restoring, with an inline comment explaining that the
   punishment leg is no longer routable and that resuming the flag verbatim would send the player to
-  a scene nothing can complete (`GameSession.cs:122-143`). This is covered by the PlayMode suite
-  realigned in commit `d6edad5`.
+  a scene nothing can complete (`GameSession.cs:122-143`). This is covered by the EditMode test
+  `Restore_ReplacesAPreviouslyRestoredAttempt`
+  (`Assets/Tests/EditMode/Progression/GameSessionPersistenceTests.cs:172-191`), which restores a
+  save with `visitAttempt = 2` (`FinalVisit`) and `awaitingPunishment = true` and asserts
+  `ResumeRoute() == SessionRoute.Subject`. That test landed in commit `566ff6f`.
 
 ## Punishment code: retired in place, not removed
 
-`Assets/_Project/Scripts/Core/PunishmentSceneController.cs` and the Punishment scene remain in the
-repository. `SessionRoute.Punishment` still exists in the route enum and is still wired into
+`Assets/_Project/Scripts/Core/PunishmentSceneController.cs`,
+`Assets/_Project/Scripts/Progression/PunishmentController.cs`, and the Punishment scene all remain
+in the repository. `SessionRoute.Punishment` still exists in the route enum and is still wired into
 `SceneRouter` (`Assets/_Project/Scripts/Core/SceneRouter.cs:82,381,459`), but `GameSession`'s
 `RouteForResult` never returns it from live gameplay — the only remaining path that could produce
-it is closed off by the `Restore` guard above. The scene and its controller are therefore
+it is closed off by the `Restore` guard above. The scene and both controllers are therefore
 unreachable from any route in current play, and the three `ChallengeSequenceTests` cases listed
-above are `[Ignore]`d for exactly this reason: their fixtures need a `PendingPunishmentSubject`
-that no route sets anymore.
+above are `[Ignore]`d for exactly this reason: their fixtures need a `PendingPunishmentSubject` to
+construct `PunishmentController` from a live `GameSession`, and no route sets that anymore.
 
 ## Housekeeping
 
