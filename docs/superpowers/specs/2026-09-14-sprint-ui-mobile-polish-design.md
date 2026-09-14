@@ -87,8 +87,8 @@ Origin is bottom-left of the safe area.
 | Pause | top-right, inset `.02W` / `.06H` | `.089H × .089H` (96×96) | Rounded square, `‖` from two Images, no label. `PausePanel` behavior unchanged. |
 | Left control | bottom-left, inset `.02W` / `.04H` | `.43H × .26H` (464×281) | |
 | Right control | bottom-right, inset `.02W` / `.04H` | `.43H × .26H` | Mirrors the left exactly. |
-| Countdown | centred at `x .5W`, `y .56H` | `.53H × .32H` | Empty at race start. |
-| Instruction | centred at `x .5W`, `y .33H` | `1.07H × .10H` | Below countdown. |
+| Countdown |  centred at `x .5W`, `y .62H` | `.53H × .32H` | Empty at race start. |
+| Instruction |  centred at `x .5W`, `y .38H` | `1.07H × .10H` | Below countdown. |
 
 **Scoreboard rows.** Two rows, not three: `42 / 100 m` (Title, left) and `1st`
 (Headline, gold pill, right) share row 1; `COMBO ×5` (Body) is row 2. Three stacked
@@ -115,7 +115,7 @@ and adjust the panel, not the lanes.
 regardless of aspect, so on a 20:9 phone the gap between them widens rather than the
 buttons stretching toward the middle. A button wider than a thumb's reach is not a
 better button, and keeping them fixed guarantees they never approach `x = .5`. At the
-narrowest aspect tested (4:3, `W = 1440`) the two still leave a 454-unit gap.
+narrowest aspect tested (16:10, `W = 1728`) the two still leave a 730-unit gap.
 
 ## Visual system
 
@@ -124,10 +124,10 @@ narrowest aspect tested (4:3, `W = 1440`) the two still leave a 454-unit gap.
 | Token | Value | Used for | Contrast on `Surface` |
 |---|---|---|---|
 | `Surface` | `#08233D` | Panels, buttons, pause, marker plate, at .30-.92 alpha | — |
-| `TextPrimary` | `#FFF9E7` | Distance, control labels, instruction | ~13:1 |
-| `Accent` | `#FFCA3A` | Rank, progress fill, countdown, button border | ~9:1 |
-| `Player` | `#3AE6FF` | Player only: sprite outline, head marker, rail pip | ~7:1 |
-| `Energy` | `#FF595E` | Combo, press flash | ~4.3:1 |
+| `TextPrimary` | `#FFF9E7` | Distance, control labels, instruction | ~15:1 |
+| `Accent` | `#FFCA3A` | Rank, progress fill, countdown, button border | ~10.4:1 |
+| `Player` | `#3AE6FF` | Player only: sprite outline, head marker, rail pip | ~10.6:1 |
+| `Energy` | `#FF595E` | Combo, press flash | ~5.2:1 |
 
 `Player` cyan is reserved. Nothing else in the Sprint scene may use it. Identity is
 never carried by hue alone — the marker also has a chevron shape and the word PLAYER.
@@ -299,7 +299,7 @@ rather than hiding it. `SprintHud`'s serialized references to those labels
 Because `SprintUiLayout` owns every rect, the hardest requirement becomes a loop:
 
 ```csharp
-[TestCaseSource(nameof(LandscapeSafeAreas))]  // 16:9, 18:9, 19.5:9, 20:9, 4:3, + notch inset
+[TestCaseSource(nameof(LandscapeSafeAreas))]  // 16:9, 16:10, 18:9, 19.5:9, 20:9, + notch inset
 public void NoTwoElementsOverlap(Rect safe)
 {
     foreach (var (a, b) in Pairs(SprintUiLayout.StartStateRects(safe)))
