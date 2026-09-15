@@ -41,12 +41,27 @@ namespace KMA.Gameplay.UI
             if (isApplying || rectTransform == null || screenSize.x <= 0 || screenSize.y <= 0)
                 return;
 
+            // An offset is an inset only while the anchors are apart on that axis. Where they are
+            // coincident, offsetMax - offsetMin *is* sizeDelta, so writing here resizes the rect to
+            // the inset instead of shrinking it by the inset — which collapses a Canvas root to 0x0
+            // and drags every anchored child onto the origin.
+            var stretchesX = !Mathf.Approximately(rectTransform.anchorMin.x, rectTransform.anchorMax.x);
+            var stretchesY = !Mathf.Approximately(rectTransform.anchorMin.y, rectTransform.anchorMax.y);
+            if (!stretchesX && !stretchesY)
+                return;
+
             var offsets = CalculateOffsets(safeArea, screenSize);
             isApplying = true;
             try
             {
-                rectTransform.offsetMin = new Vector2(offsets.left, offsets.bottom);
-                rectTransform.offsetMax = new Vector2(-offsets.right, -offsets.top);
+                var currentMin = rectTransform.offsetMin;
+                var currentMax = rectTransform.offsetMax;
+                rectTransform.offsetMin = new Vector2(
+                    stretchesX ? offsets.left : currentMin.x,
+                    stretchesY ? offsets.bottom : currentMin.y);
+                rectTransform.offsetMax = new Vector2(
+                    stretchesX ? -offsets.right : currentMax.x,
+                    stretchesY ? -offsets.top : currentMax.y);
             }
             finally
             {

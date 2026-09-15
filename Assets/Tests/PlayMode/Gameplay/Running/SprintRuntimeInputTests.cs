@@ -43,7 +43,7 @@ namespace KMA.Tests.Gameplay.Running
         public void SprintActions_RouteValidAlternationToControllerOncePerTap()
         {
             var controller = controllerObject.AddComponent<KMA.Gameplay.SprintController>();
-            controller.ConfigureForTest(.8f);
+            controller.ConfigureForTest();
             actions = ScriptableObject.CreateInstance<InputActionAsset>();
             var map = actions.AddActionMap("Sprint");
             var left = map.AddAction("SprintLeft", InputActionType.Button, "<Keyboard>/leftArrow");
@@ -75,10 +75,10 @@ namespace KMA.Tests.Gameplay.Running
         }
 
         [Test]
-        public void SprintActions_RouteWrongSideThroughRulesAndFailAnActiveWindWindow()
+        public void SprintActions_RouteWrongSideThroughRulesWithoutEndingTheRace()
         {
             var controller = controllerObject.AddComponent<KMA.Gameplay.SprintController>();
-            controller.ConfigureForTest(.8f);
+            controller.ConfigureForTest();
             actions = ScriptableObject.CreateInstance<InputActionAsset>();
             var map = actions.AddActionMap("Sprint");
             map.AddAction("SprintLeft", InputActionType.Button, "<Keyboard>/leftArrow");
@@ -91,18 +91,17 @@ namespace KMA.Tests.Gameplay.Running
 
             controller.AdvanceToDistance(30f);
             controller.Simulate(0f);
-            controller.Simulate(.8f);
-            Assert.That(controller.WindWindowActive, Is.True);
 
             router.FeedSprintTapForTest(KMA.Input.Side.Right, 1d);
 
-            Assert.That(controller.Snapshot.Speed, Is.EqualTo(7.2f).Within(.001f));
-            Assert.That(controller.WindChallengeFailed, Is.True);
-            Assert.That(controller.LastResult.Pass, Is.False);
-            Assert.That(completions, Is.EqualTo(1));
+            Assert.That(controller.Snapshot.Speed, Is.EqualTo(7.2f).Within(.001f),
+                "a wrong-side tap still feeds the rules at the reduced impulse");
+            Assert.That(controller.ExpectedSide, Is.EqualTo(KMA.Gameplay.Side.Left),
+                "a wrong-side tap must not advance the alternation");
+            Assert.That(completions, Is.Zero, "a wrong-side tap must never end the race");
 
             router.FeedSprintTapForTest(KMA.Input.Side.Left, 2d);
-            Assert.That(completions, Is.EqualTo(1));
+            Assert.That(completions, Is.Zero);
         }
 
         [UnityTest]
@@ -137,7 +136,7 @@ namespace KMA.Tests.Gameplay.Running
                 Assert.That(areaRect.rect.height, Is.GreaterThan(0f));
             }
 
-            controller.ConfigureForTest(.8f);
+            controller.ConfigureForTest();
             float speedBeforeKeyboardAction = controller.Snapshot.Speed;
             router.FeedSprintTapForTest(KMA.Input.Side.Left, 1d);
             Assert.That(controller.Snapshot.Speed, Is.EqualTo(speedBeforeKeyboardAction + 18f));

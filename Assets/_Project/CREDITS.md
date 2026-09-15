@@ -18,16 +18,28 @@ assets.
 
 ## Runner character sprites
 
-The idle, run, and hit frames in `Art/Characters/Runner/` come from Kenney's
-Toon Characters pack. They are used as the visual frames for the player and
-Sprint rivals; Unity animation clips control frame timing and presentation.
+The pose frames under `Art/Characters/` come from Kenney's Toon Characters pack.
+Each of the four Sprint runners draws from a different pack character so the
+player and the three rivals are told apart at a glance; Unity animation clips
+control frame timing and presentation.
 
 - Source: `https://kenney.nl/assets/toon-characters`
 - Pack: Kenney Toon Characters, version 1.0 (2019)
-- Source files: `Male person/PNG/Poses/character_malePerson_{idle,run0,run1,run2,hit}.png`
 - License: Creative Commons Zero (CC0 1.0)
-- Retrieved: 2026-09-05
+- Retrieved: 2026-09-05 (`Male person`), 2026-09-15 (remaining characters and poses)
 - Changes: filenames normalized for the Unity project; pixels unchanged
+
+| Project folder | Pack character | Role |
+| --- | --- | --- |
+| `Characters/MaleAdventurer/` | `Male adventurer` | Player |
+| `Characters/MalePerson/` | `Male person` | Rival, lane 1 |
+| `Characters/FemalePerson/` | `Female person` | Rival, lane 3 |
+| `Characters/FemaleAdventurer/` | `Female adventurer` | Rival, lane 4 |
+
+Each folder holds the same eight poses, taken from that character's
+`PNG/Poses/character_<name>_{idle,run0,run1,run2,hit,cheer0,cheer1,fallDown}.png`.
+`cheer0`/`cheer1` drive the Celebrate state and `fallDown` drives Fail; before
+this the two states reused the idle and hit poses.
 
 ## Project-generated report demo art
 

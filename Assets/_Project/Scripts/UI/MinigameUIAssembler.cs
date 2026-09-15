@@ -249,8 +249,24 @@ namespace KMA.Gameplay.UI
 
             if (root.GetComponent<GraphicRaycaster>() == null)
                 root.AddComponent<GraphicRaycaster>();
-            if (root.GetComponentInChildren<SafeAreaFitter>(true) == null)
-                root.AddComponent<SafeAreaFitter>();
+            EnsureSafeAreaFitter(root);
+        }
+
+        // The fitter belongs on the stretched SafeAreaRoot, never on the Canvas root: the root's
+        // anchors are coincident, so writing safe-area offsets there resizes it to 0x0.
+        static void EnsureSafeAreaFitter(GameObject root)
+        {
+            var rootFitter = root.GetComponent<SafeAreaFitter>();
+            if (rootFitter != null)
+                UnityEngine.Object.DestroyImmediate(rootFitter, true);
+
+            var safeAreaRoot = root.transform.Find("SafeAreaRoot");
+            if (safeAreaRoot == null)
+                return;
+
+            var fitter = safeAreaRoot.GetComponent<SafeAreaFitter>()
+                ?? safeAreaRoot.gameObject.AddComponent<SafeAreaFitter>();
+            fitter.enabled = true;
         }
 
         static void ConfigureHud(GameObject root, MinigameBase minigame, UITheme theme)

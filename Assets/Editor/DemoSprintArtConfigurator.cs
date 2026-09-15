@@ -1,5 +1,6 @@
 #if UNITY_EDITOR
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using KMA.Gameplay;
 using UnityEditor;
@@ -16,20 +17,60 @@ namespace KMA.EditorTools
         const string Animations = "Assets/_Project/Animations/";
         const string PlayerPrefab = "Assets/_Project/Prefabs/Gameplay/PlayerRunnerVisual.prefab";
         const string RivalPrefab = "Assets/_Project/Prefabs/Gameplay/RivalRunner.prefab";
+        const string BaseController = Animations + "RivalRunner.controller";
+
+        static readonly string[] States = { "Idle", "Run", "Burst", "Stumble", "Celebrate", "Fail" };
+        static readonly string[] Poses = { "Idle", "Run0", "Run1", "Run2", "Hit", "Cheer0", "Cheer1", "FallDown" };
+
+        /// The player and every rival draw from a different pack character, so a glance at the
+        /// track tells four runners apart. PlayerCharacter also owns the authored lane order.
+        const string PlayerCharacter = "MaleAdventurer";
+        static readonly Dictionary<int, string> RivalCharacterByLane = new Dictionary<int, string>
+        {
+            { 1, "MalePerson" },
+            { 3, "FemalePerson" },
+            { 4, "FemaleAdventurer" }
+        };
+
+        /// <summary>One pack character's eight authored poses.</summary>
+        sealed class CharacterArt
+        {
+            public string Folder;
+            public Sprite Idle;
+            public Sprite Hit;
+            public Sprite FallDown;
+            public Sprite[] Run;
+            public Sprite[] Cheer;
+        }
 
         [MenuItem("KMA/Demo/Configure Sprint Artwork")]
         public static void Configure()
         {
             AssetDatabase.Refresh();
-            var idle = ImportSprite("Characters/Runner/Runner_Idle.png", true);
-            var run = new[] { "Run0", "Run1", "Run2" }
-                .Select(p => ImportSprite("Characters/Runner/Runner_" + p + ".png", true)).ToArray();
-            var hit = ImportSprite("Characters/Runner/Runner_Hit.png", true);
-            foreach (string state in new[] { "Idle", "Run", "Burst", "Stumble", "Celebrate", "Fail" })
-                AuthorClip(state, idle, run, hit);
-            var animatorController = AssetDatabase.LoadAssetAtPath<RuntimeAnimatorController>(Animations + "RivalRunner.controller");
-            AuthorRival(idle);
-            AuthorPlayer(idle, animatorController);
+
+            var characters = RivalCharacterByLane.Values.Concat(new[] { PlayerCharacter }).Distinct().ToArray();
+            // Every pose is imported before any is loaded; see LoadCharacter for why.
+            foreach (string folder in characters)
+                foreach (string pose in Poses)
+                    ImportSprite("Characters/" + folder + "/Runner_" + pose + ".png", true);
+            var artByCharacter = characters.ToDictionary(folder => folder, LoadCharacter);
+
+            // The base controller's own clips belong to lane 1's character; every other character
+            // gets a parallel clip set reached through an override controller.
+            var baseCharacter = artByCharacter[RivalCharacterByLane[1]];
+            foreach (string state in States)
+                AuthorClip(state, baseCharacter, Animations + "RivalRunner_" + state + ".anim");
+            var animatorController = AssetDatabase.LoadAssetAtPath<RuntimeAnimatorController>(BaseController);
+
+            var controllerByCharacter = new Dictionary<string, RuntimeAnimatorController>
+            {
+                { baseCharacter.Folder, animatorController }
+            };
+            foreach (var art in artByCharacter.Values.Where(value => value.Folder != baseCharacter.Folder))
+                controllerByCharacter[art.Folder] = AuthorOverrideController(art, animatorController);
+
+            AuthorRival(baseCharacter.Idle);
+            AuthorPlayer(artByCharacter[PlayerCharacter].Idle, controllerByCharacter[PlayerCharacter]);
 
             var scene = EditorSceneManager.OpenScene("Assets/_Project/Scenes/MG_Sprint.unity");
             var player = GameObject.Find("Player");
@@ -38,20 +79,27 @@ namespace KMA.EditorTools
                 UnityEngine.Object.DestroyImmediate(child.gameObject);
             var playerVisual = (GameObject)PrefabUtility.InstantiatePrefab(
                 AssetDatabase.LoadAssetAtPath<GameObject>(PlayerPrefab), player.transform);
-            playerVisual.transform.localPosition = new Vector3(0f, -1.6f - player.transform.position.y, 0f);
+            // Same contract as the rivals: the Player root carries the lane centre.
+            playerVisual.transform.localPosition = Vector3.zero;
 
             foreach (var rival in UnityEngine.Object.FindObjectsByType<RivalRunnerAI>(FindObjectsSortMode.None))
             {
+                if (!RivalCharacterByLane.TryGetValue(rival.Lane, out string folder))
+                    throw new InvalidOperationException("No authored character for Sprint lane " + rival.Lane);
+                var rivalArt = artByCharacter[folder];
                 var visual = rival.transform.Find("Visual");
-                // Preserve the lane roots used by race mappings; only place the feet on the illustrated track.
-                float feetY = rival.Lane == 1 ? -0.6f : rival.Lane == 3 ? -2.6f : -3.6f;
-                visual.localPosition = new Vector3(0f, feetY - rival.transform.position.y, 0f);
+                // The lane root already sits on the painted lane centre (SprintRivalMapping) and the
+                // sprite pivot is at the feet, so the visual rides the root instead of a tuned offset.
+                visual.localPosition = Vector3.zero;
                 var renderer = visual.GetComponent<SpriteRenderer>();
-                renderer.sprite = idle;
+                renderer.sprite = rivalArt.Idle;
                 renderer.sortingOrder = 10 + rival.Lane;
                 renderer.color = Color.white;
+                var animator = rival.GetComponentInChildren<Animator>();
+                animator.runtimeAnimatorController = controllerByCharacter[folder];
                 PrefabUtility.RecordPrefabInstancePropertyModifications(visual);
                 PrefabUtility.RecordPrefabInstancePropertyModifications(renderer);
+                PrefabUtility.RecordPrefabInstancePropertyModifications(animator);
             }
 
             var parallax = UnityEngine.Object.FindFirstObjectByType<SprintParallax>();
@@ -123,21 +171,64 @@ namespace KMA.EditorTools
             return AssetDatabase.LoadAssetAtPath<Sprite>(path);
         }
 
-        static void AuthorClip(string state, Sprite idle, Sprite[] run, Sprite hit)
+        /// <summary>
+        /// Loads one character's poses. Every pose must already be imported: reimporting a texture
+        /// invalidates Sprite references handed out earlier, so importing and loading cannot be
+        /// interleaved across characters or the earlier characters end up holding dead references.
+        /// </summary>
+        static CharacterArt LoadCharacter(string folder)
         {
-            var clip = AssetDatabase.LoadAssetAtPath<AnimationClip>(Animations + "RivalRunner_" + state + ".anim");
-            if (clip == null) throw new InvalidOperationException("Missing runner clip: " + state);
+            string prefix = "Characters/" + folder + "/Runner_";
+            Sprite Pose(string pose)
+            {
+                string path = Art + prefix + pose + ".png";
+                var sprite = AssetDatabase.LoadAssetAtPath<Sprite>(path);
+                if (sprite == null) throw new InvalidOperationException("Missing runner pose: " + path);
+                return sprite;
+            }
+
+            return new CharacterArt
+            {
+                Folder = folder,
+                Idle = Pose("Idle"),
+                Hit = Pose("Hit"),
+                FallDown = Pose("FallDown"),
+                Run = new[] { "Run0", "Run1", "Run2" }.Select(Pose).ToArray(),
+                Cheer = new[] { "Cheer0", "Cheer1" }.Select(Pose).ToArray()
+            };
+        }
+
+        /// <summary>Frames for one state, so Celebrate cheers and Fail drops instead of reusing Idle and Hit.</summary>
+        static Sprite[] SelectFrames(string state, CharacterArt art) => state switch
+        {
+            "Run" or "Burst" => new[] { art.Run[0], art.Run[1], art.Run[2], art.Run[1], art.Run[0] },
+            "Celebrate" => new[] { art.Cheer[0], art.Cheer[1] },
+            "Fail" => new[] { art.FallDown, art.FallDown },
+            "Stumble" => new[] { art.Hit, art.Hit },
+            _ => new[] { art.Idle, art.Idle }
+        };
+
+        static void AuthorClip(string state, CharacterArt art, string clipPath)
+        {
+            var clip = AssetDatabase.LoadAssetAtPath<AnimationClip>(clipPath);
+            if (clip == null)
+            {
+                clip = new AnimationClip();
+                AssetDatabase.CreateAsset(clip, clipPath);
+            }
+
             clip.ClearCurves();
             bool running = state == "Run" || state == "Burst";
             float interval = state == "Burst" ? .075f : .12f;
-            var frames = running ? new[] { run[0], run[1], run[2], run[1], run[0] }
-                : new[] { state == "Stumble" || state == "Fail" ? hit : idle,
-                    state == "Stumble" || state == "Fail" ? hit : idle };
+            var frames = SelectFrames(state, art);
             float duration = running ? interval * 4 : .6f;
+            // Two-frame states hold each pose for half the loop, so Celebrate reads as a cheer
+            // rather than parking the second frame on the loop boundary where it never shows.
+            float step = running ? interval : duration / 2f;
             AnimationUtility.SetObjectReferenceCurve(clip,
                 EditorCurveBinding.PPtrCurve("Visual", typeof(SpriteRenderer), "m_Sprite"),
                 frames.Select((sprite, index) => new ObjectReferenceKeyframe
-                { time = running ? index * interval : index * duration, value = sprite }).ToArray());
+                { time = index * step, value = sprite }).ToArray());
             // Scale motion retains authored state feedback without fighting race-owned localPosition.x.
             clip.SetCurve("Visual", typeof(Transform), "m_LocalScale.y",
                 new AnimationCurve(new Keyframe(0f, 1f), new Keyframe(duration / 2, state == "Celebrate" ? 1.12f : 1.03f),
@@ -146,6 +237,43 @@ namespace KMA.EditorTools
             settings.loopTime = true;
             AnimationUtility.SetAnimationClipSettings(clip, settings);
             EditorUtility.SetDirty(clip);
+        }
+
+        /// <summary>Gives one character its own clip set behind the shared state machine.</summary>
+        static RuntimeAnimatorController AuthorOverrideController(CharacterArt art, RuntimeAnimatorController baseController)
+        {
+            var clips = States.ToDictionary(state => state,
+                state => AuthorClipAndLoad(state, art, Animations + art.Folder + "_" + state + ".anim"));
+
+            string path = Animations + art.Folder + ".overrideController";
+            var controller = AssetDatabase.LoadAssetAtPath<AnimatorOverrideController>(path);
+            if (controller == null)
+            {
+                controller = new AnimatorOverrideController();
+                AssetDatabase.CreateAsset(controller, path);
+            }
+
+            controller.runtimeAnimatorController = baseController;
+            var overrides = new List<KeyValuePair<AnimationClip, AnimationClip>>(controller.overridesCount);
+            controller.GetOverrides(overrides);
+            for (int i = 0; i < overrides.Count; i++)
+            {
+                // Base clips are named RivalRunner_<State>; the suffix picks this character's twin.
+                string state = overrides[i].Key.name.Substring(overrides[i].Key.name.IndexOf('_') + 1);
+                if (!clips.TryGetValue(state, out var replacement))
+                    throw new InvalidOperationException("No authored clip for state " + state + " on " + art.Folder);
+                overrides[i] = new KeyValuePair<AnimationClip, AnimationClip>(overrides[i].Key, replacement);
+            }
+
+            controller.ApplyOverrides(overrides);
+            EditorUtility.SetDirty(controller);
+            return controller;
+        }
+
+        static AnimationClip AuthorClipAndLoad(string state, CharacterArt art, string clipPath)
+        {
+            AuthorClip(state, art, clipPath);
+            return AssetDatabase.LoadAssetAtPath<AnimationClip>(clipPath);
         }
 
         static void AuthorRival(Sprite idle)

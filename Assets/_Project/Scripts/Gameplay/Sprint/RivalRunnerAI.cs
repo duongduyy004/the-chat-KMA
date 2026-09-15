@@ -42,8 +42,6 @@ namespace KMA.Gameplay
         static readonly int IdleHash = Animator.StringToHash("Idle");
         RivalRunnerState lastPlayedState;
         bool hasPlayedState;
-        bool sawChallengeFailure;
-        float stumbleUntil;
 
         void Awake()
         {
@@ -60,8 +58,7 @@ namespace KMA.Gameplay
 
             if (rivalIndex >= controller.RivalCount)
                 return;
-            Refresh(controller.GetRivalDistance(rivalIndex), controller.Snapshot.Distance, controller.Phase, controller.LastResult,
-                controller.WindChallengeFailed || controller.WindChallengeExpired);
+            Refresh(controller.GetRivalDistance(rivalIndex), controller.Snapshot.Distance, controller.Phase, controller.LastResult);
         }
 
         public void Configure(RivalPaceProfileAsset value, int valueLane, int valueRivalIndex, SprintController owner)
@@ -76,13 +73,10 @@ namespace KMA.Gameplay
         }
 
         public void RefreshForTest(float rivalDistance, float playerDistance, MinigamePhase phase, MinigameResult result) =>
-            Refresh(rivalDistance, playerDistance, phase, result, false);
+            Refresh(rivalDistance, playerDistance, phase, result);
 
-        void Refresh(float rivalDistance, float playerDistance, MinigamePhase phase, MinigameResult result, bool challengeFailed)
+        void Refresh(float rivalDistance, float playerDistance, MinigamePhase phase, MinigameResult result)
         {
-            if (challengeFailed && !sawChallengeFailure)
-                stumbleUntil = Time.time + .45f;
-            sawChallengeFailure = challengeFailed;
             VisualProgress01 = Mathf.Clamp01(rivalDistance / 100f);
             if (visual != null)
             {
@@ -93,8 +87,6 @@ namespace KMA.Gameplay
 
             if (phase == MinigamePhase.Resolve)
                 State = result != null && result.Pass ? RivalRunnerState.Celebrate : RivalRunnerState.Fail;
-            else if (Time.time < stumbleUntil)
-                State = RivalRunnerState.Stumble;
             else if (phase != MinigamePhase.Play)
                 State = RivalRunnerState.Idle;
             else if (playerDistance >= 70f)

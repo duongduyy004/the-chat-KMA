@@ -8,6 +8,11 @@ namespace KMA.Gameplay
     public static class SprintUiLayout
     {
         public const float FinishRevealDistance = 70f;
+        public const float FinishDistance = 100f;
+
+        const float FinishRestAnchorX = .84f;   // where the ribbon ends up, fraction of width
+        const float FinishAnchorWidth = .06f;
+        const float FinishEntryAnchorX = 1f;    // just past the right edge, so it slides in unseen
 
         const float EdgeX = .02f;   // horizontal inset, fraction of width
         const float RailInsetX = .03f;
@@ -51,6 +56,18 @@ namespace KMA.Gameplay
 
         public static bool FinishVisible(float distance) => distance >= FinishRevealDistance;
 
+        /// How far the finish ribbon has travelled in from the right edge: 0 the moment it is
+        /// revealed, 1 when the runner reaches the line.
+        public static float FinishReveal01(float distance) =>
+            Mathf.Clamp01(Mathf.InverseLerp(FinishRevealDistance, FinishDistance, distance));
+
+        /// The ribbon enters from beyond the right edge rather than appearing on the track, and
+        /// slides to its resting place as the runner closes on the line.
+        public static float FinishAnchorMinX(float distance) =>
+            Mathf.Lerp(FinishEntryAnchorX, FinishRestAnchorX, FinishReveal01(distance));
+
+        public static float FinishAnchorMaxX(float distance) => FinishAnchorMinX(distance) + FinishAnchorWidth;
+
         // The one deliberate exception to height-only sizing: the rail spans the screen
         // because it maps 0-100 m onto the same left-right axis the runner moves along.
         public static Rect ProgressRailRect(Rect safe) => new Rect(
@@ -76,6 +93,20 @@ namespace KMA.Gameplay
             safe.yMin + safe.height * ClusterTop - safe.height * PauseSize,
             safe.height * PauseSize,
             safe.height * PauseSize);
+
+        /// The visible button inside its tap area, in fractions of that tap area.
+        /// The hit box stays full size for the thumb; only the artwork shrinks, so the button can
+        /// sit on the running lanes without hiding the runner in the lane beneath it. Sitting low
+        /// in the hit box also puts it where a thumb rests in landscape.
+        public const float ControlVisualWidthFraction = .52f;
+        public const float ControlVisualHeightFraction = .50f;
+        public const float ControlVisualBottomFraction = .04f;
+
+        public static Rect ControlVisualRect01 => new Rect(
+            (1f - ControlVisualWidthFraction) * .5f,
+            ControlVisualBottomFraction,
+            ControlVisualWidthFraction,
+            ControlVisualHeightFraction);
 
         public static Rect ControlRect(Rect safe, bool left)
         {

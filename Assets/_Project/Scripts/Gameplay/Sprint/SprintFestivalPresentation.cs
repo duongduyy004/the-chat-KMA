@@ -237,15 +237,14 @@ namespace KMA.Gameplay
         static void PrepareSafeArea(Transform safeArea)
         {
             safeArea.gameObject.SetActive(true);
-            var nestedFitter = safeArea.GetComponent<KMA.Gameplay.UI.SafeAreaFitter>();
-            if (nestedFitter != null)
-                nestedFitter.enabled = false;
 
-            if (safeArea is RectTransform rectTransform)
-            {
-                rectTransform.offsetMin = Vector2.zero;
-                rectTransform.offsetMax = Vector2.zero;
-            }
+            // SafeAreaRoot is the only rect in the HUD that stretches (0,0)-(1,1), so it is the only
+            // one where a safe-area offset reads as an inset rather than a resize. It owns the inset;
+            // the Canvas root must not carry a fitter at all.
+            var fitter = safeArea.GetComponent<KMA.Gameplay.UI.SafeAreaFitter>()
+                ?? safeArea.gameObject.AddComponent<KMA.Gameplay.UI.SafeAreaFitter>();
+            fitter.enabled = true;
+            fitter.Apply(Screen.safeArea, new Vector2Int(Screen.width, Screen.height));
         }
 
         static void EnsureControls(RectTransform root, Rect safe)
@@ -303,8 +302,14 @@ namespace KMA.Gameplay
             if (existing != null)
                 Object.DestroyImmediate(existing.gameObject);
 
+            // The tap area keeps its full size — the hit box is unchanged. Only this visual shrinks,
+            // so the button rests on the running lanes without covering the runner in them.
             RectTransform visual = Rect(tapRect, "Visual");
-            Stretch(visual);
+            Rect visualRect = SprintUiLayout.ControlVisualRect01;
+            visual.anchorMin = new Vector2(visualRect.xMin, visualRect.yMin);
+            visual.anchorMax = new Vector2(visualRect.xMax, visualRect.yMax);
+            visual.offsetMin = Vector2.zero;
+            visual.offsetMax = Vector2.zero;
 
             int radius = Mathf.RoundToInt(SprintUiTheme.RadiusControl);
             Image border = Panel(visual, "Border", SprintUiTheme.WithAlpha(SprintUiTheme.Accent, .25f), radius);
@@ -397,14 +402,17 @@ namespace KMA.Gameplay
 
             var marker = new GameObject("PlayerMarker").transform;
             marker.SetParent(presentation, false);
-            marker.localPosition = new Vector3(0f, 2.15f, 0f);
+            marker.localPosition = new Vector3(SprintPlayerMarkerPlacement.SideOffset,
+                SprintPlayerMarkerPlacement.MarkerHeight, 0f);
 
             var plate = new GameObject("Plate", typeof(SpriteRenderer)).transform;
             plate.SetParent(marker, false);
-            plate.localScale = new Vector3(1.35f, .42f, 1f);
+            // RoundedRect is an 18px sprite, so the scale is what gives the plate its world size;
+            // it has to actually cover the label rather than sit behind it as a sliver.
+            plate.localScale = new Vector3(7.2f, 1.9f, 1f);
             var plateRenderer = plate.GetComponent<SpriteRenderer>();
             plateRenderer.sprite = SprintUiShapes.RoundedRect(8);
-            plateRenderer.color = SprintUiTheme.WithAlpha(SprintUiTheme.Surface, .85f);
+            plateRenderer.color = SprintUiTheme.WithAlpha(SprintUiTheme.Surface, .92f);
             plateRenderer.sortingOrder = 19;
 
             var labelObject = new GameObject("Label");
@@ -421,13 +429,17 @@ namespace KMA.Gameplay
 
             var chevron = new GameObject("Chevron", typeof(SpriteRenderer)).transform;
             chevron.SetParent(marker, false);
-            chevron.localPosition = new Vector3(0f, -.30f, 0f);
+            chevron.localPosition = new Vector3(-SprintPlayerMarkerPlacement.ChevronOffset, 0f, 0f);
             chevron.localScale = new Vector3(.22f, .22f, 1f);
             chevron.localRotation = Quaternion.Euler(0f, 0f, 45f);
             var chevronRenderer = chevron.GetComponent<SpriteRenderer>();
             chevronRenderer.sprite = SprintUiShapes.RoundedRect(2);
             chevronRenderer.color = SprintUiTheme.Player;
             chevronRenderer.sortingOrder = 20;
+
+            var placement = presentation.GetComponent<SprintPlayerMarkerPlacement>()
+                ?? presentation.gameObject.AddComponent<SprintPlayerMarkerPlacement>();
+            placement.Bind(marker);
 
             SpriteRenderer playerVisual = presentation.GetComponentInChildren<SpriteRenderer>(true);
             if (playerVisual != null && playerVisual.transform != plate && playerVisual.transform != chevron)
@@ -517,6 +529,57 @@ namespace KMA.Gameplay
             rect.anchorMax = Vector2.one;
             rect.offsetMin = min;
             rect.offsetMax = max;
+        }
+    }
+
+    /// <summary>
+    /// Keeps the PLAYER marker beside the runner instead of above them.
+    ///
+    /// The four painted lanes sit 1.48 units apart and a runner sprite is 1.28 tall, so only
+    /// ~0.2 units separate the player's head from the next lane's feet — an overhead plate lands
+    /// on the lane 1 rival's body. The marker rides alongside the runner inside their own lane.
+    ///
+    /// The track spans the whole viewport at 16:9, so a fixed side would push the marker off
+    /// screen at the starting line or at the tape; it takes whichever side has room instead.
+    /// </summary>
+    public sealed class SprintPlayerMarkerPlacement : MonoBehaviour
+    {
+        public const float SideOffset = 1.05f;
+        public const float MarkerHeight = .42f;
+        public const float ChevronOffset = .52f;
+
+        [SerializeField] Transform marker;
+        [SerializeField] Transform chevron;
+
+        public Transform Marker => marker;
+        public float SideSign => marker == null ? 0f : Mathf.Sign(marker.localPosition.x);
+
+        public void Bind(Transform markerTransform)
+        {
+            marker = markerTransform;
+            chevron = markerTransform == null ? null : markerTransform.Find("Chevron");
+            Refresh();
+        }
+
+        void LateUpdate() => Refresh();
+
+        void Refresh()
+        {
+            if (marker == null)
+                return;
+
+            float runnerX = marker.parent == null ? 0f : marker.parent.position.x;
+            float offset = runnerX > 0f ? -SideOffset : SideOffset;
+            marker.localPosition = new Vector3(offset, MarkerHeight, 0f);
+
+            if (chevron == null)
+                chevron = marker.Find("Chevron");
+            if (chevron != null)
+            {
+                // The chevron always sits on the runner's side of the plate.
+                var local = chevron.localPosition;
+                chevron.localPosition = new Vector3(-Mathf.Sign(offset) * ChevronOffset, local.y, local.z);
+            }
         }
     }
 

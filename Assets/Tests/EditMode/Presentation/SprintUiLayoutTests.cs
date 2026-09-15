@@ -31,6 +31,89 @@ namespace KMA.Tests.Presentation
             Assert.That(SprintUiLayout.FinishVisible(distance), Is.EqualTo(expected));
 
         [TestCaseSource(nameof(LandscapeSafeAreas))]
+        public void ControlVisualIsSmallerThanTheTapAreaItSitsIn(Rect safe)
+        {
+            Rect visual01 = SprintUiLayout.ControlVisualRect01;
+
+            Assert.That(visual01.width, Is.LessThan(1f).And.GreaterThan(0f));
+            Assert.That(visual01.height, Is.LessThan(1f).And.GreaterThan(0f));
+            Assert.That(visual01.xMin, Is.GreaterThanOrEqualTo(0f));
+            Assert.That(visual01.xMax, Is.LessThanOrEqualTo(1f));
+            Assert.That(visual01.yMin, Is.GreaterThanOrEqualTo(0f));
+            Assert.That(visual01.yMax, Is.LessThanOrEqualTo(1f));
+
+            // The shrink must be real at every aspect: the drawn button covers well under half the
+            // area a thumb can hit.
+            Rect tap = SprintUiLayout.ControlRect(safe, true);
+            float drawnArea = tap.width * visual01.width * tap.height * visual01.height;
+            Assert.That(drawnArea, Is.LessThan(tap.width * tap.height * .5f));
+        }
+
+        [Test]
+        public void ControlVisualIsCentredHorizontallyAndSitsLowInItsTapArea()
+        {
+            Rect visual01 = SprintUiLayout.ControlVisualRect01;
+
+            Assert.That(visual01.center.x, Is.EqualTo(.5f).Within(.0001f));
+            Assert.That(visual01.center.y, Is.LessThan(.5f),
+                "The drawn button sits low in the hit box, where a thumb rests and clear of the lane above.");
+        }
+
+        [TestCaseSource(nameof(LandscapeSafeAreas))]
+        public void ShrinkingTheVisualDoesNotShrinkTheHitBox(Rect safe)
+        {
+            // The tap area is what ScreenTapArea raycasts against; it is sized from ControlRect
+            // alone and must not be derived from the visual.
+            Rect left = SprintUiLayout.ControlRect(safe, true);
+            Rect right = SprintUiLayout.ControlRect(safe, false);
+
+            Assert.That(left.height, Is.EqualTo(safe.height * .26f).Within(.01f));
+            Assert.That(left.width, Is.EqualTo(safe.height * .43f).Within(.01f));
+            Assert.That(right.size, Is.EqualTo(left.size));
+        }
+
+        [TestCase(60f, 0f)]
+        [TestCase(70f, 0f)]
+        [TestCase(85f, .5f)]
+        [TestCase(100f, 1f)]
+        [TestCase(120f, 1f)]
+        public void FinishReveal01_RunsFromTheRevealDistanceToTheLine(float distance, float expected) =>
+            Assert.That(SprintUiLayout.FinishReveal01(distance), Is.EqualTo(expected).Within(.0001f));
+
+        [Test]
+        public void FinishRibbonStartsOffTheRightEdgeSoItNeverPopsIn()
+        {
+            Assert.That(SprintUiLayout.FinishAnchorMinX(SprintUiLayout.FinishRevealDistance),
+                Is.GreaterThanOrEqualTo(1f),
+                "At the reveal distance the ribbon must still be off-screen, not sitting on the track.");
+        }
+
+        [Test]
+        public void FinishRibbonSlidesInMonotonicallyAndKeepsItsWidth()
+        {
+            float previous = float.MaxValue;
+            for (float distance = 70f; distance <= 100f; distance += 2.5f)
+            {
+                float min = SprintUiLayout.FinishAnchorMinX(distance);
+                float max = SprintUiLayout.FinishAnchorMaxX(distance);
+
+                Assert.That(min, Is.LessThan(previous), $"The ribbon must keep approaching at {distance} m.");
+                Assert.That(max - min,
+                    Is.EqualTo(SprintUiLayout.FinishAnchorMaxX(70f) - SprintUiLayout.FinishAnchorMinX(70f))
+                        .Within(.0001f),
+                    "Sliding must not stretch or squash the ribbon.");
+                previous = min;
+            }
+        }
+
+        [Test]
+        public void FinishRibbonComesToRestWhereTheRunnerReachesIt()
+        {
+            Assert.That(SprintUiLayout.FinishAnchorMinX(100f), Is.EqualTo(.84f).Within(.0001f));
+            Assert.That(SprintUiLayout.FinishAnchorMaxX(100f), Is.EqualTo(.90f).Within(.0001f));
+        }
+
+        [TestCaseSource(nameof(LandscapeSafeAreas))]
         public void NoTwoElementsOverlapDuringTheStartState(Rect safe)
         {
             SprintUiLayout.NamedRect[] rects = SprintUiLayout.StartStateRects(safe);
