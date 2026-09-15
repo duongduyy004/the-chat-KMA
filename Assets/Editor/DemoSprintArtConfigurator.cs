@@ -120,12 +120,28 @@ namespace KMA.EditorTools
                     renderer.color = Color.white;
                     renderer.flipX = field == "second";
                     renderer.sortingOrder = -30 + i * 10;
+                    // The track backdrop carries the painted lanes that runner Y is derived from,
+                    // so its geometry comes from SprintTrackLayout, never from constants here -
+                    // a backdrop scaled independently leaves every runner floating off their lane.
+                    bool isTrack = i == 2;
+                    float parentScaleY = tile.parent == null ? 1f : tile.parent.lossyScale.y;
                     tile.localScale = new Vector3(25.6f / sprite.bounds.size.x,
-                        (i == 2 ? 14f : 10.8f) / sprite.bounds.size.y, 1f);
-                    // Extend track down to the viewport edge while raising its first lane above the controls.
-                    var position = tile.localPosition;
-                    position.y = i == 2 ? 1.6f : 0f;
-                    tile.localPosition = position;
+                        isTrack
+                            ? SprintTrackLayout.BackdropScaleY / parentScaleY
+                            : 10.8f / sprite.bounds.size.y,
+                        1f);
+                    if (isTrack)
+                    {
+                        var world = tile.position;
+                        world.y = SprintTrackLayout.BackdropCenterY;
+                        tile.position = world;
+                    }
+                    else
+                    {
+                        var position = tile.localPosition;
+                        position.y = 0f;
+                        tile.localPosition = position;
+                    }
                 }
             }
             EditorSceneManager.SaveScene(scene);
