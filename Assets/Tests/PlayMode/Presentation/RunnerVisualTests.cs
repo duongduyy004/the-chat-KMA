@@ -11,24 +11,21 @@ namespace KMA.Tests.Presentation
     public sealed class RunnerVisualTests
     {
         [UnityTest]
-        public IEnumerator WindExpiryShowsBriefHitThenResumesPlayerAndRivalRunning()
+        public IEnumerator PlayIsUninterrupted_KeepsPlayerAndRivalsRunning()
         {
             yield return SceneManager.LoadSceneAsync("MG_Sprint");
             var controller = Object.FindFirstObjectByType<SprintController>();
-            controller.ConfigureForTest(.8f);
+            controller.ConfigureForTest();
             controller.enabled = false;
             controller.AdvanceToDistance(30f);
             controller.Simulate(0f);
             controller.Simulate(2.01f);
-            Assert.That(controller.WindChallengeExpired, Is.True);
             Assert.That(controller.Phase, Is.EqualTo(MinigamePhase.Play));
             yield return null;
             yield return null;
             var player = GameObject.Find("Player").GetComponentInChildren<Animator>();
-            Assert.That(player.GetCurrentAnimatorStateInfo(0).IsName("Stumble"), Is.True);
-            yield return new WaitForSeconds(.6f);
             Assert.That(player.GetCurrentAnimatorStateInfo(0).IsName("Run"), Is.True,
-                "A missed wind window must not leave a running player frozen in the hit pose.");
+                "Nothing interrupts a mid-race runner now that the wind challenge is gone.");
             foreach (var rival in Object.FindObjectsByType<RivalRunnerAI>(FindObjectsSortMode.None)
                 .Where(r => r.RivalIndex < controller.RivalCount))
                 Assert.That(rival.Animator.GetCurrentAnimatorStateInfo(0).IsName("Run"), Is.True);
@@ -39,7 +36,7 @@ namespace KMA.Tests.Presentation
         {
             yield return SceneManager.LoadSceneAsync("MG_Sprint");
             var controller = Object.FindFirstObjectByType<SprintController>();
-            controller.ConfigureForTest(0.8f);
+            controller.ConfigureForTest();
             controller.enabled = false;
             var player = GameObject.Find("Player");
             var animator = player.GetComponentInChildren<Animator>();
@@ -76,7 +73,12 @@ namespace KMA.Tests.Presentation
             yield return SceneManager.LoadSceneAsync("MG_Sprint");
             var parallax = Object.FindFirstObjectByType<SprintParallax>();
             var backgrounds = parallax.GetComponentsInChildren<SpriteRenderer>();
-            Assert.That(backgrounds, Has.Length.EqualTo(6));
+            Assert.That(backgrounds, Has.Length.EqualTo(6),
+                "The backdrop is artwork only — it reaches the viewport floor without a filler strip.");
+            Assert.That(backgrounds.First(renderer => renderer.sprite.name == "Track").bounds.min.y,
+                Is.LessThanOrEqualTo(-5.4f),
+                "The track must cover the viewport floor so no sky shows beneath it.");
+
             foreach (var background in backgrounds)
             {
                 Assert.That(background.sprite, Is.Not.Null);
@@ -96,11 +98,89 @@ namespace KMA.Tests.Presentation
         }
 
         [UnityTest]
+        public IEnumerator EveryRunnerUsesItsOwnPackCharacter()
+        {
+            yield return SceneManager.LoadSceneAsync("MG_Sprint");
+            var rivals = Object.FindObjectsByType<RivalRunnerAI>(FindObjectsSortMode.None);
+            Assert.That(rivals, Has.Length.EqualTo(3));
+            var playerVisual = GameObject.Find("Player").GetComponentInChildren<SpriteRenderer>();
+            Assert.That(playerVisual, Is.Not.Null);
+
+            var sprites = rivals.Select(rival => rival.Sprite.sprite).Append(playerVisual.sprite).ToArray();
+            Assert.That(sprites, Has.No.Null);
+            Assert.That(sprites.Distinct().Count(), Is.EqualTo(4),
+                "The player and all three rivals must be visually distinct characters, not four copies.");
+
+            var playerAnimator = GameObject.Find("Player").GetComponentInChildren<Animator>();
+            var controllers = rivals.Select(rival => rival.Animator.runtimeAnimatorController)
+                .Append(playerAnimator.runtimeAnimatorController).ToArray();
+            Assert.That(controllers, Has.No.Null);
+            Assert.That(controllers.Distinct().Count(), Is.EqualTo(4),
+                "Each character needs its own clip set, so each runner needs its own controller.");
+        }
+
+        [UnityTest]
+        public IEnumerator CelebrateAndFailUseTheirOwnPosesRatherThanIdleAndHit()
+        {
+            yield return SceneManager.LoadSceneAsync("MG_Sprint");
+            var rival = Object.FindObjectsByType<RivalRunnerAI>(FindObjectsSortMode.None)[0];
+            var animator = rival.Animator;
+            var renderer = rival.Sprite;
+
+            Sprite PoseOf(string state)
+            {
+                animator.Play(state, 0, 0f);
+                animator.Update(0f);
+                return renderer.sprite;
+            }
+
+            var idle = PoseOf("Idle");
+            var hit = PoseOf("Stumble");
+            var celebrate = PoseOf("Celebrate");
+            var fail = PoseOf("Fail");
+
+            Assert.That(celebrate, Is.Not.EqualTo(idle),
+                "Winning must cheer rather than reuse the standing idle pose.");
+            Assert.That(fail, Is.Not.EqualTo(hit),
+                "Losing must use the authored fall pose rather than reuse the hit pose.");
+            Assert.That(fail, Is.Not.EqualTo(idle));
+        }
+
+        [UnityTest]
+        public IEnumerator PlayerMarkerStaysOnTheTrackAtBothEndsOfTheRace()
+        {
+            yield return SceneManager.LoadSceneAsync("MG_Sprint");
+            var controller = Object.FindFirstObjectByType<SprintController>();
+            controller.ConfigureForTest();
+            controller.enabled = false;
+            yield return null;
+
+            var marker = GameObject.Find("Player").GetComponentInChildren<TextMesh>(true).transform.parent;
+            Assert.That(marker.name, Is.EqualTo("PlayerMarker"));
+
+            // The track spans the full viewport at 16:9, so a marker pinned to one side would
+            // leave the screen at the starting line or at the tape.
+            const float trackEdge = 9.6f;
+
+            controller.AdvanceToDistance(0f);
+            yield return null;
+            yield return null;
+            Assert.That(marker.position.x, Is.GreaterThan(-trackEdge),
+                "at the starting line the marker must stay inside the track, not off the left edge");
+
+            controller.AdvanceToDistance(100f);
+            yield return null;
+            yield return null;
+            Assert.That(marker.position.x, Is.LessThan(trackEdge),
+                "at the finish the marker must stay inside the track, not off the right edge");
+        }
+
+        [UnityTest]
         public IEnumerator PlayerMapsItsOwnRaceDistanceAcrossTheTrack()
         {
             yield return SceneManager.LoadSceneAsync("MG_Sprint");
             var controller = Object.FindFirstObjectByType<SprintController>();
-            controller.ConfigureForTest(.8f);
+            controller.ConfigureForTest();
             controller.enabled = false;
             var player = GameObject.Find("Player");
 
@@ -109,7 +189,8 @@ namespace KMA.Tests.Presentation
 
             Assert.That(player.transform.position.x, Is.EqualTo(0f).Within(.001f),
                 "At half race distance the player must be halfway across the authored track.");
-            Assert.That(player.transform.position.y, Is.EqualTo(.7f).Within(.001f),
+            Assert.That(player.transform.position.y,
+                Is.EqualTo(SprintTrackLayout.LaneCenterYForAuthoredLane(2)).Within(.001f),
                 "Race progress must not move the player out of lane 2.");
         }
 

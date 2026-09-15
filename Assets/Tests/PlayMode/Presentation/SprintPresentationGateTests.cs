@@ -24,21 +24,17 @@ namespace KMA.Tests.Presentation
             var scene = SceneManager.GetActiveScene();
             var controllers = SceneObjects<SprintController>(scene);
             var sprintHuds = SceneObjects<SprintHud>(scene);
-            var windCues = SceneObjects<SprintWindCue>(scene);
             var overlays = SceneObjects<TutorialOverlay>(scene);
             var starts = SceneObjects<SprintStartPresentation>(scene);
             var pauses = SceneObjects<PausePanel>(scene);
             Assert.That(controllers.Length, Is.EqualTo(1));
             Assert.That(sprintHuds.Length, Is.EqualTo(1));
-            Assert.That(windCues.Length, Is.EqualTo(1));
             Assert.That(overlays.Length, Is.EqualTo(1));
             Assert.That(starts.Length, Is.EqualTo(1));
             Assert.That(pauses.Length, Is.EqualTo(1));
 
             var sprintHud = sprintHuds[0];
-            var windCue = windCues[0];
             Assert.That(sprintHud.HasBoundVisuals, Is.True, "SprintHud must bind all authored HUD labels/fills.");
-            Assert.That(windCue.HasBoundVisuals, Is.True, "SprintWindCue must bind a separate host, Image, and TMP state label.");
 
             var start = starts[0];
             Assert.That(overlays[0].ShouldShow, Is.False,
@@ -64,11 +60,13 @@ namespace KMA.Tests.Presentation
             var safeArea = pause.GetComponentInParent<SafeAreaFitter>();
             Assert.That(safeArea, Is.Not.Null, "Pause must be inside the safe-area hierarchy.");
             var pauseRect = pause.GetComponent<RectTransform>();
-            Assert.That(pauseRect.anchorMin, Is.EqualTo(new Vector2(1f, 1f)));
-            Assert.That(pauseRect.anchorMax, Is.EqualTo(new Vector2(1f, 1f)));
-            Assert.That(pauseRect.pivot, Is.EqualTo(new Vector2(1f, 1f)));
-            Assert.That(pauseRect.anchoredPosition.x, Is.LessThan(0f));
-            Assert.That(pauseRect.anchoredPosition.y, Is.LessThan(0f));
+            // Once the Canvas sizes correctly, SprintUiLayout.PauseRect spreads the button's anchors
+            // across the top-right of the safe area. The old corner-pin values only ever appeared on
+            // the degenerate zero-sized canvas.
+            Assert.That(pauseRect.anchorMin.x, Is.GreaterThan(.5f), "Pause sits on the right of the safe area.");
+            Assert.That(pauseRect.anchorMin.y, Is.GreaterThan(.5f), "Pause sits in the top half of the safe area.");
+            Assert.That(pauseRect.anchorMax.x, Is.GreaterThan(pauseRect.anchorMin.x).And.LessThanOrEqualTo(1f));
+            Assert.That(pauseRect.anchorMax.y, Is.GreaterThan(pauseRect.anchorMin.y).And.LessThanOrEqualTo(1f));
             pause.Open();
             Assert.That(FindNamed<Button>(scene, "ResumeButton"), Is.Not.Null);
             Assert.That(FindNamed<Button>(scene, "RestartButton"), Is.Not.Null);
@@ -86,9 +84,14 @@ namespace KMA.Tests.Presentation
             Assert.That(right, Is.Not.Null);
             var leftRect = left.GetComponent<RectTransform>();
             var rightRect = right.GetComponent<RectTransform>();
-            Assert.That(leftRect.anchorMin.x, Is.EqualTo(.01f));
+            // With the Canvas sized correctly the tap areas take their inset from SprintUiLayout;
+            // the authored scene rect only survived while the safe rect was degenerate.
+            var unitSafe = new Rect(0f, 0f, 1f, 1f);
+            Assert.That(leftRect.anchorMin.x,
+                Is.EqualTo(SprintUiLayout.ControlRect(unitSafe, true).xMin).Within(.001f));
             Assert.That(leftRect.anchorMax.x, Is.LessThan(rightRect.anchorMin.x));
-            Assert.That(rightRect.anchorMax.x, Is.EqualTo(.99f));
+            Assert.That(rightRect.anchorMax.x,
+                Is.EqualTo(SprintUiLayout.ControlRect(unitSafe, false).xMax).Within(.001f));
             Assert.That(1920f * (leftRect.anchorMax.x - leftRect.anchorMin.x) + leftRect.sizeDelta.x, Is.GreaterThanOrEqualTo(140f));
             Assert.That(1920f * (rightRect.anchorMax.x - rightRect.anchorMin.x) + rightRect.sizeDelta.x, Is.GreaterThanOrEqualTo(140f));
         }
@@ -199,14 +202,13 @@ namespace KMA.Tests.Presentation
         }
 
         [UnityTest]
-        public IEnumerator SprintPresentationRendersDedicatedHudMetricsAndWindStateTransitions()
+        public IEnumerator SprintPresentationRendersDedicatedHudMetrics()
         {
             yield return LoadSprint();
 
             var scene = SceneManager.GetActiveScene();
             var controller = SceneObjects<SprintController>(scene)[0];
             var sprintHud = SceneObjects<SprintHud>(scene)[0];
-            var windCue = SceneObjects<SprintWindCue>(scene)[0];
             Transform chrome = GameObject.Find("SprintBroadcastChrome")?.transform;
             Assert.That(chrome, Is.Not.Null);
             Assert.That(GameObject.Find("SprintFestivalChrome"), Is.Null);
@@ -227,7 +229,7 @@ namespace KMA.Tests.Presentation
             Assert.That(rank.text, Is.EqualTo("1st"));
             Assert.That(cadence.text, Is.EqualTo("COMBO ×0"));
 
-            controller.ConfigureForTest(.8f);
+            controller.ConfigureForTest();
             controller.AdvanceToDistance(42f);
             sprintHud.Refresh();
 
@@ -236,38 +238,11 @@ namespace KMA.Tests.Presentation
             Assert.That(cadence.text, Is.EqualTo("COMBO ×0"));
             Assert.That(distanceFill.fillAmount, Is.EqualTo(.42f).Within(.001f));
 
-            var cueImage = FindNamed<Image>(scene, "WindCueHost");
-            Assert.That(cueImage, Is.Not.Null);
-            var cueHost = cueImage.gameObject;
-            var cueState = cueHost.GetComponentInChildren<TMP_Text>(true);
-            Assert.That(cueState, Is.Not.Null);
-            Assert.That(cueHost.GetComponentInParent<Canvas>(), Is.Not.Null);
-            Assert.That(cueHost.GetComponentInParent<SafeAreaFitter>(), Is.Not.Null);
-            Assert.That(windCue.gameObject.activeSelf, Is.True);
-
-            controller.AdvanceToDistance(30f);
-            controller.Simulate(0f);
-            windCue.Refresh();
-            Assert.That(cueHost.activeSelf, Is.True);
-            Assert.That(cueState.text, Is.EqualTo("GIÓ ĐANG ĐẾN"));
-            Assert.That(cueImage.color, Is.EqualTo(Color.white));
-
-            controller.Simulate(.8f);
-            windCue.Refresh();
-            Assert.That(cueState.text, Is.EqualTo("CHẠM ĐỂ CẢN GIÓ"));
-            Assert.That(cueImage.color, Is.EqualTo(new Color(1f, .8f, 0f, 1f)));
-
             controller.OnLeftTap();
-            windCue.Refresh();
-            Assert.That(cueState.text, Is.EqualTo("CẢN GIÓ THÀNH CÔNG"));
-            Assert.That(cueImage.color, Is.EqualTo(Color.green));
-
-            controller.ConfigureForTest(.8f);
-            controller.AdvanceToDistance(30f);
-            controller.Simulate(2.1f);
-            windCue.Refresh();
-            Assert.That(cueState.text, Is.EqualTo("LỠ NHỊP GIÓ"));
-            Assert.That(cueImage.color, Is.EqualTo(Color.red));
+            controller.OnRightTap();
+            sprintHud.Refresh();
+            Assert.That(cadence.text, Is.EqualTo("COMBO ×2"),
+                "The scoreboard must track the cadence combo as the only live race feedback.");
 
             yield return null;
         }
@@ -285,15 +260,15 @@ namespace KMA.Tests.Presentation
                 FindNamed<Transform>(scene, "Runner_03"),
                 FindNamed<Transform>(scene, "Runner_04")
             };
-            var trackRegion = new Rect(-9.6f, -2.8f, 19.2f, 5.6f);
             for (int lane = 0; lane < runnerRoots.Length; lane++)
             {
                 Assert.That(runnerRoots[lane], Is.Not.Null);
                 SpriteRenderer runnerVisual = runnerRoots[lane].GetComponentInChildren<SpriteRenderer>(true);
                 Assert.That(runnerVisual, Is.Not.Null);
-                float expectedY = trackRegion.yMin + trackRegion.height *
-                    (1f - SprintUiLayout.LaneCenter01(lane, runnerRoots.Length));
-                Assert.That(runnerVisual.transform.position.y, Is.EqualTo(expectedY).Within(.02f));
+                // Feet on the painted lane centre — the sprite's pivot is at its feet.
+                Assert.That(runnerVisual.bounds.min.y,
+                    Is.EqualTo(SprintTrackLayout.LaneCenterY(lane)).Within(.02f),
+                    $"Runner {lane + 1} must stand midway between the two painted lines of their lane.");
             }
 
             Transform chromeMarker = GameObject.Find("SprintBroadcastChrome")?.transform.Find("PlayerMarker");
@@ -334,8 +309,14 @@ namespace KMA.Tests.Presentation
 
             Transform markerRoot = label.transform.parent;
             Assert.That(markerRoot.name, Is.EqualTo("PlayerMarker"));
-            Assert.That(markerRoot.localPosition.y, Is.GreaterThan(2f), "marker must clear the sprite's head");
-            Assert.That(markerRoot.Find("Plate"), Is.Not.Null, "marker needs a plate so cyan reads over sky");
+            // Lanes are 1.48 apart and a runner is 1.28 tall, so an overhead plate lands on the
+            // lane 1 rival. The marker rides beside the runner, inside the player's own lane band.
+            Assert.That(Mathf.Abs(markerRoot.localPosition.x), Is.GreaterThan(.5f),
+                "marker must sit beside the runner, not stacked above them");
+            Assert.That(markerRoot.position.y,
+                Is.GreaterThan(SprintTrackLayout.LaneCenterY(1)).And.LessThan(SprintTrackLayout.LaneCenterY(0)),
+                "marker must stay inside the player's lane band so it never covers the lane 1 rival");
+            Assert.That(markerRoot.Find("Plate"), Is.Not.Null, "marker needs a plate so cyan reads over the track");
             Assert.That(markerRoot.Find("Chevron"), Is.Not.Null, "identity must not rely on colour alone");
 
             Assert.That(label.text, Is.EqualTo("PLAYER"));
@@ -364,7 +345,7 @@ namespace KMA.Tests.Presentation
         }
 
         [UnityTest]
-        public IEnumerator SprintControls_AreRealButtonsMatchingTheirHitAreas()
+        public IEnumerator SprintControls_DrawASmallVisualInsideTheirFullSizeHitAreas()
         {
             yield return LoadSprint();
             var scene = SceneManager.GetActiveScene();
@@ -375,11 +356,30 @@ namespace KMA.Tests.Presentation
                 var visual = tap.Find("Visual") as RectTransform;
                 Assert.That(visual, Is.Not.Null, $"{tapName} must own a Visual child.");
 
-                Assert.That(visual.anchorMin, Is.EqualTo(Vector2.zero));
-                Assert.That(visual.anchorMax, Is.EqualTo(Vector2.one));
+                // The drawn button is deliberately smaller than the area a thumb can hit, so it can
+                // sit on the running lanes without hiding the runner in the lane beneath it.
+                Rect expected = SprintUiLayout.ControlVisualRect01;
+                Assert.That(visual.anchorMin,
+                    Is.EqualTo(new Vector2(expected.xMin, expected.yMin)).Within(.0001f));
+                Assert.That(visual.anchorMax,
+                    Is.EqualTo(new Vector2(expected.xMax, expected.yMax)).Within(.0001f));
                 Assert.That(visual.offsetMin, Is.EqualTo(Vector2.zero));
                 Assert.That(visual.offsetMax, Is.EqualTo(Vector2.zero));
 
+                Assert.That(visual.rect.width, Is.LessThan(tap.rect.width));
+                Assert.That(visual.rect.height, Is.LessThan(tap.rect.height));
+                Assert.That(visual.rect.width * visual.rect.height,
+                    Is.LessThan(tap.rect.width * tap.rect.height * .5f),
+                    $"{tapName}'s drawn button must be markedly smaller than the area it answers for.");
+
+                // The hit box itself is untouched: still the full ControlRect, still raycasting.
+                var safeAreaRect = GameObject.Find("SafeAreaRoot").GetComponent<RectTransform>().rect;
+                Rect expectedTap = SprintUiLayout.ControlRect(
+                    new Rect(0f, 0f, safeAreaRect.width, safeAreaRect.height), tapName == "LeftTap");
+                Assert.That(tap.rect.width, Is.EqualTo(expectedTap.width).Within(1f),
+                    $"{tapName}'s hit box must keep its full width.");
+                Assert.That(tap.rect.height, Is.EqualTo(expectedTap.height).Within(1f),
+                    $"{tapName}'s hit box must keep its full height.");
                 Assert.That(tap.GetComponent<Image>().raycastTarget, Is.True, $"{tapName} must receive taps.");
                 Assert.That(visual.Find("Border").GetComponent<Image>().sprite, Is.Not.Null);
                 Assert.That(visual.Find("Background").GetComponent<Image>().sprite, Is.Not.Null);
@@ -510,7 +510,7 @@ namespace KMA.Tests.Presentation
             var scene = SceneManager.GetActiveScene();
             var controller = SceneObjects<SprintController>(scene)[0];
             var presenter = SceneObjects<SprintControlPresenter>(scene)[0];
-            controller.ConfigureForTest(.8f);
+            controller.ConfigureForTest();
             float distanceBefore = controller.Snapshot.Distance;
             int comboBefore = controller.CadenceCombo;
 
@@ -543,7 +543,7 @@ namespace KMA.Tests.Presentation
             for (int i = 0; i < squares.Length; i++)
                 Assert.That(squares[i].raycastTarget, Is.False);
 
-            controller.ConfigureForTest(.8f);
+            controller.ConfigureForTest();
             controller.AdvanceToDistance(69.9f);
             finish.RefreshForTest();
             Assert.That(finish.IsVisible, Is.False);
