@@ -11,8 +11,6 @@ namespace KMA.Gameplay
         [SerializeField] float trackStartX = -9.6f;
         [SerializeField] float trackLength = 19.2f;
         string lastState;
-        bool sawWindExpiry;
-        float stumbleUntil;
 
         void Awake()
         {
@@ -25,13 +23,9 @@ namespace KMA.Gameplay
         {
             if (controller == null || animator == null) return;
             RefreshPosition(controller.Snapshot.Distance);
-            if (controller.WindChallengeExpired && !sawWindExpiry)
-                stumbleUntil = Time.time + .45f;
-            sawWindExpiry = controller.WindChallengeExpired;
             string state = controller.Phase == MinigamePhase.Resolve
                 ? (controller.LastResult != null && controller.LastResult.Pass ? "Celebrate" : "Fail")
                 : controller.Phase != MinigamePhase.Play ? "Idle"
-                : controller.WindChallengeFailed || Time.time < stumbleUntil ? "Stumble"
                 : controller.Snapshot.Distance >= 70f ? "Burst" : "Run";
             if (state == lastState) return;
             animator.Play(state, 0, 0f);

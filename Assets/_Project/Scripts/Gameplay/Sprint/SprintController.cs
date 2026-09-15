@@ -7,7 +7,6 @@ namespace KMA.Gameplay
 {
     public sealed class SprintController : MinigameBase
     {
-        [SerializeField] SprintChallengePattern challengePattern = new SprintChallengePattern();
         [SerializeField] RivalPaceProfileAsset[] rivalProfiles;
         [SerializeField] InputActionAsset inputActions;
         [SerializeField] bool directInputEnabled = true;
@@ -18,19 +17,10 @@ namespace KMA.Gameplay
         SprintRules rules;
         InputAction leftAction;
         InputAction rightAction;
-        float cueAt;
-        float activeAt;
-        float challengeElapsed;
-        bool windChallengeResolved;
         bool terminalResolved;
         bool inputRouterSubscribed;
         int cadenceCombo;
 
-        public bool WindCueVisible { get; private set; }
-        public bool WindWindowActive { get; private set; }
-        public bool WindChallengeCountered { get; private set; }
-        public bool WindChallengeFailed { get; private set; }
-        public bool WindChallengeExpired { get; private set; }
         public bool InputActionsReady => directInputEnabled && leftAction != null && rightAction != null;
         public Side ExpectedSide => rules == null ? Side.Left : rules.ExpectedSide;
         public SprintSnapshot Snapshot => rules == null ? default : rules.Snapshot;
@@ -49,7 +39,6 @@ namespace KMA.Gameplay
         {
             base.Awake();
             rules = CreateRulesFromAuthoredProfiles();
-            ConfigureChallengePattern();
             ConfigureInputActions();
         }
 
@@ -151,23 +140,13 @@ namespace KMA.Gameplay
                 OnRightTap();
         }
 
-        public void ConfigureForTest(float cueLeadSeconds)
+        public void ConfigureForTest()
         {
             Lifecycle = new MinigameLifecycle(0f, 0f);
             Lifecycle.Tick(0f);
             Lifecycle.Tick(0f);
             rules = SprintRules.ForTest(0f, 0f, 1);
-            challengePattern = SprintChallengePattern.AuthoredDefault();
-            challengePattern.ConfigureForTest(cueLeadSeconds);
-            ConfigureChallengePattern();
-            WindCueVisible = false;
-            WindWindowActive = false;
-            WindChallengeCountered = false;
-            WindChallengeFailed = false;
-            WindChallengeExpired = false;
-            windChallengeResolved = false;
             terminalResolved = false;
-            challengeElapsed = 0f;
             cadenceCombo = 0;
             LastResult = null;
         }
@@ -190,11 +169,8 @@ namespace KMA.Gameplay
 
         public MinigameResult BuildResult()
         {
-            var result = rules.BuildResult();
-            if (WindChallengeFailed)
-                result = new MinigameResult(false, result.Score, result.Rank);
-            LastResult = result;
-            return result;
+            LastResult = rules.BuildResult();
+            return LastResult;
         }
 
         protected override MinigameHudState BuildHudState() => new MinigameHudState(
@@ -203,12 +179,10 @@ namespace KMA.Gameplay
             progress01: Mathf.Clamp01((rules == null ? 0f : rules.Snapshot.Distance) / 100f),
             stamina01: Mathf.Clamp01((rules == null ? 0f : rules.Stamina) / 100f),
             score: rules == null ? 0f : rules.BuildResult().Score,
-            statusText: WindWindowActive ? "WIND — COUNTER NOW" : "TAP LEFT / RIGHT");
+            statusText: "TAP LEFT / RIGHT");
         protected override void TickPlay(float dt)
         {
-            float distanceBefore = rules.Snapshot.Distance;
             rules.Tick(dt);
-            UpdateAuthoredChallenges(dt, distanceBefore);
             EvaluateTerminalOutcome();
         }
 
@@ -220,24 +194,6 @@ namespace KMA.Gameplay
             Side expected = rules.ExpectedSide;
             rules.Tap(side);
             cadenceCombo = side == expected ? cadenceCombo + 1 : 0;
-            if (!WindWindowActive || windChallengeResolved)
-                return;
-
-            windChallengeResolved = true;
-            if (side == expected)
-            {
-                WindChallengeCountered = true;
-                return;
-            }
-
-            WindChallengeFailed = true;
-            EvaluateTerminalOutcome();
-        }
-
-        void ConfigureChallengePattern()
-        {
-            cueAt = challengePattern.WindCueDistance;
-            activeAt = challengePattern.WindActivationDistance;
         }
 
         SprintRules CreateRulesFromAuthoredProfiles()
@@ -251,39 +207,6 @@ namespace KMA.Gameplay
             return new SprintRules(14f, runtimeProfiles);
         }
 
-        void UpdateAuthoredChallenges(float dt, float distanceBefore)
-        {
-            float distanceAfter = rules.Snapshot.Distance;
-            float timerDt = dt;
-            if (!WindCueVisible && distanceAfter >= cueAt)
-            {
-                float distanceDelta = distanceAfter - distanceBefore;
-                float fractionBeforeCue = distanceDelta > 0f
-                    ? Mathf.Clamp01((cueAt - distanceBefore) / distanceDelta)
-                    : 0f;
-                WindCueVisible = true;
-                challengeElapsed = 0f;
-                timerDt = Mathf.Max(0f, dt * (1f - fractionBeforeCue));
-            }
-
-            if (WindCueVisible && !windChallengeResolved)
-            {
-                challengeElapsed += timerDt;
-                if (challengeElapsed >= challengePattern.WindCueLeadSeconds + challengePattern.WindWindowDuration)
-                {
-                    WindWindowActive = false;
-                    WindChallengeExpired = true;
-                    windChallengeResolved = true;
-                }
-                else if (!WindWindowActive &&
-                    challengeElapsed >= challengePattern.WindCueLeadSeconds &&
-                    rules.Snapshot.Distance >= activeAt)
-                {
-                    WindWindowActive = true;
-                }
-            }
-        }
-
         void EvaluateTerminalOutcome()
         {
             if (terminalResolved || Lifecycle.Phase != MinigamePhase.Play)
@@ -291,7 +214,7 @@ namespace KMA.Gameplay
 
             bool finished = rules.Snapshot.Distance >= 100f;
             bool timedOut = rules.Snapshot.Elapsed >= 14f;
-            if (!finished && !timedOut && !WindChallengeFailed)
+            if (!finished && !timedOut)
                 return;
 
             terminalResolved = true;

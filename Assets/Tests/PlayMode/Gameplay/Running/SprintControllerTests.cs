@@ -15,29 +15,9 @@ namespace KMA.Tests.Gameplay.Running
     public sealed class SprintControllerTests
     {
         [UnityTest]
-        public IEnumerator WindCue_UsesDistanceThresholdAndLeadsActivationByPointEightSeconds()
-        {
-            var controller = CreateSprintController(.8f);
-            controller.AdvanceToDistance(29.9f);
-            controller.Simulate(.1f);
-            Assert.That(controller.WindCueVisible, Is.False);
-            Assert.That(controller.WindWindowActive, Is.False);
-
-            controller.AdvanceToDistance(30f);
-            controller.Simulate(0f);
-            Assert.That(controller.WindCueVisible, Is.True);
-            Assert.That(controller.WindWindowActive, Is.False);
-            controller.Simulate(.79f);
-            Assert.That(controller.WindWindowActive, Is.False);
-            controller.Simulate(.01f);
-            Assert.That(controller.WindWindowActive, Is.True);
-            DestroyController(controller);
-            yield return null;
-        }
-        [UnityTest]
         public IEnumerator InputSystemAsset_BindsSprintActionsAndControllerResolvesThem()
         {
-            var controller = CreateSprintController(.8f);
+            var controller = CreateSprintController();
             var asset = new InputActionAsset();
             var map = asset.AddActionMap("Sprint");
             var left = map.AddAction("SprintLeft", InputActionType.Button);
@@ -58,17 +38,14 @@ namespace KMA.Tests.Gameplay.Running
 
 
         [UnityTest]
-        public IEnumerator CorrectWindCounterplay_AllowsViableFinishAndEmitsOnePassResult()
+        public IEnumerator ReachingTheFinish_EmitsOnePassResultAndIgnoresPostResolveTaps()
         {
-            var controller = CreateActiveWindController();
+            var controller = CreateSprintController();
             MinigameResult result = null;
             int completions = 0;
             controller.Completed += value => { result = value; completions++; };
-            controller.OnLeftTap();
             controller.AdvanceToDistance(100f);
             controller.Simulate(0f);
-            Assert.That(controller.WindChallengeCountered, Is.True);
-            Assert.That(controller.WindChallengeFailed, Is.False);
             Assert.That(result, Is.Not.Null);
             Assert.That(result.Pass, Is.True);
             Assert.That(completions, Is.EqualTo(1));
@@ -82,85 +59,9 @@ namespace KMA.Tests.Gameplay.Running
         }
 
         [UnityTest]
-        public IEnumerator WrongWindCounterplay_EmitsOneFailureResultEvenOnViableFinishPath()
-        {
-            var controller = CreateActiveWindController();
-            MinigameResult result = null;
-            int completions = 0;
-            controller.Completed += value => { result = value; completions++; };
-            controller.AdvanceToDistance(100f);
-            controller.OnRightTap();
-            Assert.That(controller.WindChallengeCountered, Is.False);
-            Assert.That(controller.WindChallengeFailed, Is.True);
-            Assert.That(result, Is.Not.Null);
-            Assert.That(result.Pass, Is.False);
-            Assert.That(completions, Is.EqualTo(1));
-            Assert.That(controller.Phase, Is.EqualTo(MinigamePhase.Resolve));
-            DestroyController(controller);
-            yield return null;
-        }
-
-        [UnityTest]
-        public IEnumerator ExpiredWindWindow_DoesNotAcceptLateCounterplay()
-        {
-            var controller = CreateActiveWindController();
-            controller.Simulate(1.21f);
-            Assert.That(controller.WindWindowActive, Is.False);
-            Assert.That(controller.WindChallengeExpired, Is.True);
-            controller.OnLeftTap();
-            Assert.That(controller.WindChallengeCountered, Is.False);
-            Assert.That(controller.WindChallengeFailed, Is.False);
-            DestroyController(controller);
-            yield return null;
-        }
-
-        [UnityTest]
-        public IEnumerator LargeSimulationStep_ExpiresWindWindowBeforeLateCounterplay()
-        {
-            var controller = CreateSprintController(.8f);
-            controller.AdvanceToDistance(30f);
-            controller.Simulate(0f);
-            controller.Simulate(2.01f);
-
-            Assert.That(controller.WindWindowActive, Is.False);
-            Assert.That(controller.WindChallengeExpired, Is.True);
-            controller.OnLeftTap();
-            Assert.That(controller.WindChallengeCountered, Is.False);
-            Assert.That(controller.WindChallengeFailed, Is.False);
-            DestroyController(controller);
-            yield return null;
-        }
-
-        [UnityTest]
-        public IEnumerator CueCrossingInsideLargeStep_StartsTimerAtThresholdAndExpiresAfterAuthoredDuration()
-        {
-            var controller = CreateSprintController(.8f);
-            controller.AdvanceToDistance(29f);
-            controller.OnLeftTap();
-            controller.OnRightTap();
-
-            controller.Simulate(1f);
-            Assert.That(controller.WindCueVisible, Is.True);
-            Assert.That(controller.WindWindowActive, Is.False);
-            controller.Simulate(.39f);
-            Assert.That(controller.WindWindowActive, Is.False);
-            controller.Simulate(.02f);
-            Assert.That(controller.WindWindowActive, Is.True);
-            controller.Simulate(1.18f);
-            Assert.That(controller.WindWindowActive, Is.True);
-            controller.Simulate(.02f);
-            Assert.That(controller.WindWindowActive, Is.False);
-            Assert.That(controller.WindChallengeExpired, Is.True);
-            controller.OnLeftTap();
-            Assert.That(controller.WindChallengeCountered, Is.False);
-            DestroyController(controller);
-            yield return null;
-        }
-
-        [UnityTest]
         public IEnumerator TimeLimit_EmitsOneFailureResultWithoutStaminaDepletion()
         {
-            var controller = CreateSprintController(.8f);
+            var controller = CreateSprintController();
             MinigameResult result = null;
             int completions = 0;
             controller.Completed += value => { result = value; completions++; };
@@ -207,7 +108,8 @@ namespace KMA.Tests.Gameplay.Running
             var player = GameObject.Find("Player");
             Assert.That(player, Is.Not.Null);
             Assert.That(player.transform.position.x, Is.EqualTo(-9.6f).Within(.001f));
-            Assert.That(player.transform.position.y, Is.EqualTo(.7f).Within(.001f));
+            Assert.That(player.transform.position.y,
+                Is.EqualTo(SprintTrackLayout.LaneCenterYForAuthoredLane(2)).Within(.001f));
 
             var parallax = SceneObjects<SprintParallax>(scene);
             Assert.That(parallax.Length, Is.EqualTo(1));
@@ -276,9 +178,9 @@ namespace KMA.Tests.Gameplay.Running
 
             var expectedLaneY = new System.Collections.Generic.Dictionary<int, float>
             {
-                { 1, 2.1f },
-                { 3, -.7f },
-                { 4, -2.1f }
+                { 1, SprintTrackLayout.LaneCenterYForAuthoredLane(1) },
+                { 3, SprintTrackLayout.LaneCenterYForAuthoredLane(3) },
+                { 4, SprintTrackLayout.LaneCenterYForAuthoredLane(4) }
             };
 
             var rivals = SceneObjects<RivalRunnerAI>(SceneManager.GetActiveScene());
@@ -343,7 +245,7 @@ namespace KMA.Tests.Gameplay.Running
         [Test]
         public void CadenceCombo_TracksConsecutiveValidTapsAndResetsOnWrongSide()
         {
-            var controller = CreateSprintController(.8f);
+            var controller = CreateSprintController();
             try
             {
                 controller.OnLeftTap();
@@ -359,20 +261,10 @@ namespace KMA.Tests.Gameplay.Running
             }
         }
 
-        static SprintController CreateActiveWindController()
-        {
-            var controller = CreateSprintController(.8f);
-            controller.AdvanceToDistance(30f);
-            controller.Simulate(0f);
-            controller.Simulate(.8f);
-            Assert.That(controller.WindWindowActive, Is.True);
-            return controller;
-        }
-
-        static SprintController CreateSprintController(float cueLeadSeconds)
+        static SprintController CreateSprintController()
         {
             var value = new GameObject("SprintController").AddComponent<SprintController>();
-            value.ConfigureForTest(cueLeadSeconds);
+            value.ConfigureForTest();
             return value;
         }
 
@@ -380,8 +272,14 @@ namespace KMA.Tests.Gameplay.Running
 
         static void AssertAnimatorStatesHaveAuthoredVisualMotions(Animator animator)
         {
-            var controller = animator.runtimeAnimatorController as AnimatorController;
-            Assert.That(controller, Is.Not.Null, "RivalRunner must use an authored AnimatorController asset.");
+            // Characters other than the base one reach the shared state machine through an
+            // override controller, which swaps in their own clip set.
+            var runtime = animator.runtimeAnimatorController;
+            var overrideController = runtime as AnimatorOverrideController;
+            var controller = (overrideController == null
+                ? runtime
+                : overrideController.runtimeAnimatorController) as AnimatorController;
+            Assert.That(controller, Is.Not.Null, "RivalRunner must resolve to an authored AnimatorController asset.");
 
             var states = controller.layers[0].stateMachine.states;
             var expectedStates = new[] { "Idle", "Run", "Burst", "Stumble", "Celebrate", "Fail" };
@@ -391,7 +289,10 @@ namespace KMA.Tests.Gameplay.Running
             {
                 var state = states.Single(value => value.state.name == expectedState).state;
                 Assert.That(state.motion, Is.TypeOf<AnimationClip>(), $"{expectedState} must use an AnimationClip.");
-                var clip = (AnimationClip)state.motion;
+                var baseClip = (AnimationClip)state.motion;
+                var clip = overrideController == null ? baseClip : overrideController[baseClip];
+                Assert.That(clip, Is.Not.Null,
+                    $"{expectedState} must be overridden with this character's own clip.");
                 Assert.That(clip.length, Is.GreaterThan(0f), $"{expectedState} clip must have a duration.");
                 Assert.That(AnimationUtility.GetCurveBindings(clip).Any(binding =>
                         binding.type == typeof(Transform) && binding.path == "Visual" &&

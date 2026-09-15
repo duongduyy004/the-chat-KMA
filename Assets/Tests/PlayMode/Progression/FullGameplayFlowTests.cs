@@ -166,7 +166,7 @@ namespace KMA.Tests.Gameplay.Progression
 
             var sprint = UnityEngine.Object.FindFirstObjectByType<SprintController>();
             Assert.That(sprint, Is.Not.Null);
-            sprint.ConfigureForTest(0f);
+            sprint.ConfigureForTest();
             sprint.AdvanceToDistance(100f);
             sprint.Simulate(0f);
             var resultPanel = UnityEngine.Object.FindFirstObjectByType<ResultPanel>(FindObjectsInactive.Include);
@@ -248,7 +248,7 @@ namespace KMA.Tests.Gameplay.Progression
 
             var sprint = UnityEngine.Object.FindFirstObjectByType<SprintController>();
             Assert.That(sprint, Is.Not.Null, "The original subject route must keep its pending binding.");
-            sprint.ConfigureForTest(0f);
+            sprint.ConfigureForTest();
             sprint.AdvanceToDistance(100f);
             sprint.Simulate(0f);
             var resultPanel = UnityEngine.Object.FindFirstObjectByType<ResultPanel>(FindObjectsInactive.Include);
