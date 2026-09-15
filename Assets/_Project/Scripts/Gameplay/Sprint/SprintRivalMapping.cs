@@ -11,12 +11,14 @@ namespace KMA.Gameplay
     /// </summary>
     public readonly struct SprintRivalMapping
     {
-        public SprintRivalMapping(string name, int lane, int rivalIndex, float localY, string profilePath)
+        public SprintRivalMapping(string name, int lane, int rivalIndex, string profilePath)
         {
             Name = name;
             Lane = lane;
             RivalIndex = rivalIndex;
-            LocalPosition = new Vector3(-9.6f, localY, 0f);
+            // Y comes from the painted track, never from a hand-tuned constant, so a rival always
+            // stands midway between the two lines that mark their lane.
+            LocalPosition = new Vector3(-9.6f, SprintTrackLayout.LaneCenterYForAuthoredLane(lane), 0f);
             ProfilePath = profilePath;
         }
 
@@ -31,11 +33,11 @@ namespace KMA.Gameplay
     {
         public static readonly SprintRivalMapping[] Required =
         {
-            new SprintRivalMapping("Runner_01", 1, 0, 2.1f,
+            new SprintRivalMapping("Runner_01", 1, 0,
                 "Assets/_Project/ScriptableObjects/Sprint/RivalPaceProfile_Lane1.asset"),
-            new SprintRivalMapping("Runner_03", 3, 1, -.7f,
+            new SprintRivalMapping("Runner_03", 3, 1,
                 "Assets/_Project/ScriptableObjects/Sprint/RivalPaceProfile_Lane3.asset"),
-            new SprintRivalMapping("Runner_04", 4, 2, -2.1f,
+            new SprintRivalMapping("Runner_04", 4, 2,
                 "Assets/_Project/ScriptableObjects/Sprint/RivalPaceProfile_Lane4.asset")
         };
     }

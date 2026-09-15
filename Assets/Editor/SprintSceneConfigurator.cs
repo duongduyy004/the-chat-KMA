@@ -148,6 +148,74 @@ namespace KMA.EditorTools
             Debug.Log($"Removed {removed} legacy SprintMetrics group(s) from {ScenePath}.");
         }
 
+        const string ApronName = "TrackApron";
+        const int PlayerLane = 2;
+
+        /// <summary>
+        /// Restores the painted track to its authored size and stands every runner on the centre of
+        /// the lane they are drawn to be in. The backdrop reaches the viewport floor on its own, so
+        /// no apron is needed; the lowest lane runs under the control buttons, which draw a small
+        /// visual inside a full-size tap area.
+        /// </summary>
+        [MenuItem("KMA/Sprint/Align Track Lanes")]
+        public static void AlignTrackLanes()
+        {
+            var scene = EditorSceneManager.OpenScene(ScenePath, OpenSceneMode.Single);
+
+            var backdrops = scene.GetRootGameObjects()
+                .SelectMany(root => root.GetComponentsInChildren<SpriteRenderer>(true))
+                .Where(renderer => renderer.sprite != null && renderer.sprite.name == "Track")
+                .ToArray();
+            if (backdrops.Length == 0)
+                throw new InvalidOperationException("MG_Sprint has no Track backdrop tile to align.");
+
+            foreach (var backdrop in backdrops)
+            {
+                var tile = backdrop.transform;
+                float parentScaleY = tile.parent == null ? 1f : tile.parent.lossyScale.y;
+                var localScale = tile.localScale;
+                localScale.y = SprintTrackLayout.BackdropScaleY / parentScaleY;
+                tile.localScale = localScale;
+
+                var position = tile.position;
+                position.y = SprintTrackLayout.BackdropCenterY;
+                tile.position = position;
+            }
+
+            RemoveApron(scene);
+
+            var player = GameObject.Find("Player");
+            if (player == null)
+                throw new InvalidOperationException("MG_Sprint has no Player root to align.");
+            var playerPosition = player.transform.position;
+            playerPosition.y = SprintTrackLayout.LaneCenterYForAuthoredLane(PlayerLane);
+            player.transform.position = playerPosition;
+
+            foreach (var rival in SceneComponents(scene, RivalTypeName))
+            {
+                var rivalPosition = rival.transform.position;
+                rivalPosition.y = SprintTrackLayout.LaneCenterYForAuthoredLane(RivalLane(rival));
+                rival.transform.position = rivalPosition;
+            }
+
+            EditorSceneManager.MarkSceneDirty(scene);
+            EditorSceneManager.SaveScene(scene);
+            Debug.Log($"[KMA] Sprint track aligned: backdrop scaleY {SprintTrackLayout.BackdropScaleY:F4}, " +
+                      $"lane centres {string.Join(", ", Enumerable.Range(0, SprintTrackLayout.LaneCount).Select(lane => SprintTrackLayout.LaneCenterY(lane).ToString("F3")))}.");
+        }
+
+
+        /// The apron only existed while the backdrop was compressed and stopped short of the
+        /// viewport floor. At its authored size the backdrop reaches the floor on its own.
+        static void RemoveApron(Scene scene)
+        {
+            var apron = scene.GetRootGameObjects()
+                .SelectMany(root => root.GetComponentsInChildren<Transform>(true))
+                .FirstOrDefault(transform => transform != null && transform.name == ApronName);
+            if (apron != null)
+                UnityEngine.Object.DestroyImmediate(apron.gameObject);
+        }
+
         static int RivalLane(MonoBehaviour rival) => new SerializedObject(rival).FindProperty("lane").intValue;
 
         static MonoBehaviour[] SceneComponents(Scene scene, string fullTypeName) => scene.GetRootGameObjects()

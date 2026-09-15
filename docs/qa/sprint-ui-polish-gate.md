@@ -66,6 +66,10 @@ canvasRect=(0,0)             <- and still (0,0) after Canvas.ForceUpdateCanvases
 lossyScale=(0.01,0.01,0.01)  <- correct for ortho size 5.4 against a 1080 reference
 ```
 
+> **Superseded 2026-09-15.** The root cause below was fixed; see
+> [Safe-area root fix](#safe-area-root-fix-2026-09-15) at the end of this document. The Editor now
+> renders the Sprint HUD at real geometry, so Play-mode screenshots are usable again.
+
 ### Root cause (identified, NOT fixed — out of scope for this branch)
 
 `Assets/_Project/Prefabs/UI/HUD_Minigame.prefab` contains **two** `SafeAreaFitter` components, enabled
@@ -130,3 +134,189 @@ partially covered — see below.
 Capture the nine states on a real device (`adb exec-out screencap -p`), where the canvas sizes
 correctly, and inspect them against Task 10's checklist. That is the only remaining way to close the
 four unverified acceptance criteria.
+
+---
+
+## Safe-area root fix (2026-09-15)
+
+The root cause recorded above under "Root cause (identified, NOT fixed)" has been fixed. The
+`SafeAreaFitter` inversion was real and reproduced exactly as described.
+
+### What was wrong
+
+`SafeAreaFitter.Apply()` writes `offsetMin`/`offsetMax`. Those are *insets* only while the anchors
+are apart on that axis; where the anchors are coincident, `offsetMax - offsetMin` **is** `sizeDelta`,
+so the write is a resize. The fitter was enabled on the Canvas root, whose anchors are
+`(0,0)-(0,0)` — so it resized the canvas to `0x0` and every anchored child collapsed onto the origin.
+
+Three layers carried the same mistake:
+
+| Layer | Was | Now |
+|---|---|---|
+| `HUD_Minigame.prefab` | fitter on the Canvas root, enabled; `SafeAreaRoot`'s fitter disabled | Canvas-root fitter **removed**; `SafeAreaRoot`'s fitter **enabled** |
+| `SprintFestivalPresentation.PrepareSafeArea` | disabled `SafeAreaRoot`'s fitter and zeroed its offsets | enables it and applies it |
+| `MinigameUIAssembler.ConfigureCanvas` | `root.AddComponent<SafeAreaFitter>()` on the Canvas root | `EnsureSafeAreaFitter` puts it on `SafeAreaRoot`, never the root |
+
+`SafeAreaFitter.Apply()` additionally now refuses to write on an axis whose anchors are coincident,
+so this class of bug cannot be reintroduced by any future wiring.
+
+Commit `0d56cef` ("keep sprint safe area single rooted") is what inverted it: the intent — exactly
+one fitter applying — was right, but it kept the Canvas-root fitter and switched off the correctly
+stretch-anchored one. The intent still holds: there is exactly one fitter, on `SafeAreaRoot`.
+
+### Consequence: two workarounds were load-bearing on the bug
+
+`SprintFestivalPresentation` had two "degenerate safe rect (batchmode's headless canvas)" branches —
+in `EnsurePause` and `BuildControl` — that skipped the real anchor math when `safe` was zero-sized.
+In batchmode that branch was always taken, so two PlayMode assertions had been pinned to the fallback
+geometry rather than to `SprintUiLayout`:
+
+- the pause button's corner-pin anchors `(1,1)`, now the spread anchors `SprintUiLayout.PauseRect`
+  produces;
+- the tap areas' authored `.01` inset, now `SprintUiLayout`'s `EdgeX` of `.02`.
+
+Both assertions were corrected to derive from `SprintUiLayout`. The fallback branches were left in
+place as genuine first-frame guards; they are simply no longer the path batchmode takes.
+
+`UIComponentTests.SafeAreaFitterMapsLandscapeInsetsToBothHorizontalEdges` applied the fitter to a
+default `RectTransform` — whose anchors are coincident — and asserted the resize. It now uses a
+stretched rect, the only configuration where that assertion is meaningful.
+
+### A defect the fix exposed
+
+`WindCueHost` was parented directly to the Canvas root, outside `SafeAreaRoot`. It only satisfied the
+existing "must be inside the safe-area hierarchy" assertion because the fitter was (wrongly) on the
+Canvas root, an ancestor of everything. It is now parented under `SafeAreaRoot` in `MG_Sprint.unity`,
+so the wind cue actually respects the safe area.
+
+### Verification
+
+| Suite | total | passed | failed | skipped |
+|---|---|---|---|---|
+| EditMode | 375 | 372 | 0 | 3 |
+| PlayMode | 268 | 268 | 0 | 0 |
+
+Against the loss-route gate's baseline (EditMode 369/366/0/3, PlayMode 268/268/0/0): EditMode gains
+the 6 new `SafeAreaContractTests`, PlayMode is unchanged. The 3 skips are the same `[Ignore]`d parked
+challenge tests. Counts read from the root `<test-run>` element, never from an exit code.
+
+`Assets/Tests/EditMode/Presentation/SafeAreaContractTests.cs` pins the contract: the fitter leaves a
+coincident-anchor rect unresized, still insets a stretched one, the prefab keeps no fitter on the
+Canvas root and an enabled one on `SafeAreaRoot`, and neither the Sprint build nor the assembler may
+undo that. All five failed before the fix, for the expected reasons.
+
+### Visual verification — NOW POSSIBLE
+
+The four acceptance criteria this gate had to leave open were blocked only by the collapsed canvas.
+Editor Play-mode capture via `tools/qa-screenshot.sh` now returns a correctly laid-out HUD:
+
+- `Builds/Screenshots/sprint-fixed.png` — start/countdown state
+- `Builds/Screenshots/sprint-running.png` — race state
+- `Builds/Screenshots/endurance-check.png` — `MG_Endurance`, confirming the shared prefab fix
+
+Scoreboard, rank pill, progress rail, mode chip, pause, countdown, instruction plate and both
+controls all render in their intended positions, with Vietnamese diacritics unclipped.
+
+**Still open, now visible for the first time** (pre-existing presentation issues, not regressions):
+
+1. The `PlayerMarker` plate is far wider than the "PLAYER" label it backs and sits well above the
+   runner's head, so it reads as a stray bar rather than a marker.
+2. The mode chip "CHẠY NƯỚC RÚT · 100M" is low-contrast caption text over the blue sky.
+3. Lane 0 of the four runner lanes sits above the red track art, in the sky region.
+
+These were not investigated and are not addressed here.
+
+---
+
+## Lane alignment, small controls, and finish-line approach (2026-09-15)
+
+Two of the three issues left open by the section above are fixed. Both were only visible once the
+canvas rendered at real geometry.
+
+### Runners now stand on the painted lanes
+
+`Track.png` carries five painted lane lines — four lanes. Runner Y was a set of hand-tuned constants
+in `SprintRivalMapping` (`2.1 / 0.7 / -0.7 / -2.1`) that had drifted off the artwork: the top runner
+stood in the sky above the track, and the fourth painted lane sat empty behind the control buttons.
+
+The line rows were measured off the asset itself and are identical at x = 10%, 50% and 90%:
+
+| Painted line | 1 | 2 | 3 | 4 | 5 |
+|---|---|---|---|---|---|
+| Row in `Track.png` (875 px tall) | 471.5 | 553.5 | 639 | 722 | 798 |
+
+`SprintTrackLayout` is now the single source of truth. The backdrop keeps its authored size — bottom
+edge on the viewport floor, so the track covers the screen with no filler needed — and every runner's
+Y is derived from the painted rows, so the two cannot drift apart again:
+
+| | Lane 1 | Lane 2 (player) | Lane 3 | Lane 4 |
+|---|---|---|---|---|
+| Before | 2.100 (in the sky) | 0.700 | -0.700 | -2.100 |
+| After | 1.000 | -0.479 | -1.966 | -3.370 |
+
+`KMA/Sprint/Align Track Lanes` applies this and is re-runnable.
+
+### The controls sit on the lanes, drawn small
+
+Lane 4 runs underneath the TRÁI/PHẢI buttons, which is the accepted arrangement rather than a problem
+to design around: the buttons lie on the running lanes and the *drawn* button was shrunk so it stops
+hiding them. The hit box is untouched.
+
+`ScreenTapArea`'s own RectTransform is still the full `SprintUiLayout.ControlRect`
+(`.43 x .26` of safe height) and still the raycast target. Only its `Visual` child shrank — it used to
+stretch to fill the tap area and is now placed by `SprintUiLayout.ControlVisualRect01`
+(`.52` wide, `.50` tall, sitting `.04` up from the tap area's floor, centred horizontally). That puts
+the artwork where a thumb rests in landscape and clear of the runner in the lane above it.
+
+Measured on the rendered frame at 1101x534 — drawn button against the touch target it answers for:
+
+| | x | y | size |
+|---|---|---|---|
+| Hit box (unchanged) | 22 – 251.6 | 373.8 – 512.6 | 229.6 x 138.8 |
+| Drawn button, predicted | 77.1 – 196.5 | 437.6 – 507.0 | 119.4 x 69.4 |
+| Drawn button, measured | 77 – 196 | 438 – 506 | 119 x 68 |
+
+The drawn button is about a quarter of the area a tap still lands in.
+
+### The finish line approaches instead of appearing
+
+`SprintFinishLinePresenter` used to `SetActive(true)` the ribbon the instant the runner passed 70 m,
+so a full-height checkerboard appeared on the track out of nothing. It now enters from beyond the
+right edge at 70 m and slides to its resting place as the runner reaches the line, at full opacity
+throughout (`SprintUiLayout.FinishReveal01` / `FinishAnchorMinX`). The reveal distance is unchanged.
+
+### Verification
+
+| Suite | total | passed | failed | skipped |
+|---|---|---|---|---|
+| EditMode | 406 | 403 | 0 | 3 |
+| PlayMode | 268 | 268 | 0 | 0 |
+
+EditMode gains 31 tests over the previous section's 375 (`SprintTrackLayoutTests`, the finish-reveal
+cases and the control-visual cases in `SprintUiLayoutTests`); PlayMode holds at 268. The 3 skips
+remain the parked challenge tests.
+
+Six PlayMode tests asserted geometry this work deliberately moved — four the old hand-tuned lane
+constants, one the player's lane Y, and `SprintControls_AreRealButtonsMatchingTheirHitAreas`, which
+asserted the visual filled its tap area exactly. That last one is now
+`SprintControls_DrawASmallVisualInsideTheirFullSizeHitAreas` and asserts the new contract in both
+directions: the visual is under half the tap area's area, and the tap area still measures the full
+`ControlRect`. The rest were repointed at `SprintTrackLayout` rather than renumbered, so the scene and
+the geometry stay locked together.
+
+Measured from the rendered frames rather than from the code:
+
+- `Builds/Screenshots/small-buttons.png` — the painted lines land at 182, 253, 400 and 467 px against
+  a predicted 181.8, 253.4, 400.4, 466.8 (the fourth is behind the instruction plate); each runner
+  stands on the band centre between them. The frame's bottom row is the track artwork's own bottom
+  edge, so no sky shows beneath it.
+- `finish-69m.png` — no ribbon on screen. `finish-75m.png` — left edge at 1072 px against a predicted
+  1071.6. `finish-88m.png` — 995 px against 995.3. `finish-97m.png` — at rest as the runner arrives.
+
+### Still open
+
+- The `PlayerMarker` plate is far wider than the "PLAYER" label it backs.
+- The mode chip's low contrast over the sky.
+- The `←` / `→` glyphs on the control buttons do not exist in `Baloo2-ExtraBold` and render as blank
+  space; the buttons read on their "TRÁI" / "PHẢI" labels alone. Pre-existing, and visible in every
+  screenshot in this document.

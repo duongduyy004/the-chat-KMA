@@ -18,6 +18,12 @@ namespace KMA.Tests.Presentation
             var root = new GameObject("safe-area-fitter", typeof(RectTransform));
             try
             {
+                var rectTransform = root.GetComponent<RectTransform>();
+                // Offsets only read as insets on a stretched rect; on the default coincident
+                // anchors they are sizeDelta, and the fitter deliberately leaves those alone.
+                rectTransform.anchorMin = Vector2.zero;
+                rectTransform.anchorMax = Vector2.one;
+
                 var fitter = root.AddComponent<SafeAreaFitter>();
                 var offsets = fitter.CalculateOffsets(
                     new Rect(100f, 0f, 1720f, 1080f),
@@ -27,7 +33,6 @@ namespace KMA.Tests.Presentation
                 Assert.That(offsets.right, Is.EqualTo(100f).Within(.01f));
 
                 fitter.Apply(new Rect(100f, 0f, 1720f, 1080f), new Vector2Int(1920, 1080));
-                var rectTransform = root.GetComponent<RectTransform>();
                 Assert.That(rectTransform.offsetMin.x, Is.EqualTo(100f).Within(.01f));
                 Assert.That(rectTransform.offsetMax.x, Is.EqualTo(-100f).Within(.01f));
             }
