@@ -6,7 +6,7 @@ AnimationClip:
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_Name: RivalRunner_Stumble
+  m_Name: FemaleAdventurer_Fail
   serializedVersion: 7
   m_Legacy: 0
   m_Compressed: 0
@@ -55,9 +55,9 @@ AnimationClip:
   - serializedVersion: 2
     curve:
     - time: 0
-      value: {fileID: 21300000, guid: a19644b29572973ffa2ee1afe7ea47b8, type: 3}
+      value: {fileID: 21300000, guid: c8855f7fc53ccd341995e0277aa07e95, type: 3}
     - time: 0.3
-      value: {fileID: 21300000, guid: a19644b29572973ffa2ee1afe7ea47b8, type: 3}
+      value: {fileID: 21300000, guid: c8855f7fc53ccd341995e0277aa07e95, type: 3}
     attribute: m_Sprite
     path: Visual
     classID: 212
@@ -89,8 +89,8 @@ AnimationClip:
       isIntCurve: 0
       isSerializeReferenceCurve: 0
     pptrCurveMapping:
-    - {fileID: 21300000, guid: a19644b29572973ffa2ee1afe7ea47b8, type: 3}
-    - {fileID: 21300000, guid: a19644b29572973ffa2ee1afe7ea47b8, type: 3}
+    - {fileID: 21300000, guid: c8855f7fc53ccd341995e0277aa07e95, type: 3}
+    - {fileID: 21300000, guid: c8855f7fc53ccd341995e0277aa07e95, type: 3}
   m_AnimationClipSettings:
     serializedVersion: 2
     m_AdditiveReferencePoseClip: {fileID: 0}
