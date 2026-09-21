@@ -12,7 +12,7 @@
 [CmdletBinding()]
 param(
     # arm64 | x86_64 | all | comma-separated
-    [string] $Abi = 'arm64,x86_64',
+    [string] $Abi = 'arm64',
     # APK directory, relative to the project root
     [string] $OutputDir = 'Builds/Android',
     # APK base name; files land at <base>-<abi>.apk
@@ -81,27 +81,36 @@ Write-Host "Output  : $OutputDir/$Name-<abi>.apk"
 Write-Host "Log     : $Log"
 Write-Host ''
 
-# Unity.exe is a GUI-subsystem binary, so the call operator would not block; Start-Process -Wait does.
+# Stream Unity's live log to the terminal while retaining the complete log on disk.
 $unityArgs = @(
     '-batchmode', '-nographics', '-quit',
-    '-projectPath', ('"{0}"' -f $projectRoot),
+    '-projectPath', $projectRoot,
     '-executeMethod', 'KMA.EditorTools.AndroidBuildMatrix.Build',
-    '-androidAbi', ('"{0}"' -f $Abi),
-    '-buildOutputDir', ('"{0}"' -f $OutputDir),
-    '-buildName', ('"{0}"' -f $Name),
-    '-logFile', ('"{0}"' -f $Log)
+    '-androidAbi', $Abi,
+    '-buildOutputDir', $OutputDir,
+    '-buildName', $Name,
+    '-logFile', '-'
 )
-$process = Start-Process -FilePath $Unity -ArgumentList $unityArgs -Wait -PassThru -NoNewWindow
+$previousErrorActionPreference = $ErrorActionPreference
+$ErrorActionPreference = 'Continue'
+& $Unity @unityArgs 2>&1 |
+    ForEach-Object {
+        if ($_ -is [System.Management.Automation.ErrorRecord]) {
+            $_.Exception.Message
+        } else {
+            $_
+        }
+    } |
+    Tee-Object -FilePath $Log
+$unityExitCode = $LASTEXITCODE
+$ErrorActionPreference = $previousErrorActionPreference
 
-if ($process.ExitCode -ne 0) {
-    Write-Host "build-apk: Unity exited with $($process.ExitCode). Last 40 log lines:"
+if ($unityExitCode -ne 0) {
+    Write-Host "build-apk: Unity exited with $unityExitCode. Last 40 log lines:"
     if (Test-Path -LiteralPath $Log) { Get-Content -Path $Log -Tail 40 | Write-Host }
-    exit $process.ExitCode
+    exit $unityExitCode
 }
 
-if (Test-Path -LiteralPath $Log) {
-    Select-String -Path $Log -Pattern '^\[KMA\] .* build ' | ForEach-Object { Write-Host $_.Line }
-}
 Write-Host ''
 Get-ChildItem -Path $outputFull -Filter "$Name-*.apk" -File | ForEach-Object {
     $hash = (Get-FileHash -Path $_.FullName -Algorithm SHA256).Hash.ToLower()

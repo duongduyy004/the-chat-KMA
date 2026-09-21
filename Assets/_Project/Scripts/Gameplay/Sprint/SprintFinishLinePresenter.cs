@@ -29,8 +29,10 @@ namespace KMA.Gameplay
 
             // The ribbon enters from beyond the right edge at the reveal distance and slides in as
             // the runner closes on the line, rather than appearing on the track all at once.
-            rect.anchorMin = new Vector2(SprintUiLayout.FinishAnchorMinX(distance), 0f);
-            rect.anchorMax = new Vector2(SprintUiLayout.FinishAnchorMaxX(distance), 1f);
+            rect.anchorMin = new Vector2(
+                SprintUiLayout.FinishAnchorMinX(distance), SprintUiLayout.FinishAnchorMinY);
+            rect.anchorMax = new Vector2(
+                SprintUiLayout.FinishAnchorMaxX(distance), SprintUiLayout.FinishAnchorMaxY);
             rect.offsetMin = Vector2.zero;
             rect.offsetMax = Vector2.zero;
         }

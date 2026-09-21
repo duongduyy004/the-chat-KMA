@@ -11,8 +11,13 @@ namespace KMA.Gameplay
         public const float FinishDistance = 100f;
 
         const float FinishRestAnchorX = .84f;   // where the ribbon ends up, fraction of width
-        const float FinishAnchorWidth = .06f;
+        const float FinishAnchorWidth = .03f;
         const float FinishEntryAnchorX = 1f;    // just past the right edge, so it slides in unseen
+
+        // Track.png has transparent sky above the painted lanes. Keep the checkerboard inside the
+        // four-lane band instead of stretching it over the whole camera presentation.
+        public const float FinishAnchorMinY = .12f;
+        public const float FinishAnchorMaxY = .66f;
 
         const float EdgeX = .02f;   // horizontal inset, fraction of width
         const float RailInsetX = .03f;

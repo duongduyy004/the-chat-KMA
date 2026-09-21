@@ -535,8 +535,8 @@ namespace KMA.Tests.Presentation
             Assert.That(finishLine, Is.Not.Null);
 
             RectTransform finishRect = finishLine.GetComponent<RectTransform>();
-            Assert.That(finishRect.anchorMin.y, Is.EqualTo(0f));
-            Assert.That(finishRect.anchorMax.y, Is.EqualTo(1f));
+            Assert.That(finishRect.anchorMin.y, Is.EqualTo(.12f).Within(.0001f));
+            Assert.That(finishRect.anchorMax.y, Is.EqualTo(.66f).Within(.0001f));
 
             Image[] squares = finishLine.GetComponentsInChildren<Image>(true);
             Assert.That(squares.Length, Is.GreaterThan(1));

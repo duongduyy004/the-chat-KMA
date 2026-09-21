@@ -18,7 +18,8 @@ namespace KMA.EditorTools
     {
         const string DefaultOutputDirectory = "Builds/Android";
         const string DefaultBaseName = "kma";
-        const string DefaultAbiList = "arm64,x86_64";
+        const string DefaultAbiList = "arm64";
+        const string AllAbiList = "arm64,x86_64";
 
         public static void Build()
         {
@@ -63,9 +64,8 @@ namespace KMA.EditorTools
             finally
             {
                 PlayerSettings.Android.targetArchitectures = previous;
-                AssetDatabase.SaveAssets();
-                // SaveAssets does not write ProjectSettings.asset; without this a batch run would
-                // quit leaving the last built architecture as the project's shipping default.
+                // Save Project writes ProjectSettings.asset; without this a batch run would quit
+                // leaving the last built architecture as the project's shipping default.
                 EditorApplication.ExecuteMenuItem("File/Save Project");
             }
 
@@ -79,7 +79,7 @@ namespace KMA.EditorTools
             if (string.IsNullOrWhiteSpace(requested))
                 requested = DefaultAbiList;
             if (string.Equals(requested.Trim(), "all", StringComparison.OrdinalIgnoreCase))
-                requested = DefaultAbiList;
+                requested = AllAbiList;
 
             var result = new List<string>();
             foreach (var token in requested.Split(new[] { ',', ';', '+', ' ' }, StringSplitOptions.RemoveEmptyEntries))

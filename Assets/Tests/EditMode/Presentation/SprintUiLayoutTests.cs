@@ -7,6 +7,8 @@ namespace KMA.Tests.Presentation
 {
     public sealed class SprintUiLayoutTests
     {
+        const float ExpectedFinishAnchorWidth = .03f;
+
         static IEnumerable<TestCaseData> LandscapeSafeAreas()
         {
             yield return new TestCaseData(new Rect(0f, 0f, 1920f, 1080f)).SetName("16x9");
@@ -110,7 +112,11 @@ namespace KMA.Tests.Presentation
         public void FinishRibbonComesToRestWhereTheRunnerReachesIt()
         {
             Assert.That(SprintUiLayout.FinishAnchorMinX(100f), Is.EqualTo(.84f).Within(.0001f));
-            Assert.That(SprintUiLayout.FinishAnchorMaxX(100f), Is.EqualTo(.90f).Within(.0001f));
+            Assert.That(SprintUiLayout.FinishAnchorMaxX(100f), Is.EqualTo(.87f).Within(.0001f));
+            Assert.That(SprintUiLayout.FinishAnchorMaxX(100f) - SprintUiLayout.FinishAnchorMinX(100f),
+                Is.EqualTo(ExpectedFinishAnchorWidth).Within(.0001f));
+            Assert.That(SprintUiLayout.FinishAnchorMinY, Is.EqualTo(.12f).Within(.0001f));
+            Assert.That(SprintUiLayout.FinishAnchorMaxY, Is.EqualTo(.66f).Within(.0001f));
         }
 
         [TestCaseSource(nameof(LandscapeSafeAreas))]

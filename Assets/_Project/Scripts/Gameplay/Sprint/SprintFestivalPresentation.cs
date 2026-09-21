@@ -155,8 +155,12 @@ namespace KMA.Gameplay
         static void EnsureFinishLine(RectTransform root)
         {
             RectTransform finish = Rect(root, "FinishLine");
-            finish.anchorMin = new Vector2(.84f, 0f);
-            finish.anchorMax = new Vector2(.9f, 1f);
+            finish.anchorMin = new Vector2(
+                SprintUiLayout.FinishAnchorMinX(SprintUiLayout.FinishDistance),
+                SprintUiLayout.FinishAnchorMinY);
+            finish.anchorMax = new Vector2(
+                SprintUiLayout.FinishAnchorMaxX(SprintUiLayout.FinishDistance),
+                SprintUiLayout.FinishAnchorMaxY);
             finish.offsetMin = Vector2.zero;
             finish.offsetMax = Vector2.zero;
 

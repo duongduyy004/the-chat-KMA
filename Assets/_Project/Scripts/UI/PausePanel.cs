@@ -7,6 +7,8 @@ namespace KMA.Gameplay.UI
 {
     public sealed class PausePanel : MonoBehaviour
     {
+        const int MenuSortingOrder = 100;
+
         [SerializeField] Button pauseButton;
         [SerializeField] GameObject menuRoot;
         [SerializeField] Button resumeButton;
@@ -85,13 +87,17 @@ namespace KMA.Gameplay.UI
             if (parent == null)
                 return;
 
-            menuRoot = new GameObject("PauseMenu", typeof(RectTransform), typeof(CanvasRenderer), typeof(Image));
+            menuRoot = new GameObject("PauseMenu", typeof(RectTransform), typeof(CanvasRenderer),
+                typeof(Image), typeof(Canvas), typeof(GraphicRaycaster));
             menuRoot.transform.SetParent(parent, false);
             var menuRect = (RectTransform)menuRoot.transform;
             menuRect.anchorMin = Vector2.zero;
             menuRect.anchorMax = Vector2.one;
             menuRect.offsetMin = Vector2.zero;
             menuRect.offsetMax = Vector2.zero;
+            var menuCanvas = menuRoot.GetComponent<Canvas>();
+            menuCanvas.overrideSorting = true;
+            menuCanvas.sortingOrder = MenuSortingOrder;
             menuRoot.GetComponent<Image>().color = new Color(0f, 0f, 0f, .7f);
 
             var card = new GameObject("PauseCard", typeof(RectTransform), typeof(CanvasRenderer),
@@ -165,7 +171,11 @@ namespace KMA.Gameplay.UI
         void SetMenuVisible(bool visible)
         {
             if (menuRoot != null)
+            {
+                if (visible)
+                    menuRoot.transform.SetAsLastSibling();
                 menuRoot.SetActive(visible);
+            }
         }
     }
 }

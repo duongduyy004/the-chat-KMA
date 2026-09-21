@@ -34,5 +34,32 @@ namespace KMA.Tests.Gameplay.Core
                 Object.DestroyImmediate(root);
             }
         }
+
+        [Test]
+        public void PausePanel_MenuCanvasRendersAboveGameplaySprites()
+        {
+            var canvasObject = new GameObject("Canvas", typeof(RectTransform), typeof(Canvas));
+            var root = new GameObject("PausePanel", typeof(RectTransform));
+            root.transform.SetParent(canvasObject.transform, false);
+            var panel = root.AddComponent<PausePanel>();
+            try
+            {
+                panel.Open();
+
+                var menu = canvasObject.transform.Find("PauseMenu");
+                Assert.That(menu, Is.Not.Null);
+                var menuCanvas = menu.GetComponent<Canvas>();
+                Assert.That(menuCanvas, Is.Not.Null,
+                    "The pause menu needs its own sorting canvas so world runners cannot draw over it.");
+                Assert.That(menuCanvas.overrideSorting, Is.True);
+                Assert.That(menuCanvas.sortingOrder, Is.GreaterThan(20),
+                    "Sprint runner sprites use sorting orders up to 20.");
+            }
+            finally
+            {
+                Time.timeScale = 1f;
+                Object.DestroyImmediate(canvasObject);
+            }
+        }
     }
 }

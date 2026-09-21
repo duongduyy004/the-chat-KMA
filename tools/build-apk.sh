@@ -4,7 +4,7 @@
 set -euo pipefail
 
 PROJECT_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-ABI="arm64,x86_64"
+ABI="arm64"
 OUTPUT_DIR="Builds/Android"
 BASE_NAME="kma"
 UNITY="${KMA_UNITY_EDITOR:-}"
@@ -14,7 +14,7 @@ usage() {
   cat <<'USAGE'
 Usage: tools/build-apk.sh [options]
 
-  --abi <list>        arm64 | x86_64 | all | comma-separated (default: arm64,x86_64)
+  --abi <list>        arm64 | x86_64 | all | comma-separated (default: arm64)
   --arm64             shorthand for --abi arm64
   --x86_64            shorthand for --abi x86_64  (Android emulators)
   --output-dir <dir>  APK directory, relative to the project root (default: Builds/Android)
@@ -83,6 +83,7 @@ echo "Log     : $LOG_FILE"
 echo
 
 status=0
+set +e
 "$UNITY" \
   -batchmode -nographics -quit \
   -projectPath "$PROJECT_ROOT" \
@@ -90,7 +91,15 @@ status=0
   -androidAbi "$ABI" \
   -buildOutputDir "$OUTPUT_DIR" \
   -buildName "$BASE_NAME" \
-  -logFile "$LOG_FILE" || status=$?
+  -logFile - 2>&1 | tee "$LOG_FILE"
+pipeline_status=("${PIPESTATUS[@]}")
+status=${pipeline_status[0]}
+tee_status=${pipeline_status[1]:-0}
+set -e
+
+if [[ $status -eq 0 && $tee_status -ne 0 ]]; then
+  status=$tee_status
+fi
 
 if [[ $status -ne 0 ]]; then
   echo "build-apk: Unity exited with $status. Last 40 log lines:" >&2
@@ -98,7 +107,6 @@ if [[ $status -ne 0 ]]; then
   exit "$status"
 fi
 
-grep -E '^\[KMA\] .* build ' "$LOG_FILE" || true
 echo
 for apk in "$OUTPUT_DIR/$BASE_NAME"-*.apk; do
   [[ -f "$apk" ]] || continue

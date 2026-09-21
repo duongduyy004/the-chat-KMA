@@ -99,9 +99,10 @@ Editor session and restores the project's ARM64 default before quitting. Close t
 batchmode cannot open a locked project.
 
 ```bash
-tools/build-apk.sh                 # arm64 + x86_64 -> Builds/Android/kma-arm64.apk, kma-x86_64.apk
+tools/build-apk.sh                 # arm64 -> Builds/Android/kma-arm64.apk
 tools/build-apk.sh --arm64         # phones only
 tools/build-apk.sh --x86_64        # emulators only
+tools/build-apk.sh --abi all       # arm64 + x86_64
 tools/build-apk.sh --abi all --output-dir Builds/Release --name kma-1.0
 ```
 
@@ -118,9 +119,12 @@ changing machine settings. To call the `.ps1` directly instead, allow local scri
 `Set-ExecutionPolicy -Scope CurrentUser RemoteSigned` (no admin rights needed).
 
 Both resolve Unity from `KMA_UNITY_EDITOR`, then from the Unity Hub install matching
-`ProjectSettings/ProjectVersion.txt`; override with `--unity` / `-Unity`. Each run writes
-`<output-dir>/build-apk.log`, prints the per-ABI result line, and reports each APK's size and
-SHA-256. A non-zero exit dumps the last 40 log lines.
+`ProjectSettings/ProjectVersion.txt`; override with `--unity` / `-Unity`. The default ARM64 build
+keeps the common phone build to one Unity build; request `--x86_64` or `--abi all` when an emulator
+APK is also needed. Each run streams
+Unity's build output to the terminal while writing the same output to `<output-dir>/build-apk.log`,
+then exits when Unity finishes and reports each APK's size and SHA-256. A non-zero exit dumps the
+last 40 log lines.
 
 The APKs are signed with Unity's debug keystore (`androidUseCustomKeystore: 0`); set a release
 keystore in Player Settings before distributing. `BuildScript.BuildAndroid` stays the ARM64-only
