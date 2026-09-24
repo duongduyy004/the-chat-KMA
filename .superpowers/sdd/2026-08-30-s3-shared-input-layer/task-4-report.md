@@ -37,7 +37,7 @@ rtk ~/.local/bin/unity test . --mode PlayMode --output /tmp/kma-s3-task4-full-pl
 
 XML evidence: `/tmp/kma-s3-task4-full-play.xml`.
 
-Result: this is a real failed suite, 56 total / 55 passed / 1 failed / 0 inconclusive / 0 skipped. The failed test node is `KMA.Tests.Gameplay.Progression.BossPhaseControllerTests.AuthoredPhaseDurationFailsBeforeTargetIsReached`; its failure is the unhandled headless graphics log `No graphic device is available to initialize the view.`
+Result: this is a real failed suite, 56 total / 55 passed / 1 failed / 0 inconclusive / 0 skipped. The failed test node is `KMA.Tests.Gameplay.Progression.retired-routePhaseControllerTests.AuthoredPhaseDurationFailsBeforeTargetIsReached`; its failure is the unhandled headless graphics log `No graphic device is available to initialize the view.`
 
 The first brief command using `--testFilter` was rejected by the installed wrapper (`unknown option '--testFilter'`) before Unity ran. The supported equivalent is `--filter`, used above.
 
@@ -47,7 +47,7 @@ The first brief command using `--testFilter` was rejected by the installed wrapp
 - Metadata cleanup: trailing whitespace removed only from the six named S3-owned metadata files; missing `Assets/Tests/EditMode/Input.meta` and `Assets/_Project/Settings/Input.meta` were added.
 - Follow-up range-based folder-meta check: `rtk git diff --check d40d7fece920fe17a1ff1b564c507b5723ff526b HEAD -- Assets/Tests/EditMode/Input.meta Assets/_Project/Settings/Input.meta`: exit 0, no output.
 - Follow-up metadata commit: `611129d509103e0c2d96b49e76f93c5c3e79173e` (`fix: normalize input folder metadata`).
-- `Assets/_Project/Settings/Input/KMA.inputactions` declares exactly: `Sprint`, `Endurance`, `Boss`, `Punishment`, `UI`.
+- `Assets/_Project/Settings/Input/KMA.inputactions` declares exactly: `Sprint`, `Endurance`, `retired-route`, `Punishment`, `UI`.
 - Base comparison used: `d40d7fece920fe17a1ff1b564c507b5723ff526b` (`build: complete S2 Android verification`).
 - `rtk git diff --quiet d40d7fece920fe17a1ff1b564c507b5723ff526b -- Assets/_Project/Scripts/Progression/PunishmentController.cs Assets/_Project/Scripts/Gameplay/Sprint/SprintController.cs Assets/_Project/Scripts/Gameplay/Endurance/EnduranceInputBridge.cs Assets/_Project/Scripts/Gameplay/Endurance/EnduranceInputActions.inputactions Assets/_Project/Scripts/Gameplay/Sprint/SprintInputActions.inputactions`: exit 0; these protected controllers and legacy input assets are unchanged against the S3 base.
 - Existing `SprintInputActions.inputactions` and `EnduranceInputActions.inputactions` remain present and are still referenced by their legacy consumers.
@@ -65,6 +65,6 @@ A subsequent run without `-nographics` completed successfully:
 rtk ~/.local/bin/unity test . --mode PlayMode --output /tmp/kma-s3-final-play-with-graphics.xml --timeout 1200
 ```
 
-Result: pass, 65 total / 65 passed / 0 failed / 0 inconclusive / 0 skipped. This includes `BossPhaseControllerTests` 10/10 and the focused S3 router tests.
+Result: pass, 65 total / 65 passed / 0 failed / 0 inconclusive / 0 skipped. This includes `retired-routePhaseControllerTests` 10/10 and the focused S3 router tests.
 
 The earlier 55/56 headless result was an environment limitation and is superseded for the formal gate by this graphics-capable run.

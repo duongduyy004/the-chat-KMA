@@ -8,7 +8,6 @@
         "KMA.Gameplay.Core",
         "KMA.Gameplay.UI",
         "KMA.Gameplay.Sprint",
-        "KMA.Gameplay.Endurance",
         "KMA.Input",
         "UnityEditor",
         "Unity.TextMeshPro",

@@ -13,20 +13,15 @@ Trạng thái: đã duyệt qua brainstorming, sẵn sàng chuyển sang impleme
 Repo hiện là **thư viện logic + test suite**, không phải game.
 
 Đã có:
-- 46 script C#, 12 asmdef. 7 rule engine môn + boss + progression, deterministic, không RNG.
 - 158 test (121 EditMode + 37 PlayMode) — theo README, chưa verify lại vì editor chưa cài.
 - `GameSession` (5 tim, 2 lượt, route hình phạt), `SceneRouter`, `MinigameLifecycle`, `ScoreUtil`, `BallRig`.
 
 Chưa có (đã kiểm bằng grep toàn `Assets/`):
 - 0 Canvas (`!u!223`), 0 SpriteRenderer (`!u!212`), 0 prefab, 0 file `.png/.wav/.ttf/.anim/.controller/.mat`.
-- `MG_Boss.unity` **không có Camera** (`!u!20` chỉ có ở Sprint + Endurance).
 - `Map.unity` chỉ chứa 1 GameObject `SceneRouter` → không đường nào gọi `StartSubject()`.
 - 0 hit `PlayerPrefs|persistentDataPath|JsonUtility|File.` → không có persistence.
 - `SwipeDetector` không tồn tại; 4 "detector" ở `Progression/PunishmentController.cs:20-40` là class rỗng.
-- 5/7 môn không có scene và không có controller (chỉ có rules): Volleyball, Basketball, PingPong, Badminton, Football.
 - `TrajectoryPreview`, `BallShadow` (PLAN §2.3b) không tồn tại.
-
-Hệ quả nghiêm trọng nhất: `GameSession.cs:44` `BossUnlocked => records.Values.All(r => r.Passed)` với `SubjectId` 7 giá trị, mà `SceneRouter.DefaultSubjectScenes()` (`Core/SceneRouter.cs:311`) chỉ map **2** entry → **Boss không thể mở khi chơi thật**.
 
 Toolchain (đã xác minh lại — bản trước của tài liệu này ghi sai là "editor chưa cài"):
 - Unity **6000.3.23f1 đã cài** tại `/home/duydt/Unity/Hub/Editor/6000.3.23f1/Editor/Unity`, kèm module `android`, `android-sdk-ndk-tools`, `android-open-jdk-17.0.18+8`. File `.tar.xz` trong `~/.config/unityhub/downloads/` là rác sau khi cài.
@@ -53,7 +48,6 @@ Và một nguyên tắc về **đích**: mốc S5 ("chơi được trọn loop")
 ## 3. Nguồn lực & cách làm
 
 - **1 người + AI, không deadline cứng.** 16 section chạy tuần tự. S1–S15 = 39 ngày-người; S16 ≥8 → tổng ~47 ngày-người ≈ 47 ngày thực. Cấu trúc phụ thuộc dùng để chọn thứ tự, không tăng tốc.
-- **Cut list PLAN §8 không kích hoạt** — làm đủ 7 môn + boss.
 - **Không có người làm art** → S16 là section rủi ro nhất, cần brainstorm riêng khi tới.
 - **Cách viết spec: lai (Approach 3).** S1–S5 spec đầy đủ (tài liệu này). S6–S16 giữ ở mức brief, nâng lên spec đầy đủ ngay trước khi implement.
   Lý do: S1–S5 là nơi quyết định sai đội giá 10 section sau. S6–S13 dựa trên rules API đã cố định và có test, brief đủ định hướng. Spec hết 15 upfront sẽ drift nặng vì S9–S13 phụ thuộc ball kit chưa tồn tại.
@@ -61,26 +55,6 @@ Và một nguyên tắc về **đích**: mốc S5 ("chơi được trọn loop")
 ---
 
 ## 4. Cắt công việc — 16 section
-
-```
-S1  Toolchain & config                    1d   —
-S2  Presentation foundation               4d   S1
-S3  Shared input layer                    3d   S1
-S4  Core systems                          3d   S1
-S5  Shell & core loop  (checkpoint:        5d   S2,S3,S4
-     loop khép kín — KHÔNG phải đích)
-S6  MG_Sprint                             3d   S5
-S7  MG_Endurance                          3d   S5
-S8  Ball presentation kit                 2d   S5
-S9  MG_Volleyball                         2d   S5,S8
-S10 MG_Basketball                         2d   S5,S8
-S11 MG_PingPong                           2d   S5,S8
-S12 MG_Badminton                          2d   S5,S8
-S13 MG_Football                           2d   S5,S8
-S14 Boss & Punishment polish              3d   S5
-S15 Kết thúc game & màn meta              2d   S5,S14
-S16 Art/audio/release                     8d+  S6–S15
-```
 
 Đường găng: `S1 → S4 → S5 → S8 → (môn bóng bất kỳ) → S15 → S16`.
 S16 là section cuối vì nó cần toàn bộ nội dung đã xong.
@@ -121,7 +95,7 @@ Không có quyết định kiến trúc; là checklist. Một điểm lệch PLA
    graphicsAPIs (Android)  → Vulkan, OpenGLES3
    audio DSP buffer        → Best latency
    ```
-6. Tạo cây thư mục PLAN §2.6 còn thiếu: `Art/{Characters,Environments,UI,FX}`, `Audio/{Music,SFX}`, `Fonts/`, `Prefabs/{UI,Gameplay}`, `Settings/{URP,Input,AudioMixer}`, `ScriptableObjects/{Subjects,Rhythm,Difficulty,Quotes}`.
+6. Tạo cây thư mục PLAN §2.6 còn thiếu: `Art/{Characters,Environments,UI,FX}`, `Audio/{Music,SFX}`, `Fonts/`, `Prefabs/{UI,Gameplay}`, `Settings/{URP,Input,AudioMixer}`, `ScriptableObjects/{Subjects,Difficulty,Quotes}`.
 7. **Normalize scene YAML.** 6 scene hiện viết tay, thiếu `RenderSettings`/`LightmapSettings`/`NavMeshSettings`. Mở từng scene trong Editor, save → commit riêng `chore: normalize scenes via Editor` → chạy lại 158 test. Kỳ vọng diff rất to; đó là bình thường, không phải lỗi.
 
 **Gate S1**: batchmode compile không lỗi + 121 EditMode + 37 PlayMode pass + APK "hello" chạy trên máy Android thật.
@@ -207,10 +181,6 @@ Lý do: PLAN §10 yêu cầu EditMode test cho detector (biên `±80/±160ms`, �
 
 #### Quyết định S3-2 — S3 chỉ tạo `.inputactions`, không rewire
 
-2 file `.inputactions` hiện nằm lẫn trong `Scripts/Gameplay/{Sprint,Endurance}/`. S3 tạo `Assets/_Project/Settings/Input/KMA.inputactions` với 5 map: `Sprint`, `Endurance`, `Boss`, `Punishment`, `UI`.
-
-Việc rewire `SprintController.inputActions` + `EnduranceInputBridge` + field đã serialize trong 2 scene **để S6/S7 làm** — nơi ta đang mở scene đó ra sửa HUD sẵn rồi.
-
 → S3 thành **additive thuần**, không chạm file nào có test. Tồn tại 3 file input song song đến hết S7; chấp nhận được vì 1 người làm.
 
 **Gate S3**: EditMode test 5 detector pass — biên `±80ms`/`±160ms` của rhythm, đúng/sai bên của alternate tap, `ChargeRatio` clamp `0..1`, swipe dir/length/duration/curvature.
@@ -221,15 +191,11 @@ Việc rewire `SprintController.inputActions` + `EnduranceInputBridge` + field �
 
 #### Quyết định S4-1 — inject `GameSession`, không đổi chủ sở hữu
 
-Vướng: `SceneRouter.Awake()` (`Core/SceneRouter.cs:131`) tự `new GameSession()`. `GameSession.Lives` private setter, ctor hardcode `= 5`. `SubjectRecord` cũng private setter. `BossSceneSessionHandoff.SetPendingSession` và toàn bộ PlayMode test dựa vào chuỗi này.
-
 Chọn:
 - `SceneRouter.Awake()` giữ nguyên hành vi tạo session default → test không đổi.
 - Thêm `SceneRouter.LoadSession(GameSession)` — thay session + dựng lại `transitioner`.
 - `GameManager` ở Bootstrap: đọc save → dựng `GameSession` → `EnsurePersistentInstance().LoadSession(...)`. Thứ tự `Awake` không thành vấn đề vì Bootstrap load `Menu` **sau** khi inject xong.
 - Restore additive: `GameSession.Restore(SaveData)` + `ToSaveData()`; `SubjectRecord.FromData(...)` static factory + DTO riêng `SubjectRecordData { SubjectId id; bool passed; float bestScore; Rank bestRank; int failedVisits; }`. **Không** thêm `[SerializeField]` vào `SubjectRecord` (file có test).
-
-Phương án loại: chuyển hẳn quyền sở hữu session sang `GameManager` theo PLAN §2.1 — sạch hơn về kiến trúc nhưng phải viết lại `SceneRouter.Awake/Session/OnDestroy` + `BossSceneSessionHandoff` + test, ở section nền tảng, chưa có gì chạy để verify.
 
 #### Quyết định S4-2 — tách mối quan tâm giữa `SceneRouter` và `SubjectConfig`
 
@@ -247,17 +213,9 @@ PLAN §1 ghi "PlayerPrefs cho settings" nhưng PLAN §5 lại đặt `Settings` 
 #### Quyết định S4-4 — `AudioManager` không sở hữu beat clock
 
 `AudioManager` chỉ quản AudioMixer 2 group `Music`/`SFX` + phát SFX + volume.
-Đồng hồ nhịp `dspTime` **để nguyên trong `EnduranceController`** (`MetronomeStartDspTime`, `DspClockScheduled` đã cài đặt và có test). Boss/Punishment sau này dựng instance riêng.
 Không rút clock ra thành global — đó là viết lại code đang chạy để lấy sự đối xứng trên giấy.
 
 #### Phần còn lại
-```csharp
-[Serializable] class SaveData {
-  int version; int lives; SubjectRecordData[] subjects; bool bossUnlocked;
-  bool gameCompleted; bool[] tutorialSeen; Settings settings;
-}
-[Serializable] class Settings { float musicVol, sfxVol; bool vibration; float rhythmOffsetMs; }
-```
 - Ghi `save.json` tại `Application.persistentDataPath`, **atomic**: `save.tmp` → `File.Replace`.
 - Ghi khi: kết thúc môn, mất tim, đổi settings, `OnApplicationPause(true)`.
 - Migration theo `version`.
@@ -303,25 +261,19 @@ Phương án loại: overlay trung tính (mất phản hồi nhân-quả đúng 
 
 Mỗi stub chứa: Camera + HUD prefab + `PlaceholderMinigameController : MinigameBase` với 2 nút debug Pass / Fail.
 
-Hệ quả có giá trị lớn: **toàn bộ progression verify được ngay tại S5** — đi hết 7 môn bằng nút debug, mở Boss thật (`BossUnlocked` = 7/7), chạm GameOver, kiểm save/load — nhiều tuần trước khi có minigame thật. Mỗi section minigame sau chỉ thay placeholder của mình.
-
 #### Phần còn lại
 - `Bootstrap.unity` index 0 → `GameManager` → load `Menu`.
 - `Menu.unity`: MainMenu (Play / Settings / Quit) + Settings (music/sfx volume, vibration) + **màn calibrate nhịp** ghi `rhythmOffsetMs` vào save. PLAN §5 ghi calibrate là bắt buộc cho M2 trên Android.
-- `Map.unity`: 10 node đọc `SubjectConfig`, hiện lock / best rank / stars; `HeartBar` đọc `GameSession.Lives`; node Boss mở theo `BossUnlocked`; bấm node → `SceneRouter.StartSubject(subject)`.
 - `Punishment.unity`: sprite giảng viên, cue mechanic hiện tại, progress bar theo `sequence.CurrentProgress`, tap zone → `PunishmentSceneController.SubmitTap()` / `SubmitRhythmHold(float)` / `SubmitAlternateTap(bool)` (`Core/PunishmentSceneController.cs:72-87`), nguồn dữ liệu là detector thật từ S3.
-- `ChallengeSequenceAsset` SO mới cho Punishment authoring. **Không** chạm `BossSequenceAsset` (có `CanonicalStepCount` + test riêng).
 - `GameOver.unity`: tổng kết + Retry / về MainMenu.
-- **Pause menu** (`PausePanel`): PLAN §2.4 giao pause cho `MinigameBase`, PLAN §3.1 đặt nút góc trên **phải** — nhưng chưa ai thiết kế screen. Nội dung: Resume / Restart môn / Thoát về Map (mất lượt hiện tại). `Time.timeScale = 0` khi pause; rhythm dùng `dspTime` nên Endurance/Boss phải **tạm dừng đồng hồ nhịp** riêng, không dựa `timeScale`.
 - **3 node locked** (Hít đất, Nhịp điệu, Bơi lội): `SubjectConfig.comingSoon` → node hiện mờ + nhãn "Coming soon", không nhận bấm. PLAN §0: giữ art, 0 code gameplay. Lưu ý: 3 node này **không** nằm trong `SubjectId` enum (enum chỉ có 7) nên chúng là dữ liệu Map thuần, không tạo record.
-- **New Game vs Continue**: MainMenu hiện `Continue` khi save tồn tại và `!gameCompleted`; `New Game` luôn hiện, có xác nhận trước khi ghi đè.
+- **New Game vs Continue**: MainMenu hiện `Continue` khi có save; `New Game` luôn hiện, có xác nhận trước khi ghi đè.
 - **Reset save**: Retry từ GameOver = ghi save mới (5 tim, records rỗng, giữ `settings` + `tutorialSeen`). Settings và tutorial đã xem không mất khi chơi lại — đó là dữ liệu người chơi, không phải tiến trình.
 - **Credits screen** (vỏ ở S5, nội dung ở S16): đọc từ `CREDITS.md` hoặc SO tương ứng, scroll được. PLAN §7 bắt buộc ghi license — game hoàn chỉnh phải hiện được.
 - Đăng ký **7** scene vào `ProjectSettings/EditorBuildSettings.asset`; nâng `SceneRouter.DefaultSubjectScenes()` (`Core/SceneRouter.cs:311`) từ 2 lên 7 entry; cập nhật field `subjectScenes` đã serialize trong `Map.unity`.
 
 **Gate S5** — chạy trên máy thật, không cần Editor. Đây là **checkpoint giữa đường**, không phải định nghĩa hoàn thành (xem §10):
 1. MainMenu → Map → chọn môn → fail lượt 1 → Punishment → lượt 2 → fail → −1 tim → Map → lặp tới 0 tim → GameOver.
-2. Đi hết 7 môn bằng placeholder → node Boss sáng → vào được `MG_Boss`.
 3. Kill app giữa chừng → mở lại → tiến trình đúng.
 4. Pause giữa môn → Resume, nhịp không lệch; Restart, Thoát về Map đều đúng.
 5. New Game ghi đè có xác nhận; Continue vào đúng chỗ đang dở.
@@ -344,35 +296,11 @@ Mỗi section môn (S6–S13) ngoài các gạch đầu dòng riêng còn phải
 - Test: wind cue hiện trước `0.8s`; tap trùng bên = 40% xung lực.
 - Gate: 60fps máy mid (Profiler trên **máy thật**), pass lượt 1 ≈40–60%.
 
-### S7 — `MG_Endurance` (3d)
-- Input: `RhythmBeatInputDetector` + `HoldInputDetector` + `SwipeInputDetector`; mỗi lúc **đúng 1 mode** active. Rewire `EnduranceInputBridge`.
-- API sẵn: `Tap(inputDsp, beatDsp)`, `EndHold(beatsHeld)`, `Swipe(dir)`, `CalibratedInputTime`, `CurrentBeatDspTime`, `ObstacleCueVisible`, `EnduranceCueSchedule.WarningLeadBeats`, `MetronomeStartDspTime`, `RhythmOffsetMs`.
-- HUD: beat ring, đổi màu theo mode, lap counter, mini-map oval, stamina.
-- Scene: **thay metronome sinh runtime** (`EnduranceController.cs:250 AudioClip.Create`) bằng clip thật, giữ mốc `dspTime`; parallax; obstacle icon hiện ≥2 beat trước; 10s cuối stamina tụt +20%.
-- `rhythmOffsetMs` đọc từ save (calibrate ở S5).
-- Test: swipe đúng **không** bị tính Miss; 2 mode không active chồng nhau.
-
 ### S8 — Ball presentation kit (2d)
 - Viết `TrajectoryPreview` (đường dashed khi ngón còn kéo) + `BallShadow` (đọc độ cao) — PLAN §2.3b, chưa tồn tại.
 - 5 `FlightProfile` asset. `FlightProfile_Shuttle`: `linearDrag` rất cao + `bounciness = 0` → cầu vọt nhanh rồi rơi dốc (PLAN §M6).
 - `BallRig` đã đủ: `Launch(dir,force,curvature)`, `AttachTo`, `IsNearApex(threshold)`, `PredictLandingPoint()`, `Bounce`, `Snapshot`, `Collided`, `Ballistics.PredictGround`.
 - Test: preview khớp `Ballistics.PredictGround`.
-
-### S9 — `MG_Volleyball` (2d)
-- Swipe → `rules.TryResolveAndLaunch(ball, context, swipe, inReachZone, timingAccuracy)`; hướng vuốt → động tác qua `ResolveGesture(context, swipe)`.
-- Tính `BallContext` từ độ cao/velocity + `reachZone`. Player & đồng đội auto-position qua `PredictLandingPoint()`.
-- HUD: `TOUCH 1/2/3`, `PlayerScore`/`OpponentScore`, `LongestCombo`.
-- Counterplay: sau rally 3, đối thủ mở spin/fake — anim tay + trail màu báo trước, quỹ đạo không đổi giữa đường bay.
-
-### S10 — `MG_Basketball` (2d)
-- `Hold(dt)` → swipe `TryPass(ball, passVector)` → AI `TryLaunchAlleyOop(ball)` → tap `TapFinish(ballY, velocityY)` → `FinishJudge{Ignored,Early,Perfect,Late}`.
-- HUD: vòng apex thu quanh bóng + vùng apex phát sáng, nhãn `EARLY/PERFECT/LATE`, `Baskets`/`Attempts`, `ApexProgress`, `BestCombo`.
-- Mỗi phase tăng **một** trục độ khó: cửa sổ timing hẹp hơn **hoặc** đường alley-oop khó hơn, không cả hai.
-
-### S11 — `MG_PingPong` (2d)
-- Tap → `rules.TryReturn(ball, timingAccuracy, placement)`.
-- HUD: hitZone, ball shadow, `PlayerScore`/`OpponentScore`, `BallSpeed` (đã có cap), `LongestRally`.
-- Sau khi đạt cap tốc độ, độ khó chỉ tăng qua placement pattern.
 
 ### S12 — `MG_Badminton` (2d)
 - `HoldInputDetector.ChargeRatio` + độ cao lúc nhả → `rules.TryExchange(charge, height, authoredWindCue)` → `BadmintonShot{Lift,Drive,Smash,Overcharge}`.
@@ -385,38 +313,17 @@ Mỗi section môn (S6–S13) ngoài các gạch đầu dòng riêng còn phải
 - HUD: `TrajectoryPreview` dashed khi ngón còn kéo, 5 quả sút / goals, GK anim theo `LastKeeperPattern` từ `GKPatternSet`.
 - Mỗi phase chỉ tăng một trục: reaction thủ môn **hoặc** thu hẹp vùng mục tiêu.
 
-### S14 — Boss & Punishment polish (3d)
-- `MG_Boss.unity`: **thêm Camera** — hiện không có cái nào, build ra đen tuyệt đối.
-- Nối `BossRuntimeInputSource` + 3 adapter (`BossTapMashDetectorAdapter`, `BossRhythmHoldDetectorAdapter`, `BossAlternateTapDetectorAdapter`) vào detector thật từ S3 — hiện chỉ nhận input qua API test `SubmitTap`/`SubmitHold`.
-- Giảng viên sprite + anim `idle/angry/whistle/nod`; phase HUD; cue chuyển phase; BPM/target tăng dần.
-- `BossSequence.asset` đã authored: TapMash `10s/40` → RhythmHold `12s/16` → AlternateTap `10s/32`.
-- Gate: 1 lượt boss 30–40s, 3 phase liền không nghỉ, hoàn thành → về Map, `CompleteBoss()` đúng.
-
 ### S15 — Kết thúc game & màn meta (2d)
-
-**Lỗ này có trong cả `PLAN.md`.** `SceneRouter.cs:161` hiện là `CompleteBoss() => Route(SessionRoute.Map, null)` — đánh xong Boss thì về bản đồ như chưa có gì xảy ra. Grep `ending|victory|kết thúc game|hoàn thành game` trong `PLAN.md`: 0 hit liên quan; GDD dừng ở slide 14 = boss. Game không có kết thúc thì không hoàn chỉnh.
-
-#### Quyết định S15-1 — Ending là overlay trong `MG_Boss`, không phải scene mới
-
-Phương án đầu tiên (thêm `SessionRoute.Victory` + `Ending.unity`, đổi `CompleteBoss()` route về đó) **bị loại**: `FullGameplayFlowTests.cs:81` assert `harness.Route == SessionRoute.Map` ngay sau `CompleteBoss()`, và `:126` assert tương tự trên router thật → vỡ 2 test, vi phạm nguyên tắc §2.
-
-Chọn: dùng đúng pattern của Result panel (S5-2). `BossPhaseController.Finish()` hiện `EndingPanel` overlay → người chơi bấm tiếp → **mới** `Completed?.Invoke` → router route về Map như cũ.
-→ 0 enum mới, 0 sửa `SceneRouter`, 0 test vỡ. Không có panel (như trong test) thì `Completed` phát ngay — cùng cơ chế đã dùng cho Result panel.
 
 #### Nội dung (victory tĩnh, không cutscene)
 - Bảng tổng kết 7 môn: rank + sao từng môn (`ScoreUtil.ToStars(BestRank)`), điểm trung bình, số tim còn lại, tổng thời gian nếu có.
 - Quote giảng viên từ `InstructorQuoteSet`. Nút về Menu.
-- `SaveData.gameCompleted = true`; ghi save ngay tại đây.
 
 #### Post-game state
-- `Map.unity` hiện trạng thái "đã hoàn thành": node Boss đổi nhãn, cho **chơi lại tự do** mọi môn để cải thiện rank/sao (`SubjectRecord.Accept` đã chỉ ghi khi `result.Score > BestScore` nên logic best-score sẵn đúng).
-- MainMenu: khi `gameCompleted`, `Continue` đổi thành vào Map post-game.
 - **Chưa quyết**: chơi lại sau khi hoàn thành thì tim có tiêu không. Nâng lên spec đầy đủ khi tới S15.
 
 #### Credits screen
 Nội dung điền vào vỏ dựng ở S5, đọc từ `CREDITS.md` / SO tương ứng.
-
-**Gate S15**: đánh boss xong → thấy bảng tổng kết 7 môn đúng số → về Menu → mở lại app → trạng thái post-game giữ đúng.
 
 ### S16 — Art / audio / release (8d+)
 ⚠️ **Section duy nhất còn rủi ro chưa giải. Cần brainstorm riêng khi tới, không quyết bây giờ.**
@@ -448,7 +355,6 @@ PLAN §0 đã ghi 3 điểm lệch với `kma-pe.md`. Tài liệu này thêm cá
 | 6 | §11: pin `6000.3.22f1` | Repin `6000.3.23f1` | Bản 23f1 đã tải sẵn 2.1GB; tránh tải lại |
 | 7 | §1: Unity 6.3 LTS "Universal 2D" | Dùng URP 2D nhưng **tắt light + post-process** ngay từ đầu | PLAN §6 vốn đã cấm light/post-process. Giữ URP để không thêm điểm lệch tầng engine khi bảo vệ |
 | 8 | §5: `stars` là field lưu trong `SaveData` | `stars` suy ra từ `BestRank` qua `ScoreUtil.ToStars`, không lưu | Lưu giá trị suy ra được → drift khi đổi ngưỡng rank |
-| 9 | không có ending — `CompleteBoss()` route về Map | Thêm S15: `EndingPanel` overlay + `gameCompleted` + post-game state | Lỗ trong cả PLAN.md và GDD (dừng ở slide 14). Game không có kết thúc thì không hoàn chỉnh |
 | 10 | §2.4: tutorial = 2–3s icon tự ẩn | `TutorialOverlay` nhiều bước bấm qua được, `tutorialSeen` theo môn | 2s không dạy nổi cơ chế giữ-nhả 2 trục của cầu lông hay apex timing của bóng rổ |
 
 Điểm lệch #7 gần như là no-op, #8 là chi tiết lưu trữ; #1, #2, #3, #5, #9, #10 là lệch thật và nên có mặt trong slide phụ lục cùng 3 điểm của PLAN §0.
@@ -467,7 +373,6 @@ PLAN §0 đã ghi 3 điểm lệch với `kma-pe.md`. Tài liệu này thêm cá
 | `PreviewRoute` drift khỏi `SubmitResult` | **S5** — cả hai gọi cùng một private helper thuần, không nhân đôi logic |
 | Không có người làm art | **S16** — brainstorm riêng; code chạy placeholder hình khối màu tới đó, swap sprite cuối (data đã tách khỏi art qua `SubjectConfig` + prefab) |
 | Máy tầm thấp tụt fps | Ngân sách draw call + pooling từ S2; đo bằng Profiler trên **máy thật** từ S6 |
-| Pause phá nhịp rhythm | **S5** — `timeScale = 0` không dừng `dspTime`; Endurance/Boss phải tạm dừng đồng hồ nhịp riêng, có test |
 | Nhầm S5 là đích, dừng ở game half-done | **§10 Definition of Done** — checklist tick hết mới xong; nhãn S5 ghi rõ "checkpoint, không phải đích" |
 | Chưa quyết: chơi lại post-game có tiêu tim không | **S15** — nâng lên spec đầy đủ khi tới, không quyết bây giờ |
 
@@ -479,9 +384,7 @@ PLAN §0 đã ghi 3 điểm lệch với `kma-pe.md`. Tài liệu này thêm cá
 |---|---|---|
 | EditMode | 5 detector: biên `±80/±160ms`, đúng/sai bên, `ChargeRatio` clamp, swipe metric | S3 |
 | EditMode | `SaveSystem` round-trip + migration version; `GameSession.Restore/ToSaveData`; `PreviewRoute` khớp `SubmitResult` | S4, S5 |
-| PlayMode | `ResultPanel` phát `Completed` đúng 1 lần; full loop Menu→Map→môn→phạt→GameOver; đi 7 placeholder → Boss mở | S5 |
 | PlayMode | 5 controller môn bóng qua `InputTestFixture` | S9–S13 |
-| PlayMode | `EndingPanel` phát `Completed` đúng 1 lần; không có panel thì phát ngay; `gameCompleted` ghi đúng | S15 |
 | PlayMode | Pause: `Resume` không lệch nhịp `dspTime`; `Restart`/`Thoát` route đúng | S5 |
 | EditMode | `ScoreUtil.ToStars` biên rank; reset save giữ `settings` + `tutorialSeen` | S4, S5 |
 | Contract | giữ nguyên: chỉ `PrimaryObjective` đặt `Pass = true`; mọi sự kiện bất lợi có cue trước cửa sổ phản ứng | mọi section môn |
@@ -503,15 +406,12 @@ Mục tiêu **không** phải "chơi được trọn loop" (đó là gate S5). G
 
 ### Nội dung
 - [ ] 7 môn chơi được thật, không còn `PlaceholderMinigameController` nào trong build.
-- [ ] Boss 3 phase chơi được, có Camera, có cue chuyển phase.
 - [ ] Hình phạt chơi được với cả 3 mechanic (TapMash / RhythmHold / AlternateTap).
 - [ ] 3 node `Coming soon` hiện đúng trạng thái, không bấm được, không crash.
 - [ ] Mỗi môn có tutorial riêng, bấm qua được, `tutorialSeen` ghi nhớ.
-- [ ] Có kết thúc: bảng tổng kết 7 môn sau Boss, `gameCompleted` lưu, post-game vào lại đúng.
 
 ### Vòng lặp & dữ liệu
 - [ ] Loop đầy đủ: Menu → Map → môn → (fail lượt 1 → phạt → lượt 2) → pass/mất tim → Map → 0 tim → GameOver.
-- [ ] Boss mở **bằng cách chơi thật** đủ 7 môn, không bằng debug.
 - [ ] Save/load đúng qua kill app ở mọi điểm; `save.tmp` → `File.Replace` atomic; migration `version` chạy được.
 - [ ] New Game / Continue / Reset save đúng; reset giữ `settings` + `tutorialSeen`.
 - [ ] Pause ở mọi môn: Resume không lệch nhịp, Restart, Thoát về Map.

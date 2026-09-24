@@ -4,7 +4,6 @@
     "references": [
         "KMA.Gameplay",
         "KMA.Gameplay.Ball",
-        "KMA.Gameplay.Basketball",
         "KMA.Gameplay.Core",
         "KMA.Gameplay.Progression",
         "KMA.Gameplay.Shell",

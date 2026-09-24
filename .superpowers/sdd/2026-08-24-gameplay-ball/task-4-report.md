@@ -35,6 +35,6 @@ Also ran `git diff --check` successfully.
 
 - Added the minimal PingPong asmdef and one existing test-asmdef reference because Unity requires the new gameplay code and tests to compile across assembly boundaries. No unrelated gameplay scope was changed.
 - Unity logs report `Licensing::Module: Access token is unavailable; failed to update`; tests still completed and XML results passed.
-- The full EditMode log retains one pre-existing warning in `VolleyballRulesTests.cs` for deprecated `Rigidbody2D.velocity`; the new PingPong test uses `linearVelocity`.
+- The full EditMode log retains one pre-existing warning in `retired-subjectRulesTests.cs` for deprecated `Rigidbody2D.velocity`; the new PingPong test uses `linearVelocity`.
 - Unity test XML files and logs remain under `/tmp` as requested.
 - Reviewer-fix verification specifically asserts `BallRig.linearVelocity.magnitude` never exceeds the configured cap and covers invalid timing/placement plus direct and repeated scoring attempts.

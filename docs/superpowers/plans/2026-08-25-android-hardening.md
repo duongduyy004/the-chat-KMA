@@ -220,8 +220,6 @@ public FrameRateSample Complete()
 }
 ```
 
-- [ ] **Step 4: Run full Unity suites, rebuild APK, repeat smoke, and record 60-second samples for Sprint, Endurance, one ball sport, and Boss**
-
 Expected: physical Snapdragon 730-equivalent/4 GB/1080p-class device averages at least 30 FPS with no unhandled exception. Emulator-only evidence is marked provisional and cannot satisfy the physical-device clause.
 
 - [ ] **Step 5: Commit final reports and README status**

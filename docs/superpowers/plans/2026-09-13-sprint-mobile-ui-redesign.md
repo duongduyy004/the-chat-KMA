@@ -260,8 +260,6 @@ Expected: all pass and one physical/UI tap still reaches gameplay exactly once.
 
 - [ ] **Step 1: Write a failing Sprint start-flow test.** Bind a test controller, assert tutorial gate/visual are active with exact approved copy, tick `1.49f` and confirm it remains Tutorial, tick `.01f` and confirm the gate releases. Advance lifecycle and assert countdown sequence `3`, `2`, `1`, `GO!`; call `OnLeftTap()` before Play and assert distance stays zero.
 
-- [ ] **Step 2: Add a regression test proving non-Sprint tutorials are unchanged.** Bind an Endurance test source to `PhaseOverlay`; assert its existing `TutorialOverlay` remains manual/persisted and is not auto-released at 1.5 seconds.
-
 - [ ] **Step 3: Run focused RED.**
 
 ```bash
@@ -271,8 +269,6 @@ rtk ~/.local/bin/unity test . --mode PlayMode --testFilter 'KMA.Tests.Presentati
 Expected: missing `SprintStartPresentation` and the current Sprint tutorial remains blocking.
 
 - [ ] **Step 4: Implement the Sprint-only gate and labels.** On bind, call `controller.SetTutorialGate(true)`, show the banner, accumulate unscaled presentation time, and at exactly 1.5 seconds hide/fade the banner then call `SetTutorialGate(false)` once. Mirror `PresentationPhase` to countdown/instruction visuals; show `GO!` at the countdown-to-Play boundary and fade `TĂNG TỐC!` over `.25f` after Play begins.
-
-- [ ] **Step 5: Remove Sprint's dependency on multi-page tutorial UI.** In `PhaseOverlay.ConfigureTutorial`, route `SprintController` to `SprintStartPresentation` and skip `TutorialOverlay.Show`; leave Endurance, Volleyball, and Basketball branches byte-for-byte equivalent in behavior.
 
 - [ ] **Step 6: Run focused GREEN and full presentation regression.** Run the Task 4 command with `/tmp/kma-sprint-start-green.xml`, then all `KMA.Tests.Presentation`. Expected: Sprint auto-start passes; other minigame tutorial tests remain green.
 

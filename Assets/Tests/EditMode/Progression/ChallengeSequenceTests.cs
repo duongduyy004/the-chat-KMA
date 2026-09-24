@@ -133,18 +133,23 @@ namespace KMA.Tests.Gameplay.Progression
         {
             var session = new GameSession();
             Assert.Throws<ArgumentNullException>(() => new PunishmentController(null, SubjectId.Sprint,
-                ChallengeSequence.BossDefault()));
+                ValidSequence()));
             Assert.Throws<ArgumentNullException>(() => new PunishmentController(session, SubjectId.Sprint, null));
             Assert.Throws<InvalidOperationException>(() => new PunishmentController(session, SubjectId.Sprint,
-                ChallengeSequence.BossDefault()));
+                ValidSequence()));
 
             session.StartSubject(SubjectId.Sprint);
             session.SubmitResult(SubjectId.Sprint, Failed());
             // Subject-mismatch is unreachable while punishment is retired: the constructor
             // now throws "No punishment is active." first, so this duplicates the assertion above.
             Assert.Throws<InvalidOperationException>(() => new PunishmentController(session, SubjectId.Football,
-                ChallengeSequence.BossDefault()));
+                ValidSequence()));
         }
+
+        static ChallengeSequence ValidSequence() => new ChallengeSequence(new[]
+        {
+            new ChallengeStep(ChallengeMechanic.TapMash, 1, 1)
+        });
 
         static MinigameResult Failed() => new MinigameResult(false, 0, Rank.F);
     }

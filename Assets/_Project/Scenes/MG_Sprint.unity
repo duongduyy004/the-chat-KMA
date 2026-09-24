@@ -398,8 +398,6 @@ MonoBehaviour:
   swipeAction: {fileID: 0}
   rhythmAction: {fileID: 0}
   sprintActionMapName: Sprint
-  enduranceActionMapName: Endurance
-  bossActionMapName: Boss
   punishmentActionMapName: Punishment
   uiActionMapName: UI
   gameplayActionMapName: Sprint
@@ -1183,12 +1181,9 @@ MonoBehaviour:
   punishmentScene: Punishment
   mapScene: Map
   gameOverScene: GameOver
-  bossScene: MG_Boss
   subjectScenes:
   - Subject: 0
     SceneName: MG_Sprint
-  - Subject: 1
-    SceneName: MG_Endurance
 --- !u!4 &910001
 Transform:
   m_ObjectHideFlags: 0

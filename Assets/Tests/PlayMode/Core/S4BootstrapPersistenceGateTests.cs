@@ -22,8 +22,6 @@ namespace KMA.Tests.Gameplay.Core
             "Assets/_Project/Scenes/Menu.unity",
             "Assets/_Project/Scenes/Map.unity",
             "Assets/_Project/Scenes/MG_Sprint.unity",
-            "Assets/_Project/Scenes/MG_Endurance.unity",
-            "Assets/_Project/Scenes/MG_Boss.unity",
             "Assets/_Project/Scenes/Punishment.unity",
             "Assets/_Project/Scenes/GameOver.unity"
         };
@@ -133,9 +131,7 @@ namespace KMA.Tests.Gameplay.Core
             seeded.subjects[0].bestScore = 0.98f;
             seeded.subjects[0].bestRank = Rank.S;
             seeded.subjects[0].failedVisits = 4;
-            seeded.bossUnlocked = true;
-            seeded.gameCompleted = true;
-            seeded.tutorialSeen = new[] { true, false, true, false, true, false, true };
+            seeded.tutorialSeen = new[] { true, false, true };
             seeded.settings.musicVol = 0.35f;
             seeded.settings.sfxVol = 0.65f;
             seeded.settings.vibration = false;
@@ -165,10 +161,8 @@ namespace KMA.Tests.Gameplay.Core
             }
 
             SaveData restored = manager.SaveSystem.Load();
-            Assert.That(restored.bossUnlocked, Is.False);
-            Assert.That(restored.gameCompleted, Is.False);
             Assert.That(restored.tutorialSeen,
-                Is.EqualTo(new[] { true, false, true, false, true, false, true }));
+                Is.EqualTo(new[] { true, false, true }));
             Assert.That(restored.settings.musicVol, Is.EqualTo(0.35f));
             Assert.That(restored.settings.sfxVol, Is.EqualTo(0.65f));
             Assert.That(restored.settings.vibration, Is.False);

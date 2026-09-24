@@ -2,7 +2,6 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
-using KMA.Gameplay.Boss;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 
@@ -53,15 +52,9 @@ namespace KMA.Gameplay.Core
 
             if (RequiresSubject(route) && !subject.HasValue)
                 throw new ArgumentNullException(nameof(subject));
-            if (route == SessionRoute.Boss && !session.BossUnlocked)
-                throw new InvalidOperationException("Pass all seven subjects before starting the boss.");
-
             transitioning = true;
             try
             {
-                if (route == SessionRoute.Boss)
-                    BossSceneSessionHandoff.SetPendingSession(session);
-
                 bool accepted = sink.Begin(
                     new SceneRouteTransition(route, subject, session, sceneName ?? route.ToString()),
                     CompleteTransition);
@@ -97,18 +90,14 @@ namespace KMA.Gameplay.Core
         [SerializeField] string punishmentScene = "Punishment";
         [SerializeField] string mapScene = "Map";
         [SerializeField] string gameOverScene = "GameOver";
-        [SerializeField] string bossScene = "MG_Boss";
         [SerializeField] SubjectScene[] subjectScenes = DefaultSubjectScenes();
 
         readonly Dictionary<MinigameBase, Action<MinigameResult>> subjectCompletionHandlers =
             new Dictionary<MinigameBase, Action<MinigameResult>>();
-        readonly Dictionary<BossPhaseController, Action<MinigameResult>> bossCompletionHandlers =
-            new Dictionary<BossPhaseController, Action<MinigameResult>>();
         IResultPreviewPanel pendingResultPanel;
         Action<string> pendingResultPanelHandler;
         SubjectId? activeSubject;
         bool awaitingSubjectScene;
-        bool awaitingBossScene;
         bool menuLoading;
         GameSession session;
         SessionRouteTransitioner transitioner;
@@ -161,7 +150,6 @@ namespace KMA.Gameplay.Core
                 instance = null;
             SceneManager.sceneLoaded -= OnSceneLoaded;
             UnbindSubjects();
-            UnbindBosses();
             UnbindResultPanel();
         }
 
@@ -208,11 +196,9 @@ namespace KMA.Gameplay.Core
                 throw new ArgumentNullException(nameof(restoredSession));
 
             UnbindSubjects();
-            UnbindBosses();
             UnbindResultPanel();
             activeSubject = null;
             awaitingSubjectScene = false;
-            awaitingBossScene = false;
             session = restoredSession;
             transitioner = new SessionRouteTransitioner(session, this);
         }
@@ -250,14 +236,6 @@ namespace KMA.Gameplay.Core
             return true;
         }
 
-        public bool StartBoss()
-        {
-            if (IsTransitioning)
-                return false;
-
-            return Route(SessionRoute.Boss, null);
-        }
-
         public bool RouteToMenu()
         {
             if (IsTransitioning)
@@ -269,11 +247,9 @@ namespace KMA.Gameplay.Core
                 return false;
 
             UnbindSubjects();
-            UnbindBosses();
             UnbindResultPanel();
             activeSubject = null;
             awaitingSubjectScene = false;
-            awaitingBossScene = false;
             return true;
         }
 
@@ -305,8 +281,6 @@ namespace KMA.Gameplay.Core
         }
 
         public bool ExitActiveSubjectToMap() => Route(SessionRoute.Map);
-
-        public bool CompleteBoss() => Route(SessionRoute.Map, null);
 
         public void BindSubject(MinigameBase controller, SubjectId subject)
         {
@@ -340,18 +314,6 @@ namespace KMA.Gameplay.Core
             panel.Show(result, previewRoute.ToString());
         }
 
-        public void BindBoss(BossPhaseController controller)
-        {
-            if (controller == null)
-                throw new ArgumentNullException(nameof(controller));
-            if (bossCompletionHandlers.ContainsKey(controller))
-                return;
-
-            Action<MinigameResult> handler = _ => CompleteBoss();
-            bossCompletionHandlers.Add(controller, handler);
-            controller.Completed += handler;
-        }
-
         public bool Route(SessionRoute route, SubjectId? subject = null)
         {
             if (IsTransitioning)
@@ -381,7 +343,6 @@ namespace KMA.Gameplay.Core
                 SessionRoute.Punishment => punishmentScene,
                 SessionRoute.Map => mapScene,
                 SessionRoute.GameOver => gameOverScene,
-                SessionRoute.Boss => bossScene,
                 SessionRoute.Subject or SessionRoute.RetrySubject => SceneFor(subject),
                 _ => null
             };
@@ -404,7 +365,6 @@ namespace KMA.Gameplay.Core
         void OnSceneLoaded(Scene scene, LoadSceneMode mode)
         {
             UnbindSubjects();
-            UnbindBosses();
 
             if (awaitingSubjectScene && activeSubject.HasValue &&
                 string.Equals(scene.name, SceneFor(activeSubject), StringComparison.Ordinal))
@@ -413,27 +373,10 @@ namespace KMA.Gameplay.Core
                 foreach (var controller in FindObjectsByType<MinigameBase>(
                     FindObjectsInactive.Exclude, FindObjectsSortMode.None))
                 {
-                    if (!(controller is BossPhaseController))
-                    {
-                        BindSubject(controller, activeSubject.Value);
-                        boundController = true;
-                    }
+                    BindSubject(controller, activeSubject.Value);
+                    boundController = true;
                 }
                 awaitingSubjectScene = !boundController;
-            }
-
-            if (awaitingBossScene && string.Equals(scene.name, bossScene, StringComparison.Ordinal))
-            {
-                var boundBoss = false;
-                foreach (var boss in FindObjectsByType<BossPhaseController>(
-                    FindObjectsInactive.Exclude, FindObjectsSortMode.None))
-                {
-                    if (!ReferenceEquals(boss.Session, session))
-                        boss.SetSession(session);
-                    BindBoss(boss);
-                    boundBoss = true;
-                }
-                awaitingBossScene = !boundBoss;
             }
         }
 
@@ -454,22 +397,15 @@ namespace KMA.Gameplay.Core
                 case SessionRoute.RetrySubject:
                     activeSubject = subject;
                     awaitingSubjectScene = true;
-                    awaitingBossScene = false;
                     break;
                 case SessionRoute.Punishment:
                     activeSubject = subject;
                     awaitingSubjectScene = false;
-                    awaitingBossScene = false;
-                    break;
-                case SessionRoute.Boss:
-                    awaitingSubjectScene = false;
-                    awaitingBossScene = true;
                     break;
                 case SessionRoute.Map:
                 case SessionRoute.GameOver:
                     activeSubject = null;
                     awaitingSubjectScene = false;
-                    awaitingBossScene = false;
                     break;
             }
         }
@@ -479,13 +415,6 @@ namespace KMA.Gameplay.Core
             foreach (var binding in subjectCompletionHandlers)
                 binding.Key.Completed -= binding.Value;
             subjectCompletionHandlers.Clear();
-        }
-
-        void UnbindBosses()
-        {
-            foreach (var binding in bossCompletionHandlers)
-                binding.Key.Completed -= binding.Value;
-            bossCompletionHandlers.Clear();
         }
 
         void UnbindResultPanel()
@@ -621,10 +550,6 @@ namespace KMA.Gameplay.Core
         static SubjectScene[] DefaultSubjectScenes() => new[]
         {
             new SubjectScene { Subject = SubjectId.Sprint, SceneName = "MG_Sprint" },
-            new SubjectScene { Subject = SubjectId.Endurance, SceneName = "MG_Endurance" },
-            new SubjectScene { Subject = SubjectId.Volleyball, SceneName = "MG_Volleyball" },
-            new SubjectScene { Subject = SubjectId.Basketball, SceneName = "MG_Basketball" },
-            new SubjectScene { Subject = SubjectId.PingPong, SceneName = "MG_PingPong" },
             new SubjectScene { Subject = SubjectId.Badminton, SceneName = "MG_Badminton" },
             new SubjectScene { Subject = SubjectId.Football, SceneName = "MG_Football" }
         };

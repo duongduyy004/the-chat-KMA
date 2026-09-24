@@ -47,7 +47,7 @@ Result: clean.
 
 - Added `KMA.Gameplay.Badminton.asmdef` and one reference in the existing Ball EditMode test asmdef because Unity’s assembly layout otherwise excludes the new sibling feature assembly from the test compilation. Unity also generated the matching `.meta` files.
 - The authored pattern is deterministic rules data only; this task does not add a scene/controller or physical shuttlecock visual integration.
-- The Unity log includes an existing unrelated `Rigidbody2D.velocity` deprecation warning from `VolleyballRulesTests`; it does not affect the 91/91 result.
+- The Unity log includes an existing unrelated `Rigidbody2D.velocity` deprecation warning from `retired-subjectRulesTests`; it does not affect the 91/91 result.
 
 ## Reviewer follow-up: lifecycle scoring boundary
 

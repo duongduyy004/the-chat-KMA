@@ -13,7 +13,6 @@
 ## Global Constraints
 
 - Android minimum API 26, target API 35, ARM64, landscape only.
-- `GameSession` is the sole progression authority; `BossUnlocked` remains derived.
 - Save only settled route state; closing during gameplay returns to Map without a penalty.
 - Touch and keyboard invoke the same semantic controller methods.
 - Keep the current 121 EditMode and 38 PlayMode tests green.
@@ -33,28 +32,9 @@
 **Interfaces:**
 - Produces: `GameSessionSnapshot GameSession.ExportSnapshot()`.
 - Produces: `static GameSession GameSession.Restore(GameSessionSnapshot snapshot)`.
-- Produces: `void GameSession.MarkBossCompleted()` and `bool GameSession.CompletedBoss`.
 - Produces: `SaveEnvelope.FromSession(GameSession, SettingsSnapshot)` and `ToSessionSnapshot()`.
 
 - [ ] **Step 1: Write failing snapshot round-trip tests**
-
-```csharp
-[Test]
-public void ExportRestore_PreservesSettledProgression()
-{
-    var session = new GameSession();
-    session.StartSubject(SubjectId.Sprint);
-    session.SubmitResult(SubjectId.Sprint, new MinigameResult(true, 8.2f, Rank.A));
-    session.MarkBossCompleted();
-
-    var restored = GameSession.Restore(session.ExportSnapshot());
-
-    Assert.That(restored.Lives, Is.EqualTo(5));
-    Assert.That(restored.GetRecord(SubjectId.Sprint).BestScore, Is.EqualTo(8.2f));
-    Assert.That(restored.CompletedBoss, Is.True);
-    Assert.That(restored.PendingPunishmentSubject, Is.Null);
-}
-```
 
 - [ ] **Step 2: Run the focused test and verify RED**
 
@@ -63,57 +43,6 @@ Run: `rtk proxy "$KMA_UNITY_EDITOR" -batchmode -projectPath . -runTests -testPla
 Expected: compilation fails because `GameSessionSnapshot`, `ExportSnapshot`, and `Restore` do not exist.
 
 - [ ] **Step 3: Implement immutable domain snapshots and serializable save DTOs**
-
-```csharp
-public sealed class GameSessionSnapshot
-{
-    public GameSessionSnapshot(int lives, IReadOnlyList<SubjectRecordSnapshot> subjects, bool completedBoss)
-    { Lives = lives; Subjects = subjects; CompletedBoss = completedBoss; }
-    public int Lives { get; }
-    public IReadOnlyList<SubjectRecordSnapshot> Subjects { get; }
-    public bool CompletedBoss { get; }
-}
-
-public readonly struct SubjectRecordSnapshot
-{
-    public SubjectRecordSnapshot(SubjectId id, bool passed, float bestScore, Rank bestRank, int failedVisits)
-    { Id = id; Passed = passed; BestScore = bestScore; BestRank = bestRank; FailedVisits = failedVisits; }
-    public SubjectId Id { get; }
-    public bool Passed { get; }
-    public float BestScore { get; }
-    public Rank BestRank { get; }
-    public int FailedVisits { get; }
-}
-
-[Serializable]
-public sealed class SaveEnvelope
-{
-    public int schemaVersion = 1;
-    public string savedAtUtc;
-    public int lives;
-    public bool completedBoss;
-    public List<SubjectSaveRecord> subjects = new List<SubjectSaveRecord>();
-    public SettingsSnapshot settings = new SettingsSnapshot();
-}
-
-[Serializable]
-public sealed class SubjectSaveRecord
-{
-    public SubjectId id;
-    public bool passed;
-    public float bestScore;
-    public Rank bestRank;
-    public int failedVisits;
-}
-
-[Serializable]
-public sealed class SettingsSnapshot
-{
-    public float masterVolume = 1f;
-    public float musicVolume = 1f;
-    public float sfxVolume = 1f;
-}
-```
 
 `GameSession.Restore` must require exactly one valid record for every `SubjectId`, clamp lives to `0..5`, rebuild only settled records, and never restore an active attempt or punishment.
 
@@ -249,8 +178,6 @@ public void Initialize(GameSession loadedSession, SubjectCatalog subjectCatalog,
 }
 ```
 
-Generate the asset with all seven exact scene names: `MG_Sprint`, `MG_Endurance`, `MG_Volleyball`, `MG_Basketball`, `MG_PingPong`, `MG_Badminton`, and `MG_Football`.
-
 - [ ] **Step 4: Run catalog/root tests and all progression tests**
 
 Expected: singleton survives a scene load, duplicate root destroys itself, and progression tests remain green.
@@ -340,23 +267,9 @@ rtk git commit -m "feat: route settled gameplay outcomes"
 
 **Interfaces:**
 - `MenuScreen.NewGame()`, `ContinueGame()`, and `ConfirmReset(bool confirmed)` call router APIs.
-- `MapScreen.SelectSubject(SubjectId id)` and `SelectBoss()` call router APIs.
 - `ResultScreen.Continue()` follows `SceneRouter.LastOutcome.NextRoute`.
 
 - [ ] **Step 1: Write failing shell navigation tests**
-
-```csharp
-[UnityTest]
-public IEnumerator NewGame_ShowsSevenSubjectButtonsAndLockedBoss()
-{
-    yield return SceneManager.LoadSceneAsync("Menu");
-    Object.FindFirstObjectByType<MenuScreen>().NewGame();
-    yield return WaitForScene("Map");
-    var map = Object.FindFirstObjectByType<MapScreen>();
-    Assert.That(map.SubjectButtonCount, Is.EqualTo(7));
-    Assert.That(map.BossInteractable, Is.False);
-}
-```
 
 - [ ] **Step 2: Run `ProductShellTests` and verify RED**
 
@@ -373,8 +286,6 @@ public void SelectSubject(SubjectId id)
     router.StartSubject(id);
 }
 ```
-
-Set build order to Bootstrap, Menu, Map, Result, Error, Punishment, seven subject scenes, Boss, GameOver, Victory; references to not-yet-created later scenes may be disabled until their checkpoint creates them.
 
 - [ ] **Step 4: Run shell tests and visually inspect rendered test screenshots**
 

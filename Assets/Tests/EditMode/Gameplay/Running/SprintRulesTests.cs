@@ -67,7 +67,7 @@ namespace KMA.Tests.Gameplay.Running
             var profiles = new[]
             {
                 new RivalPaceProfile("FastStart", 8f, 4f),
-                new RivalPaceProfile("Endurance", 5f, 6f)
+                new RivalPaceProfile("RunnerB", 5f, 6f)
             };
             var rules = new SprintRules(rivalProfiles: profiles);
 

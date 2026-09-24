@@ -1,6 +1,5 @@
 using System.Collections;
 using KMA.Gameplay;
-using KMA.Gameplay.Boss;
 using KMA.Gameplay.Core;
 using NUnit.Framework;
 using UnityEngine;
@@ -14,7 +13,6 @@ namespace KMA.Tests.Gameplay.Progression
         [SetUp]
         public void SetUp()
         {
-            BossSceneSessionHandoff.ClearPendingSession();
         }
 
         [TearDown]
@@ -26,7 +24,6 @@ namespace KMA.Tests.Gameplay.Progression
                 Object.DestroyImmediate(router.gameObject);
             }
 
-            BossSceneSessionHandoff.ClearPendingSession();
         }
 
         [UnityTest]

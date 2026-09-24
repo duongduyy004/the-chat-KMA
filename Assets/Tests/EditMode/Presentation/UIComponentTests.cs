@@ -126,7 +126,7 @@ namespace KMA.Tests.Presentation
         }
 
         [Test]
-        public void MapPresentationPlacesSevenSubjectsAndProgressInUniformEightCellGrid()
+        public void MapPresentationPlacesThreeSubjectsInUniformGrid()
         {
             var root = new GameObject("map", typeof(RectTransform));
             try
@@ -138,11 +138,9 @@ namespace KMA.Tests.Presentation
                 var grid = root.transform.Find("S5MapPresentation/Content/SelectionGrid")
                     .GetComponent<GridLayoutGroup>();
                 Assert.That(grid.constraint, Is.EqualTo(GridLayoutGroup.Constraint.FixedColumnCount));
-                Assert.That(grid.constraintCount, Is.EqualTo(4));
-                Assert.That(grid.transform.childCount, Is.EqualTo(8));
-                Assert.That(grid.transform.GetChild(7).name, Is.EqualTo("ProgressCard"));
-                Assert.That(grid.transform.GetChild(7).GetComponent<MapNodeView>(), Is.Null);
-                Assert.That(root.GetComponentsInChildren<MapNodeView>(true), Has.Length.EqualTo(7));
+                Assert.That(grid.constraintCount, Is.EqualTo(3));
+                Assert.That(grid.transform.childCount, Is.EqualTo(3));
+                Assert.That(root.GetComponentsInChildren<MapNodeView>(true), Has.Length.EqualTo(3));
                 Assert.That(grid.cellSize.y, Is.GreaterThanOrEqualTo(220f));
                 Assert.That(root.transform.Find("S5MapPresentation/Content/ProgressSection"), Is.Null);
             }
@@ -198,7 +196,7 @@ namespace KMA.Tests.Presentation
         }
 
         [Test]
-        public void MapCardsCommunicateCompletedReadyAndLockedStatesWithoutColorAlone()
+        public void MapCardsCommunicateCompletedAndLockedStatesWithoutColorAlone()
         {
             var root = new GameObject("map", typeof(RectTransform));
             try
@@ -210,27 +208,13 @@ namespace KMA.Tests.Presentation
                 MapPresentationBuilder.Build(screen, session);
 
                 MapNodeView completed = screen.Nodes.Single(node => node.SubjectId == SubjectId.Sprint);
-                MapNodeView ready = screen.Nodes.Single(node => node.SubjectId == SubjectId.Endurance);
-                MapNodeView locked = screen.Nodes.Single(node => node.SubjectId == SubjectId.Basketball);
+                MapNodeView locked = screen.Nodes.Single(node => node.SubjectId == SubjectId.Badminton);
 
                 Assert.That(completed.transform.Find("StatusContainer/Status").GetComponent<Text>().text,
                     Is.EqualTo("✓  HOÀN THÀNH"));
                 Assert.That(completed.transform.Find("DetailContainer").gameObject.activeSelf, Is.True);
                 Assert.That(completed.transform.Find("ActionHint").GetComponent<Text>().text,
                     Is.EqualTo("THI →"));
-                Assert.That(ready.DetailText, Is.EqualTo("SẴN SÀNG"));
-                Assert.That(ready.transform.Find("StatusContainer/Status").GetComponent<Text>().text,
-                    Is.EqualTo("SẴN SÀNG"));
-                Assert.That(ready.transform.Find("DetailContainer").gameObject.activeSelf, Is.False);
-                Assert.That(ready.transform.Find("ActionHint").GetComponent<Text>().text,
-                    Is.EqualTo("THI →"));
-                RectTransform readyStatus = ready.transform.Find("StatusContainer").GetComponent<RectTransform>();
-                RectTransform readyAction = ready.transform.Find("ActionHint").GetComponent<RectTransform>();
-                Assert.That(readyStatus.anchorMin.y, Is.EqualTo(0f));
-                Assert.That(readyStatus.anchorMax.y, Is.EqualTo(0f));
-                Assert.That(readyAction.anchorMin.y, Is.EqualTo(0f));
-                Assert.That(readyAction.anchorMax.y, Is.EqualTo(0f));
-                Assert.That(readyStatus.offsetMin.y, Is.EqualTo(readyAction.offsetMin.y).Within(.1f));
                 Assert.That(locked.transform.Find("StatusContainer/Status").GetComponent<Text>().text,
                     Is.EqualTo("🔒  ĐANG PHÁT TRIỂN"));
                 Assert.That(locked.DetailText, Is.EqualTo("ĐANG PHÁT TRIỂN"));
@@ -238,7 +222,6 @@ namespace KMA.Tests.Presentation
                 Assert.That(locked.transform.Find("ActionHint"), Is.Null);
 
                 Assert.That(completed.GetComponent<BrutalButton>(), Is.Not.Null);
-                Assert.That(ready.GetComponent<BrutalButton>(), Is.Not.Null);
                 Assert.That(locked.GetComponent<BrutalButton>(), Is.Null);
                 Assert.That(locked.GetComponent<Button>(), Is.Null);
 
@@ -250,7 +233,7 @@ namespace KMA.Tests.Presentation
                     Assert.That(icon.preserveAspect, Is.True, node.name);
                     return icon.sprite;
                 }).ToArray();
-                Assert.That(iconSprites.Distinct().Count(), Is.EqualTo(7));
+                Assert.That(iconSprites.Distinct().Count(), Is.EqualTo(3));
 
                 foreach (MapNodeView node in screen.Nodes)
                 {
@@ -259,44 +242,6 @@ namespace KMA.Tests.Presentation
                     Assert.That(node.GetComponent<VerticalLayoutGroup>().padding.left,
                         Is.GreaterThanOrEqualTo(20), node.name);
                 }
-            }
-            finally
-            {
-                Object.DestroyImmediate(root);
-            }
-        }
-
-        [Test]
-        public void ProgressCardShowsFractionProportionalFillAndActionableRemainingCount()
-        {
-            var root = new GameObject("map", typeof(RectTransform));
-            try
-            {
-                var session = new GameSession();
-                session.StartSubject(SubjectId.Sprint);
-                session.SubmitResult(SubjectId.Sprint, new MinigameResult(true, 8f, Rank.A));
-                var screen = root.AddComponent<MapScreen>();
-                MapPresentationBuilder.Build(screen, session);
-
-                Transform progress = root.transform.Find(
-                    "S5MapPresentation/Content/SelectionGrid/ProgressCard");
-                Color progressColor = progress.GetComponent<Image>().color;
-                Assert.That(progressColor.r, Is.EqualTo(13f / 255f).Within(.001f));
-                Assert.That(progressColor.g, Is.EqualTo(57f / 255f).Within(.001f));
-                Assert.That(progressColor.b, Is.EqualTo(92f / 255f).Within(.001f));
-                Text fraction = progress.Find("ProgressFractionContainer/ProgressFraction")
-                    .GetComponent<Text>();
-                Assert.That(fraction.text, Is.EqualTo("1 / 7"));
-                Assert.That(fraction.fontSize, Is.GreaterThanOrEqualTo(44));
-                RectTransform track = progress.Find("ProgressTrack").GetComponent<RectTransform>();
-                Assert.That(track.GetComponent<LayoutElement>().preferredHeight,
-                    Is.GreaterThanOrEqualTo(28f));
-                Assert.That(track.Find("Fill").GetComponent<RectTransform>().anchorMax.x,
-                    Is.EqualTo(1f / 7f).Within(.001f));
-                Text hint = progress.Find("UnlockHintContainer/UnlockHint").GetComponent<Text>();
-                Assert.That(hint.text,
-                    Is.EqualTo("Hoàn thành thêm 6 môn để mở thử thách tiếp theo."));
-                Assert.That(hint.fontSize, Is.GreaterThanOrEqualTo(20));
             }
             finally
             {
@@ -316,15 +261,8 @@ namespace KMA.Tests.Presentation
                 Transform future = root.transform.Find("S5MapPresentation/Content/FutureRow");
                 Assert.That(future.GetComponentsInChildren<Button>(true), Is.Empty);
                 Assert.That(future.GetComponentsInChildren<Text>(true).Select(text => text.text),
-                    Is.EquivalentTo(new[] { "SẮP RA MẮT", "Hít đất", "Nhịp điệu", "Bơi lội" }));
+                    Is.EquivalentTo(new[] { "SẮP RA MẮT", "Hít đất" }));
 
-                Transform challenge = root.transform.Find("S5MapPresentation/Content/BossChallenge");
-                Assert.That(challenge, Is.Not.Null);
-                Assert.That(challenge.GetComponent<Button>(), Is.Null);
-                Text message = challenge.Find("Label").GetComponent<Text>();
-                Assert.That(message.text,
-                    Is.EqualTo("🔒  Hoàn thành thêm các môn để mở thử thách tiếp theo."));
-                Assert.That(message.fontSize, Is.GreaterThanOrEqualTo(24));
             }
             finally
             {
@@ -352,10 +290,6 @@ namespace KMA.Tests.Presentation
                     Assert.That(Mathf.Abs(shadow.effectDistance.x), Is.LessThanOrEqualTo(8f), card.name);
                 }
 
-                Image challenge = root.transform.Find("S5MapPresentation/Content/BossChallenge")
-                    .GetComponent<Image>();
-                Assert.That(challenge.sprite, Is.Not.Null);
-                Assert.That(challenge.type, Is.EqualTo(Image.Type.Sliced));
             }
             finally
             {
@@ -403,7 +337,7 @@ namespace KMA.Tests.Presentation
         }
 
         [Test]
-        public void LockedCardsAndChallengeRenderLockPictograms()
+        public void LockedCardsRenderLockPictograms()
         {
             var root = new GameObject("map", typeof(RectTransform));
             try
@@ -412,18 +346,13 @@ namespace KMA.Tests.Presentation
                 MapPresentationBuilder.Build(screen, new GameSession());
 
                 MapNodeView ready = screen.Nodes.Single(node => node.SubjectId == SubjectId.Sprint);
-                MapNodeView locked = screen.Nodes.Single(node => node.SubjectId == SubjectId.Basketball);
+                MapNodeView locked = screen.Nodes.Single(node => node.SubjectId == SubjectId.Badminton);
                 Assert.That(ready.transform.Find("LockIcon"), Is.Null);
                 Image cardLock = locked.transform.Find("LockIcon").GetComponent<Image>();
                 Assert.That(cardLock.sprite, Is.Not.Null);
                 Assert.That(cardLock.preserveAspect, Is.True);
                 Assert.That(cardLock.raycastTarget, Is.False);
 
-                Image challengeLock = root.transform.Find(
-                        "S5MapPresentation/Content/BossChallenge/LockIcon")
-                    .GetComponent<Image>();
-                Assert.That(challengeLock.sprite, Is.Not.Null);
-                Assert.That(challengeLock.preserveAspect, Is.True);
             }
             finally
             {
@@ -449,10 +378,6 @@ namespace KMA.Tests.Presentation
                 Assert.That(sprint.Find("ActionHint").GetComponent<Text>().fontSize,
                     Is.GreaterThanOrEqualTo(26));
 
-                Text progressHint = root.transform.Find(
-                        "S5MapPresentation/Content/SelectionGrid/ProgressCard/UnlockHintContainer/UnlockHint")
-                    .GetComponent<Text>();
-                Assert.That(progressHint.fontSize, Is.GreaterThanOrEqualTo(24));
                 foreach (Text tag in root.transform.Find("S5MapPresentation/Content/FutureRow")
                              .GetComponentsInChildren<Text>(true))
                     Assert.That(tag.fontSize, Is.GreaterThanOrEqualTo(22), tag.name);
@@ -524,11 +449,6 @@ namespace KMA.Tests.Presentation
                 Assert.That(completed.g, Is.GreaterThan(completed.r));
                 Assert.That(completed.g, Is.GreaterThan(completed.b));
 
-                MapNodeView ready = screen.Nodes.Single(node => node.SubjectId == SubjectId.Endurance);
-                Color readyBorder = ready.GetComponent<Outline>().effectColor;
-                Assert.That(readyBorder.r, Is.GreaterThan(.9f));
-                Assert.That(readyBorder.g, Is.GreaterThan(.65f));
-                Assert.That(readyBorder.b, Is.LessThan(.35f));
             }
             finally
             {
@@ -566,26 +486,6 @@ namespace KMA.Tests.Presentation
                 if (firstRoot != null)
                     Object.DestroyImmediate(firstRoot);
                 Object.DestroyImmediate(secondRoot);
-            }
-        }
-
-        [Test]
-        public void ZeroProgressHidesFillInsteadOfCreatingANegativeWidthRect()
-        {
-            var root = new GameObject("map", typeof(RectTransform));
-            try
-            {
-                var screen = root.AddComponent<MapScreen>();
-                MapPresentationBuilder.Build(screen, new GameSession());
-
-                GameObject fill = root.transform.Find(
-                        "S5MapPresentation/Content/SelectionGrid/ProgressCard/ProgressTrack/Fill")
-                    .gameObject;
-                Assert.That(fill.activeSelf, Is.False);
-            }
-            finally
-            {
-                Object.DestroyImmediate(root);
             }
         }
 

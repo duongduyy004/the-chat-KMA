@@ -16,7 +16,7 @@ namespace KMA.EditorTools
     {
         static readonly string[] PlaceholderScenes =
         {
-            "MG_Volleyball", "MG_Basketball", "MG_PingPong", "MG_Badminton", "MG_Football"
+            "MG_Badminton", "MG_Football"
         };
 
         [MenuItem("KMA/S5/Generate Placeholder Scenes and Build Routes")]
@@ -106,7 +106,6 @@ namespace KMA.EditorTools
                             new Vector2(-420f + (i % 4) * 280f, 120f - (i / 4) * 180f),
                             () => screen.SelectSubject(subject));
                     }
-                    AddButton(safeArea.transform, "BOSS", new Vector2(560f, -240f), screen.SelectBoss);
                 }
                 else if (gameOver)
                 {

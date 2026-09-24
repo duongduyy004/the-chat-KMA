@@ -12,7 +12,7 @@ namespace KMA.Tests.Gameplay.Progression
             var session = new GameSession();
             session.StartSubject(SubjectId.Sprint);
 
-            Assert.Throws<InvalidOperationException>(() => session.StartSubject(SubjectId.Endurance));
+            Assert.Throws<InvalidOperationException>(() => session.StartSubject(SubjectId.Badminton));
         }
 
         [Test]
@@ -25,7 +25,7 @@ namespace KMA.Tests.Gameplay.Progression
             Assert.That(session.Lives, Is.EqualTo(4));
             Assert.That(session.GetRecord(SubjectId.Sprint).FailedVisits, Is.EqualTo(1));
 
-            Assert.That(session.StartSubject(SubjectId.Endurance), Is.EqualTo(SessionRoute.Subject));
+            Assert.That(session.StartSubject(SubjectId.Badminton), Is.EqualTo(SessionRoute.Subject));
         }
 
         [Test]
@@ -126,36 +126,6 @@ namespace KMA.Tests.Gameplay.Progression
         }
 
         [Test]
-        public void BossUnlockRequiresEverySubjectToBePassed()
-        {
-            var session = new GameSession();
-            foreach (SubjectId id in Enum.GetValues(typeof(SubjectId)))
-            {
-                session.StartSubject(id);
-                session.SubmitResult(id, Passed(6f));
-            }
-
-            Assert.That(session.BossUnlocked, Is.True);
-        }
-
-        [Test]
-        public void OneUnpassedSubjectBlocksBossUnlock()
-        {
-            var session = new GameSession();
-            foreach (SubjectId id in Enum.GetValues(typeof(SubjectId)))
-            {
-                if (id == SubjectId.Football)
-                {
-                    continue;
-                }
-
-                session.StartSubject(id);
-                session.SubmitResult(id, Passed(6f));
-            }
-
-            Assert.That(session.BossUnlocked, Is.False);
-        }
-
         static MinigameResult Failed() => new MinigameResult(false, 0, Rank.F);
 
         static MinigameResult Passed(float score) => new MinigameResult(true, score, ScoreUtil.ToRank(score));

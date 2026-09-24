@@ -9,9 +9,6 @@ namespace KMA.Tests.Gameplay.Ball
     {
         const string ProfileRoot = "Assets/_Project/ScriptableObjects/Ball/";
 
-        [TestCase("Volleyball", 1.00f, .05f, 0f, .75f)]
-        [TestCase("Basketball", 1.00f, .02f, 0f, .80f)]
-        [TestCase("PingPong", .85f, .08f, 0f, .65f)]
         [TestCase("Shuttle", .90f, 4.00f, 0f, 0f)]
         [TestCase("Football", 1.10f, .03f, 0f, .60f)]
         public void AuthoredProfile_HasExactApprovedValues(
@@ -38,14 +35,14 @@ namespace KMA.Tests.Gameplay.Ball
         }
 
         [Test]
-        public void ShuttleProfile_HasHigherDragThanVolleyballAndNoBounce()
+        public void ShuttleProfile_HasHighDragAndNoBounce()
         {
             FlightProfile shuttle = Load("Shuttle");
-            FlightProfile volleyball = Load("Volleyball");
+            FlightProfile football = Load("Football");
 
             Assert.That(shuttle, Is.Not.Null);
-            Assert.That(volleyball, Is.Not.Null);
-            Assert.That(shuttle.LinearDrag, Is.GreaterThan(volleyball.LinearDrag));
+            Assert.That(football, Is.Not.Null);
+            Assert.That(shuttle.LinearDrag, Is.GreaterThan(football.LinearDrag));
             Assert.That(shuttle.BounceDamping, Is.Zero);
         }
 

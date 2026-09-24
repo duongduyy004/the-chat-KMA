@@ -43,10 +43,8 @@ namespace KMA.Gameplay.Shell
             if (map != null)
             {
                 var router = SceneRouter.Instance;
-                map.SetBossUnlocked(router != null && router.Session.BossUnlocked);
                 BuildMapPresentation(router == null ? null : router.Session);
                 map.SubjectRequested += StartSubject;
-                map.BossRequested += StartBoss;
             }
             if (gameOver != null)
             {
@@ -82,7 +80,6 @@ namespace KMA.Gameplay.Shell
             if (map != null)
             {
                 map.SubjectRequested -= StartSubject;
-                map.BossRequested -= StartBoss;
             }
             if (gameOver != null)
             {
@@ -271,13 +268,6 @@ namespace KMA.Gameplay.Shell
             var router = SceneRouter.Instance;
             if (router != null)
                 router.StartSubject(subject);
-        }
-
-        static void StartBoss()
-        {
-            var router = SceneRouter.Instance;
-            if (router != null)
-                router.StartBoss();
         }
 
         static void ApplySettings(Settings value) => GameManager.Instance?.UpdateSettings(value);

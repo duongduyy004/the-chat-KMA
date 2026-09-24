@@ -817,59 +817,6 @@ canh đúng Renderer2D. UrpBootstrap để gán lại khi clone mới."
 
 - [ ] **Step 1: Viết test thất bại**
 
-```bash
-cat > Assets/Tests/EditMode/Config/ProjectLayoutTests.cs <<'EOF'
-using System.IO;
-using NUnit.Framework;
-
-namespace KMA.Tests.Config
-{
-    public sealed class ProjectLayoutTests
-    {
-        static readonly string[] RequiredFolders =
-        {
-            "Assets/_Project/Art/Characters",
-            "Assets/_Project/Art/Environments",
-            "Assets/_Project/Art/UI",
-            "Assets/_Project/Art/FX",
-            "Assets/_Project/Audio/Music",
-            "Assets/_Project/Audio/SFX",
-            "Assets/_Project/Fonts",
-            "Assets/_Project/Prefabs/UI",
-            "Assets/_Project/Prefabs/Gameplay",
-            "Assets/_Project/Settings/URP",
-            "Assets/_Project/Settings/Input",
-            "Assets/_Project/Settings/AudioMixer",
-            "Assets/_Project/ScriptableObjects/Subjects",
-            "Assets/_Project/ScriptableObjects/Rhythm",
-            "Assets/_Project/ScriptableObjects/Difficulty",
-            "Assets/_Project/ScriptableObjects/Quotes"
-        };
-
-        [Test]
-        public void PlanFolderTreeExists()
-        {
-            foreach (var folder in RequiredFolders)
-            {
-                Assert.That(Directory.Exists(folder), Is.True, $"Thiếu thư mục {folder} (PLAN §2.6).");
-            }
-        }
-
-        [Test]
-        public void AudioDspBufferIsBestLatency()
-        {
-            var yaml = File.ReadAllText("ProjectSettings/AudioManager.asset");
-            Assert.That(yaml, Does.Match(@"m_RequestedDSPBufferSize:\s*256"),
-                "DSP buffer phải là Best latency (256) — chạy bền và boss tính nhịp theo dspTime.");
-        }
-    }
-}
-EOF
-
-~/.local/bin/unity test --mode EditMode --filter ProjectLayoutTests \
-  --output /tmp/kma-layout.xml --timeout 1200
-```
-
 Expected: FAIL cả 2 — thư mục chưa tồn tại, `m_RequestedDSPBufferSize` đang là `0`.
 
 - [ ] **Step 2: Tạo thư mục**
@@ -879,7 +826,7 @@ cd /home/duydt/project/the-chat-KMA
 for d in Art/Characters Art/Environments Art/UI Art/FX \
          Audio/Music Audio/SFX Fonts Prefabs/UI Prefabs/Gameplay \
          Settings/URP Settings/Input Settings/AudioMixer \
-         ScriptableObjects/Subjects ScriptableObjects/Rhythm \
+         ScriptableObjects/Subjects \
          ScriptableObjects/Difficulty ScriptableObjects/Quotes; do
   mkdir -p "Assets/_Project/$d"
   touch "Assets/_Project/$d/.gitkeep"
@@ -923,15 +870,6 @@ Expected: `failed 0`, `total 2`.
 Expected: `failed = 0` cả hai. EditMode total = baseline + 13.
 
 - [ ] **Step 6: Commit**
-
-```bash
-git add Assets/_Project ProjectSettings/AudioManager.asset \
-  Assets/Tests/EditMode/Config/ProjectLayoutTests.cs
-git commit -m "chore: dựng cây thư mục PLAN §2.6, DSP buffer Best latency
-
-DSP 256 là bắt buộc cho chạy bền và boss — cả hai tính nhịp theo
-AudioSettings.dspTime, latency mặc định làm lệch judge."
-```
 
 ---
 

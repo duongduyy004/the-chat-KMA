@@ -38,12 +38,12 @@ namespace KMA.Tests.Gameplay.Progression
             var original = new GameSession();
             original.StartSubject(SubjectId.Sprint);
             original.SubmitResult(SubjectId.Sprint, new MinigameResult(true, 8f, Rank.A));
-            original.StartSubject(SubjectId.Volleyball);
+            original.StartSubject(SubjectId.Badminton);
 
             GameSession restored = RoundTrip(original);
 
             Assert.That(restored.ResumeRoute(), Is.EqualTo(SessionRoute.Subject));
-            Assert.That(restored.ActiveSubject, Is.EqualTo(SubjectId.Volleyball));
+            Assert.That(restored.ActiveSubject, Is.EqualTo(SubjectId.Badminton));
             Assert.That(restored.VisitAttempt, Is.EqualTo(1));
             Assert.That(restored.AwaitingPunishment, Is.False);
             Assert.That(restored.Lives, Is.EqualTo(5));
@@ -58,8 +58,8 @@ namespace KMA.Tests.Gameplay.Progression
             var original = new GameSession();
             original.StartSubject(SubjectId.Sprint);
             original.SubmitResult(SubjectId.Sprint, Failed());
-            original.StartSubject(SubjectId.Endurance);
-            original.SubmitResult(SubjectId.Endurance, Failed());
+            original.StartSubject(SubjectId.Badminton);
+            original.SubmitResult(SubjectId.Badminton, Failed());
 
             GameSession restored = RoundTrip(original);
 
@@ -69,7 +69,7 @@ namespace KMA.Tests.Gameplay.Progression
             Assert.That(restored.AwaitingPunishment, Is.False);
             Assert.That(restored.Lives, Is.EqualTo(3));
             Assert.That(restored.GetRecord(SubjectId.Sprint).FailedVisits, Is.EqualTo(1));
-            Assert.That(restored.GetRecord(SubjectId.Endurance).FailedVisits, Is.EqualTo(1));
+            Assert.That(restored.GetRecord(SubjectId.Badminton).FailedVisits, Is.EqualTo(1));
         }
 
         [Test]
@@ -91,17 +91,17 @@ namespace KMA.Tests.Gameplay.Progression
         public void ToSaveData_ExportsTheActiveAttemptFields()
         {
             var session = new GameSession();
-            session.StartSubject(SubjectId.PingPong);
+            session.StartSubject(SubjectId.Football);
 
             SaveData exported = session.ToSaveData();
 
             Assert.That(exported.version, Is.EqualTo(SaveData.CurrentVersion));
             Assert.That(exported.hasActiveSubject, Is.True);
-            Assert.That(exported.activeSubject, Is.EqualTo(SubjectId.PingPong));
+            Assert.That(exported.activeSubject, Is.EqualTo(SubjectId.Football));
             Assert.That(exported.visitAttempt, Is.EqualTo(1));
             Assert.That(exported.awaitingPunishment, Is.False);
 
-            session.SubmitResult(SubjectId.PingPong, new MinigameResult(true, 6f, Rank.C));
+            session.SubmitResult(SubjectId.Football, new MinigameResult(true, 6f, Rank.C));
             SaveData cleared = session.ToSaveData();
 
             Assert.That(cleared.hasActiveSubject, Is.False);
@@ -174,7 +174,7 @@ namespace KMA.Tests.Gameplay.Progression
         {
             SaveData active = SaveData.CreateDefault();
             active.hasActiveSubject = true;
-            active.activeSubject = SubjectId.Basketball;
+            active.activeSubject = (SubjectId)3;
             active.visitAttempt = 2;
             active.awaitingPunishment = true;
 
@@ -196,8 +196,8 @@ namespace KMA.Tests.Gameplay.Progression
             var original = new GameSession();
             original.StartSubject(SubjectId.Sprint);
             original.SubmitResult(SubjectId.Sprint, new MinigameResult(true, 8f, Rank.A));
-            original.StartSubject(SubjectId.Endurance);
-            original.SubmitResult(SubjectId.Endurance, Failed());
+            original.StartSubject(SubjectId.Badminton);
+            original.SubmitResult(SubjectId.Badminton, Failed());
 
             var data = original.ToSaveData();
             data.lives = 3;
@@ -209,23 +209,23 @@ namespace KMA.Tests.Gameplay.Progression
                 rhythmOffsetMs = -42f
             };
             data.tutorialSeen[0] = true;
-            data.tutorialSeen[3] = true;
+            data.tutorialSeen[2] = true;
 
             var restored = new GameSession();
             restored.Restore(data);
 
             Assert.That(restored.Lives, Is.EqualTo(3));
-            Assert.That(restored.Records, Has.Count.EqualTo(7));
+            Assert.That(restored.Records, Has.Count.EqualTo(3));
             Assert.That(restored.GetRecord(SubjectId.Sprint).BestRank, Is.EqualTo(Rank.A));
             Assert.That(restored.GetRecord(SubjectId.Sprint).BestScore, Is.EqualTo(8f));
-            Assert.That(restored.GetRecord(SubjectId.Endurance).FailedVisits, Is.EqualTo(1));
+            Assert.That(restored.GetRecord(SubjectId.Badminton).FailedVisits, Is.EqualTo(1));
 
             Assert.That(data.settings.musicVol, Is.EqualTo(0.25f));
             Assert.That(data.settings.sfxVol, Is.EqualTo(0.75f));
             Assert.That(data.settings.vibration, Is.False);
             Assert.That(data.settings.rhythmOffsetMs, Is.EqualTo(-42f));
             Assert.That(data.tutorialSeen[0], Is.True);
-            Assert.That(data.tutorialSeen[3], Is.True);
+            Assert.That(data.tutorialSeen[2], Is.True);
 
             var restoredData = restored.ToSaveData();
             Assert.That(restoredData.settings.musicVol, Is.EqualTo(1f));
@@ -312,8 +312,8 @@ namespace KMA.Tests.Gameplay.Progression
             Assert.That(restored.GetRecord(SubjectId.Sprint).Passed, Is.True);
             Assert.That(restored.GetRecord(SubjectId.Sprint).BestResult, Is.Not.Null);
             Assert.That(restored.GetRecord(SubjectId.Sprint).BestResult.Score, Is.EqualTo(7f));
-            Assert.That(restored.GetRecord(SubjectId.Endurance).Passed, Is.False);
-            Assert.That(restored.GetRecord(SubjectId.Endurance).FailedVisits, Is.Zero);
+            Assert.That(restored.GetRecord(SubjectId.Badminton).Passed, Is.False);
+            Assert.That(restored.GetRecord(SubjectId.Badminton).FailedVisits, Is.Zero);
 
             data.lives = -1;
             restored.Restore(data);

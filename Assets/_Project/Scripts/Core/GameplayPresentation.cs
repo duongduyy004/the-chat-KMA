@@ -43,7 +43,7 @@ namespace KMA.Gameplay.Core
             var phase = minigame == null ? "Route" : minigame.PresentationPhase.ToString();
             var session = router == null
                 ? "Session: waiting for route"
-                : $"Lives: {router.Session.Lives}   Boss: {(router.Session.BossUnlocked ? "Unlocked" : "Locked")}";
+                : $"Lives: {router.Session.Lives}";
             statusText = $"Phase: {phase}\n{session}";
         }
 
@@ -105,9 +105,6 @@ namespace KMA.Gameplay.Core
         static string SceneTitle(string sceneName) => sceneName switch
         {
             "MG_Sprint" => "KMA — Sprint",
-            "MG_Endurance" => "KMA — Endurance",
-            "MG_Boss" => "KMA — Final Boss",
-            "MG_Basketball" => "KMA — Basketball",
             "Punishment" => "KMA — Recovery Challenge",
             "Map" => "KMA — Map",
             "GameOver" => "KMA — Game Over",
@@ -117,9 +114,6 @@ namespace KMA.Gameplay.Core
         static string Controls(string sceneName) => sceneName switch
         {
             "MG_Sprint" => "Sprint: Left / Right arrows",
-            "MG_Endurance" => "Endurance: T tap · H hold · Up / Down swipe",
-            "MG_Boss" => "Boss: Space tap · H hold · Left / Right alternate",
-            "MG_Basketball" => "Basketball: Space charge · H hold ratio · Left / Right pass · Space finish",
             "Punishment" => "Recovery: Space tap · H hold · Left / Right alternate",
             "Map" => "Progression route",
             "GameOver" => "Run complete",

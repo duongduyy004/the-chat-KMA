@@ -37,7 +37,7 @@ From the XML `<test-run>` summary:
 
 The 11 cases cover hold/no-apex, authored pass-generated BallRig launch, replacement rejection, six apex boundary cases, final tap/objective gating, five real authored pass/launch/apex-perfect-tap cycles, combo/mastery rejection, and lifecycle rejection/resolution.
 
-`git diff --check` passed. The log contains a non-fatal Unity licensing message (`Access token is unavailable; failed to update`) and an existing Volleyball test warning for deprecated `Rigidbody2D.velocity`; no Basketball test warning remains.
+`git diff --check` passed. The log contains a non-fatal Unity licensing message (`Access token is unavailable; failed to update`) and an existing retired-subject test warning for deprecated `Rigidbody2D.velocity`; no Basketball test warning remains.
 
 ## Review-fix verification
 

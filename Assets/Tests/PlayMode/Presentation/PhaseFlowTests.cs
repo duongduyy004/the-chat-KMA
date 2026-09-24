@@ -13,66 +13,6 @@ namespace KMA.Tests.Presentation
     public sealed class PhaseFlowTests
     {
         [UnityTest]
-        public IEnumerator EnduranceTutorialRemainsManualUntilCompletionThenSeenSubjectStartsCountdown()
-        {
-            var prefab = AssetDatabase.LoadAssetAtPath<GameObject>(
-                "Assets/_Project/Prefabs/UI/PhaseOverlay.prefab");
-            Assert.That(prefab, Is.Not.Null);
-
-            var firstControllerObject = new GameObject("first-endurance-controller");
-            var secondControllerObject = new GameObject("second-endurance-controller");
-            var overlayObject = Object.Instantiate(prefab);
-            try
-            {
-                var firstController = firstControllerObject.AddComponent<EnduranceController>();
-                var overlay = overlayObject.GetComponent<PhaseOverlay>();
-                var tutorial = overlayObject.GetComponentInChildren<TutorialOverlay>(true);
-                var store = new MemoryTutorialSeenStore();
-                tutorial.ConfigureForTest(store, "Endurance", new TutorialStep[0]);
-
-                var completionCount = 0;
-                var countdownTransitions = 0;
-                tutorial.Completed += () => completionCount++;
-                firstController.PhaseChanged += phase =>
-                {
-                    if (phase == MinigamePhase.Countdown)
-                        countdownTransitions++;
-                };
-
-                overlay.Bind(firstController);
-                Assert.That(tutorial.ShouldShow, Is.True);
-                yield return new WaitForSeconds(2.1f);
-
-                Assert.That(firstController.PresentationPhase, Is.EqualTo(MinigamePhase.Tutorial),
-                    "An interactive tutorial must hold the lifecycle after the ordinary tutorial timeout.");
-                tutorial.Next();
-                tutorial.Next();
-                tutorial.Close();
-                tutorial.Close();
-                tutorial.Skip();
-
-                Assert.That(completionCount, Is.EqualTo(1));
-                Assert.That(countdownTransitions, Is.EqualTo(1));
-                Assert.That(firstController.PresentationPhase, Is.EqualTo(MinigamePhase.Countdown));
-                Assert.That(store.HasSeen("Endurance"), Is.True);
-
-                var secondController = secondControllerObject.AddComponent<EnduranceController>();
-                overlay.Bind(secondController);
-
-                Assert.That(tutorial.ShouldShow, Is.False);
-                Assert.That(overlay.IsTutorialVisible, Is.False);
-                Assert.That(secondController.PresentationPhase, Is.EqualTo(MinigamePhase.Countdown),
-                    "An already-seen tutorial must release directly into countdown.");
-            }
-            finally
-            {
-                Object.Destroy(overlayObject);
-                Object.Destroy(firstControllerObject);
-                Object.Destroy(secondControllerObject);
-            }
-        }
-
-        [UnityTest]
         public IEnumerator SprintStartPresentationReleasesAfterInstructionGateAndMirrorsCountdown()
         {
             var controllerObject = new GameObject("sprint-controller");

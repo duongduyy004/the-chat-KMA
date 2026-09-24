@@ -1,6 +1,6 @@
 # The Chat KMA — Gameplay
 
-Unity gameplay prototype for KMA: seven sports subjects, normalized scoring, recovery challenges, progression, and a final boss.
+Unity gameplay prototype for KMA: three retained sports subjects, normalized scoring, and campaign progression.
 
 ## Project status
 
@@ -8,12 +8,10 @@ Unity gameplay prototype for KMA: seven sports subjects, normalized scoring, rec
 - Input System `1.20.0`
 - NUnit/Unity Test Framework `1.6.0`
 - Android targets landscape, ARM64, IL2CPP, API 25/35, and `com.kma.thechat`. A separate x86_64 APK supports Genymotion; those results are in [demo QA](docs/qa/android-report-demo.md).
-- Current playable subject routes are Sprint, Endurance, Volleyball and Basketball.
-- S1–S10 is a **checkpoint, not a release**. S11–S16 are outside the current plan, and the physical-device gate is still open for both sections — see [S1–S9 Stabilization Gate](docs/qa/s1-s9-stabilization-gate.md) and [S10 Basketball Gate](docs/qa/s10-basketball-device-gate.md).
+- Sprint is selectable; Badminton and Football remain disabled on the map.
+- Historical test snapshots predate the current scope and have not been rerun after recent removals.
 
-The seven subject rule engines are present: Sprint, Endurance, Volleyball, Basketball, PingPong, Badminton, and Football. The scene router exposes Sprint, Endurance, Volleyball and Basketball as playable subject scenes; the other three are implemented as deterministic gameplay models and ball-rule contracts.
-
-Volleyball plays as a three-touch `Dig → Set → Spike` possession driven by swipes on the shared gameplay surface, with the rally point awarded when the flight resolves. Its known gaps — the authored net and court colliders are not yet enforced as rules, and the ground plane sits above the drawn floor — are recorded in the gate document above.
+The retained subjects are Sprint, Badminton, and Football. Only Sprint is currently selectable on the map.
 
 ## Core gameplay
 
@@ -33,8 +31,7 @@ The shared lifecycle is `Tutorial → Countdown → Play → Resolve`, with exac
 2. A first failure opens the authored Punishment scene.
 3. Completing Punishment routes back to the same subject for its second attempt.
 4. A second failure costs one life.
-5. Passing all seven subject records unlocks the Boss.
-6. The Boss uses the authored sequence `TapMash → RhythmHold → AlternateTap` and returns to Map once resolved.
+5. Failure costs one life and returns to Map, or to GameOver when no lives remain.
 
 `SceneRouter` keeps the live `GameSession` across scene loads and guards against duplicate transitions.
 
@@ -43,12 +40,10 @@ The shared lifecycle is `Tutorial → Countdown → Play → Resolve`, with exac
 | Scene | Purpose |
 | --- | --- |
 | `MG_Sprint` | Sprint subject with rival pace, stamina, wind cue, and counterplay |
-| `MG_Endurance` | Phased rhythm subject with tap, hold, and swipe modes |
-| `MG_Volleyball` | Three-touch Dig-Set-Spike possession against an authored opponent return |
-| `MG_Basketball` | Charged alley-oop lob finished by a tap inside the authored apex window |
-| `MG_Boss` | Three-phase final boss sequence |
+| `MG_Badminton` | Badminton subject scene |
+| `MG_Football` | Football subject scene |
 | `Punishment` | Recovery challenge for a failed first attempt |
-| `Map` | Return route after subject/boss resolution |
+| `Map` | Return route after subject resolution |
 | `GameOver` | Route after lives are exhausted |
 
 ## Default keyboard controls
@@ -56,20 +51,16 @@ The shared lifecycle is `Tutorial → Countdown → Play → Resolve`, with exac
 | Gameplay | Controls |
 | --- | --- |
 | Sprint | Left/Right arrows |
-| Endurance | `T` tap, `H` hold, Up/Down arrows swipe |
-| Volleyball | No keyboard fallback - swipe on the gameplay surface with touch or a mouse drag |
-| Basketball | `Space` begins the charge, Left/Right arrows release the pass, `Space` finishes at the apex |
-| Boss | `Space` tap-mash, `H` rhythm hold, Left/Right arrows alternate tap |
 | Punishment | `Space` tap-mash, `H` rhythm hold, Left/Right arrows alternate tap |
 
-Touch input is supported by Endurance, Boss, and Punishment input bridges where the scene requires it. Volleyball and Basketball have no bridge: each controller owns its detectors on the scene's shared `GameplayInputRouter`, fed by the one full-screen `ScreenTapArea`. Volleyball is gesture-only; Basketball also has a keyboard path through the `Basketball` action map.
+Touch input is supported by the shared gameplay input router and Punishment input bridge where required.
 
 ## Open the project
 
 1. Install Unity `6000.3.23f1` with the required 2D and Input System packages.
 2. Open this repository as the Unity project root.
 3. For the report demo, open `Assets/_Project/Scenes/Bootstrap.unity` and press Play: Splash → Menu → Map → Sprint. Choose New Game, then Sprint, acknowledge the tutorial, and alternate the left/right touch buttons or arrow keys.
-4. For isolated gameplay development, open `MG_Sprint.unity`, `MG_Endurance.unity`, or `MG_Boss.unity`.
+4. For isolated gameplay development, open `MG_Sprint.unity`.
 
 ## Android report demo
 
@@ -145,7 +136,7 @@ rtk proxy "$KMA_UNITY_EDITOR" -batchmode -projectPath . \
   -testResults /tmp/kma-playmode.xml -logFile /tmp/kma-playmode.log
 ```
 
-Current verification is `258/258` EditMode and `243/243` PlayMode, each reproduced twice from a clean tracked status. Evidence, commands and the open device gates are in [S1–S9 Stabilization Gate](docs/qa/s1-s9-stabilization-gate.md) and [S10 Basketball Gate](docs/qa/s10-basketball-device-gate.md).
+The last recorded suite counts predate the current scope; they have not been rerun after the removals.
 
 Test runs regenerate `Assets/_Project/Fonts/Nunito-Bold.asset` — the dynamic TextMeshPro atlas caching newly rendered glyphs. Revert it rather than committing it.
 
@@ -157,6 +148,5 @@ Superseded by the counts above, kept for provenance: Task 1 verified `209/209` E
 
 - [`PLAN.md`](PLAN.md) — original gameplay specification
 - [`docs/superpowers/plans/2026-08-24-gameplay-foundation.md`](docs/superpowers/plans/2026-08-24-gameplay-foundation.md) — score, timing, and lifecycle contracts
-- [`docs/superpowers/plans/2026-08-24-running-minigames.md`](docs/superpowers/plans/2026-08-24-running-minigames.md) — Sprint and Endurance
-- [`docs/superpowers/plans/2026-08-24-ball-minigames.md`](docs/superpowers/plans/2026-08-24-ball-minigames.md) — five ball minigames
-- [`docs/superpowers/plans/2026-08-24-progression-boss.md`](docs/superpowers/plans/2026-08-24-progression-boss.md) — progression, Punishment, routing, and Boss
+- [`docs/superpowers/plans/2026-08-24-running-minigames.md`](docs/superpowers/plans/2026-08-24-running-minigames.md) — Sprint
+- [`docs/superpowers/plans/2026-08-24-ball-minigames.md`](docs/superpowers/plans/2026-08-24-ball-minigames.md) — shared ball gameplay systems

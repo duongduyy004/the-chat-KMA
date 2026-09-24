@@ -265,13 +265,13 @@ namespace KMA.Tests.Input
         public void RouterLifecycle_SubscribesKeyboardTapExactlyOnce()
         {
             var actions = ScriptableObject.CreateInstance<InputActionAsset>();
-            var map = actions.AddActionMap("Endurance");
+            var map = actions.AddActionMap("Gameplay");
             map.AddAction("Tap", InputActionType.Button, "<Keyboard>/t");
             var detector = new InputLayer.TapMashInputDetector();
             var delivered = 0;
             detector.OnTap += () => delivered++;
             Router.SetDetectors(detector, null, null, null, null);
-            Router.ConfigureInputForTest(actions, "Endurance");
+            Router.ConfigureInputForTest(actions, "Gameplay");
 
             Router.enabled = false;
             Router.enabled = true;
@@ -285,7 +285,7 @@ namespace KMA.Tests.Input
         public void KeyboardTap_FeedsBothGenericAndRhythmDetectors()
         {
             var actions = ScriptableObject.CreateInstance<InputActionAsset>();
-            var map = actions.AddActionMap("Endurance");
+            var map = actions.AddActionMap("Gameplay");
             map.AddAction("Tap", InputActionType.Button, "<Keyboard>/t");
             var tapMash = new InputLayer.TapMashInputDetector();
             var rhythm = new InputLayer.RhythmBeatInputDetector();
@@ -295,7 +295,7 @@ namespace KMA.Tests.Input
             rhythm.OnJudge += (_, _) => rhythmJudges++;
             Router.SetDetectors(tapMash, rhythm, null, null, null);
             Router.RhythmBeatDsp = AudioSettings.dspTime;
-            Router.ConfigureInputForTest(actions, "Endurance");
+            Router.ConfigureInputForTest(actions, "Gameplay");
 
             var keyboard = InputSystem.AddDevice<Keyboard>();
             Press(keyboard.tKey);
@@ -308,7 +308,7 @@ namespace KMA.Tests.Input
         public void KeyboardRhythmAction_UsesConfiguredOffset()
         {
             var actions = ScriptableObject.CreateInstance<InputActionAsset>();
-            var map = actions.AddActionMap("Endurance");
+            var map = actions.AddActionMap("Gameplay");
             var rhythmAction = map.AddAction("Rhythm", InputActionType.Button, "<Keyboard>/r");
             var detector = new InputLayer.RhythmBeatInputDetector();
             double deltaMs = 0d;
@@ -316,7 +316,7 @@ namespace KMA.Tests.Input
             Router.SetDetectors(null, detector, null, null, null);
             Router.RhythmOffsetMs = 125d;
             Router.RhythmBeatDsp = AudioSettings.dspTime;
-            Router.ConfigureInputForTest(actions, "Endurance", rhythmAction);
+            Router.ConfigureInputForTest(actions, "Gameplay", rhythmAction);
 
             var keyboard = InputSystem.AddDevice<Keyboard>();
             Press(keyboard.rKey);
@@ -331,7 +331,7 @@ namespace KMA.Tests.Input
             var holdEnds = 0;
             hold.OnHoldEnd += _ => holdEnds++;
             Router.SetDetectors(null, null, hold, null, null);
-            Router.ConfigureInputForTest(SharedActions(), "Endurance");
+            Router.ConfigureInputForTest(SharedActions(), "Gameplay");
             var keyboard = InputSystem.AddDevice<Keyboard>();
 
             Press(keyboard.hKey);
@@ -341,7 +341,7 @@ namespace KMA.Tests.Input
 
             Router.enabled = true;
             Press(keyboard.hKey);
-            Router.ConfigureInputForTest(SharedActions(), "Endurance");
+            Router.ConfigureInputForTest(SharedActions(), "Gameplay");
 
             Assert.That(holdEnds, Is.EqualTo(2));
         }
@@ -364,7 +364,7 @@ namespace KMA.Tests.Input
         }
 
         [Test]
-        public void SharedEnduranceActions_RouteTapHoldAndBothSwipes()
+        public void SharedGameplayActions_RouteTapHoldAndBothSwipes()
         {
             var taps = new InputLayer.TapMashInputDetector();
             var hold = new InputLayer.HoldInputDetector();
@@ -378,7 +378,7 @@ namespace KMA.Tests.Input
             hold.OnHoldEnd += _ => holdEnds++;
             swipe.OnSwipe += _ => swipeCount++;
             Router.SetDetectors(taps, null, hold, null, swipe);
-            Router.ConfigureInputForTest(SharedActions(), "Endurance");
+            Router.ConfigureInputForTest(SharedActions(), "Gameplay");
             var keyboard = InputSystem.AddDevice<Keyboard>();
 
             Press(keyboard.tKey);
@@ -396,7 +396,6 @@ namespace KMA.Tests.Input
             Assert.That(swipeCount, Is.EqualTo(2));
         }
 
-        [TestCase("Boss")]
         [TestCase("Punishment")]
         public void SharedSideActionMaps_RouteTapHoldSwipeAndAlternate(string mapName)
         {
@@ -542,7 +541,7 @@ namespace KMA.Tests.Input
         }
 
         // Router.FeedPointerUp feeds hold before swipe, so a controller can read the charge that the
-        // release gesture belongs to. Basketball depends on that order.
+        // release gesture belongs to. the ball game depends on that order.
         [Test]
         public void PointerUp_ReportsHoldEndBeforeSwipe()
         {
@@ -562,7 +561,7 @@ namespace KMA.Tests.Input
             Assert.That(order, Is.EqualTo(new[] { "hold", "swipe" }));
         }
 
-        // A controller (e.g. Basketball) calls SetTapMashDetector from Awake, which Unity always
+        // A controller (e.g. the ball game) calls SetTapMashDetector from Awake, which Unity always
         // runs before the router's own OnEnable. At that point detectorEventsSubscribed is false,
         // so the setter only stores the detector; ConfigureDetectorEvents() on OnEnable is the only
         // thing that ever wires it up. This test fails if the tap line is removed from

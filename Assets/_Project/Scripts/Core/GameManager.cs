@@ -29,7 +29,6 @@ namespace KMA.Gameplay.Core
         GameSession session;
         Settings settings;
         bool[] tutorialSeen;
-        bool gameCompleted;
         bool startupConfigured;
         bool initialized;
 
@@ -121,7 +120,6 @@ namespace KMA.Gameplay.Core
             if (router.IsTransitioning)
                 return;
 
-            gameCompleted = false;
             router.ResetCampaign();
         }
 
@@ -138,7 +136,7 @@ namespace KMA.Gameplay.Core
 
         public bool HasSeenTutorial(SubjectId subject)
         {
-            int index = (int)subject;
+            int index = Array.IndexOf(Enum.GetValues(typeof(SubjectId)), subject);
             return tutorialSeen != null && index >= 0 && index < tutorialSeen.Length && tutorialSeen[index];
         }
 
@@ -149,7 +147,9 @@ namespace KMA.Gameplay.Core
             if (HasSeenTutorial(subject))
                 return;
 
-            int index = (int)subject;
+            int index = Array.IndexOf(Enum.GetValues(typeof(SubjectId)), subject);
+            if (index < 0)
+                return;
             int requiredLength = Enum.GetValues(typeof(SubjectId)).Length;
             if (tutorialSeen == null || tutorialSeen.Length < requiredLength)
             {
@@ -190,7 +190,6 @@ namespace KMA.Gameplay.Core
             session.Restore(loaded);
             settings = loaded.settings ?? Settings.CreateDefault();
             tutorialSeen = CloneTutorialFlags(loaded.tutorialSeen);
-            gameCompleted = loaded.gameCompleted;
             RefreshSavedCampaign(hasExistingSave != null && hasExistingSave());
 
             router.LoadSession(session);
@@ -217,13 +216,12 @@ namespace KMA.Gameplay.Core
             SaveData current = session.ToSaveData();
             current.settings = settings;
             current.tutorialSeen = CloneTutorialFlags(tutorialSeen);
-            current.gameCompleted = gameCompleted;
             saveData(current);
             RefreshSavedCampaign(true);
         }
 
         void RefreshSavedCampaign(bool saveExists) =>
-            HasSavedCampaign = saveExists && !gameCompleted;
+            HasSavedCampaign = saveExists;
 
         void ApplySettings()
         {

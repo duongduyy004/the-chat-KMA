@@ -2,8 +2,6 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** Hoàn thiện "Thể Chất KMA" thành game Android chơi được trọn campaign: 7 môn thật, punishment, boss 3 phase, save/load, ending, presentation, audio/art và release verification.
-
 **Architecture:** Giữ rules engine deterministic hiện có làm nguồn sự thật; mọi gameplay mới đi qua controller, detector và presentation adapter additive. `SceneRouter` tiếp tục load scene bằng `Single`, mỗi scene gameplay sở hữu HUD; `GameManager` inject/restore `GameSession` từ một `save.json` atomic. Thực hiện tuần tự S1–S16, mỗi section kết thúc bằng test và gate trên thiết bị thật.
 
 **Tech Stack:** Unity `6000.3.23f1`, URP `17.3.0`/2D Renderer, uGUI/TMP, Input System + EnhancedTouch, C#/.NET Standard 2.1, Unity Test Framework, Android IL2CPP ARM64.
@@ -13,7 +11,6 @@
 ## Global Constraints
 
 - Không sửa rules engine đã có test; chỉ thêm method/event, adapter hoặc component presentation additive.
-- Giữ nguyên chữ ký và hành vi đã test của `SceneRouter`, `GameSession`, `MinigameBase`, các rules và `BossSequenceAsset`; khi cần mở rộng, thêm API mới rồi kiểm regression.
 - Chạy mọi shell command qua `rtk`; dùng editor `/home/duydt/Unity/Hub/Editor/6000.3.23f1/Editor/Unity`.
 - Giữ Android landscape; Canvas reference `1920×1080`, `Match Width Or Height = 1.0`, safe-area cả trái/phải.
 - Chỉ `PrimaryObjective` được đặt `Pass = true`; mọi sự kiện bất lợi phải có cue và cửa sổ counterplay deterministic.
@@ -30,7 +27,6 @@
 | Shared presentation/input | `Assets/_Project/Scripts/UI/`, `Assets/_Project/Settings/Input/KMA.inputactions`, detector/router tests |
 | Core/session | `Assets/_Project/Scripts/Core/`, `Assets/_Project/Scripts/Progression/`, `Assets/_Project/Scripts/Gameplay/Common/` |
 | Data authoring | `Assets/_Project/ScriptableObjects/`, `Assets/_Project/Settings/`, `Assets/_Project/Prefabs/` |
-| Scenes | `Assets/_Project/Scenes/{Bootstrap,Menu,Map,MG_Sprint,MG_Endurance,MG_Volleyball,MG_Basketball,MG_PingPong,MG_Badminton,MG_Football,MG_Boss,Punishment,GameOver}.unity` |
 | Tests | `Assets/Tests/EditMode/` for pure contracts/save/detectors; `Assets/Tests/PlayMode/` for scenes, input and full routes |
 | Release | `Assets/_Project/Art/`, `Assets/_Project/Audio/`, `Assets/_Project/CREDITS.md`, `docs/qa/`, `README.md` |
 
@@ -97,8 +93,6 @@ S5 is a playable progression checkpoint only. Completion requires every Definiti
 - Create: `Assets/_Project/ScriptableObjects/Subjects/`, `Assets/_Project/Scenes/Bootstrap.unity`
 - Test: `Assets/Tests/EditMode/Core/`, `Assets/Tests/EditMode/Progression/`
 
-**Interfaces:** `GameSession.Restore(SaveData)`, `ToSaveData()`, `SubjectRecord.FromData(SubjectRecordData)`, `SceneRouter.LoadSession(GameSession)` and pure `ScoreUtil.ToStars(Rank)` are additive. `SaveData` contains version, lives, seven records, boss/game completion, tutorial flags and settings; stars are derived, never persisted.
-
 - [ ] **Step 1: Write failing round-trip/migration tests.** Assert atomic data shape, version migration, seven subject records, `ToStars` rank boundaries, restore, settings/tutorial retention and `PreviewRoute` parity with `SubmitResult`.
 - [ ] **Step 2: Implement DTOs and atomic SaveSystem.** Serialize `save.json` through `save.tmp` then `File.Replace`; write on subject completion, life loss, settings change and application pause; migrate by version and recover safely from a missing/invalid file.
 - [ ] **Step 3: Inject sessions without changing ownership contracts.** Keep `SceneRouter.Awake()` default construction; add `LoadSession` and let `GameManager` load save before loading Menu. Do not add serialization fields to tested `SubjectRecord`.
@@ -115,11 +109,8 @@ S5 is a playable progression checkpoint only. Completion requires every Definiti
 
 **Interfaces:** `GameSession.PreviewRoute(subject,result)` is pure and shares the route helper with `SubmitResult`; placeholder controllers expose debug Pass/Fail only for S5 verification and are all replaced before S16.
 
-- [ ] **Step 1: Write failing PlayMode tests** for result completion-once, full Menu→Map→subject→punishment→GameOver route, seven-subject boss unlock, pause routes, New Game/Continue and placeholder scene binding.
 - [ ] **Step 2: Implement route preview and result sequencing.** Show score/rank/stars/quote/consequence first; invoke `Completed` only after Continue; preserve immediate completion when no panel exists and preserve existing router routes.
 - [ ] **Step 3: Build MainMenu, Map, settings and calibration.** Map reads `SubjectConfig`, shows lock/best rank/derived stars/hearts, blocks three coming-soon nodes, and calibrate writes `rhythmOffsetMs`; New Game confirmation resets progress but keeps settings/tutorial flags.
-- [ ] **Step 4: Build placeholder scenes and punishment.** Add camera/HUD/debug Pass-Fail to five stubs; wire punishment tap/rhythm/alternate adapters to S3 detectors and progress; add pause `Time.timeScale = 0` plus explicit DSP clock pause/resume for Endurance/Boss.
-- [ ] **Step 5: Run the S5 device gate.** On Android complete both attempts, lose all five hearts, unlock Boss through seven actual placeholder subjects, kill/relaunch, pause/resume/restart/exit, and verify Continue/New Game.
 - [ ] **Step 6: Commit** `feat: close the playable campaign shell` only after EditMode, PlayMode and device gates pass.
 
 ### Task 6: S6 — Replace Sprint placeholder with the real vertical slice
@@ -133,17 +124,6 @@ S5 is a playable progression checkpoint only. Completion requires every Definiti
 - [ ] **Step 3: Add HUD and authored scene content.** Implement rank/cadence/wind extras, player locked at x=35%, three rivals, 3-layer parallax and required animations; pause remains top-right.
 - [ ] **Step 4: Run tests, profiler and device gate.** Verify 60fps on a mid device and first-attempt pass rate near 40–60%; commit `feat: make sprint playable`.
 
-### Task 7: S7 — Replace Endurance placeholder with rhythm/hold/swipe gameplay
-
-**Files:** `Assets/_Project/Scripts/Gameplay/Endurance/`, `Assets/_Project/Scenes/MG_Endurance.unity`, `Assets/Tests/PlayMode/Gameplay/Running/EnduranceControllerTests.cs`.
-
-**Interfaces:** One and only one of `RhythmBeatInputDetector`, `HoldInputDetector`, `SwipeInputDetector` is active at a time; `EnduranceController` keeps its tested `dspTime` clock and reads calibrated offset.
-
-- [ ] **Step 1: Add failing tests** for correct swipe not becoming Miss, exclusive modes, obstacle warning lead and pause/resume DSP continuity.
-- [ ] **Step 2: Rewire `EnduranceInputBridge`** to `KMA.inputactions` and the router; map detector events to the existing `Tap`, `EndHold` and `Swipe` APIs without changing rules.
-- [ ] **Step 3: Replace runtime metronome generation** with licensed audio clip, retain scheduled `dspTime`, build beat ring/mode color/lap/oval mini-map/stamina HUD and two-beat obstacle cue.
-- [ ] **Step 4: Verify on Android** with calibration offset and pause/resume; commit `feat: make endurance playable`.
-
 ### Task 8: S8 — Add shared ball presentation kit
 
 **Files:** `Assets/_Project/Scripts/Gameplay/Ball/{TrajectoryPreview,BallShadow}.cs`, `FlightProfile.cs`, `Assets/_Project/ScriptableObjects/Ball/FlightProfile_*.asset`, `Assets/Tests/EditMode/Gameplay/Ball/`.
@@ -153,36 +133,6 @@ S5 is a playable progression checkpoint only. Completion requires every Definiti
 - [ ] **Step 1: Write failing tests** asserting preview landing matches `Ballistics.PredictGround` and shuttle profile has high drag with zero bounce.
 - [ ] **Step 2: Implement dashed trajectory and height-driven shadow** with pooled line/visual objects and no `GetComponent` in `Update`.
 - [ ] **Step 3: Author five profiles**, including `FlightProfile_Shuttle`, then run ball EditMode/PlayMode suites and commit `feat: add ball presentation kit`.
-
-### Task 9: S9 — Implement Volleyball scene/controller
-
-**Files:** `Assets/_Project/Scripts/Gameplay/Volleyball/VolleyballController.cs`, `Assets/_Project/Scenes/MG_Volleyball.unity`, volleyball prefabs/assets, `Assets/Tests/PlayMode/Gameplay/Ball/VolleyballControllerTests.cs`.
-
-**Interfaces:** Swipe maps to `ResolveGesture` and `TryResolveAndLaunch`; `BallContext` comes from ball height/velocity/reach zone; HUD exposes Touch 1/2/3, scores and combo.
-
-- [ ] **Step 1: Test** swipe-to-action, rally-3 spin/fake cue and stable predicted landing.
-- [ ] **Step 2: Implement controller, auto-positioning and shared ball kit wiring** without changing `VolleyballRules`.
-- [ ] **Step 3: Add tutorial steps for dig/set/spike and run InputTestFixture plus device gate; commit `feat: add volleyball vertical slice`.
-
-### Task 10: S10 — Implement Basketball scene/controller
-
-**Files:** `Assets/_Project/Scripts/Gameplay/Basketball/BasketballController.cs`, `Assets/_Project/Scenes/MG_Basketball.unity`, basketball assets, `Assets/Tests/PlayMode/Gameplay/Ball/BasketballControllerTests.cs`.
-
-**Interfaces:** Hold→pass swipe→AI alley-oop→apex tap maps to existing rules; HUD reports apex progress, finish judge, baskets/attempts and combo.
-
-- [ ] **Step 1: Test** Hold charge, pass, alley-oop, `Ignored/Early/Perfect/Late`, and one-axis-per-phase difficulty.
-- [ ] **Step 2: Implement controller/HUD/apex ring** and authored scene; keep ball apex source deterministic.
-- [ ] **Step 3: Add tutorial and device gate**, then commit `feat: add basketball vertical slice`.
-
-### Task 11: S11 — Implement PingPong scene/controller
-
-**Files:** `Assets/_Project/Scripts/Gameplay/PingPong/PingPongController.cs`, `Assets/_Project/Scenes/MG_PingPong.unity`, ping-pong assets, `Assets/Tests/PlayMode/Gameplay/Ball/PingPongControllerTests.cs`.
-
-**Interfaces:** Tap maps to `TryReturn`; after ball-speed cap, only authored placement pattern changes difficulty.
-
-- [ ] **Step 1: Test** timing/placement, speed cap and post-cap placement-only difficulty.
-- [ ] **Step 2: Implement hit-zone/shadow/speed/rally HUD and return loop** through existing rules.
-- [ ] **Step 3: Add tutorial and device gate**, then commit `feat: add ping pong vertical slice`.
 
 ### Task 12: S12 — Implement Badminton scene/controller
 
@@ -203,31 +153,6 @@ S5 is a playable progression checkpoint only. Completion requires every Definiti
 - [ ] **Step 1: Test** shot mapping, five-kick scoring, keeper cue and one-axis-per-phase difficulty.
 - [ ] **Step 2: Implement dashed preview, goal counter, keeper animation and target/reaction phase progression** through existing rules.
 - [ ] **Step 3: Add tutorial and device gate**, then commit `feat: add football vertical slice`.
-
-### Task 14: S14 — Connect Boss and polish Punishment
-
-**Files:** `Assets/_Project/Scripts/Gameplay/Boss/`, `Assets/_Project/Scenes/{MG_Boss,Punishment}.unity`, `Assets/Tests/PlayMode/Progression/BossPhaseControllerTests.cs`.
-
-**Interfaces:** Runtime input source feeds the three existing boss adapters, which consume S3 detector events; `BossSequence.asset` remains unchanged: TapMash `10s/40`, RhythmHold `12s/16`, AlternateTap `10s/32`.
-
-- [ ] **Step 1: Add failing PlayMode tests** for all three runtime mechanics, 30–40s continuous phase flow, transition cues, camera presence and one completion event.
-- [ ] **Step 2: Add the missing Boss camera and wire adapters** to `GameplayInputRouter`; preserve the tested test-input APIs.
-- [ ] **Step 3: Add instructor sprite/animations, phase HUD, BPM/target progression and punishment mechanic cues/progress** without touching `BossSequenceAsset`.
-- [ ] **Step 4: Verify boss completion routes to Map and punishment routes correctly** on Android; commit `feat: connect runtime boss and punishment input`.
-
-### Task 15: S15 — Add ending, post-game state and credits
-
-**Files:**
-- Modify: `Assets/_Project/Scripts/Gameplay/Boss/BossPhaseController.cs`, `Assets/_Project/Scripts/Progression/{GameSession,SaveData}.cs`, `Assets/_Project/Scripts/UI/`
-- Modify: `Assets/_Project/Scenes/{MG_Boss,Map,Menu,GameOver}.unity`
-- Test: `Assets/Tests/PlayMode/Progression/EndingPanelTests.cs`, `Assets/Tests/EditMode/Progression/ResetSaveTests.cs`
-
-**Interfaces:** Boss ending is an overlay; `Completed` still routes to `SessionRoute.Map` after Continue. `gameCompleted` is persisted; stars come from `ScoreUtil.ToStars`; post-game Map permits replay/improvement.
-
-- [ ] **Step 1: Decide and test replay-heart semantics before implementation.** Use the existing session rules as default: post-game replay does not create a new campaign life-loss route unless a result is explicitly submitted; encode the chosen behavior in tests and UI copy.
-- [ ] **Step 2: Implement `EndingPanel` completion sequencing.** Show all seven ranks/stars, average score, remaining hearts, total time and quote; save `gameCompleted` immediately; no panel still completes immediately for harnesses.
-- [ ] **Step 3: Implement post-game Menu/Map and Credits.** Change Continue to Map after completion, allow replay for better best scores, show completed Boss state, and render credits from `Assets/_Project/CREDITS.md` or a matching SO.
-- [ ] **Step 4: Kill/relaunch after victory** and verify summary/post-game state; run full tests and commit `feat: add campaign ending and post-game state`.
 
 ### Task 16: S16 — Finish art/audio, performance, balance and release
 
@@ -258,5 +183,4 @@ The final claim of completion requires device evidence for every §10 item; pass
 
 - Spec coverage: S1–S5 are decomposed from the full decisions; S6–S16 each map their input, rules adapter, HUD, scene, tests and gate; S16 covers every content, quality and delivery checkbox.
 - Placeholder scan: no deferred implementation step remains; the only approval gate is the explicitly required S16 art brainstorm.
-- Type consistency: detector signatures, `BuildHudState`, `PreviewRoute`, `LoadSession`, DTO names and boss sequence values match the design spec and existing source names.
 - Dirty worktree safety: Task 1 explicitly snapshots and preserves current uncommitted S1/S2 changes before any implementation task.

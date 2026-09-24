@@ -133,13 +133,21 @@ namespace KMA.Gameplay
                 version = SaveData.CurrentVersion,
                 lives = data.lives,
                 subjects = MigrateSubjects(data.subjects, defaults.subjects),
-                bossUnlocked = data.bossUnlocked,
-                gameCompleted = data.gameCompleted,
-                hasActiveSubject = defaults.hasActiveSubject,
-                activeSubject = defaults.activeSubject,
-                visitAttempt = defaults.visitAttempt,
-                awaitingPunishment = defaults.awaitingPunishment,
-                tutorialSeen = MigrateTutorialSeen(data.tutorialSeen, defaults.tutorialSeen.Length),
+                hasActiveSubject = data.version >= 2 && data.hasActiveSubject &&
+                                   Enum.IsDefined(typeof(SubjectId), data.activeSubject),
+                activeSubject = data.version >= 2 && data.hasActiveSubject &&
+                                Enum.IsDefined(typeof(SubjectId), data.activeSubject)
+                    ? data.activeSubject
+                    : defaults.activeSubject,
+                visitAttempt = data.version >= 2 && data.hasActiveSubject &&
+                               Enum.IsDefined(typeof(SubjectId), data.activeSubject)
+                    ? data.visitAttempt
+                    : defaults.visitAttempt,
+                awaitingPunishment = data.version >= 2 && data.hasActiveSubject &&
+                                     Enum.IsDefined(typeof(SubjectId), data.activeSubject) &&
+                                     data.awaitingPunishment,
+                tutorialSeen = MigrateTutorialSeen(data.tutorialSeen, data.version,
+                    (SubjectId[])Enum.GetValues(typeof(SubjectId))),
                 settings = data.settings ?? defaults.settings
             };
 
@@ -193,14 +201,27 @@ namespace KMA.Gameplay
             return migrated;
         }
 
-        private static bool[] MigrateTutorialSeen(bool[] tutorialSeen, int expectedLength)
+        private static bool[] MigrateTutorialSeen(bool[] tutorialSeen, int sourceVersion,
+            SubjectId[] currentSubjects)
         {
-            var migrated = new bool[expectedLength];
-            if (tutorialSeen != null)
-            {
-                Array.Copy(tutorialSeen, migrated, Math.Min(tutorialSeen.Length, migrated.Length));
-            }
+            var migrated = new bool[currentSubjects.Length];
+            if (tutorialSeen == null)
+                return migrated;
 
+            for (int currentIndex = 0; currentIndex < currentSubjects.Length; currentIndex++)
+            {
+                int oldIndex = sourceVersion >= 3
+                    ? currentSubjects[currentIndex] switch
+                    {
+                        SubjectId.Sprint => 0,
+                        SubjectId.Badminton => 2,
+                        SubjectId.Football => 3,
+                        _ => -1
+                    }
+                    : (int)currentSubjects[currentIndex];
+                if (oldIndex >= 0 && oldIndex < tutorialSeen.Length)
+                    migrated[currentIndex] = tutorialSeen[oldIndex];
+            }
             return migrated;
         }
 
@@ -281,8 +302,6 @@ namespace KMA.Gameplay
             public int version = MissingLegacyInteger;
             public int lives = MissingLegacyInteger;
             public SubjectRecordData[] subjects;
-            public bool bossUnlocked;
-            public bool gameCompleted;
             public bool[] tutorialSeen;
 
             public bool HasRequiredFields(int expectedVersion) =>
@@ -293,8 +312,6 @@ namespace KMA.Gameplay
                 version = version,
                 lives = lives,
                 subjects = subjects,
-                bossUnlocked = bossUnlocked,
-                gameCompleted = gameCompleted,
                 tutorialSeen = tutorialSeen,
                 settings = null
             };

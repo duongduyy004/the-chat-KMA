@@ -8,22 +8,22 @@ namespace KMA.Tests.Gameplay.Progression
     public sealed class SaveDataTests
     {
         [Test]
-        public void SaveData_ContainsSevenRecordsAndSettings()
+        public void SaveData_ContainsThreeRecordsAndSettings()
         {
             var data = SaveData.CreateDefault();
             var subjectIds = (SubjectId[])Enum.GetValues(typeof(SubjectId));
 
-            Assert.That(subjectIds, Has.Length.EqualTo(7));
-            Assert.That(SaveData.CurrentVersion, Is.EqualTo(2));
+            Assert.That(subjectIds, Has.Length.EqualTo(3));
+            Assert.That(subjectIds, Is.EqualTo(new[]
+                { SubjectId.Sprint, SubjectId.Badminton, SubjectId.Football }));
+            Assert.That(SaveData.CurrentVersion, Is.EqualTo(4));
             Assert.That(data.version, Is.EqualTo(SaveData.CurrentVersion));
             Assert.That(data.lives, Is.EqualTo(5));
-            Assert.That(data.bossUnlocked, Is.False);
-            Assert.That(data.gameCompleted, Is.False);
             Assert.That(data.hasActiveSubject, Is.False);
             Assert.That(data.visitAttempt, Is.EqualTo(1));
             Assert.That(data.awaitingPunishment, Is.False);
             Assert.That(data.subjects, Has.Length.EqualTo(subjectIds.Length));
-            Assert.That(data.tutorialSeen, Has.Length.EqualTo(7));
+            Assert.That(data.tutorialSeen, Has.Length.EqualTo(3));
             Assert.That(data.tutorialSeen, Is.All.False);
 
             for (int i = 0; i < subjectIds.Length; i++)
@@ -51,8 +51,6 @@ namespace KMA.Tests.Gameplay.Progression
             StringAssert.Contains("\"version\":", json);
             StringAssert.Contains("\"lives\":", json);
             StringAssert.Contains("\"subjects\":", json);
-            StringAssert.Contains("\"bossUnlocked\":", json);
-            StringAssert.Contains("\"gameCompleted\":", json);
             StringAssert.Contains("\"hasActiveSubject\":", json);
             StringAssert.Contains("\"activeSubject\":", json);
             StringAssert.Contains("\"visitAttempt\":", json);
@@ -73,11 +71,11 @@ namespace KMA.Tests.Gameplay.Progression
             Assert.That(restored, Is.Not.Null);
             Assert.That(restored.version, Is.EqualTo(SaveData.CurrentVersion));
             Assert.That(restored.lives, Is.EqualTo(5));
-            Assert.That(restored.subjects, Has.Length.EqualTo(7));
+            Assert.That(restored.subjects, Has.Length.EqualTo(3));
             Assert.That(restored.hasActiveSubject, Is.False);
             Assert.That(restored.visitAttempt, Is.EqualTo(1));
             Assert.That(restored.awaitingPunishment, Is.False);
-            Assert.That(restored.tutorialSeen, Has.Length.EqualTo(7));
+            Assert.That(restored.tutorialSeen, Has.Length.EqualTo(3));
             Assert.That(restored.tutorialSeen, Is.All.False);
             Assert.That(restored.settings.musicVol, Is.EqualTo(1f));
             Assert.That(restored.settings.sfxVol, Is.EqualTo(1f));

@@ -28,7 +28,6 @@
 - **Create** `Assets/Editor/ImportRivalRunnerSprite.cs` — configures the recolored RivalRunner PNG as a sprite and wires it into the prefab.
 - **Create** `Tools/asset-pipeline/recolor_character.py` — one-off/repeatable outfit recolor for a Kenney character frame (lives outside `Assets/` — it's a build-time tool, not a Unity asset).
 - **Create (generated, committed)** `Assets/_Project/Art/UI/Generated/ButtonBrutal.png` (+ `.meta`).
-- **Create (generated, committed)** `Assets/_Project/Art/Props/Generated/{ShuttlecockIcon,PingPongIcon,SwimmingIcon,PushUpsIcon}.png` (+ `.meta` each).
 - **Create (sourced, committed)** `Assets/_Project/Art/Characters/RivalRunner/RivalRunner.png` (+ `.meta`).
 - **Modify** `Assets/_Project/Prefabs/Gameplay/RivalRunner.prefab` — `Visual/SpriteRenderer.m_Sprite` points at the new sprite instead of the built-in placeholder (`fileID: 10913`).
 - **Modify** `Assets/_Project/CREDITS.md` — new section documenting the RivalRunner source.
@@ -225,44 +224,8 @@ git commit -m "feat: generate neo-brutalist button sprite procedurally"
 
 **Interfaces:**
 - Consumes: `KMA.Gameplay.UI.UITheme.Border`, `.Accent`, `.BorderWidth`.
-- Produces: four PNGs under `Assets/_Project/Art/Props/Generated/`: `ShuttlecockIcon.png`, `PingPongIcon.png`, `SwimmingIcon.png`, `PushUpsIcon.png` — each a single sprite, PPU `100`, `ASTC_4x4`. These are standalone icons (not consumed by any script yet — wiring into `SubjectConfig.icon` fields is out of scope, per the spec's §2 Out of scope).
 
 - [ ] **Step 1: Write the failing test**
-
-```csharp
-using NUnit.Framework;
-using UnityEditor;
-using UnityEngine;
-
-namespace KMA.Tests.Presentation
-{
-    public sealed class PropIconTests
-    {
-        private static readonly string[] IconNames =
-        {
-            "ShuttlecockIcon", "PingPongIcon", "SwimmingIcon", "PushUpsIcon"
-        };
-
-        [TestCaseSource(nameof(IconNames))]
-        [Category("AssetPipeline")]
-        public void PropIconExistsAndIsConfiguredAsSprite(string iconName)
-        {
-            var path = $"Assets/_Project/Art/Props/Generated/{iconName}.png";
-            var sprite = AssetDatabase.LoadAssetAtPath<Sprite>(path);
-            Assert.That(sprite, Is.Not.Null, path);
-
-            var importer = (TextureImporter)AssetImporter.GetAtPath(path);
-            Assert.That(importer.textureType, Is.EqualTo(TextureImporterType.Sprite));
-            Assert.That(importer.spriteImportMode, Is.EqualTo(SpriteImportMode.Single));
-            Assert.That(importer.spritePixelsPerUnit, Is.EqualTo(100f));
-
-            var platformSettings = importer.GetPlatformTextureSettings("Android");
-            Assert.That(platformSettings.overridden, Is.True);
-            Assert.That(platformSettings.format, Is.EqualTo(TextureImporterFormat.ASTC_4x4));
-        }
-    }
-}
-```
 
 - [ ] **Step 2: Run test to verify it fails**
 
@@ -270,151 +233,6 @@ Run: `rtk proxy "$KMA_UNITY_EDITOR" -batchmode -projectPath . -runTests -testPla
 Expected: FAIL — all four cases fail, sprite is null.
 
 - [ ] **Step 3: Write the generator**
-
-```csharp
-using System;
-using System.IO;
-using KMA.Gameplay.UI;
-using UnityEditor;
-using UnityEngine;
-
-internal static class GeneratePropIcons
-{
-    private const string OutputDirectory = "Assets/_Project/Art/Props/Generated";
-    private const string ThemePath = "Assets/_Project/Settings/UI/UITheme.asset";
-    private const int TextureSize = 64;
-
-    public static void Run()
-    {
-        var theme = AssetDatabase.LoadAssetAtPath<UITheme>(ThemePath);
-        if (theme == null)
-            throw new FileNotFoundException("UITheme asset not found", ThemePath);
-
-        Directory.CreateDirectory(OutputDirectory);
-        Bake("ShuttlecockIcon", Shuttlecock, theme);
-        Bake("PingPongIcon", PingPong, theme);
-        Bake("SwimmingIcon", Swimming, theme);
-        Bake("PushUpsIcon", PushUps, theme);
-        AssetDatabase.Refresh();
-        Debug.Log("Generated 4 procedural prop icons.");
-    }
-
-    private static void Bake(string name, Func<float, float, float, bool> insideTest, UITheme theme)
-    {
-        var assetPath = $"{OutputDirectory}/{name}.png";
-        var texture = BuildTexture(insideTest, theme);
-        File.WriteAllBytes(assetPath, texture.EncodeToPNG());
-        Object.DestroyImmediate(texture);
-        AssetDatabase.ImportAsset(assetPath, ImportAssetOptions.ForceUpdate);
-        ConfigureImporter(assetPath);
-    }
-
-    private static Texture2D BuildTexture(Func<float, float, float, bool> insideTest, UITheme theme)
-    {
-        var borderWidth = Mathf.Max(1f, theme.BorderWidth);
-        var borderColor = ToColor32(theme.Border);
-        var fillColor = ToColor32(theme.Accent);
-
-        var texture = new Texture2D(TextureSize, TextureSize, TextureFormat.RGBA32, false)
-        {
-            filterMode = FilterMode.Bilinear,
-            wrapMode = TextureWrapMode.Clamp
-        };
-        var pixels = new Color32[TextureSize * TextureSize];
-        for (var y = 0; y < TextureSize; y++)
-        {
-            for (var x = 0; x < TextureSize; x++)
-            {
-                var px = x + 0.5f;
-                var py = y + 0.5f;
-                Color32 pixel;
-                if (insideTest(px, py, 0f))
-                    pixel = fillColor;
-                else if (insideTest(px, py, borderWidth))
-                    pixel = borderColor;
-                else
-                    pixel = new Color32(0, 0, 0, 0);
-                pixels[(y * TextureSize) + x] = pixel;
-            }
-        }
-        texture.SetPixels32(pixels);
-        texture.Apply();
-        return texture;
-    }
-
-    private static Color32 ToColor32(Color color) => new Color32(
-        (byte)Mathf.RoundToInt(color.r * 255f),
-        (byte)Mathf.RoundToInt(color.g * 255f),
-        (byte)Mathf.RoundToInt(color.b * 255f),
-        255);
-
-    private static void ConfigureImporter(string assetPath)
-    {
-        var importer = (TextureImporter)AssetImporter.GetAtPath(assetPath);
-        importer.textureType = TextureImporterType.Sprite;
-        importer.spriteImportMode = SpriteImportMode.Single;
-        importer.spritePixelsPerUnit = 100f;
-        importer.filterMode = FilterMode.Bilinear;
-        importer.mipmapEnabled = false;
-
-        var platformSettings = importer.GetPlatformTextureSettings("Android");
-        platformSettings.overridden = true;
-        platformSettings.format = TextureImporterFormat.ASTC_4x4;
-        importer.SetPlatformTextureSettings(platformSettings);
-
-        EditorUtility.SetDirty(importer);
-        importer.SaveAndReimport();
-    }
-
-    private static bool InsideCircle(float x, float y, float cx, float cy, float r, float expand)
-        => ((x - cx) * (x - cx)) + ((y - cy) * (y - cy)) <= (r + expand) * (r + expand);
-
-    private static bool InsideRect(float x, float y, float minX, float minY, float maxX, float maxY, float expand)
-        => x >= minX - expand && x <= maxX + expand && y >= minY - expand && y <= maxY + expand;
-
-    private static bool Shuttlecock(float x, float y, float expand)
-    {
-        var half = TextureSize / 2f;
-        var corkInside = InsideCircle(x, y, half, half - 18f, 8f, expand);
-        var skirtTopY = half - 10f;
-        var skirtBottomY = half + 20f;
-        if (y < skirtTopY - expand || y > skirtBottomY + expand)
-            return corkInside;
-        var t = Mathf.Clamp01((y - skirtTopY) / (skirtBottomY - skirtTopY));
-        var halfWidth = Mathf.Lerp(6f, 16f, t) + expand;
-        var skirtInside = Mathf.Abs(x - half) <= halfWidth;
-        return corkInside || skirtInside;
-    }
-
-    private static bool PingPong(float x, float y, float expand)
-    {
-        var bladeInside = InsideCircle(x, y, TextureSize * 0.38f, TextureSize * 0.55f, 14f, expand);
-        var handleInside = InsideRect(x, y, TextureSize * 0.34f, TextureSize * 0.72f, TextureSize * 0.44f, TextureSize * 0.88f, expand);
-        var ballInside = InsideCircle(x, y, TextureSize * 0.74f, TextureSize * 0.28f, 6f, expand);
-        return bladeInside || handleInside || ballInside;
-    }
-
-    private static bool Swimming(float x, float y, float expand)
-    {
-        var strokeHalf = 3f + expand;
-        return NearWave(x, y, TextureSize * 0.36f, strokeHalf) || NearWave(x, y, TextureSize * 0.62f, strokeHalf);
-    }
-
-    private static bool NearWave(float x, float y, float baseline, float strokeHalf)
-    {
-        var wave = baseline + (Mathf.Sin(x / TextureSize * Mathf.PI * 2f) * 6f);
-        return Mathf.Abs(y - wave) <= strokeHalf;
-    }
-
-    private static bool PushUps(float x, float y, float expand)
-    {
-        var barInside = InsideRect(x, y, TextureSize * 0.2f, TextureSize * 0.46f, TextureSize * 0.8f, TextureSize * 0.54f, expand);
-        var leftPlate = InsideRect(x, y, TextureSize * 0.14f, TextureSize * 0.3f, TextureSize * 0.22f, TextureSize * 0.7f, expand);
-        var rightPlate = InsideRect(x, y, TextureSize * 0.78f, TextureSize * 0.3f, TextureSize * 0.86f, TextureSize * 0.7f, expand);
-        return barInside || leftPlate || rightPlate;
-    }
-}
-```
 
 - [ ] **Step 4: Run the generator**
 
@@ -502,7 +320,6 @@ from PIL import Image
 OUTFIT_REFERENCE = (99, 102, 190)
 THRESHOLD = 60
 
-
 def recolor_outfit(src_path, dst_path, target_rgb):
     img = Image.open(src_path).convert("RGBA")
     pixels = img.load()
@@ -516,7 +333,6 @@ def recolor_outfit(src_path, dst_path, target_rgb):
                     and abs(b - OUTFIT_REFERENCE[2]) < THRESHOLD):
                 pixels[x, y] = (target_rgb[0], target_rgb[1], target_rgb[2], a)
     img.save(dst_path)
-
 
 if __name__ == "__main__":
     if len(sys.argv) != 6:

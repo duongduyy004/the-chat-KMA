@@ -117,34 +117,6 @@ namespace KMA.Gameplay.UI
             if (tutorialOverlay == null)
                 return;
 
-            if (source.GetType().Name == "EnduranceController")
-            {
-                tutorialOverlay.Show("Endurance", new List<TutorialStep>
-                {
-                    new TutorialStep("RHYTHM", "Tap on the beat"),
-                    new TutorialStep("RECOVER", "Hold to recover stamina"),
-                    new TutorialStep("OBSTACLES", "Swipe up/down to clear obstacles")
-                });
-            }
-            else if (source.GetType().Name == "VolleyballController")
-            {
-                tutorialOverlay.Show("Volleyball", new List<TutorialStep>
-                {
-                    new TutorialStep("DIG", "Swipe down when the ball is low."),
-                    new TutorialStep("SET", "Swipe up while the ball is rising."),
-                    new TutorialStep("SPIKE", "Swipe toward the net near the apex.")
-                });
-            }
-            else if (source.GetType().Name == "BasketballController")
-            {
-                tutorialOverlay.Show("Basketball", new List<TutorialStep>
-                {
-                    new TutorialStep("HOLD", "Hold to charge the lob."),
-                    new TutorialStep("AIM", "Release inside the glowing charge band."),
-                    new TutorialStep("FINISH", "Tap when the ball reaches the apex ring.")
-                });
-            }
-
             if (tutorialOverlay.ShouldShow)
             {
                 tutorialOverlay.Completed += ReleaseTutorialGate;

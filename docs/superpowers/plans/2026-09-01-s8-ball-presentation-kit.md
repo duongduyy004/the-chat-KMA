@@ -27,7 +27,6 @@
 |---|---|
 | Presentation components | `Assets/_Project/Scripts/Gameplay/Ball/TrajectoryPreview.cs` samples the shared landing prediction; `Assets/_Project/Scripts/Gameplay/Ball/BallShadow.cs` maps height to shadow visual |
 | Existing physics seam | `Assets/_Project/Scripts/Gameplay/Ball/BallRig.cs`, `BallFlightSnapshot.cs`, `FlightProfile.cs`; inspect and modify only if an additive read-only seam is required |
-| Authored data | `Assets/_Project/ScriptableObjects/Ball/FlightProfile_{Volleyball,Basketball,PingPong,Shuttle,Football}.asset` and Unity `.meta` files |
 | Reusable scene objects | `Assets/_Project/Prefabs/Gameplay/BallPresentation.prefab` containing preallocated preview line and shadow; no subject-specific rules or controller |
 | Tests | `Assets/Tests/EditMode/Gameplay/Ball/TrajectoryPreviewTests.cs`, `FlightProfileTests.cs`; extend `Assets/Tests/PlayMode/Gameplay/Ball/BallRigTests.cs` only for scene/MonoBehaviour integration |
 | QA evidence | `docs/qa/s8-ball-presentation-kit.md` |
@@ -47,12 +46,9 @@
 - Modify: `Assets/Tests/PlayMode/Gameplay/Ball/BallRigTests.cs` only for an additive integration assertion if the EditMode tests cannot cover it
 - Inspect only: `Assets/_Project/Scripts/Gameplay/Ball/{BallRig,BallFlightSnapshot,FlightProfile}.cs`
 
-**Interfaces:** Tests use pure `Ballistics.PredictGround`, a `FlightProfile.Create(...)` fixture and the proposed read-only presentation seams. No test may require a volleyball/basketball controller or alter an existing rules test.
-
 - [ ] **Step 1: Add the preview prediction contract test.** Create a ball with a non-zero velocity/curvature and assert that the preview's reported landing point equals `Ballistics.PredictGround(position, velocity, gravity, groundY, linearDrag, curvature, Time.fixedDeltaTime)` within `.001f` on both axes. Include a zero-flight/invalid-sample case that produces no visible line points rather than NaN or Infinity.
 - [ ] **Step 2: Add the line ownership and visibility tests.** Assert `SetVisible(false)` disables the preallocated `LineRenderer`, `SetVisible(true)` enables it, and refresh never changes `BallRig.Body.position`, `Body.velocity` or `BallRig.Snapshot`. Assert repeated refreshes reuse the same line object and do not create children.
 - [ ] **Step 3: Add the shadow mapping tests.** For target heights at ground, midpoint and above the configured maximum, assert shadow y stays at `groundY`, x follows the target, scale/alpha stay within configured bounds, and values clamp instead of becoming negative or transparent unexpectedly.
-- [ ] **Step 4: Add the profile invariant tests.** Load the five expected asset paths after assets exist, assert each has finite non-negative drag, valid ground/bounce values, and assert `FlightProfile_Shuttle.LinearDrag > FlightProfile_Volleyball.LinearDrag` and `FlightProfile_Shuttle.BounceDamping == 0f`.
 - [ ] **Step 5: Run the RED suites.** Run:
 
 ```bash
@@ -83,7 +79,6 @@ Expected: the new tests fail because the presentation components/assets do not e
 ### Task 3: Author the five reusable flight profiles and presentation prefab
 
 **Files:**
-- Create: `Assets/_Project/ScriptableObjects/Ball/FlightProfile_{Volleyball,Basketball,PingPong,Shuttle,Football}.asset` and `.meta` files
 - Create: `Assets/_Project/Prefabs/Gameplay/BallPresentation.prefab` and `.meta`
 - Modify: `Assets/Tests/EditMode/Gameplay/Ball/FlightProfileTests.cs` if asset-loading assertions need the final GUID/path
 - Do not modify: the five subject scenes or any subject rules/controller; S9–S13 will consume this kit
@@ -94,9 +89,6 @@ Expected: the new tests fail because the presentation components/assets do not e
 
 | Asset | GravityScale | LinearDrag | GroundY | BounceDamping |
 |---|---:|---:|---:|---:|
-| `FlightProfile_Volleyball` | `1.00` | `0.05` | `0.00` | `0.75` |
-| `FlightProfile_Basketball` | `1.00` | `0.02` | `0.00` | `0.80` |
-| `FlightProfile_PingPong` | `0.85` | `0.08` | `0.00` | `0.65` |
 | `FlightProfile_Shuttle` | `0.90` | `4.00` | `0.00` | `0.00` |
 | `FlightProfile_Football` | `1.10` | `0.03` | `0.00` | `0.60` |
 
@@ -110,7 +102,6 @@ Expected: the new tests fail because the presentation components/assets do not e
 **Files:**
 - Verify: `Assets/_Project/Scripts/Gameplay/Ball/`, `Assets/_Project/ScriptableObjects/Ball/`, `Assets/_Project/Prefabs/Gameplay/BallPresentation.prefab`
 - Create: `docs/qa/s8-ball-presentation-kit.md`
-- Do not modify: `Assets/_Project/Scenes/MG_{Volleyball,Basketball,PingPong,Badminton,Football}.unity` except if a dedicated prefab import check requires a non-behavioral reference update approved by the task owner
 
 **Interfaces:** The handoff documents the kit contract for S9–S13: attach a `BallRig`, call `TrajectoryPreview.Configure`, call `BallShadow.Configure`, and feed current drag state to `Refresh`; the future controller remains the owner of input and rules calls.
 

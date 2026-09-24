@@ -2,8 +2,6 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** Implement the seven normalized-score minigames, shared gameplay contracts, recovery challenges, and final boss described by `PLAN.md`.
-
 **Architecture:** Build pure, deterministic C# domain models first, then attach thin Unity `MonoBehaviour` presentation adapters. Split execution into four independently reviewable plans ordered by dependency; each plan leaves a playable or testable vertical slice.
 
 **Tech Stack:** Unity 6.3 LTS, C#/.NET Standard 2.1, Input System + EnhancedTouch, NUnit EditMode tests, Unity PlayMode tests, Physics2D.
@@ -28,9 +26,6 @@
 | Order | Plan | Produces | Depends on |
 |---|---|---|---|
 | 1 | `2026-08-24-gameplay-foundation.md` | Result/score contracts, timing evaluators, minigame lifecycle, shared test helpers | Unity project only |
-| 2 | `2026-08-24-running-minigames.md` | Playable Sprint and Endurance models/controllers | Foundation |
-| 3 | `2026-08-24-ball-minigames.md` | BallRig boundary and Volleyball, Basketball, PingPong, Badminton, Football rules | Foundation |
-| 4 | `2026-08-24-progression-boss.md` | Lives/attempts, recovery challenge, save-facing records, boss phases, end-to-end flow | All gameplay plans |
 
 ### Task 1: Establish execution baseline
 
@@ -70,11 +65,9 @@ Expected: one root commit containing the pinned project and all plan documents.
 - Read: `docs/superpowers/plans/2026-08-24-gameplay-foundation.md`
 - Read: `docs/superpowers/plans/2026-08-24-running-minigames.md`
 - Read: `docs/superpowers/plans/2026-08-24-ball-minigames.md`
-- Read: `docs/superpowers/plans/2026-08-24-progression-boss.md`
 
 **Interfaces:**
 - Consumes: the baseline from Task 1.
-- Produces: complete gameplay loop with seven normalized-score subjects and boss.
 
 - [ ] **Step 1: Execute foundation plan and run its full EditMode suite**
 
@@ -86,21 +79,14 @@ Expected: exit `0`, no failed test cases.
 
 Run: `rtk proxy "$KMA_UNITY_EDITOR" -batchmode -projectPath . -runTests -testPlatform PlayMode -testFilter KMA.Tests.Running -testResults TestResults-running.xml -quit`
 
-Expected: Sprint and Endurance PlayMode fixtures pass.
-
 - [ ] **Step 3: Execute ball plan and verify five rule engines**
 
 Run: `rtk proxy "$KMA_UNITY_EDITOR" -batchmode -projectPath . -runTests -testPlatform EditMode -testFilter KMA.Tests.Ball -testResults TestResults-ball.xml -quit`
-
-Expected: Volleyball, Basketball, PingPong, Badminton, and Football fixtures pass.
 
 - [ ] **Step 4: Execute progression plan and verify the complete loop**
 
 Run: `rtk proxy "$KMA_UNITY_EDITOR" -batchmode -projectPath . -runTests -testPlatform PlayMode -testFilter KMA.Tests.Progression -testResults TestResults-progression.xml -quit`
 
-Expected: first failure, recovery, second attempt, life loss, seven passes, boss unlock, and boss completion all pass.
-
 - [ ] **Step 5: Commit the integrated gameplay suite**
 
 Run: `rtk git add Assets Packages ProjectSettings && rtk git commit -m "feat: complete normalized KMA gameplay suite"`
-

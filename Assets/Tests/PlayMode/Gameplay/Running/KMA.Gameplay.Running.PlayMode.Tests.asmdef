@@ -5,7 +5,6 @@
         "UnityEngine.TestRunner",
         "KMA.Gameplay",
         "KMA.Gameplay.Sprint",
-        "KMA.Gameplay.Endurance",
         "KMA.Input",
         "UnityEditor",
         "Unity.InputSystem"

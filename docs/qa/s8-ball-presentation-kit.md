@@ -12,13 +12,8 @@ The refresh paths contain no `Instantiate`, `Destroy`, material creation, or com
 
 | Profile | Gravity | Drag | Ground | Bounce |
 |---|---:|---:|---:|---:|
-| Volleyball | `1.00` | `0.05` | `0.00` | `0.75` |
-| Basketball | `1.00` | `0.02` | `0.00` | `0.80` |
-| PingPong | `0.85` | `0.08` | `0.00` | `0.65` |
 | Shuttle | `0.90` | `4.00` | `0.00` | `0.00` |
 | Football | `1.10` | `0.03` | `0.00` | `0.60` |
-
-`FlightProfileTests` loads all five assets by production path, checks these exact values and finite/range invariants, and separately verifies Shuttle drag exceeds Volleyball drag with zero bounce.
 
 ## Prefab inspection
 

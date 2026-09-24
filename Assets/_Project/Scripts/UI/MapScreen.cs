@@ -7,12 +7,9 @@ namespace KMA.Gameplay.UI
     public sealed class MapScreen : ScreenBase
     {
         public event Action<SubjectId> SubjectRequested;
-        public event Action BossRequested;
-        public bool BossUnlocked { get; private set; }
         public HeartBar Hearts { get; private set; }
         public MapNodeView[] Nodes { get; private set; } = new MapNodeView[0];
 
-        public void SetBossUnlocked(bool unlocked) => BossUnlocked = unlocked;
 
         public void BindPresentation(MapNodeView[] nodes, HeartBar heartBar, GameSession session)
         {
@@ -36,10 +33,5 @@ namespace KMA.Gameplay.UI
         }
 
         public void SelectSubject(SubjectId subject) => SubjectRequested?.Invoke(subject);
-        public void SelectBoss()
-        {
-            if (BossUnlocked)
-                BossRequested?.Invoke();
-        }
     }
 }

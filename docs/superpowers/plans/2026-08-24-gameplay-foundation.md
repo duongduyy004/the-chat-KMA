@@ -2,7 +2,7 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** Provide deterministic result, scoring, timing, input-evaluation, and minigame lifecycle contracts used by all seven subjects.
+**Goal:** Provide deterministic result, scoring, timing, input-evaluation, and minigame lifecycle contracts used by the retained subjects.
 
 **Architecture:** Keep rules in Unity-independent C# classes under `Gameplay/Common`; `MonoBehaviour` classes only forward frame time/input and render state. Tests construct rule objects directly without scenes or real touch devices.
 
@@ -230,4 +230,3 @@ Expected: zero failed tests.
 - [ ] **Step 5: Commit**
 
 Run: `rtk git add Assets/_Project/Scripts/Gameplay/Common Assets/Tests/EditMode/Gameplay/Common && rtk git commit -m "feat: add shared minigame lifecycle"`
-

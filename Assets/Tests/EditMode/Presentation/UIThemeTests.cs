@@ -31,7 +31,6 @@ namespace KMA.Tests.Presentation
             Assert.That(store.HasSeen("Sprint"), Is.False);
             store.MarkSeen("Sprint");
             Assert.That(store.HasSeen("Sprint"), Is.True);
-            Assert.That(store.HasSeen("Endurance"), Is.False);
         }
 
         [Test]

@@ -5,9 +5,9 @@
 Implemented and reviewed Task 1 progression behavior on current `master`:
 
 - Added `SubjectId` with the seven subjects.
-- Added `GameSession` with five lives, explicit subject/punishment/retry/map/game-over routes, two-attempt failure flow, and derived boss unlock.
+- Added `GameSession` with five lives, explicit subject/punishment/retry/map/game-over routes, two-attempt failure flow, and derived retired-route unlock.
 - Added `SubjectRecord` with pass state, best score/rank, failed visits, and a defensive snapshot of the canonical best `MinigameResult`.
-- Added seven focused EditMode tests covering failure/life flow, result recording, failed-result isolation, snapshot retention, and boss prerequisites.
+- Added seven focused EditMode tests covering failure/life flow, result recording, failed-result isolation, snapshot retention, and retired-route prerequisites.
 - Added minimal source/test assembly definitions so Unity discovers the new Progression folder.
 - Foundation gameplay result and lifecycle files were not modified.
 

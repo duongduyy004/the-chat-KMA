@@ -12,7 +12,6 @@
 
 ## Global Constraints
 
-- Requires Volleyball checkpoint.
 - Release below `.35` is Lift, `.35..<.7` is Drive, and `>=.7` is Smash; charge above `1` is Overcharge.
 - Authored wind cue must match the active rally exchange.
 - Pass only at five points with a lead.

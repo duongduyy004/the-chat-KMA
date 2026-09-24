@@ -2,8 +2,6 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** Add a deterministic shared input layer for Sprint, Endurance, Boss and Punishment without rewiring existing controllers or changing the four legacy punishment detector stubs.
-
 **Architecture:** Plain C# detectors receive explicit timestamps and emit mechanic-level events; they do not read Unity clocks, devices or scenes. One `GameplayInputRouter` owns Input System/EnhancedTouch reads and feeds detectors, while `ScreenTapArea` is the only gameplay tap boundary so EventSystem UI taps cannot double-fire.
 
 **Tech Stack:** Unity `6000.3.23f1`, C#/.NET Standard 2.1, Input System `1.20.0`, EnhancedTouch, NUnit Unity EditMode tests.
@@ -16,7 +14,6 @@
 - Put real detectors in a new `KMA.Input` assembly and use the `Input` suffix in every real detector name.
 - Detectors must be deterministic, timestamp-injected plain C# types; no `Time`, `Input`, `Touchscreen`, `EventSystem` or `MonoBehaviour` references in detector files.
 - Apply `rhythmOffsetMs` in the router boundary, not inside `RhythmBeatInputDetector`.
-- S3 creates `Assets/_Project/Settings/Input/KMA.inputactions` with maps `Sprint`, `Endurance`, `Boss`, `Punishment`, `UI`; it does not rewire Sprint or Endurance serialized actions.
 - Every task must run its focused tests, then full EditMode and PlayMode suites before its own commit.
 - Preserve unrelated dirty worktree changes; stage only S3 files.
 
@@ -28,11 +25,8 @@
 - Create: `Assets/Tests/EditMode/Input/KMA.Input.EditMode.Tests.asmdef`
 - Create: `Assets/Tests/EditMode/Input/InputAssetContractTests.cs`
 
-**Interfaces:** Produces the `KMA.Input` assembly and a stable action-map asset with five named maps. The asset is additive; existing `SprintInputActions.inputactions` and `EnduranceInputActions.inputactions` remain untouched.
-
 - [ ] **Step 1: Write the failing action contract tests.** Load the asset through `AssetDatabase`, assert it exists, assert exactly the five required maps, and assert the assembly does not reference gameplay stubs.
 - [ ] **Step 2: Run the focused EditMode test and verify the expected red failure.** Run `rtk ~/.local/bin/unity test . --mode EditMode --testFilter 'KMA.Tests.Input.InputAssetContractTests' --output /tmp/kma-s3-asset-red.xml --timeout 600 -- -nographics`; expected failure is missing asset/assembly.
-- [ ] **Step 3: Add the assembly and action asset.** Define maps `Sprint`, `Endurance`, `Boss`, `Punishment`, `UI`; include keyboard mirrors for Editor and touch-capable actions for runtime, but do not bind existing scene fields yet.
 - [ ] **Step 4: Run the focused test green and commit.** Run the same filter with `/tmp/kma-s3-asset-green.xml`, then full EditMode and PlayMode. Commit `feat: add shared KMA input action asset` with only Task 1 files.
 
 ## Task 2: Implement the five deterministic detectors
@@ -74,7 +68,6 @@
 
 **Files:**
 - Modify only if needed: `Assets/_Project/Scripts/Input/*.cs`, input asmdefs/tests, `README.md` input test note
-- Do not modify: `Assets/_Project/Scripts/Progression/PunishmentController.cs`, `SprintController.cs`, `EnduranceInputBridge.cs`, existing `.inputactions`
 
 **Interfaces:** S3 leaves real detector APIs ready for S6/S7/S14 adapters while all current consumers continue using their existing APIs.
 

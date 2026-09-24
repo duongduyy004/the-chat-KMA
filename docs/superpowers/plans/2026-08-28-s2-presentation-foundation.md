@@ -13,7 +13,6 @@
 ## Global Constraints
 
 - Không sửa rules engine đã có test; chỉ thêm event, method virtual, adapter hoặc component presentation additive.
-- Không đổi chữ ký hoặc hành vi đã được test của `SceneRouter`, `GameSession`, `SprintRules`, `EnduranceRules` và các controller hiện có.
 - `MinigameBase.BuildHudState()` là pull contract; controller không giữ reference bắt buộc tới HUD.
 - `MinigameHudState` là struct immutable về mặt sử dụng, gồm đúng: `timeRemaining`, `primary01`, `primaryLabel`, `secondary01`, `secondaryLabel`, `statusText`.
 - HUD chung chỉ hiển thị timer, tiến độ mục tiêu, tim, pause, phase/tutorial/countdown/result; HUD đặc thù môn để cho section S6–S14.
@@ -54,7 +53,6 @@
 | `Assets/_Project/Scripts/Gameplay/Common/MinigameLifecycle.cs` | Thêm `PhaseChanged` event |
 | `Assets/Tests/EditMode/Presentation/*.cs` | Unit/config tests cho theme, safe area, lifecycle và ViewModel |
 | `Assets/Tests/PlayMode/Presentation/*.cs` | Scene/prefab/input smoke tests cho S2 gate |
-| `Assets/_Project/Scenes/{MG_Sprint,MG_Endurance,MG_Boss,Punishment,Map,GameOver}.unity` | Gắn camera và presentation prefab theo S2-2 |
 
 ## Task 1: Establish UI assembly, theme contract, and Vietnamese font assets
 
@@ -74,42 +72,6 @@
 - Produces: `KMA.Gameplay.UI.UITheme`, `KMA.Gameplay.UI.ITutorialSeenStore`, `KMA.Gameplay.UI.PlayerPrefsTutorialSeenStore`, and assembly `KMA.Gameplay.UI` for Tasks 2–6.
 
 - [ ] **Step 1: Write the failing theme tests**
-
-```csharp
-using NUnit.Framework;
-using UnityEngine;
-
-namespace KMA.Tests.Presentation
-{
-    public sealed class UIThemeTests
-    {
-        [Test]
-        public void ThemeAssetUsesApprovedPalette()
-        {
-            var theme = Resources.Load<KMA.Gameplay.UI.UITheme>("UITheme");
-            Assert.That(theme, Is.Not.Null);
-            Assert.That(theme.Primary, Is.EqualTo(new Color32(0xFF, 0x59, 0x5E, 0xFF)));
-            Assert.That(theme.Accent, Is.EqualTo(new Color32(0xFF, 0xCA, 0x3A, 0xFF)));
-            Assert.That(theme.Background, Is.EqualTo(new Color32(0x19, 0x82, 0xC4, 0xFF)));
-            Assert.That(theme.Success, Is.EqualTo(new Color32(0x8A, 0xCB, 0x88, 0xFF)));
-            Assert.That(theme.Card, Is.EqualTo(Color.white));
-            Assert.That(theme.Muted, Is.EqualTo(new Color32(0xE2, 0xE8, 0xF0, 0xFF)));
-            Assert.That(theme.MutedForeground, Is.EqualTo(new Color32(0x47, 0x55, 0x69, 0xFF)));
-            Assert.That(theme.Border, Is.EqualTo(Color.black));
-        }
-
-        [Test]
-        public void TutorialSeenStoreRoundTripsBySubject()
-        {
-            var store = new KMA.Gameplay.UI.MemoryTutorialSeenStore();
-            Assert.That(store.HasSeen("Sprint"), Is.False);
-            store.MarkSeen("Sprint");
-            Assert.That(store.HasSeen("Sprint"), Is.True);
-            Assert.That(store.HasSeen("Endurance"), Is.False);
-        }
-    }
-}
-```
 
 - [ ] **Step 2: Run the focused tests and confirm red**
 
@@ -160,7 +122,6 @@ Expected: focused theme/font tests pass; no rules test changes.
 - Create: `Assets/_Project/Scripts/UI/MinigameHUD.cs`
 - Create: `Assets/Tests/EditMode/Presentation/MinigameLifecyclePresentationTests.cs`
 - Create: `Assets/Tests/PlayMode/Presentation/MinigameHUDTests.cs`
-- Modify: controller classes only when needed to override `BuildHudState()`; start with `SprintController.cs` and `EnduranceController.cs`.
 
 **Interfaces:**
 - Consumes: `UITheme` and `KMA.Gameplay.UI` assembly from Task 1.
@@ -218,8 +179,6 @@ protected virtual MinigameHudState BuildHudState() => MinigameHudState.Empty;
 
 `Awake()` must pass those fields to `new MinigameLifecycle(tutorialSeconds, countdownSeconds)`. `MinigameHUD.Update()` finds its explicitly serialized `MinigameBase` source, calls `BuildHudState()` through a public/internal bridge, and updates only UI fields. It must tolerate no controller, no theme, and no optional label.
 
-- [ ] **Step 4: Add Sprint and Endurance state adapters**
-
 `SprintController.BuildHudState()` returns:
 
 ```csharp
@@ -232,16 +191,7 @@ new MinigameHudState(
     statusText: WindWindowActive ? "WIND — COUNTER NOW" : "TAP LEFT / RIGHT");
 ```
 
-Use the actual existing public snapshot properties; if a named property differs, expose an additive read-only property in the controller rather than changing the rules API. Endurance returns time/lap progress and the current beat/cue status using existing public controller state.
-
 - [ ] **Step 5: Run focused plus full tests and commit**
-
-```bash
-rtk ~/.local/bin/unity test . --mode EditMode --testFilter 'KMA.Tests.Presentation' --output /tmp/s2-hud-green-edit.xml --timeout 600 -- -nographics
-rtk ~/.local/bin/unity test . --mode PlayMode --testFilter 'KMA.Tests.Presentation' --output /tmp/s2-hud-green-play.xml --timeout 900 -- -nographics
-rtk git add Assets/_Project/Scripts/Gameplay/Common Assets/_Project/Scripts/Gameplay/Sprint/SprintController.cs Assets/_Project/Scripts/Gameplay/Endurance/EnduranceController.cs Assets/_Project/Scripts/UI Assets/Tests/EditMode/Presentation Assets/Tests/PlayMode/Presentation
-rtk git commit -m "feat: add lifecycle events and minigame HUD state"
-```
 
 ## Task 3: Build shared uGUI components and prefabs
 
@@ -387,8 +337,6 @@ rtk git commit -m "feat: add tutorial phase and result presentation"
 - Create: `Assets/_Project/Scripts/UI/MinigameUIAssembler.cs`
 - Create: `Assets/_Project/Prefabs/Gameplay/GameCamera.prefab`
 - Modify: `Assets/_Project/Scenes/MG_Sprint.unity`
-- Modify: `Assets/_Project/Scenes/MG_Endurance.unity`
-- Modify: `Assets/_Project/Scenes/MG_Boss.unity`
 - Modify: `Assets/_Project/Scenes/Punishment.unity`
 - Modify: `Assets/_Project/Scenes/Map.unity`
 - Modify: `Assets/_Project/Scenes/GameOver.unity`
@@ -400,23 +348,6 @@ rtk git commit -m "feat: add tutorial phase and result presentation"
 - Produces: all six existing scenes with a tagged Main Camera, URP 2D camera data, landscape-safe Canvas, and visible uGUI presentation. `MinigameUIAssembler` is editor-only and must be idempotent.
 
 - [ ] **Step 1: Write the failing scene contract test**
-
-```csharp
-[UnityTest]
-public IEnumerator EveryExistingSceneHasS2CameraAndCanvas()
-{
-    foreach (var sceneName in new[] { "MG_Sprint", "MG_Endurance", "MG_Boss", "Punishment", "Map", "GameOver" })
-    {
-        yield return SceneManager.LoadSceneAsync(sceneName, LoadSceneMode.Single);
-        Assert.That(Camera.main, Is.Not.Null, sceneName);
-        Assert.That(Camera.main.orthographic, Is.True, sceneName);
-        Assert.That(Camera.main.GetComponent("UniversalAdditionalCameraData"), Is.Not.Null, sceneName);
-        Assert.That(Object.FindFirstObjectByType<Canvas>(), Is.Not.Null, sceneName);
-        Assert.That(Object.FindFirstObjectByType<CanvasScaler>().matchWidthOrHeight, Is.EqualTo(1f).Within(.001f));
-        Assert.That(Object.FindFirstObjectByType<SafeAreaFitter>(), Is.Not.Null, sceneName);
-    }
-}
-```
 
 - [ ] **Step 2: Run the scene test and confirm missing presentation**
 
@@ -431,8 +362,6 @@ Expected: fail on the first scene without the new Canvas/prefab contract.
 Create the camera through the Unity Editor API/menu so `UniversalAdditionalCameraData` is serialized correctly. Set tag `MainCamera`, orthographic `true`, position `(0,0,-10)`, clear flags `SolidColor`, and a project theme background. Keep the orthographic size constant for the 1080 reference height; do not derive it from width.
 
 - [ ] **Step 4: Add scene-owned presentation hierarchies**
-
-Use `MinigameUIAssembler` to add one camera instance and one Canvas hierarchy to each scene, with serialized references to the scene’s minigame controller when present. `MG_Boss` must no longer render black because it has no camera. `Map` and `GameOver` receive the shared screen shell but no fake minigame HUD source. Keep `GameplayPresentation` only if the existing compatibility test needs it; disable its `OnGUI` drawing when a S2 Canvas is present so two presentations do not overlap.
 
 - [ ] **Step 5: Run the scene contract and full suites**
 

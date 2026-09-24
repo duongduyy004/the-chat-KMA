@@ -61,13 +61,6 @@ namespace KMA.Gameplay
             CurrentProgress = 0f;
         }
 
-        public static ChallengeSequence BossDefault() => new ChallengeSequence(new[]
-        {
-            new ChallengeStep(ChallengeMechanic.TapMash, 10, 40),
-            new ChallengeStep(ChallengeMechanic.RhythmHold, 12, 16),
-            new ChallengeStep(ChallengeMechanic.AlternateTap, 10, 32)
-        });
-
         public void Reset()
         {
             index = 0;

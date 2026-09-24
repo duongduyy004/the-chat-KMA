@@ -2,10 +2,6 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** Bring `master` to a reproducible, green, end-to-end S1-S9 checkpoint in which the configured Unity/Android foundation is present, Menu/Continue persistence is truthful, Sprint and Endurance regressions are fixed, S8 is integrated, and Volleyball is playable from Map through scoring, Result, routing, and save.
-
-**Architecture:** Keep `GameSession` authoritative for campaign and in-progress attempt state, `SceneRouter` authoritative for transitions, `GameManager` authoritative for persistence/settings/tutorial flags, and each rules engine authoritative for score/result. Port the already-reviewed S1 and S8 work by file responsibility rather than merging their divergent branches wholesale; then complete S9 through the existing `BallRig`/`VolleyballRules` boundaries. Every repair begins with a focused failing test and ends with a reviewer gate before the next dependency is started.
-
 **Tech Stack:** Unity `6000.3.23f1`, C#/.NET Standard 2.1, Unity Input System + EnhancedTouch, uGUI/TextMeshPro, URP 2D `17.3.0`, Unity Test Framework `1.6.0`, Android ARM64.
 
 **Spec:** `docs/superpowers/specs/2026-08-27-kma-game-completion-design.md`, sections S1-S9 and Definition of Done.
@@ -29,13 +25,10 @@
 - Full EditMode: `/tmp/kma-cleanup-editmode.xml`, 192 passed, 0 failed.
 - Full PlayMode: `/tmp/kma-cleanup-playmode.xml`, 125 passed, 3 failed.
 - The three PlayMode failures reproduce independently:
-  - `EnduranceInputBridgeTests.RouterEvents_OnlyReachControllerForTheirMatchingInputMode`: expected 2 taps, observed 1.
   - `GameplayInputRouterTests.EnhancedTouchScreenTapArea_RoutesTouchRhythmAndEnforcesOwnership`: expected 1 judgment, observed 0.
   - `SprintControllerTests.SprintScene_AuthorsThreeCosmeticRivalsAndThreeLayerParallax`: `Runner_04` is not recognized as a prefab instance by Unity.
-- The two input failures share one source: `GameplayInputRouter.FeedPointerDown` dispatches rhythm only when `gameplayActionMap` is non-null and named `Endurance`, although the detector contract and test seam do not require an action asset.
 - S1 implementation/config tests exist only on `codex/s1-toolchain`; current `master` still has Multiplayer Center, no configured render pipeline, DSP buffer `0`, README `6000.3.22f1`, and no S1 config test assembly.
 - S8 implementation/tests/assets exist only on `codex/s8-ball-presentation-kit`; `master` has none of `TrajectoryPreview`, `BallShadow`, `BallPresentation.prefab`, or the five authored `FlightProfile` assets.
-- `MG_Volleyball.unity` still contains `PlaceholderMinigameController`. `VolleyballController` never awards either side a point, and its tests award points directly through `VolleyballRules`, so the production controller cannot reach a normal pass.
 - `SaveData` does not contain active subject/attempt/punishment state; `GameSession.Restore` clears it; `Continue` always routes to Map. The documented kill/relaunch continuation gate is therefore not represented by the model.
 - `PhaseOverlay` shows multi-step tutorials, but `MinigameLifecycle.Tick` advances out of Tutorial after two seconds without waiting for Skip/Close. The user-controlled tutorial contract is therefore only visual, not lifecycle-authoritative.
 - `SceneRouter` mutates session/binding state before the transition guard can return `false`; a duplicate route request during loading can leave the first destination unbound or an attempt active without a matching scene.
@@ -87,8 +80,6 @@ URP renderer       Renderer2DData; HDR and post-processing disabled
 
 Run `ProjectConfigurator.Apply` and `UrpBootstrap.CreateOrRepair` headlessly; do not hand-edit Unity enum values in YAML.
 
-- [ ] **Step 4: Make README a current contract, not historical evidence.** Update the version, playable routes (Sprint, Endurance, Volleyball only after Task 8), current test command, and separate historical S2 evidence from the latest verified counts. Do not claim an Android/device result until Task 9.
-
 - [ ] **Step 5: Run GREEN and full regression.** Run the focused S1 filter, full EditMode, and a compile-only import. Confirm `Packages/manifest.json` has no Multiplayer Center and `GraphicsSettings` resolves the authored URP asset through Unity API tests.
 
 - [ ] **Step 6: Commit and review.** Commit only S1/config files as `fix: reconcile S1 toolchain contract`; request code review before Task 2.
@@ -126,11 +117,9 @@ Expected: no diff after either run.
 **Files:**
 - Modify: `Assets/_Project/Scripts/Input/GameplayInputRouter.cs:438-458`
 - Test: `Assets/Tests/PlayMode/Input/GameplayInputRouterTests.cs:438-454`
-- Test: `Assets/Tests/PlayMode/Gameplay/Running/EnduranceInputBridgeTests.cs:87-113`
 
 **Interfaces:**
 - A pointer down owned by `ScreenTapArea` feeds an installed `RhythmBeatInputDetector` exactly once, independent of whether an `InputActionAsset` was configured.
-- Installing no rhythm detector produces no rhythm event, so Sprint/Boss/Punishment remain isolated by detector ownership rather than an action-map name check.
 
 - [ ] **Step 1: Keep the two existing focused failures as RED and add a negative ownership assertion.** In `GameplayInputRouterTests`, install only tap/hold/swipe detectors and assert a pointer down does not synthesize an `OnRhythmJudge` event.
 
@@ -234,8 +223,6 @@ Do not change keyboard map filtering in `OnTapPerformed` or `OnRhythmPerformed`.
 
 - [ ] **Step 4: Add an explicit tutorial gate to lifecycle.** `PhaseOverlay` sets the gate only when `TutorialOverlay.ShouldShow`; Skip/Close releases it through a public additive method on `MinigameBase`. `MinigameLifecycle.Tick` must not consume countdown time while the tutorial gate is closed, and repeated completion calls must be idempotent.
 
-- [ ] **Step 5: Run tutorial, Bootstrap persistence, Sprint/Endurance phase gates, and full suites.** Verify New Game/reset preserves `tutorialSeen` in JSON, no PlayerPrefs key is created, and gameplay cannot start underneath an open tutorial.
-
 - [ ] **Step 6: Commit and review.** Commit as `fix: make tutorials gate lifecycle and save data`; request code review.
 
 ### Task 7: Integrate the S8 ball presentation kit onto stabilized master
@@ -245,7 +232,6 @@ Do not change keyboard map filtering in `OnTapPerformed` or `OnRhythmPerformed`.
 - Reconcile: `Assets/_Project/Scripts/Gameplay/Ball/BallRig.cs`
 - Port: `Assets/_Project/Prefabs/Gameplay/BallPresentation.prefab` and metadata
 - Port: `Assets/_Project/Materials/Gameplay/*` and folder metadata
-- Port: `Assets/_Project/ScriptableObjects/Ball/FlightProfile_{Volleyball,Basketball,PingPong,Shuttle,Football}.asset` and metadata
 - Port: `Assets/Tests/EditMode/Gameplay/Ball/{TrajectoryPreviewTests,FlightProfileTests}.cs` and metadata
 - Port/rewrite evidence: `docs/qa/s8-ball-presentation-kit.md`
 
@@ -264,54 +250,9 @@ Do not change keyboard map filtering in `OnTapPerformed` or `OnRhythmPerformed`.
 
 - [ ] **Step 5: Commit and review.** Commit as `feat: integrate S8 ball presentation kit`; request code review.
 
-### Task 8: Complete Volleyball rally scoring, presentation, and production scene
-
-**Files:**
-- Modify: `Assets/_Project/Scripts/Gameplay/Volleyball/{VolleyballController,VolleyballRules,VolleyReturnPattern}.cs`
-- Create: `Assets/_Project/Scripts/Gameplay/Volleyball/VolleyballHud.cs` and `.meta`
-- Modify: `Assets/_Project/Scripts/UI/PhaseOverlay.cs`
-- Modify: `Assets/_Project/Scenes/MG_Volleyball.unity`
-- Modify: `Assets/Tests/PlayMode/Gameplay/Ball/Volleyball/VolleyballControllerTests.cs`
-- Create: `Assets/Tests/PlayMode/Gameplay/Ball/Volleyball/VolleyballSceneTests.cs` and `.meta`
-- Create: `Assets/Tests/PlayMode/Progression/VolleyballCampaignTests.cs` and `.meta`
-
-**Interfaces:**
-- Add a controller possession state with touch number `1..3`, expected dig/set/spike phase, completed-rally count, and one in-flight owner.
-- A valid `Dig → Set → Spike` sequence awards exactly one player rally point after the authored landing/return resolution, resets touch number, and starts the next deterministic opponent return.
-- Invalid/out-of-reach/timing input or own-court ground contact awards at most one opponent point and resets possession.
-- Counterplay unlocks after three completed rallies, shows cue at least `VolleyReturnPattern.CueLeadSeconds` before launch, and never mutates a launched trajectory.
-- `VolleyballHud` displays `TOUCH n/3`, player-opponent score, longest combo, context, timing feedback, and counter cue; generic lifecycle/timer remains in shared HUD.
-
-- [ ] **Step 1: Replace test-only scoring with production-flow RED tests.** Remove direct `Rules.AwardRallyPoint()` calls from controller completion tests. Add cases proving a real three-touch sequence changes score, a failed possession changes opponent score, target score completes once, timeout fails once, fourth touch is impossible, and the ball resets/reattaches between possessions.
-
-- [ ] **Step 2: Add S8 integration RED tests.** Configure preview/shadow once, show preview only during gesture preparation while attached, hide on launch, and assert auto-positioning/presentation never changes body position or velocity.
-
-- [ ] **Step 3: Implement the possession state machine.** Resolve each swipe once through `VolleyballRules.TryResolveAndLaunch`; subscribe once to `BallRig.Collided` or explicit court trigger events to resolve the possession; centralize point award/reset in one method guarded by a possession token so duplicate collisions cannot double-score.
-
-- [ ] **Step 4: Implement terminal result ownership.** Tick rules only during Play; after any point or deadline, if target/timeout is terminal, call `Finish(Rules.BuildResult())` once. The controller—not tests or HUD—must be the production caller of `AwardRallyPoint`/`AwardOpponentPoint`.
-
-- [ ] **Step 5: Implement HUD and tutorial content.** Add three steps through the existing overlay:
-
-```text
-DIG   Swipe down when the ball is low.
-SET   Swipe up while the ball is rising.
-SPIKE Swipe toward the net near the apex.
-```
-
-Store completion under `SubjectId.Volleyball` through Task 6's JSON-backed store.
-
-- [ ] **Step 6: Author the production scene.** Replace only the Volleyball placeholder with exactly one `VolleyballController`; instantiate `GameCamera.prefab` and `BallPresentation.prefab`; add visible court/net, player/teammate/opponents, reach/court scoring triggers, one shared input router/surface, generic HUD, Volleyball HUD, tutorial, result, and pause. Keep scene name/build index unchanged.
-
-- [ ] **Step 7: Add scene and campaign gates.** Assert no `PlaceholderMinigameController`, one active physics ball, valid S8 references, all HUD labels/tutorial steps, and a playable `Map → Volleyball → Result Continue → Map/Punishment` route that persists the resulting record/attempt.
-
-- [ ] **Step 8: Run focused and full suites.** Run Volleyball rules/controller/scene/campaign filters, Ball tests, full EditMode, and full PlayMode. Expected: zero failures.
-
-- [ ] **Step 9: Commit and review.** Split commits into `feat: complete volleyball rally flow` and `feat: author volleyball scene and HUD`; request code review after each.
-
 ### Task 9: Execute the S1-S9 release gate and reconcile documentation
 
 **Files:**
-- Create: `docs/qa/s1-s9-stabilization-gate.md`
 - Modify: `README.md`
 - Modify only if test-discovered: source/test files from the owning task; do not bundle unrelated cleanup
 
@@ -320,8 +261,6 @@ Store completion under `SubjectId.Volleyball` through Task 6's JSON-backed store
 
 - [ ] **Step 1: Run full clean verification.** From a clean status, run full EditMode and PlayMode twice. Confirm zero failures, no tracked font/scene/config churn, no duplicate asmdefs, and `rtk git diff --check` passes.
 
-- [ ] **Step 2: Run end-to-end desktop/Editor smoke.** Verify Bootstrap → Menu → Continue/New Game → Map → Sprint/Endurance/Volleyball → Result → first failure Punishment → retry → pass/life loss → Map. Kill/recreate at active attempt 1, Punishment, and attempt 2; Continue must restore each exact route.
-
 - [ ] **Step 3: Build Android.** Run:
 
 ```bash
@@ -329,8 +268,6 @@ rtk /home/duongduy/Unity/Hub/Editor/6000.3.23f1/Editor/Unity -batchmode -project
 ```
 
 Inspect the APK for ARM64-only native libraries, package/product/orientation settings, size, and build result.
-
-- [ ] **Step 4: Run the physical-device gate when a device is available.** Install with `rtk adb install -r`, then verify touch ownership, Vietnamese glyphs, safe area, audio/haptics settings, pause/resume/restart/exit, Volleyball three-touch scoring/counter cue, save/Continue after process kill, FPS, and draw calls. If no device is connected, mark each physical/performance item unavailable and leave the gate incomplete.
 
 - [ ] **Step 5: Reconcile README and QA.** Replace stale Unity/test/route counts with current evidence; state that S1-S9 is a checkpoint and S10-S16 remain outside this plan. Do not retain claims contradicted by XML/log/device evidence.
 
@@ -348,7 +285,5 @@ rtk git status --short
 ## Plan Self-Review
 
 - Spec coverage: S1 config/Android is Task 1; S2 font/worktree stability is Task 2; S3/S7 input is Task 3; S6 scene regression is Task 4; S4/S5 persistence, transactional routing, and tutorial lifecycle ownership are Tasks 5-6; S8 is Task 7; S9 is Task 8; accumulated gate/device evidence is Task 9.
-- Dependency order: S1 supplies editor/config tooling; S3/S6 restore the green baseline; persistence must be trustworthy before the Volleyball campaign gate; S8 must exist before S9 scene authoring.
-- Type consistency: `SaveData` v2 fields map directly to `GameSession` state; `ResumeRoute()` feeds `SceneRouter.ResumeCampaign()`; `VolleyballController` remains the only bridge from ball/court events to rules point APIs.
 - Branch safety: neither divergent section branch is merged wholesale; only reviewed file responsibilities are ported and revalidated against current `master`.
 - Completion condition: this plan is not complete until full EditMode and PlayMode are green, the worktree remains clean after repeated tests, and Android/device limitations are recorded without unsupported success claims.

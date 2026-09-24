@@ -9,14 +9,14 @@
 
 The project currently has zero art (`Assets/_Project/Art/` does not exist). Fonts, animation clips, prefabs, and scenes exist, but every visual surface — UI, the RivalRunner character, and sport props — has no source imagery. This spec defines the **infrastructure** that will produce those assets: how UI is generated with no external download, how the RivalRunner character is sourced and completed, how prop icons are generated, and how everything is imported into Unity with correct settings and license attribution.
 
-This spec does not cover per-minigame background/environment art or the remaining six subjects' bespoke needs — that is Sub-project B, executed after this infrastructure exists, using the same tools this spec builds.
+This spec does not cover per-minigame background/environment art or the remaining subjects' bespoke needs — that is Sub-project B, executed after this infrastructure exists, using the same tools this spec builds.
 
 ## 2. Product Boundary
 
 ### In scope
 
 - A procedural generator that bakes neo-brutalist UI sprites (9-slice rounded-rect, radius 16, 4px black border) with no downloaded asset, for every `UITheme` color.
-- A procedural generator that bakes the four missing sport prop icons (badminton shuttlecock, table-tennis paddle/ball, swimming, push-ups) as simple geometric shapes colored from `UITheme`.
+- A procedural generator that bakes the missing sport prop icons (badminton shuttlecock, table-tennis paddle/ball, push-ups) as simple geometric shapes colored from `UITheme`.
 - A one-time character-sourcing workflow: download Kenney Toon Characters (CC0), pick one frame (a running/athletic pose) as RivalRunner's single sprite, recolor it to a neutral skin matching `UITheme`, and import it — see §4.3 for why only one sprite is needed (not a pose set).
 - A batch Editor import step (Unity CLI, batchmode) that applies correct `TextureImporter` settings (Sprite mode, PPU 100, filter Bilinear, ASTC compression, 9-slice border where relevant) to every new file this pipeline produces.
 - An `EditMode` test that asserts the generated/imported assets exist with the correct import settings.
@@ -25,7 +25,7 @@ This spec does not cover per-minigame background/environment art or the remainin
 ### Out of scope
 
 - Background/environment art for any of the 7 minigame scenes (Sub-project B).
-- Sourcing or building prop/character art for the other 6 subjects beyond RivalRunner.
+- Sourcing or building prop/character art for the other subjects beyond RivalRunner.
 - Audio (music, additional SFX).
 - Wiring the generated assets into gameplay prefabs/scenes beyond what already references them (`RivalRunner.controller` already expects these clip names; no controller changes here).
 - Any hand-drawn art tool or pipeline beyond what's needed for the two RivalRunner poses.
@@ -39,7 +39,7 @@ Verified by direct inspection (2026-09-03):
 - `Assets/_Project/Animations/RivalRunner*.anim` + `RivalRunner.controller` exist and reference 6 states (`Idle`, `Run`, `Burst`, `Celebrate`, `Fail`, `Stumble`). **Verified by reading the clips directly: every clip's `m_PPtrCurves` is empty** — none of them swap sprites. Each only animates `Visual.m_LocalPosition.y` (a bounce) plus one more float curve. The actual image is a single `SpriteRenderer` on `RivalRunner.prefab`'s `Visual` child, currently pointing at Unity's built-in placeholder sprite (`fileID: 10913`, a built-in primitive) at `m_Size: {x: 0.2, y: 0.2}`. **RivalRunner needs exactly one static character sprite, not a pose set** — the 6 animator states differentiate by transform/scale curves already authored, not by frame swapping.
 - `Assets/_Project/CREDITS.md` currently documents only the TMP font fallback substitution — no art entries.
 - Kenney.nl assets were downloaded and inspected directly (not just page descriptions):
-  - **Sports Pack** (380 assets, CC0): top-down chibi characters, generic ball/bat/racket icons. No badminton shuttlecock, no table-tennis paddle/ball, no swimming, no push-ups content. Confirmed insufficient alone.
+  - **Sports Pack** (380 assets, CC0): top-down chibi characters, generic ball/bat/racket icons. No badminton shuttlecock or table-tennis paddle/ball; no push-ups content. Confirmed insufficient alone.
   - **UI Pack** (430 assets, CC0): thin rounded borders with gradient/gloss — not neo-brutalist. Confirmed a mismatch; procedural generation replaces it entirely (see §2 in-scope).
   - **Toon Characters** (CC0): `Male person` has `idle`, `walk0-7`, `run0-2`, `jump`, `climb0-1`, `hit` PNG poses in a usable side/three-quarter view. No dedicated celebrate pose; `hit` is a usable stumble base. Confirmed as the character source.
 - Repo has an existing precedent for Editor-script-driven, batchmode-generated assets: `Assets/Editor/GenerateTask1Fonts.cs`, invoked via `unity -batchmode -quit -projectPath . -executeMethod GenerateTask1Fonts.Run` (same pattern `BuildScript.cs` uses for CI builds).
@@ -85,7 +85,6 @@ GenerateBrutalUISprites.cs       GeneratePropIcons.cs               download (cu
 
 - Badminton shuttlecock → cone-ish shape (triangle + small circle base).
 - Table-tennis → circle (ball) + a small paddle (rounded rect + short handle).
-- Swimming → a simple wave glyph (stacked sine-like arcs).
 - Push-ups → a horizontal bar/figure abstraction.
 - All flat-filled from `UITheme`, saved to `Assets/_Project/Art/Props/Generated/`, imported as single sprites (no 9-slice needed — these are icons, not stretchable containers).
 

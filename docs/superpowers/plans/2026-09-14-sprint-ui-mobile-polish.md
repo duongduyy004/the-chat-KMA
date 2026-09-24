@@ -19,7 +19,6 @@
 - `ScreenTapArea` stays the only component that forwards Sprint input. No presenter may raise `OnLeftTap`, `OnRightTap`, or router events.
 - All user-facing copy is Vietnamese. Control labels are exactly `TRÁI` and `PHẢI`. The instruction is exactly `BẤM TRÁI VÀ PHẢI LUÂN PHIÊN ĐỂ CHẠY`. Countdown is `3`, `2`, `1`, `GO!`.
 - No new package. No new bitmap, font, or material asset — rounded shapes are generated at runtime.
-- Changes apply to Sprint only. Do not restyle Endurance, Volleyball, or Basketball.
 - Element **sizes** are fractions of safe-area **height** (`H`). Element **positions** may use width (`W`) and height.
 - Minimum font size is `24`. Nothing smaller ships.
 - Test runs regenerate `Assets/_Project/Fonts/Nunito-Bold.asset` (the dynamic TMP atlas). **Revert it, never commit it:** `rtk git checkout -- Assets/_Project/Fonts/Nunito-Bold.asset`.
@@ -1992,8 +1991,6 @@ rtk proxy "$KMA_UNITY_EDITOR" -batchmode -projectPath . \
   -runTests -testPlatform PlayMode -testFilter 'KMA.Tests.Presentation' \
   -testResults /tmp/kma-presentation-green.xml -logFile /tmp/kma-presentation-green.log
 ```
-
-Expected: 0 failed. Endurance, Volleyball and Basketball still use `TutorialOverlay` with manual advance.
 
 - [ ] **Step 7: Commit**
 

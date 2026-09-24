@@ -11,13 +11,8 @@
 | Order | Plan | Working checkpoint |
 | --- | --- | --- |
 | 1 | `2026-08-25-product-shell-sprint.md` | New Game/Continue -> Map -> Sprint -> Result/Punishment with save |
-| 2 | `2026-08-25-endurance-punishment-integration.md` | Endurance and Punishment use production touch/HUD/route flow |
-| 3 | `2026-08-25-pingpong-vertical-slice.md` | First complete ball-sport route |
-| 4 | `2026-08-25-basketball-vertical-slice.md` | Pass/alley-oop/apex loop |
-| 5 | `2026-08-25-volleyball-vertical-slice.md` | Dig/set/spike rally loop |
 | 6 | `2026-08-25-badminton-vertical-slice.md` | Hold/release shuttle loop |
 | 7 | `2026-08-25-football-vertical-slice.md` | Five-kick goalkeeper loop |
-| 8 | `2026-08-25-boss-endgame-integration.md` | Boss, Victory, and GameOver complete the campaign |
 | 9 | `2026-08-25-android-hardening.md` | Validated APK, install/launch/device report |
 
 ## Suite-wide gates
@@ -28,4 +23,3 @@
 - Keep all earlier EditMode and PlayMode tests green at every checkpoint.
 - Commit only the files named by the current task; preserve unrelated and untracked user files.
 - A rule-only test is not evidence that a minigame is playable.
-

@@ -88,9 +88,6 @@ changing Render Mode and calling `ForceUpdateCanvases()` both had no effect. Mea
 `SafeAreaRoot` — which has proper `(0,0)-(1,1)` stretch anchors, where offsets correctly mean insets —
 is switched off.
 
-`HUD_Minigame.prefab` is shared by all four playable minigames, so **Endurance, Volleyball and
-Basketball are likely affected identically**. Not investigated.
-
 **This was deliberately left unfixed.** The project owner reports the game running correctly on a real
 Android device over adb at true resolution, and elected not to pursue it. Device behaviour is what
 ships; the finding is recorded here so it is not lost.
@@ -212,7 +209,6 @@ Editor Play-mode capture via `tools/qa-screenshot.sh` now returns a correctly la
 
 - `Builds/Screenshots/sprint-fixed.png` — start/countdown state
 - `Builds/Screenshots/sprint-running.png` — race state
-- `Builds/Screenshots/endurance-check.png` — `MG_Endurance`, confirming the shared prefab fix
 
 Scoreboard, rank pill, progress rail, mode chip, pause, countdown, instruction plate and both
 controls all render in their intended positions, with Vietnamese diacritics unclipped.

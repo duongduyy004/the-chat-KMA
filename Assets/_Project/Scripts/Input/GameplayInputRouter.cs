@@ -15,11 +15,9 @@ namespace KMA.Input
         [SerializeField] InputActionReference swipeAction;
         [SerializeField] InputActionReference rhythmAction;
         [SerializeField] string sprintActionMapName = "Sprint";
-        [SerializeField] string enduranceActionMapName = "Endurance";
-        [SerializeField] string bossActionMapName = "Boss";
         [SerializeField] string punishmentActionMapName = "Punishment";
         [SerializeField] string uiActionMapName = "UI";
-        [SerializeField] string gameplayActionMapName = "Endurance";
+        [SerializeField] string gameplayActionMapName = "Gameplay";
         [SerializeField] double rhythmOffsetMs;
 
         readonly Dictionary<int, PointerGestureState> pointerStates = new Dictionary<int, PointerGestureState>();
@@ -30,8 +28,6 @@ namespace KMA.Input
         AlternateTapInputDetector sprintTapDetector;
         SwipeInputDetector swipeDetector;
         InputActionMap sprintActionMap;
-        InputActionMap enduranceActionMap;
-        InputActionMap bossActionMap;
         InputActionMap punishmentActionMap;
         InputActionMap uiActionMap;
         InputActionMap gameplayActionMap;
@@ -55,8 +51,6 @@ namespace KMA.Input
 
         public InputActionAsset InputActions => inputActions;
         public string SprintActionMapName => sprintActionMapName;
-        public string EnduranceActionMapName => enduranceActionMapName;
-        public string BossActionMapName => bossActionMapName;
         public string PunishmentActionMapName => punishmentActionMapName;
         public string UiActionMapName => uiActionMapName;
         public double RhythmOffsetMs { get => rhythmOffsetMs; set => rhythmOffsetMs = value; }
@@ -301,8 +295,6 @@ namespace KMA.Input
                 return;
 
             sprintActionMap = inputActions.FindActionMap(sprintActionMapName, false);
-            enduranceActionMap = inputActions.FindActionMap(enduranceActionMapName, false);
-            bossActionMap = inputActions.FindActionMap(bossActionMapName, false);
             punishmentActionMap = inputActions.FindActionMap(punishmentActionMapName, false);
             uiActionMap = inputActions.FindActionMap(uiActionMapName, false);
             gameplayActionMap = inputActions.FindActionMap(gameplayActionMapName, false);
@@ -371,7 +363,7 @@ namespace KMA.Input
                 return;
 
             tapMashDetector?.FeedTap(Timestamp());
-            if (gameplayActionMap != null && gameplayActionMap.name == enduranceActionMapName)
+            if (rhythmBeatDetector != null)
                 FeedRhythmTap(RhythmBeatDsp);
         }
 
@@ -474,7 +466,7 @@ namespace KMA.Input
 
         void OnRhythmPerformed(InputAction.CallbackContext context)
         {
-            if (context.performed && IsKeyboard(context) && gameplayActionMap != null && gameplayActionMap.name == enduranceActionMapName)
+            if (context.performed && IsKeyboard(context) && rhythmBeatDetector != null)
                 FeedRhythmTap(RhythmBeatDsp);
         }
 

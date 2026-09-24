@@ -54,27 +54,7 @@ namespace KMA.Tests.Gameplay.Progression
             session.ResetCampaign();
 
             Assert.That(session.Lives, Is.EqualTo(5));
-            Assert.That(session.BossUnlocked, Is.False);
             Assert.That(session.GetRecord(SubjectId.Sprint).Passed, Is.False);
-        }
-
-        [Test]
-        public void MapScreen_OnlyRaisesBossRequestWhenUnlocked()
-        {
-            var screen = new GameObject("MapScreen").AddComponent<MapScreen>();
-            try
-            {
-                var calls = 0;
-                screen.BossRequested += () => calls++;
-                screen.SelectBoss();
-                screen.SetBossUnlocked(true);
-                screen.SelectBoss();
-                Assert.That(calls, Is.EqualTo(1));
-            }
-            finally
-            {
-                UnityEngine.Object.DestroyImmediate(screen.gameObject);
-            }
         }
 
         [Test]
@@ -142,7 +122,7 @@ namespace KMA.Tests.Gameplay.Progression
                 Assert.That(node.DetailText, Is.EqualTo("HẠNG A  ★ 3"));
                 Assert.That(node.Stars, Is.EqualTo(3));
 
-                node.Configure(SubjectId.Basketball, "Bóng rổ", true, null, 5);
+                node.Configure(SubjectId.Badminton, "Cầu lông", true, null, 5);
                 Assert.That(node.gameObject.activeSelf, Is.True);
                 Assert.That(node.DetailText, Is.EqualTo("ĐANG PHÁT TRIỂN"));
                 Assert.That(node.IsInteractable, Is.False);
@@ -222,10 +202,10 @@ namespace KMA.Tests.Gameplay.Progression
                 Transform futureRow = screen.transform.Find("S5MapPresentation/Content/FutureRow");
                 Assert.That(futureRow, Is.Not.Null);
                 Assert.That(futureRow.GetComponentsInChildren<Text>(true).Select(text => text.text),
-                    Is.EquivalentTo(new[] { "SẮP RA MẮT", "Hít đất", "Nhịp điệu", "Bơi lội" }));
+                    Is.EquivalentTo(new[] { "SẮP RA MẮT", "Hít đất" }));
                 Assert.That(futureRow.GetComponentsInChildren<Button>(true), Is.Empty);
                 Assert.That(futureRow.GetComponentsInChildren<MapNodeView>(true), Is.Empty);
-                Assert.That(screen.Nodes, Has.Length.EqualTo(7));
+                Assert.That(screen.Nodes, Has.Length.EqualTo(3));
 
                 Assert.That(requested, Is.Empty,
                     "Presentation-only future chips must never request a campaign subject route.");
@@ -233,18 +213,17 @@ namespace KMA.Tests.Gameplay.Progression
             finally { UnityEngine.Object.DestroyImmediate(screenObject); }
         }
 
-        [TestCase(false, 5, false)]
-        [TestCase(true, 3, false)]
-        [TestCase(true, 4, true)]
-        public void MapPresentation_UsesSessionStateOrDefaultsForLivesAndBoss(
-            bool hasSession, int expectedLives, bool expectedBossUnlocked)
+        [TestCase(false, 5)]
+        [TestCase(true, 3)]
+        public void MapPresentation_UsesSessionStateOrDefaultsForLives(
+            bool hasSession, int expectedLives)
         {
             var screenObject = new GameObject("MapScreen", typeof(RectTransform));
             var screen = screenObject.AddComponent<MapScreen>();
             try
             {
                 GameSession session = hasSession
-                    ? CreateMapSession(expectedLives, expectedBossUnlocked)
+                    ? CreateMapSession(expectedLives)
                     : null;
 
                 MapPresentationBuilder.Build(screen, session);
@@ -256,16 +235,6 @@ namespace KMA.Tests.Gameplay.Progression
                 Assert.That(livesLabel.text, Is.EqualTo($"LƯỢT: {expectedLives}/5"));
                 Assert.That(screen.Hearts.CurrentHearts, Is.EqualTo(expectedLives));
                 Assert.That(screen.Hearts.GetComponentsInChildren<Image>(true), Has.Length.EqualTo(5));
-                Assert.That(screen.BossUnlocked, Is.EqualTo(expectedBossUnlocked));
-
-                Transform boss = screen.transform.Find("S5MapPresentation/Content/BossChallenge");
-                Button bossButton = boss.GetComponent<Button>();
-                Assert.That(bossButton != null, Is.EqualTo(expectedBossUnlocked));
-                if (bossButton != null)
-                    Assert.That(bossButton.interactable, Is.True);
-                Assert.That(boss.GetComponentInChildren<Text>(true).text, Is.EqualTo(expectedBossUnlocked
-                    ? "THỬ THÁCH CUỐI  →"
-                    : "🔒  Hoàn thành thêm các môn để mở thử thách tiếp theo."));
                 Assert.That(screen.transform.Cast<Transform>()
                     .Count(child => child.name == "S5MapPresentation"), Is.EqualTo(1));
             }
@@ -290,13 +259,11 @@ namespace KMA.Tests.Gameplay.Progression
             var screen = Object.FindFirstObjectByType<MapScreen>(FindObjectsInactive.Include);
             Assert.That(screen.transform.Find("S5MapPresentation"), Is.Not.Null);
             Assert.That(screen.Nodes.Where(node => node.IsInteractable).Select(node => node.SubjectId),
-                Is.EquivalentTo(new[] { SubjectId.Sprint, SubjectId.Endurance, SubjectId.Volleyball }));
+                Is.EquivalentTo(new[] { SubjectId.Sprint }));
             Assert.That(screen.Nodes.Where(node => !node.IsInteractable &&
                     node.DetailText == "ĐANG PHÁT TRIỂN").Select(node => node.SubjectId),
                 Is.EquivalentTo(new[]
                 {
-                    SubjectId.Basketball,
-                    SubjectId.PingPong,
                     SubjectId.Badminton,
                     SubjectId.Football
                 }));
@@ -304,7 +271,7 @@ namespace KMA.Tests.Gameplay.Progression
         }
 
         [UnityTest]
-        public IEnumerator MapScene_ResponsiveLayout_KeepsCardsInsideTheGridAndAboveProgress()
+        public IEnumerator MapScene_ResponsiveLayout_KeepsCardsInsideTheGrid()
         {
             SceneManager.LoadScene("Map", LoadSceneMode.Single);
             yield return null;
@@ -318,10 +285,6 @@ namespace KMA.Tests.Gameplay.Progression
             Transform futureRowTransform = screen.transform.Find("S5MapPresentation/Content/FutureRow");
             Assert.That(futureRowTransform, Is.Not.Null);
             RectTransform futureRow = futureRowTransform.GetComponent<RectTransform>();
-            RectTransform progressCard = screen.transform.Find("S5MapPresentation/Content/SelectionGrid/ProgressCard")
-                .GetComponent<RectTransform>();
-            RectTransform boss = screen.transform.Find("S5MapPresentation/Content/BossChallenge")
-                .GetComponent<RectTransform>();
 
             foreach (Vector2Int resolution in new[]
             {
@@ -340,15 +303,10 @@ namespace KMA.Tests.Gameplay.Progression
 
                 Rect gridBounds = WorldBounds(grid);
                 Rect futureBounds = WorldBounds(futureRow);
-                Rect bossBounds = WorldBounds(boss);
                 Assert.That(gridBounds.Overlaps(futureBounds), Is.False,
                     $"SelectionGrid must not overlap FutureRow at {resolution.x}x{resolution.y}.");
-                Assert.That(futureBounds.Overlaps(bossBounds), Is.False,
-                    $"FutureRow must not overlap BossChallenge at {resolution.x}x{resolution.y}.");
                 Assert.That(Contains(content, grid), Is.True);
                 Assert.That(Contains(content, futureRow), Is.True);
-                Assert.That(Contains(content, boss), Is.True);
-                Assert.That(Contains(grid, progressCard), Is.True);
                 foreach (MapNodeView node in screen.Nodes)
                 {
                     Assert.That(Contains(grid, node.transform as RectTransform), Is.True,
@@ -370,15 +328,6 @@ namespace KMA.Tests.Gameplay.Progression
                 foreach (Text tag in futureRow.GetComponentsInChildren<Text>(true))
                     Assert.That(Contains(futureRow, tag.rectTransform), Is.True,
                         $"{tag.name} must remain inside FutureRow at {resolution.x}x{resolution.y}.");
-                Assert.That(Contains(boss, boss.GetComponentInChildren<Text>(true).rectTransform), Is.True,
-                    $"Boss label must remain inside BossChallenge at {resolution.x}x{resolution.y}.");
-
-                Assert.That(WorldBounds(screen.Nodes[0].transform as RectTransform).xMin,
-                    Is.EqualTo(WorldBounds(screen.Nodes[4].transform as RectTransform).xMin).Within(1f),
-                    $"Both grid rows must share the same first column at {resolution.x}x{resolution.y}.");
-                Assert.That(WorldBounds(screen.Nodes[3].transform as RectTransform).xMin,
-                    Is.EqualTo(WorldBounds(progressCard).xMin).Within(1f),
-                    $"Progress must occupy the fourth column at {resolution.x}x{resolution.y}.");
             }
         }
 
@@ -449,23 +398,6 @@ namespace KMA.Tests.Gameplay.Progression
         }
 
         [Test]
-        public void Continue_WithACompletedSave_IsDisabled()
-        {
-            SaveData persisted = SaveData.CreateDefault();
-            persisted.gameCompleted = true;
-            SceneRouter router = CreateRouter();
-            GameManager manager = CreateManager(router, persisted, hasExistingSave: true);
-            List<SceneRouteTransition> transitions = RecordTransitions(router);
-            MainMenuScreen menu = CreateShellMenu();
-
-            Assert.That(manager.HasSavedCampaign, Is.False);
-            Assert.That(menu.CanContinue, Is.False);
-
-            menu.Continue();
-
-            Assert.That(transitions, Is.Empty);
-        }
-
         [Test]
         public void Continue_WithRestoredProgress_IsEnabled()
         {
@@ -488,7 +420,7 @@ namespace KMA.Tests.Gameplay.Progression
                 router, Arrange(session => session.StartSubject(SubjectId.Sprint)), true);
             List<SceneRouteTransition> transitions = RecordTransitions(router);
 
-            Assert.That(router.StartSubject(SubjectId.Endurance), Is.False);
+            Assert.That(router.StartSubject(SubjectId.Badminton), Is.False);
 
             Assert.That(transitions, Is.Empty);
             Assert.That(manager.Session.ActiveSubject, Is.EqualTo(SubjectId.Sprint));
@@ -521,9 +453,9 @@ namespace KMA.Tests.Gameplay.Progression
 
             yield return WaitForRoutedScene(router, "Map");
 
-            Assert.That(router.StartSubject(SubjectId.Endurance), Is.True);
-            Assert.That(manager.Session.ActiveSubject, Is.EqualTo(SubjectId.Endurance));
-            yield return WaitForRoutedScene(router, "MG_Endurance");
+            Assert.That(router.StartSubject(SubjectId.Badminton), Is.True);
+            Assert.That(manager.Session.ActiveSubject, Is.EqualTo(SubjectId.Badminton));
+            yield return WaitForRoutedScene(router, "MG_Badminton");
         }
 
         [UnityTest]
@@ -651,18 +583,9 @@ namespace KMA.Tests.Gameplay.Progression
             }
         }
 
-        static GameSession CreateMapSession(int lives, bool bossUnlocked)
+        static GameSession CreateMapSession(int lives)
         {
             var session = new GameSession();
-            if (bossUnlocked)
-            {
-                foreach (SubjectId subject in Enum.GetValues(typeof(SubjectId)))
-                {
-                    session.StartSubject(subject);
-                    session.SubmitResult(subject, new MinigameResult(true, 0f, Rank.A));
-                }
-            }
-
             SaveData data = session.ToSaveData();
             data.lives = lives;
             session.Restore(data);

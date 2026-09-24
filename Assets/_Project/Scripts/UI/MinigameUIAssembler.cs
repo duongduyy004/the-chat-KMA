@@ -22,14 +22,9 @@ namespace KMA.Gameplay.UI
         static readonly string[] ScenePaths =
         {
             "Assets/_Project/Scenes/MG_Sprint.unity",
-            "Assets/_Project/Scenes/MG_Endurance.unity",
-            "Assets/_Project/Scenes/MG_Boss.unity",
             "Assets/_Project/Scenes/Punishment.unity",
             "Assets/_Project/Scenes/Map.unity",
             "Assets/_Project/Scenes/GameOver.unity",
-            "Assets/_Project/Scenes/MG_Volleyball.unity",
-            "Assets/_Project/Scenes/MG_Basketball.unity",
-            "Assets/_Project/Scenes/MG_PingPong.unity",
             "Assets/_Project/Scenes/MG_Badminton.unity",
             "Assets/_Project/Scenes/MG_Football.unity"
         };

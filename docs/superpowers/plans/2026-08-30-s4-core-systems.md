@@ -13,10 +13,8 @@
 ## Global Constraints
 
 - Không sửa rules engine đã có test; chỉ thêm method/event, adapter hoặc component presentation additive.
-- Giữ nguyên chữ ký và hành vi đã test của `SceneRouter`, `GameSession`, `MinigameBase`, các rules và `BossSequenceAsset`; khi cần mở rộng, thêm API mới rồi kiểm regression.
 - Không dùng `PlayerPrefs` cho save/settings; save chính là `Application.persistentDataPath/save.json`, ghi atomic qua `save.tmp` và `File.Replace`.
 - `SceneRouter.subjectScenes` là nguồn sự thật duy nhất cho routing; `SubjectConfig` không có field `sceneName`.
-- `AudioManager` không sở hữu beat clock; `EnduranceController` giữ `dspTime` và `rhythmOffsetMs` behavior hiện có.
 - `stars` không được lưu; luôn suy ra bằng `ScoreUtil.ToStars(Rank)`: `S/A → 3`, `B/C → 2`, `D → 1`, `F → 0`.
 - Không commit hoặc xoá các thay đổi không thuộc S4; preflight phải ghi nhận worktree đang dirty trước mỗi task.
 - Mỗi task có commit riêng sau khi test pass; chạy lại full EditMode và PlayMode sau mỗi task khi Unity editor khả dụng.
@@ -43,8 +41,6 @@
 - Create: `Assets/Tests/EditMode/Progression/ScoreStarsTests.cs`
 - Create: `Assets/Tests/EditMode/Progression/SaveDataTests.cs`
 - Modify: `Assets/Tests/EditMode/Progression/KMA.Gameplay.Progression.EditMode.Tests.asmdef` — add `KMA.Gameplay.Core` so the shared S4 EditMode assembly can test `SaveSystem` and `SceneRouter`.
-
-**Interfaces:** `SaveData` exposes serializable fields/properties `version`, `lives`, `subjects`, `bossUnlocked`, `gameCompleted`, `tutorialSeen`, and `settings`. `SubjectRecordData` exposes `id`, `passed`, `bestScore`, `bestRank`, and `failedVisits`. `Settings` exposes `musicVol`, `sfxVol`, `vibration`, and `rhythmOffsetMs`. `ScoreUtil.ToStars(Rank rank)` returns an `int` and is pure.
 
 - [ ] **Step 1: Snapshot the dirty worktree and confirm the existing contracts.**
 
@@ -116,8 +112,6 @@
 - Modify: `Assets/_Project/Scripts/Progression/SubjectRecord.cs`
 - Create: `Assets/Tests/EditMode/Progression/GameSessionPersistenceTests.cs`
 
-**Interfaces:** Add `GameSession.ToSaveData()`, `GameSession.Restore(SaveData)`, and `SubjectRecord.FromData(SubjectRecordData)`. Existing constructor, private setters, `StartSubject`, `SubmitResult`, `CompletePunishment`, `BossUnlocked`, and all existing route semantics remain unchanged.
-
 - [ ] **Step 1: Write failing round-trip tests.**
 
   Cover a passing record, failed visits, lives, tutorial flags, settings, and a seven-record restore:
@@ -156,8 +150,6 @@
   ```bash
   rtk /home/duydt/Unity/Hub/Editor/6000.3.23f1/Editor/Unity -batchmode -projectPath . -runTests -testPlatform EditMode -testResults /tmp/kma-s4-task2.xml -logFile /tmp/kma-s4-task2.log -quit -testFilter "GameSessionPersistenceTests|GameSessionTests|ChallengeSequenceTests"
   ```
-
-  Expected: all focused and legacy progression tests PASS, including boss unlock and punishment routes.
 
 - [ ] **Step 5: Run both suites and commit.**
 
@@ -211,8 +203,6 @@
 
 - [ ] **Step 3: Implement additive `LoadSession`.**
 
-  Keep `SceneRouter.Awake()` exactly responsible for default `new GameSession()` and its existing `DontDestroyOnLoad`/scene-loaded subscription. `LoadSession` must reject null, unbind any scene handlers if needed, assign the supplied session, and construct a new `SessionRouteTransitioner` with the same sink. Do not change `DefaultSubjectScenes`, `TryGetSceneName`, `LoadSceneMode.Single`, or `BossSceneSessionHandoff`.
-
 - [ ] **Step 4: Implement GameManager startup and save hooks.**
 
   On the persistent Bootstrap object, load/migrate the DTO, construct a `GameSession`, restore it, call `SceneRouter.EnsurePersistentInstance().LoadSession(session)`, apply settings to services, then load `Menu` exactly once. Subscribe to session result/life-loss/settings-change seams only through additive APIs; save after subject completion, life loss, settings change, and `OnApplicationPause(true)`. Apply `Application.targetFrameRate = 60` and `QualitySettings.vSyncCount = 0`.
@@ -247,8 +237,6 @@
   Create the 7 playable configs for the existing `SubjectId` values and 3 locked configs named Hít đất, Nhịp điệu, and Bơi lội with `comingSoon = true`. Keep all scene routing in `SceneRouter.subjectScenes`. Add chill and urgent quote arrays and a `RivalPaceProfileAsset` wrapper whose `ToRuntime()` returns the existing plain `RivalPaceProfile`.
 
 - [ ] **Step 4: Run asset/service tests and inspect generated assets.**
-
-  Run the focused EditMode tests plus full suites. Verify the mixer has exactly Music and SFX groups, assets are non-null after import, and no S4 service uses `PlayerPrefs` or owns endurance/Boss beat timing. Commit `feat: add core audio haptics and authored data`.
 
 ### Task 6: Create Bootstrap and prove the S4 gate
 

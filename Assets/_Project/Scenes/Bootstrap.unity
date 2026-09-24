@@ -307,18 +307,9 @@ MonoBehaviour:
   punishmentScene: Punishment
   mapScene: Map
   gameOverScene: GameOver
-  bossScene: MG_Boss
   subjectScenes:
   - Subject: 0
     SceneName: MG_Sprint
-  - Subject: 1
-    SceneName: MG_Endurance
-  - Subject: 2
-    SceneName: MG_Volleyball
-  - Subject: 3
-    SceneName: MG_Basketball
-  - Subject: 4
-    SceneName: MG_PingPong
   - Subject: 5
     SceneName: MG_Badminton
   - Subject: 6

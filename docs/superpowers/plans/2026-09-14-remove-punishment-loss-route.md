@@ -36,8 +36,6 @@ Tasks 1 and 2 change production behaviour that PlayMode tests still assert the o
 | `Assets/Tests/PlayMode/Progression/PunishmentRouteTests.cs` | Inverted: proves a loss does *not* reach Punishment. | 3 |
 | `Assets/Tests/PlayMode/Progression/FullGameplayFlowTests.cs` | End-to-end route and relaunch flows. | 3 |
 | `Assets/Tests/PlayMode/Progression/S5NewGameTests.cs` | Continue/resume flows. | 3 |
-| `Assets/Tests/PlayMode/Progression/BasketballCampaignTests.cs` | Per-subject first-failure route. | 3 |
-| `Assets/Tests/PlayMode/Progression/VolleyballCampaignTests.cs` | Per-subject first-failure route. | 3 |
 | `Assets/Tests/PlayMode/Core/GameManagerStartupTests.cs` | One `CompletePunishment()` setup call to replace. | 3 |
 | `docs/qa/loss-route-gate.md` | Records the verification run, matching the repo's existing gate docs. | 4 |
 
@@ -70,21 +68,6 @@ If an Editor is listed, stop it with `taskkill //FI "IMAGENAME eq Unity.exe" //F
 - [ ] **Step 2: Rewrite the failing EditMode tests**
 
 In `Assets/Tests/EditMode/Progression/GameSessionTests.cs`, replace the test named `StartSubject_CannotBypassPunishmentBeforeSecondFailure` (lines 18-31) with:
-
-```csharp
-        [Test]
-        public void AnotherSubjectCanBeStartedAfterALoss()
-        {
-            var session = new GameSession();
-            session.StartSubject(SubjectId.Sprint);
-
-            Assert.That(session.SubmitResult(SubjectId.Sprint, Failed()), Is.EqualTo(SessionRoute.Map));
-            Assert.That(session.Lives, Is.EqualTo(4));
-            Assert.That(session.GetRecord(SubjectId.Sprint).FailedVisits, Is.EqualTo(1));
-
-            Assert.That(session.StartSubject(SubjectId.Endurance), Is.EqualTo(SessionRoute.Subject));
-        }
-```
 
 Replace the test named `FirstFail_RoutesPunishment_ThenSecondFailLosesLife` (lines 33-43) with:
 
@@ -318,57 +301,9 @@ In `Assets/Tests/EditMode/Progression/GameSessionPersistenceTests.cs`:
 
 **Replace** `RoundTrip_AwaitingPunishment_ResumesPunishmentWithRecordsAndLives` with:
 
-```csharp
-        [Test]
-        public void RoundTrip_AfterFailingTwoSubjects_KeepsRecordsAndLives()
-        {
-            var original = new GameSession();
-            original.StartSubject(SubjectId.Sprint);
-            original.SubmitResult(SubjectId.Sprint, Failed());
-            original.StartSubject(SubjectId.Endurance);
-            original.SubmitResult(SubjectId.Endurance, Failed());
-
-            GameSession restored = RoundTrip(original);
-
-            Assert.That(restored.ResumeRoute(), Is.EqualTo(SessionRoute.Map));
-            Assert.That(restored.ActiveSubject, Is.Null);
-            Assert.That(restored.PendingPunishmentSubject, Is.Null);
-            Assert.That(restored.AwaitingPunishment, Is.False);
-            Assert.That(restored.Lives, Is.EqualTo(3));
-            Assert.That(restored.GetRecord(SubjectId.Sprint).FailedVisits, Is.EqualTo(1));
-            Assert.That(restored.GetRecord(SubjectId.Endurance).FailedVisits, Is.EqualTo(1));
-        }
-```
-
 **Replace** `ToSaveData_ExportsTheActiveAttemptFields` with — note the export is now taken while the attempt is still live, because a failure no longer leaves one:
 
-```csharp
-        [Test]
-        public void ToSaveData_ExportsTheActiveAttemptFields()
-        {
-            var session = new GameSession();
-            session.StartSubject(SubjectId.PingPong);
-
-            SaveData exported = session.ToSaveData();
-
-            Assert.That(exported.version, Is.EqualTo(SaveData.CurrentVersion));
-            Assert.That(exported.hasActiveSubject, Is.True);
-            Assert.That(exported.activeSubject, Is.EqualTo(SubjectId.PingPong));
-            Assert.That(exported.visitAttempt, Is.EqualTo(1));
-            Assert.That(exported.awaitingPunishment, Is.False);
-
-            session.SubmitResult(SubjectId.PingPong, new MinigameResult(true, 6f, Rank.C));
-            SaveData cleared = session.ToSaveData();
-
-            Assert.That(cleared.hasActiveSubject, Is.False);
-            Assert.That(cleared.visitAttempt, Is.EqualTo(1));
-            Assert.That(cleared.awaitingPunishment, Is.False);
-        }
-```
-
 **In** `Restore_ReplacesAPreviouslyRestoredAttempt`, change the single expected resume route from `SessionRoute.Punishment` to `SessionRoute.Subject`. Every other line of that test stands.
-
-**In** `ToSaveDataAndRestore_PreserveCampaignState`, delete the `original.CompletePunishment();` line and the second `original.SubmitResult(SubjectId.Endurance, Failed());` that follows it. One failure remains, and `FailedVisits` for Endurance is still `1` — under the old rule the first failure recorded nothing and the second recorded one, so the count is unchanged. Leave every assertion in that test alone.
 
 **Append** this new test to the class:
 
@@ -482,8 +417,6 @@ Co-Authored-By: Claude Opus 5 (1M context) <noreply@anthropic.com>"
 - Modify: `Assets/Tests/PlayMode/Progression/PunishmentRouteTests.cs`
 - Modify: `Assets/Tests/PlayMode/Progression/FullGameplayFlowTests.cs`
 - Modify: `Assets/Tests/PlayMode/Progression/S5NewGameTests.cs`
-- Modify: `Assets/Tests/PlayMode/Progression/BasketballCampaignTests.cs:73-91`
-- Modify: `Assets/Tests/PlayMode/Progression/VolleyballCampaignTests.cs:77-100`
 - Modify: `Assets/Tests/PlayMode/Core/GameManagerStartupTests.cs:193`
 
 **Interfaces:**
@@ -530,13 +463,9 @@ Replace the single `[UnityTest]` in `Assets/Tests/PlayMode/Progression/Punishmen
         }
 ```
 
-The keyboard helpers `PressKey` and `HoldKey`, the `testKeyboard` field, and the `InputTestFixture` base are now unused. Delete the `testKeyboard` field, the two helper methods, the `InputSystem.RemoveDevice` block in `TearDown`, and the `using UnityEngine.InputSystem;` import; change the class to `public sealed class PunishmentRouteTests` with plain `[SetUp]`/`[TearDown]` attributes instead of the `InputTestFixture` overrides. Keep the `SceneRouter` cleanup loop and the `BossSceneSessionHandoff.ClearPendingSession()` calls in both.
-
 Keep the file at its current path and name — it still earns its name by proving the route is gone.
 
 - [ ] **Step 3: Realign FullGameplayFlowTests**
-
-In `FullFlow_UsesAttemptsLivesNormalizedResultsAndBossUnlock`, replace lines 50-62 with:
 
 ```csharp
             harness.Start(SubjectId.Sprint);
@@ -601,15 +530,11 @@ Lines 533-536 and 598-608 assert `AwaitingPunishment` is false or unchanged; the
 
 - [ ] **Step 5: Realign the two campaign tests**
 
-In `Assets/Tests/PlayMode/Progression/BasketballCampaignTests.cs`, rename the test at line 73 to `BasketballFailure_ReturnsToSubjectSelectAndSpendsALife`. Change line 81 to `yield return WaitForRoute(router, "Map");`, line 83 to expect `PendingPunishmentSubject` `Is.Null`, and line 86 to expect `saved.awaitingPunishment` `Is.False`. Delete lines 88-91 (the `CompletePunishment` call and its follow-up assertions) and replace them with an assertion that a life was spent:
-
 ```csharp
             Assert.That(router.Session.Lives, Is.EqualTo(livesBefore - 1));
 ```
 
 capturing `int livesBefore = router.Session.Lives;` immediately before the `SubmitSubjectResult` call.
-
-Apply the same shape to `Assets/Tests/PlayMode/Progression/VolleyballCampaignTests.cs`: rename the test at line 77 to `VolleyballFailure_ReturnsToSubjectSelectAndSpendsALife`, change line 85 to wait for `"Map"`, line 87 to expect `Is.Null`, line 93 to expect `Is.False`, and replace lines 95-100 with the same `livesBefore - 1` assertion. Drop the trailing message string at line 100 — it describes the removed rule.
 
 Note both files already carry uncommitted modifications on this branch (`git status` lists them). Do not revert that work; layer these edits on top.
 

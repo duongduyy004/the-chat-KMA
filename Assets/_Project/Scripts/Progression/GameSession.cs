@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Linq;
 
 namespace KMA.Gameplay
 {
@@ -12,8 +11,7 @@ namespace KMA.Gameplay
         // Retired in place: the punishment leg is unreachable, and nothing emits this route.
         RetrySubject,
         Map,
-        GameOver,
-        Boss
+        GameOver
     }
 
     public interface IResultPreviewPanel
@@ -49,7 +47,6 @@ namespace KMA.Gameplay
 
         public int Lives { get; private set; } = MaxLives;
         public IReadOnlyDictionary<SubjectId, SubjectRecord> Records => records;
-        public bool BossUnlocked => records.Values.All(record => record.Passed);
         public SubjectId? PendingPunishmentSubject => awaitingPunishment && active.HasValue ? active : (SubjectId?)null;
         public SubjectId? ActiveSubject => active;
         public int VisitAttempt => visitAttempt;
@@ -88,7 +85,6 @@ namespace KMA.Gameplay
         {
             var data = SaveData.CreateDefault();
             data.lives = Lives;
-            data.bossUnlocked = BossUnlocked;
             data.hasActiveSubject = active.HasValue;
             data.activeSubject = active ?? default;
             data.visitAttempt = visitAttempt;

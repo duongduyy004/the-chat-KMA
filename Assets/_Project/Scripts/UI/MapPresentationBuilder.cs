@@ -28,10 +28,6 @@ namespace KMA.Gameplay.UI
         static readonly Entry[] Entries =
         {
             new Entry(SubjectId.Sprint, "Chạy nước rút", new Color32(49, 162, 222, 255), true),
-            new Entry(SubjectId.Endurance, "Chạy bền", new Color32(255, 202, 58, 255), true),
-            new Entry(SubjectId.Volleyball, "Bóng chuyền", new Color32(138, 203, 136, 255), true),
-            new Entry(SubjectId.Basketball, "Bóng rổ", new Color32(226, 232, 240, 255), false),
-            new Entry(SubjectId.PingPong, "Bóng bàn", new Color32(226, 232, 240, 255), false),
             new Entry(SubjectId.Badminton, "Cầu lông", new Color32(226, 232, 240, 255), false),
             new Entry(SubjectId.Football, "Bóng đá", new Color32(226, 232, 240, 255), false),
         };
@@ -39,7 +35,6 @@ namespace KMA.Gameplay.UI
         public static void Build(MapScreen screen, GameSession session)
         {
             if (screen == null || screen.transform.Find("S5MapPresentation") != null) return;
-            screen.SetBossUnlocked(session != null && session.BossUnlocked);
             foreach (Button button in screen.GetComponentsInChildren<Button>(true)) button.gameObject.SetActive(false);
             UITheme theme = screen.Theme;
             Color card = theme == null ? Color.white : theme.Card;
@@ -61,7 +56,7 @@ namespace KMA.Gameplay.UI
             Anchor(grid, new Vector2(0f, .33f), new Vector2(1f, .84f));
             GridLayoutGroup gridLayout = grid.gameObject.AddComponent<CenteredLastRowGridLayout>();
             gridLayout.constraint = GridLayoutGroup.Constraint.FixedColumnCount;
-            gridLayout.constraintCount = 4;
+            gridLayout.constraintCount = 3;
             gridLayout.spacing = new Vector2(16, 16); gridLayout.childAlignment = TextAnchor.UpperCenter;
             grid.gameObject.AddComponent<ResponsiveGridLayout>().Refresh();
             LayoutElement gridElement = grid.gameObject.AddComponent<LayoutElement>();
@@ -69,12 +64,9 @@ namespace KMA.Gameplay.UI
             grid.GetComponent<ResponsiveGridLayout>().Refresh();
             var nodes = new List<MapNodeView>();
             foreach (Entry entry in Entries) nodes.Add(Card(grid, screen, entry, card, muted, mutedForeground, border));
-            ProgressCard(grid, session, border);
             grid.GetComponent<ResponsiveGridLayout>().Refresh();
             FutureRow(content, muted, mutedForeground, border);
             Anchor((RectTransform)content.Find("FutureRow"), new Vector2(.16f, .23f), new Vector2(.84f, .29f));
-            BossChallenge(content, screen, card, mutedForeground, border);
-            Anchor((RectTransform)content.Find("BossChallenge"), new Vector2(.10f, .07f), new Vector2(.90f, .18f));
             screen.BindPresentation(nodes.ToArray(), hearts, session);
             foreach (MapNodeView node in nodes)
                 if (!node.IsComingSoon && !node.IsInteractable) node.SetAvailability(false, "ĐANG PHÁT TRIỂN");
@@ -294,8 +286,6 @@ namespace KMA.Gameplay.UI
             upcomingLayout.preferredWidth = 150;
             upcomingLayout.preferredHeight = 46;
             FutureChip(row, "PushUpsChip", "Hít đất", muted, foreground, border);
-            FutureChip(row, "RhythmChip", "Nhịp điệu", muted, foreground, border);
-            FutureChip(row, "SwimmingChip", "Bơi lội", muted, foreground, border);
         }
 
         static void FutureChip(Transform parent, string name, string label, Color muted, Color foreground, Color border)
@@ -311,86 +301,6 @@ namespace KMA.Gameplay.UI
             element.preferredWidth = 168;
             element.preferredHeight = 46;
             Text(root, "Label", label, 22, foreground, TextAnchor.MiddleCenter);
-        }
-
-        static void ProgressCard(Transform parent, GameSession session, Color border)
-        {
-            var completed = 0;
-            if (session != null)
-            {
-                foreach (Entry entry in Entries)
-                    if (session.GetRecord(entry.Subject)?.Passed == true) completed++;
-            }
-            RectTransform section = Rect(parent, "ProgressCard");
-            Image cardImage = section.gameObject.AddComponent<Image>();
-            cardImage.color = new Color32(13, 57, 92, 255);
-            UseRoundedSurface(cardImage);
-            Outline outline = section.gameObject.AddComponent<Outline>();
-            outline.effectColor = border;
-            outline.effectDistance = new Vector2(2f, -2f);
-            Shadow shadow = section.gameObject.AddComponent<Shadow>();
-            shadow.effectColor = new Color(0f, 0f, 0f, .45f);
-            shadow.effectDistance = new Vector2(6f, -6f);
-            VerticalLayoutGroup layout = section.gameObject.AddComponent<VerticalLayoutGroup>();
-            layout.padding = new RectOffset(16, 16, 12, 12);
-            layout.spacing = 6;
-            layout.childControlWidth = true;
-            layout.childControlHeight = true;
-            layout.childForceExpandHeight = false;
-            Text label = LayoutLabel(section, "ProgressLabel", "TIẾN ĐỘ", 26,
-                new Color32(201, 226, 245, 255), TextAnchor.MiddleLeft);
-            label.transform.parent.gameObject.AddComponent<LayoutElement>().preferredHeight = 30;
-            Text fraction = LayoutLabel(section, "ProgressFraction", completed + " / " + Entries.Length, 48,
-                Color.white, TextAnchor.MiddleLeft);
-            fraction.transform.parent.gameObject.AddComponent<LayoutElement>().preferredHeight = 52;
-            RectTransform track = Rect(section, "ProgressTrack");
-            Image trackImage = track.gameObject.AddComponent<Image>(); trackImage.color = new Color32(203, 213, 225, 255);
-            track.gameObject.AddComponent<Outline>().effectColor = border;
-            track.gameObject.AddComponent<LayoutElement>().preferredHeight = 28;
-            RectTransform fill = Rect(track, "Fill");
-            fill.anchorMin = new Vector2(0f, 0f); fill.anchorMax = new Vector2((float)completed / Entries.Length, 1f);
-            fill.offsetMin = new Vector2(2f, 2f); fill.offsetMax = new Vector2(-2f, -2f);
-            fill.gameObject.AddComponent<Image>().color = new Color32(255, 202, 58, 255);
-            fill.gameObject.SetActive(completed > 0);
-            int remaining = Entries.Length - completed;
-            Text hint = LayoutLabel(section, "UnlockHint",
-                remaining > 0
-                    ? "Hoàn thành thêm " + remaining + " môn để mở thử thách tiếp theo."
-                    : "Đã mở thử thách tiếp theo.",
-                24, new Color32(221, 235, 245, 255), TextAnchor.MiddleLeft);
-            hint.transform.parent.gameObject.AddComponent<LayoutElement>().preferredHeight = 60;
-        }
-
-        static void BossChallenge(Transform parent, MapScreen screen, Color card, Color foreground, Color border)
-        {
-            RectTransform root = Rect(parent, "BossChallenge");
-            Image image = root.gameObject.AddComponent<Image>();
-            image.color = screen.BossUnlocked ? card : new Color32(13, 57, 92, 220);
-            UseRoundedSurface(image);
-            Outline outline = root.gameObject.AddComponent<Outline>();
-            outline.effectColor = screen.BossUnlocked ? new Color32(255, 202, 58, 255) : new Color32(104, 137, 161, 255);
-            outline.effectDistance = new Vector2(2f, -2f);
-            Shadow shadow = root.gameObject.AddComponent<Shadow>();
-            shadow.effectColor = new Color(0f, 0f, 0f, .28f);
-            shadow.effectDistance = new Vector2(5, -5);
-            if (screen.BossUnlocked)
-            {
-                Button button = root.gameObject.AddComponent<Button>();
-                button.targetGraphic = image;
-                button.colors = ButtonColors();
-                button.onClick.AddListener(screen.SelectBoss);
-                root.gameObject.AddComponent<BrutalButton>();
-            }
-            LayoutElement bossElement = root.gameObject.AddComponent<LayoutElement>();
-            bossElement.preferredHeight = 88;
-            bossElement.flexibleHeight = 0;
-            Text(root, "Label", screen.BossUnlocked
-                    ? "THỬ THÁCH CUỐI  →"
-                    : "🔒  Hoàn thành thêm các môn để mở thử thách tiếp theo.",
-                26, screen.BossUnlocked ? new Color32(8, 35, 61, 255) : new Color32(221, 235, 245, 255),
-                TextAnchor.MiddleCenter);
-            if (!screen.BossUnlocked)
-                AddCornerLockIcon(root, new Color32(221, 235, 245, 255));
         }
 
         static ColorBlock ButtonColors()
@@ -428,29 +338,6 @@ namespace KMA.Gameplay.UI
                     DrawLine(pixels, size, 36, 52, 61, 51, 8);
                     DrawLine(pixels, size, 61, 51, 31, 15, 8);
                     DrawLine(pixels, size, 24, 34, 45, 34, 6);
-                    break;
-                case SubjectId.Endurance:
-                    DrawRing(pixels, size, 31, 48, 22, 6);
-                    DrawRing(pixels, size, 65, 48, 22, 6);
-                    DrawLine(pixels, size, 28, 34, 69, 63, 6);
-                    DrawLine(pixels, size, 28, 62, 69, 33, 6);
-                    break;
-                case SubjectId.Volleyball:
-                    DrawRing(pixels, size, 48, 48, 34, 6);
-                    DrawLine(pixels, size, 18, 36, 76, 57, 5);
-                    DrawLine(pixels, size, 45, 15, 42, 79, 5);
-                    DrawLine(pixels, size, 64, 20, 53, 43, 5);
-                    break;
-                case SubjectId.Basketball:
-                    DrawRing(pixels, size, 48, 48, 34, 6);
-                    DrawLine(pixels, size, 14, 48, 82, 48, 5);
-                    DrawLine(pixels, size, 48, 14, 48, 82, 5);
-                    DrawLine(pixels, size, 23, 22, 73, 75, 5);
-                    break;
-                case SubjectId.PingPong:
-                    DrawCircle(pixels, size, 38, 57, 25);
-                    DrawLine(pixels, size, 50, 39, 72, 17, 10);
-                    DrawCircle(pixels, size, 74, 69, 8);
                     break;
                 case SubjectId.Badminton:
                     DrawCircle(pixels, size, 48, 24, 9);

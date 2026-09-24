@@ -13,8 +13,6 @@ namespace KMA.Tests.Presentation
         static readonly string[] SceneNames =
         {
             "MG_Sprint",
-            "MG_Endurance",
-            "MG_Boss",
             "Punishment",
             "Map",
             "GameOver"

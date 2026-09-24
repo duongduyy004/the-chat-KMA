@@ -19,7 +19,6 @@
 - Landscape; UI reference 1920×1080; artwork phủ tối thiểu 2560×1080; safe area trên điện thoại thật.
 - Giữ route, lưu tiến trình, xác nhận New Game, Continue và ba instance RivalRunner hiện tại.
 - Tạo/sửa scene, prefab, animation clip và import settings bằng Unity Editor/API, giữ GUID và metadata; không viết tay YAML scene.
-- Không triển khai Volleyball hay toàn bộ asset bảy môn trong gói demo này. Task 8–9 S1–S9 vẫn là công việc riêng; gate demo không thay thế gate đó.
 - Không thay đổi các chỉnh sửa sẵn có trong .gitignore/.worktrees. Chỉ tạo tài liệu trong lượt lập kế hoạch.
 - Chưa được cung cấp Slide 20_Module 4.1: nghiệm thu theo yêu cầu background chuyển động đã trích, chưa khẳng định đúng kỹ thuật cụ thể trong slide.
 

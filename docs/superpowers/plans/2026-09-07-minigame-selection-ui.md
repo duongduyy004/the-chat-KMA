@@ -17,8 +17,7 @@
 - Use TDD: observe every new regression test fail for the intended reason before production edits.
 - `Map` keeps its camera, CanvasScaler `1920x1080` with height match, `SafeAreaFitter`, GraphicRaycaster and EventSystem.
 - `Map` must not contain active `MinigameHUD`, `PhaseOverlay`, `ResultPanel` or `PausePanel` presentation.
-- Only Sprint, Endurance and Volleyball are selectable; Basketball, PingPong, Badminton and Football display `ĐANG PHÁT TRIỂN` and are disabled.
-- PushUps, Rhythm and Swimming remain presentation-only future content and do not emit a `SubjectRequested` route.
+- PushUps remains presentation-only future content and does not emit a `SubjectRequested` route.
 - Use the current uGUI stack and `Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf")`; add no dependency or bitmap asset.
 - Do not change progression rules, `SubjectId`, or `SceneRouter` route mappings.
 
@@ -28,7 +27,6 @@
 
 | File | Responsibility |
 |---|---|
-| `Assets/_Project/Scripts/UI/MapPresentationBuilder.cs` | Own responsive Map hierarchy, copy, palette, node catalog and boss card construction. |
 | `Assets/_Project/Scripts/Shell/S5ShellSceneController.cs` | Discover shell screens, wire route events and delegate Map construction. |
 | `Assets/_Project/Scripts/UI/MapNodeView.cs` | Apply progress/availability state and expose read-only UI state for regression tests. |
 | `Assets/_Project/Scripts/UI/MinigameUIAssembler.cs` | Distinguish shell Map assembly from gameplay-scene assembly and remove leaked prefab roots. |
@@ -45,20 +43,6 @@
 - Produces tests named `MapNode_ReportsReadyCompletedAndUnavailableStates` and `MapScene_ContainsOnlyResponsiveSelectionPresentation`.
 
 - [x] **Step 1: Extend the node test with exact state assertions.** Bind a real `Button` plus title/detail `Text` components using `LegacyRuntime.ttf`, then configure these three cases:
-
-```csharp
-node.Configure(SubjectId.Sprint, "Chạy nước rút", false, null, 5);
-Assert.That(node.DetailText, Is.EqualTo("SẴN SÀNG"));
-Assert.That(node.IsInteractable, Is.True);
-
-var passed = new SubjectRecord { Passed = true, BestRank = Rank.A };
-node.Configure(SubjectId.Sprint, "Chạy nước rút", false, passed, 5);
-Assert.That(node.DetailText, Does.Contain("HẠNG A"));
-
-node.Configure(SubjectId.Basketball, "Bóng rổ", true, null, 5);
-Assert.That(node.DetailText, Is.EqualTo("ĐANG PHÁT TRIỂN"));
-Assert.That(node.IsInteractable, Is.False);
-```
 
 - [x] **Step 2: Add a real-scene UnityTest.** Load `Map` in `LoadSceneMode.Single`, yield one frame for `Awake`, and assert:
 
@@ -96,7 +80,6 @@ Expected: compilation first fails because `DetailText` and `IsInteractable` do n
 **Interfaces:**
 - Produces `public static void MapPresentationBuilder.Build(MapScreen screen, GameSession session)`.
 - Produces `MapNodeView.DetailText`, `MapNodeView.IsInteractable`, and `MapNodeView.SetAvailability(bool selectable, string unavailableLabel)` as additive APIs.
-- Consumes `MapScreen.SelectSubject`, `MapScreen.SelectBoss`, `MapScreen.BindPresentation`, `HeartBar.SetSlots`, and `UITheme` palette defaults.
 
 - [x] **Step 1: Add the smallest observable node seam.** Add read-only properties and keep the serialized fields private:
 
@@ -117,44 +100,17 @@ public void SetAvailability(bool selectable, string unavailableLabel)
 
 - [x] **Step 2: Create the builder hierarchy.** `Build` must be idempotent (`screen.transform.Find("S5MapPresentation")` short-circuit), stretch the root to its parent, and create this hierarchy using `RectTransform`, `VerticalLayoutGroup`, `HorizontalLayoutGroup`, `GridLayoutGroup`, `LayoutElement`, `Image`, `Outline`, `Button`, and `Text`:
 
-```text
-S5MapPresentation (stretch)
-└── Content (safe margins 72/48)
-    ├── Header
-    │   ├── Title: CHỌN MÔN THI
-    │   └── LivesLabel: LƯỢT: n/5
-    ├── SelectionGrid (4 columns, 2 rows, flexible cell sizing)
-    │   ├── Sprint / Endurance / Volleyball (selectable)
-    │   └── Basketball / PingPong / Badminton / Football (disabled)
-    ├── FutureRow: Hít đất / Nhịp điệu / Bơi lội (disabled compact chips)
-    └── BossButton (disabled until session.BossUnlocked)
-```
-
 Every `Text` receives `LegacyRuntime.ttf`; every label has stretched anchors. Cards use white background, black outline, subject-colored header stripe, and muted tint when unavailable. Layout groups own all node positions; do not assign per-node `anchoredPosition`.
 
 - [x] **Step 3: Define the exact catalog in the builder.** Use one immutable internal definition per visible campaign node:
 
-```csharp
-new Entry(SubjectId.Sprint, "Chạy nước rút", new Color32(255, 89, 94, 255), true),
-new Entry(SubjectId.Endurance, "Chạy bền", new Color32(255, 202, 58, 255), true),
-new Entry(SubjectId.Volleyball, "Bóng chuyền", new Color32(138, 203, 136, 255), true),
-new Entry(SubjectId.Basketball, "Bóng rổ", new Color32(226, 232, 240, 255), false),
-new Entry(SubjectId.PingPong, "Bóng bàn", new Color32(226, 232, 240, 255), false),
-new Entry(SubjectId.Badminton, "Cầu lông", new Color32(226, 232, 240, 255), false),
-new Entry(SubjectId.Football, "Bóng đá", new Color32(226, 232, 240, 255), false),
-```
-
 Selectable entries call `screen.SelectSubject(entry.Subject)`; unavailable entries have no listener and call `SetAvailability(false, "ĐANG PHÁT TRIỂN")`. Bind only these seven campaign nodes into `MapScreen.Nodes`; future chips are presentation-only.
-
-- [x] **Step 4: Preserve progress and boss semantics.** Create a `HeartBar` with five small styled slot images plus `LivesLabel`, call `screen.BindPresentation(nodes, heartBar, session)`, then override placeholder availability after binding. Boss button calls `screen.SelectBoss`, is interactable only when `screen.BossUnlocked`, and shows `HOÀN THÀNH CÁC MÔN ĐỂ MỞ` while locked.
 
 - [x] **Step 5: Delegate from the shell controller.** Replace the body of `BuildMapPresentation` and remove `CreateMapNode`:
 
 ```csharp
 void BuildMapPresentation(GameSession session) => MapPresentationBuilder.Build(map, session);
 ```
-
-Keep route event subscriptions and `SetBossUnlocked` order unchanged.
 
 - [x] **Step 6: Run the focused tests.** Use the Task 1 PlayMode command. Expected: node state assertions pass; the scene test still fails only on leaked gameplay-overlay components until Task 3.
 
@@ -238,7 +194,6 @@ Expected: `diff --check` is clean; only planned files plus the user's pre-existi
 
 ## Self-Review Checklist
 
-- Spec coverage: overlay isolation is Task 3; responsive layout/copy/availability/boss/progress are Task 2; regression and full verification are Tasks 1 and 4.
 - Placeholder scan: no `TBD`, `TODO`, “similar to”, or unspecified implementation/error-handling step remains.
 - Type consistency: `MapPresentationBuilder.Build(MapScreen, GameSession)`, `DetailText`, `IsInteractable`, and `SetAvailability(bool, string)` are defined once and consumed under the same signatures.
 - Scope: no rules, routing map, package, bitmap or unrelated shell behavior changes are included.

@@ -2,10 +2,6 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** Assemble the offline KMA campaign shell so a player can start or resume a run, play all seven placeholder subjects, recover from a failed attempt, lose lives into Game Over, unlock the boss, and pause safely.
-
-**Architecture:** Keep `GameSession` authoritative for attempts, punishment, lives, records, and boss eligibility. Add a pure route-preview API that shares the route decision helper with `SubmitResult`; the result overlay displays the consequence first and submits the result only after Continue. `SceneRouter` remains the single scene-transition owner, while each placeholder scene owns one `PlaceholderMinigameController` and uses existing presentation/input services.
-
 **Tech Stack:** Unity `6000.3.23f1`, C#/.NET Standard 2.1, uGUI/TextMeshPro, Input System + EnhancedTouch, Unity Test Framework, Android landscape, JSON save system from S4.
 
 **Spec:** `docs/superpowers/specs/2026-08-27-kma-game-completion-design.md` §5 S5-1, S5-2, S5-3 and S5 device gate.
@@ -20,7 +16,6 @@
 - `PlaceholderMinigameController` is an S5 verification stub and must be replaced before S16; it exposes only debug Pass/Fail controls for this checkpoint.
 - Save data remains `Application.persistentDataPath/save.json`, written atomically through `save.tmp` and `File.Replace`; New Game preserves `settings` and `tutorialSeen`.
 - Android remains landscape; Canvas reference resolution is `1920×1080`, `Match Width Or Height = 1.0`, and safe-area insets apply on both sides.
-- Pause sets `Time.timeScale = 0`; Endurance/Boss rhythm clocks must explicitly pause/resume their `dspTime` schedule.
 - Run every shell command through `rtk`; do not stage or overwrite unrelated dirty S1–S4 files.
 
 ---
@@ -33,7 +28,6 @@
 | Shell UI | `Assets/_Project/Scripts/UI/{MainMenuScreen,MapScreen,SettingsScreen,CalibrateScreen,PausePanel,GameOverScreen}.cs` |
 | Result flow | `Assets/_Project/Scripts/UI/ResultPanel.cs`, `Assets/_Project/Scripts/Gameplay/Common/MinigameBase.cs` only if an additive completion seam is required |
 | Placeholder gameplay | `Assets/_Project/Scripts/Gameplay/Common/PlaceholderMinigameController.cs` |
-| Scenes/build | `Assets/_Project/Scenes/{Menu,Map,Punishment,GameOver,MG_Volleyball,MG_Basketball,MG_PingPong,MG_Badminton,MG_Football}.unity`, `ProjectSettings/EditorBuildSettings.asset` |
 | Tests | `Assets/Tests/PlayMode/Progression/CoreLoopTests.cs`, plus focused shell/presentation tests under `Assets/Tests/PlayMode/` |
 
 ---
@@ -114,10 +108,7 @@ Call `RouteForResult` from both `PreviewRoute` and `SubmitResult`; keep mutation
 
 **Interfaces:**
 - `GameManager.StartNewGame()` resets campaign records/lives, preserves `Settings` and tutorial flags, saves immediately, and routes to `Menu`.
-- `MapScreen.SelectSubject(SubjectId)` calls `SceneRouter.StartSubject`; `SelectBoss()` calls `SceneRouter.StartBoss` and is disabled while `BossUnlocked == false`.
 - `CalibrateScreen.SetOffset(float)` clamps to `[-500, 500]` milliseconds and calls `GameManager.UpdateSettings` with the updated `rhythmOffsetMs`.
-
-- [ ] **Step 1: Write failing New Game and screen-event tests.** Verify a passed Sprint record and reduced lives are cleared while the same `Settings` reference/values and tutorial flags survive; verify Map emits the selected subject and Boss event without owning route state.
 
 - [ ] **Step 2: Run the focused tests and verify RED.** Run the `S5NewGameTests` filter; expected failure is missing `ResetCampaign`, `StartNewGame`, or screen event APIs.
 
@@ -136,12 +127,10 @@ Call `RouteForResult` from both `PreviewRoute` and `SubmitResult`; keep mutation
 **Files:**
 - Modify: `Assets/_Project/Scripts/Core/SceneRouter.cs`
 - Create: `Assets/_Project/Scripts/Gameplay/Common/PlaceholderMinigameController.cs`
-- Create/modify: `Assets/_Project/Scenes/MG_Volleyball.unity`, `MG_Basketball.unity`, `MG_PingPong.unity`, `MG_Badminton.unity`, `MG_Football.unity`
 - Modify: `ProjectSettings/EditorBuildSettings.asset`
 - Create/modify: `Assets/Tests/PlayMode/Progression/PlaceholderSceneTests.cs`
 
 **Interfaces:**
-- `SceneRouter.DefaultSubjectScenes()` contains exactly seven mappings: Sprint, Endurance, Volleyball, Basketball, PingPong, Badminton, Football.
 - `PlaceholderMinigameController : MinigameBase` exposes `DebugPass()` and `DebugFail()`, emits one normalized result, and ignores later debug calls after resolve.
 
 - [ ] **Step 1: Write failing route and binding tests.** For every `SubjectId`, assert `TryGetSceneName(Subject)` and `TryGetSceneName(RetrySubject)` resolve a build-enabled scene. Load each of the five new scenes and assert exactly one placeholder controller, one camera, one HUD, and one completion event.
@@ -153,8 +142,6 @@ Call `RouteForResult` from both `PreviewRoute` and `SubmitResult`; keep mutation
 - [ ] **Step 4: Generate each scene through an Editor script.** The generator must create a tagged orthographic `GameplayCamera`, shared HUD/phase/result prefabs, EventSystem/input surface, exactly one `PlaceholderMinigameController`, and `GameplayPresentation`; save the scene under its exact required name.
 
 - [ ] **Step 5: Register scenes and verify automatic binding.** Add all five paths to `EditorBuildSettings.asset`; after `SceneRouter` loads a subject, `OnSceneLoaded` must bind the scene’s controller and clear the awaiting flag only after at least one controller is found.
-
-- [ ] **Step 6: Run route, placeholder, presentation, and full progression tests.** Expected: seven routes resolve, the Boss unlock test passes after seven placeholder passes, and unsupported-route assertions are removed/replaced with the seven-subject contract.
 
 - [ ] **Step 7: Commit** `feat: add seven-subject placeholder routes`.
 
@@ -170,7 +157,6 @@ Call `RouteForResult` from both `PreviewRoute` and `SubmitResult`; keep mutation
 **Interfaces:**
 - Punishment uses the existing `TapMashDetector`, `RhythmBeatDetector`/`HoldDetector`, and `AlternateTapDetector`; `PunishmentSceneController` remains the only scene-facing adapter.
 - `PausePanel.Open()` stores the current time scale, sets `Time.timeScale = 0`, and `Resume()` restores it; Restart and ExitToMap raise distinct actions.
-- Endurance/Boss pause integration stores the DSP elapsed offset and resumes from the same beat schedule without resetting the song clock.
 
 - [ ] **Step 1: Write failing tests.** Cover first failure → Punishment → RetrySubject, detector progress across all authored steps, completion once, pause/resume time scale, and no DSP jump after pause.
 
@@ -179,8 +165,6 @@ Call `RouteForResult` from both `PreviewRoute` and `SubmitResult`; keep mutation
 - [ ] **Step 3: Bind punishment UI to the existing controller methods.** The visible mechanic cue must match `sequence.Current.Mechanic`; progress reads `CurrentProgress`; tap, hold-release, and alternating touch zones call the already-defined public methods.
 
 - [ ] **Step 4: Add pause UI to all gameplay scenes.** Anchor the pause button top-right in the safe area. Restart clears the active attempt through the router/session flow; ExitToMap rejects the unfinished attempt and routes to Map through the existing route owner.
-
-- [ ] **Step 5: Run punishment, pause, route, and full suites.** Expected: no duplicate completion, no soft-lock after punishment, and existing Endurance/Boss timing tests remain green.
 
 - [ ] **Step 6: Commit** `feat: wire S5 punishment and pause flow`.
 
@@ -202,10 +186,6 @@ rtk adb install -r Builds/Android/kma-s5.apk
 ```
 
 - [ ] **Step 3: Record the progression gate.** On-device verify Menu → Map → subject → first failure → Punishment → RetrySubject → second failure → life loss → Map, repeat to zero lives, and confirm GameOver.
-
-- [ ] **Step 4: Record the unlock/persistence gate.** Pass all seven placeholders, confirm Boss unlocks and `MG_Boss` loads, kill/relaunch after a partial run, and verify lives/records restore while settings/tutorial flags remain.
-
-- [ ] **Step 5: Record pause/input gate.** Pause during a subject, verify Resume, Restart, and ExitToMap; test Endurance/Boss beat continuity after pause and calibrate a non-zero rhythm offset.
 
 - [ ] **Step 6: Update QA notes and commit.** Document device model/API, build result, any unavailable checks, and exact known S5 limitations. Run `rtk git diff --check`; commit `feat: close the playable campaign shell` only when the device gate is evidenced.
 

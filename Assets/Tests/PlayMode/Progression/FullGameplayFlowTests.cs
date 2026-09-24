@@ -2,7 +2,6 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using KMA.Gameplay;
-using KMA.Gameplay.Boss;
 using KMA.Gameplay.Core;
 using KMA.Gameplay.Shell;
 using KMA.Gameplay.UI;
@@ -24,7 +23,6 @@ namespace KMA.Tests.Gameplay.Progression
         {
             originalTargetFrameRate = Application.targetFrameRate;
             originalVSyncCount = QualitySettings.vSyncCount;
-            BossSceneSessionHandoff.ClearPendingSession();
         }
 
         [TearDown]
@@ -38,13 +36,12 @@ namespace KMA.Tests.Gameplay.Progression
             gameObjects.Clear();
             DestroyAll<GameManager>();
             DestroyAll<SceneRouter>();
-            BossSceneSessionHandoff.ClearPendingSession();
             Application.targetFrameRate = originalTargetFrameRate;
             QualitySettings.vSyncCount = originalVSyncCount;
         }
 
         [UnityTest]
-        public IEnumerator FullFlow_UsesAttemptsLivesNormalizedResultsAndBossUnlock()
+        public IEnumerator FullFlow_UsesAttemptsLivesAndNormalizedResults()
         {
             var harness = GameplayFlowHarness.Create();
 
@@ -71,8 +68,7 @@ namespace KMA.Tests.Gameplay.Progression
                 harness.CompleteTransition();
             }
 
-            Assert.That(harness.Session.Records, Has.Count.EqualTo(7));
-            Assert.That(harness.Session.BossUnlocked, Is.True);
+            Assert.That(harness.Session.Records, Has.Count.EqualTo(3));
             foreach (var record in harness.Session.Records.Values)
             {
                 Assert.That(record.BestResult.Pass, Is.True);
@@ -80,17 +76,7 @@ namespace KMA.Tests.Gameplay.Progression
                 Assert.That(record.BestResult.Rank, Is.EqualTo(ScoreUtil.ToRank(record.BestResult.Score)));
             }
 
-            harness.StartBoss();
-            Assert.That(harness.Route, Is.EqualTo(SessionRoute.Boss));
-            Assert.That(harness.Transitions[harness.Transitions.Count - 1].Session,
-                Is.SameAs(harness.Session));
-            var handoff = CreateGameObject("Boss session handoff").AddComponent<BossSceneSessionHandoff>();
-            Assert.That(handoff.Session, Is.SameAs(harness.Session));
-            harness.CompleteTransition();
-
-            harness.CompleteBoss();
-            Assert.That(harness.Route, Is.EqualTo(SessionRoute.Map));
-            Assert.That(harness.Transitions, Has.Count.EqualTo(20));
+            Assert.That(harness.Transitions, Has.Count.EqualTo(10));
             yield return null;
         }
 
@@ -119,7 +105,7 @@ namespace KMA.Tests.Gameplay.Progression
         {
             var harness = GameplayFlowHarness.Create();
 
-            harness.Start(SubjectId.Endurance);
+            harness.Start(SubjectId.Badminton);
             harness.CompleteTransition();
             harness.Pass(6f);
             harness.RepeatLastCompletion();
@@ -130,22 +116,16 @@ namespace KMA.Tests.Gameplay.Progression
         }
 
         [Test]
-        public void RuntimeRouter_MapsAllSevenProductionSubjects()
+        public void RuntimeRouter_MapsAllThreeProductionSubjects()
         {
             var router = SceneRouter.EnsurePersistentInstance();
 
             AssertRoute(router, SessionRoute.Map, null);
             AssertRoute(router, SessionRoute.Map, SubjectId.Sprint);
             AssertRoute(router, SessionRoute.GameOver, null);
-            AssertRoute(router, SessionRoute.Boss, null);
             AssertRoute(router, SessionRoute.Subject, SubjectId.Sprint);
-            AssertRoute(router, SessionRoute.Subject, SubjectId.Endurance);
-
             foreach (var subject in new[]
             {
-                SubjectId.Volleyball,
-                SubjectId.Basketball,
-                SubjectId.PingPong,
                 SubjectId.Badminton,
                 SubjectId.Football
             })
@@ -155,7 +135,7 @@ namespace KMA.Tests.Gameplay.Progression
         }
 
         [UnityTest]
-        public IEnumerator RuntimeRouter_AutoBindsRealSubjectAndBossCompletionEvents()
+        public IEnumerator RuntimeRouter_AutoBindsRealSubjectCompletionEvents()
         {
             var router = SceneRouter.EnsurePersistentInstance();
             var mapRouteCount = 0;
@@ -178,36 +158,9 @@ namespace KMA.Tests.Gameplay.Progression
             Assert.That(router.Session.GetRecord(SubjectId.Sprint).Passed, Is.True);
             Assert.That(mapRouteCount, Is.EqualTo(1));
 
-            foreach (SubjectId subject in Enum.GetValues(typeof(SubjectId)))
-            {
-                if (subject == SubjectId.Sprint)
-                    continue;
-                router.Session.StartSubject(subject);
-                router.Session.SubmitResult(subject, new MinigameResult(true, 6f, Rank.C));
-            }
-
-            Assert.That(router.Session.BossUnlocked, Is.True);
-            Assert.That(router.StartBoss(), Is.True);
-            yield return WaitForScene("MG_Boss");
-
-            var boss = UnityEngine.Object.FindFirstObjectByType<BossPhaseController>();
-            Assert.That(boss.Session, Is.SameAs(router.Session));
-            var bossCompletionCount = 0;
-            boss.Completed += _ => bossCompletionCount++;
-            yield return new WaitForSeconds(5.1f);
-            boss.Begin();
-            for (var tap = 0; tap < 40; tap++)
-                boss.TapMashDetector.SubmitTap();
-            for (var hold = 0; hold < 16; hold++)
-                boss.RhythmHoldDetector.SubmitHold(1f);
-            for (var alternate = 0; alternate < 32; alternate++)
-                boss.AlternateTapDetector.SubmitTap(alternate % 2 == 0 ? BossTapSide.Left : BossTapSide.Right);
-
-            yield return WaitForScene("Map");
             yield return null;
 
-            Assert.That(bossCompletionCount, Is.EqualTo(1));
-            Assert.That(mapRouteCount, Is.EqualTo(2));
+            Assert.That(mapRouteCount, Is.EqualTo(1));
             router.TransitionStarted -= CountMapRoutes;
 
             void CountMapRoutes(SceneRouteTransition transition)
@@ -229,7 +182,7 @@ namespace KMA.Tests.Gameplay.Progression
             var persistenceEvents = 0;
             router.SessionChanged += () => persistenceEvents++;
 
-            Assert.That(router.StartSubject(SubjectId.Endurance), Is.False, "StartSubject must be rejected.");
+            Assert.That(router.StartSubject(SubjectId.Badminton), Is.False, "StartSubject must be rejected.");
             Assert.That(router.SubmitSubjectResult(SubjectId.Sprint, new MinigameResult(false, 0f, Rank.F)),
                 Is.False, "SubmitSubjectResult must be rejected.");
             Assert.That(router.RestartActiveSubject(), Is.False, "Restart must be rejected.");
@@ -319,7 +272,7 @@ namespace KMA.Tests.Gameplay.Progression
 
             Assert.That(router.RouteToMenu(), Is.True);
             Assert.That(router.IsTransitioning, Is.True);
-            Assert.That(router.StartSubject(SubjectId.Endurance), Is.False);
+            Assert.That(router.StartSubject(SubjectId.Badminton), Is.False);
             Assert.That(router.SubmitSubjectResult(SubjectId.Sprint, new MinigameResult(false, 0f, Rank.F)),
                 Is.False);
             Assert.That(router.RestartActiveSubject(), Is.False);
@@ -421,15 +374,6 @@ namespace KMA.Tests.Gameplay.Progression
                 lastCompletion = result;
                 RouteSession(Session.SubmitResult(active, result), active);
             }
-
-            public void StartBoss()
-            {
-                if (!Session.BossUnlocked)
-                    throw new InvalidOperationException("Boss is still locked.");
-                RouteSession(SessionRoute.Boss, null);
-            }
-
-            public void CompleteBoss() => RouteSession(SessionRoute.Map, null);
 
             public void RepeatLastCompletion()
             {
