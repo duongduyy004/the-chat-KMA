@@ -139,8 +139,10 @@ namespace KMA.Tests.Presentation
                     .GetComponent<GridLayoutGroup>();
                 Assert.That(grid.constraint, Is.EqualTo(GridLayoutGroup.Constraint.FixedColumnCount));
                 Assert.That(grid.constraintCount, Is.EqualTo(3));
-                Assert.That(grid.transform.childCount, Is.EqualTo(2));
-                Assert.That(root.GetComponentsInChildren<MapNodeView>(true), Has.Length.EqualTo(2));
+                Assert.That(grid.transform.childCount, Is.EqualTo(3));
+                Assert.That(root.GetComponentsInChildren<MapNodeView>(true), Has.Length.EqualTo(3));
+                Assert.That(root.GetComponentsInChildren<MapNodeView>(true).Select(node => node.SubjectId),
+                    Is.EqualTo(new[] { SubjectId.Sprint, SubjectId.Volleyball, SubjectId.Football }));
                 Assert.That(grid.cellSize.y, Is.GreaterThanOrEqualTo(220f));
                 Assert.That(root.transform.Find("S5MapPresentation/Content/ProgressSection"), Is.Null);
             }
@@ -233,7 +235,7 @@ namespace KMA.Tests.Presentation
                     Assert.That(icon.preserveAspect, Is.True, node.name);
                     return icon.sprite;
                 }).ToArray();
-                Assert.That(iconSprites.Distinct().Count(), Is.EqualTo(2));
+                Assert.That(iconSprites.Distinct().Count(), Is.EqualTo(3));
 
                 foreach (MapNodeView node in screen.Nodes)
                 {

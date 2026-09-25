@@ -131,7 +131,7 @@ namespace KMA.Tests.Gameplay.Core
             seeded.subjects[0].bestScore = 0.98f;
             seeded.subjects[0].bestRank = Rank.S;
             seeded.subjects[0].failedVisits = 4;
-            seeded.tutorialSeen = new[] { false, true };
+            seeded.tutorialSeen = new[] { false, true, false };
             seeded.settings.musicVol = 0.35f;
             seeded.settings.sfxVol = 0.65f;
             seeded.settings.vibration = false;
@@ -162,7 +162,7 @@ namespace KMA.Tests.Gameplay.Core
 
             SaveData restored = manager.SaveSystem.Load();
             Assert.That(restored.tutorialSeen,
-                Is.EqualTo(new[] { false, true }));
+                Is.EqualTo(new[] { false, true, false }));
             Assert.That(restored.settings.musicVol, Is.EqualTo(0.35f));
             Assert.That(restored.settings.sfxVol, Is.EqualTo(0.65f));
             Assert.That(restored.settings.vibration, Is.False);

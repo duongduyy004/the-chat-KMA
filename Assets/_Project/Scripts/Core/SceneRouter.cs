@@ -550,6 +550,7 @@ namespace KMA.Gameplay.Core
         static SubjectScene[] DefaultSubjectScenes() => new[]
         {
             new SubjectScene { Subject = SubjectId.Sprint, SceneName = "MG_Sprint" },
+            new SubjectScene { Subject = SubjectId.Volleyball, SceneName = "MG_Volleyball" },
             new SubjectScene { Subject = SubjectId.Football, SceneName = "MG_Football" }
         };
     }

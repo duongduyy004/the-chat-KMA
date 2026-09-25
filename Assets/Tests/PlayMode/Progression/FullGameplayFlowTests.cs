@@ -68,7 +68,7 @@ namespace KMA.Tests.Gameplay.Progression
                 harness.CompleteTransition();
             }
 
-            Assert.That(harness.Session.Records, Has.Count.EqualTo(2));
+            Assert.That(harness.Session.Records, Has.Count.EqualTo(3));
             foreach (var record in harness.Session.Records.Values)
             {
                 Assert.That(record.BestResult.Pass, Is.True);
@@ -76,7 +76,7 @@ namespace KMA.Tests.Gameplay.Progression
                 Assert.That(record.BestResult.Rank, Is.EqualTo(ScoreUtil.ToRank(record.BestResult.Score)));
             }
 
-            Assert.That(harness.Transitions, Has.Count.EqualTo(8));
+            Assert.That(harness.Transitions, Has.Count.EqualTo(10));
             yield return null;
         }
 

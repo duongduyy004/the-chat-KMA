@@ -58,6 +58,13 @@ namespace KMA.Tests.Gameplay.Progression
             Assert.That(router.Session, Is.SameAs(original));
         }
 
+        [Test]
+        public void VolleyballRoutesToItsScene()
+        {
+            Assert.That(router.TryGetSceneName(SessionRoute.Subject, SubjectId.Volleyball, out string sceneName), Is.True);
+            Assert.That(sceneName, Is.EqualTo("MG_Volleyball"));
+        }
+
         static SessionRouteTransitioner GetTransitioner(SceneRouter sceneRouter) =>
             (SessionRouteTransitioner)typeof(SceneRouter)
                 .GetField("transitioner", BindingFlags.Instance | BindingFlags.NonPublic)

@@ -1,6 +1,6 @@
 # PLAN — Vượt Thể KMA
 
-> Phạm vi hiện tại của prototype Unity: Sprint và Football. Sprint có thể chơi; Football đang khóa trên bản đồ.
+> Phạm vi hiện tại của prototype Unity: Sprint, Volleyball và Football. Sprint và Volleyball có thể chơi; Football đang khóa trên bản đồ.
 
 ## 1. Nền tảng
 
@@ -20,13 +20,14 @@
 | Môn | Scene | Trạng thái bản đồ |
 |---|---|---|
 | Sprint | `MG_Sprint` | Có thể chơi |
+| Volleyball | `MG_Volleyball` | Có thể chơi |
 | Football | `MG_Football` | Khóa |
 
 Mỗi môn có luật và điều kiện hoàn thành riêng. Kết quả dùng cùng thang điểm và vòng đời chung: `Tutorial → Countdown → Play → Resolve`.
 
 ## 4. Scene và hệ thống dùng chung
 
-- `Bootstrap`, `Map`, `MG_Sprint`, `MG_Football`, `Punishment`, `GameOver`.
+- `Bootstrap`, `Map`, `MG_Sprint`, `MG_Volleyball`, `MG_Football`, `Punishment`, `GameOver`.
 - `GameSession`, `SaveSystem`, `SceneRouter`, subject configuration và bộ trình bày bản đồ quản lý tiến trình.
 - Input dùng chung gồm tap, alternate tap, rhythm, hold, swipe và timing window; scene chỉ sử dụng các detector phù hợp.
 - Thành phần UI chia sẻ theme, safe-area handling, HUD, tutorial, countdown và kết quả.

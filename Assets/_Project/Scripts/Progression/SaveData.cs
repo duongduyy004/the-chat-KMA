@@ -5,7 +5,7 @@ namespace KMA.Gameplay
     [Serializable]
     public sealed class SaveData
     {
-        public const int CurrentVersion = 5;
+        public const int CurrentVersion = 6;
 
         public int version;
         public int lives;

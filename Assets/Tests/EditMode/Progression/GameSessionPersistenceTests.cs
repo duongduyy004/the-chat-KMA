@@ -215,7 +215,7 @@ namespace KMA.Tests.Gameplay.Progression
             restored.Restore(data);
 
             Assert.That(restored.Lives, Is.EqualTo(3));
-            Assert.That(restored.Records, Has.Count.EqualTo(2));
+            Assert.That(restored.Records, Has.Count.EqualTo(3));
             Assert.That(restored.GetRecord(SubjectId.Sprint).BestRank, Is.EqualTo(Rank.A));
             Assert.That(restored.GetRecord(SubjectId.Sprint).BestScore, Is.EqualTo(8f));
             Assert.That(restored.GetRecord(SubjectId.Football).FailedVisits, Is.EqualTo(1));

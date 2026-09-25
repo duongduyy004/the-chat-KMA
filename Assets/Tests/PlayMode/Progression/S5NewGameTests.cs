@@ -205,7 +205,7 @@ namespace KMA.Tests.Gameplay.Progression
                     Is.EquivalentTo(new[] { "SẮP RA MẮT", "Hít đất" }));
                 Assert.That(futureRow.GetComponentsInChildren<Button>(true), Is.Empty);
                 Assert.That(futureRow.GetComponentsInChildren<MapNodeView>(true), Is.Empty);
-                Assert.That(screen.Nodes, Has.Length.EqualTo(2));
+                Assert.That(screen.Nodes, Has.Length.EqualTo(3));
 
                 Assert.That(requested, Is.Empty,
                     "Presentation-only future chips must never request a campaign subject route.");
@@ -259,7 +259,7 @@ namespace KMA.Tests.Gameplay.Progression
             var screen = Object.FindFirstObjectByType<MapScreen>(FindObjectsInactive.Include);
             Assert.That(screen.transform.Find("S5MapPresentation"), Is.Not.Null);
             Assert.That(screen.Nodes.Where(node => node.IsInteractable).Select(node => node.SubjectId),
-                Is.EquivalentTo(new[] { SubjectId.Sprint }));
+                Is.EquivalentTo(new[] { SubjectId.Sprint, SubjectId.Volleyball }));
             Assert.That(screen.Nodes.Where(node => !node.IsInteractable &&
                     node.DetailText == "ĐANG PHÁT TRIỂN").Select(node => node.SubjectId),
                 Is.EquivalentTo(new[] { SubjectId.Football }));

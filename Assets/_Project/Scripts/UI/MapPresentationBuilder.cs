@@ -28,6 +28,7 @@ namespace KMA.Gameplay.UI
         static readonly Entry[] Entries =
         {
             new Entry(SubjectId.Sprint, "Chạy nước rút", new Color32(49, 162, 222, 255), true),
+            new Entry(SubjectId.Volleyball, "Bóng chuyền", new Color32(245, 158, 46, 255), true),
             new Entry(SubjectId.Football, "Bóng đá", new Color32(226, 232, 240, 255), false),
         };
 
@@ -346,6 +347,12 @@ namespace KMA.Gameplay.UI
                     DrawLine(pixels, size, 57, 54, 77, 66, 5);
                     DrawLine(pixels, size, 42, 41, 25, 25, 5);
                     DrawLine(pixels, size, 54, 41, 70, 25, 5);
+                    break;
+                case SubjectId.Volleyball:
+                    DrawRing(pixels, size, 48, 48, 34, 6);
+                    DrawLine(pixels, size, 48, 48, 48, 82, 5);
+                    DrawLine(pixels, size, 48, 48, 19, 31, 5);
+                    DrawLine(pixels, size, 48, 48, 77, 31, 5);
                     break;
             }
             texture.SetPixels32(pixels);

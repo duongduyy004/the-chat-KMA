@@ -8,22 +8,22 @@ namespace KMA.Tests.Gameplay.Progression
     public sealed class SaveDataTests
     {
         [Test]
-        public void SaveData_ContainsTwoRecordsAndSettings()
+        public void SaveData_ContainsThreeRecordsAndSettings()
         {
             var data = SaveData.CreateDefault();
             var subjectIds = (SubjectId[])Enum.GetValues(typeof(SubjectId));
 
-            Assert.That(subjectIds, Has.Length.EqualTo(2));
+            Assert.That(subjectIds, Has.Length.EqualTo(3));
             Assert.That(subjectIds, Is.EqualTo(new[]
-                { SubjectId.Sprint, SubjectId.Football }));
-            Assert.That(SaveData.CurrentVersion, Is.EqualTo(5));
+                { SubjectId.Sprint, SubjectId.Football, SubjectId.Volleyball }));
+            Assert.That(SaveData.CurrentVersion, Is.EqualTo(6));
             Assert.That(data.version, Is.EqualTo(SaveData.CurrentVersion));
             Assert.That(data.lives, Is.EqualTo(5));
             Assert.That(data.hasActiveSubject, Is.False);
             Assert.That(data.visitAttempt, Is.EqualTo(1));
             Assert.That(data.awaitingPunishment, Is.False);
             Assert.That(data.subjects, Has.Length.EqualTo(subjectIds.Length));
-            Assert.That(data.tutorialSeen, Has.Length.EqualTo(2));
+            Assert.That(data.tutorialSeen, Has.Length.EqualTo(3));
             Assert.That(data.tutorialSeen, Is.All.False);
 
             for (int i = 0; i < subjectIds.Length; i++)
@@ -71,11 +71,11 @@ namespace KMA.Tests.Gameplay.Progression
             Assert.That(restored, Is.Not.Null);
             Assert.That(restored.version, Is.EqualTo(SaveData.CurrentVersion));
             Assert.That(restored.lives, Is.EqualTo(5));
-            Assert.That(restored.subjects, Has.Length.EqualTo(2));
+            Assert.That(restored.subjects, Has.Length.EqualTo(3));
             Assert.That(restored.hasActiveSubject, Is.False);
             Assert.That(restored.visitAttempt, Is.EqualTo(1));
             Assert.That(restored.awaitingPunishment, Is.False);
-            Assert.That(restored.tutorialSeen, Has.Length.EqualTo(2));
+            Assert.That(restored.tutorialSeen, Has.Length.EqualTo(3));
             Assert.That(restored.tutorialSeen, Is.All.False);
             Assert.That(restored.settings.musicVol, Is.EqualTo(1f));
             Assert.That(restored.settings.sfxVol, Is.EqualTo(1f));
