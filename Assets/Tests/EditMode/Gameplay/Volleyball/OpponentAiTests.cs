@@ -66,7 +66,16 @@ namespace KMA.Tests.Gameplay.Volleyball
             MatchDriver.ServeGood(match);
             Assert.That(MatchDriver.AdvanceUntil(match, () => match.OpponentSmashTell, 6f), Is.True);
 
+            // The block must be judged against where the smash actually crosses the net, not its
+            // eventual landing spot (OpponentAim). The two differ meaningfully for this serve.
+            float netCrossY = ActionResolver.NetCrossY(match.Flight.GroundAt(match.FlightTime), match.OpponentAim);
+            Assert.That(Mathf.Abs(netCrossY - match.OpponentAim.y), Is.GreaterThan(ActionResolver.BlockLateral));
+
             match.Player.PlaceAt(new Vector2(-.8f, match.OpponentAim.y));
+            Assert.That(match.PressAction().Kind, Is.EqualTo(ActionKind.None),
+                "lining up on the smash's landing spot, not its net crossing, must not block");
+
+            match.Player.PlaceAt(new Vector2(-.8f, netCrossY));
             Assert.That(match.PressAction().Kind, Is.EqualTo(ActionKind.Block));
 
             Assert.That(MatchDriver.AdvanceUntil(match, () => match.BallState == BallState.Dead, 1f), Is.True);
@@ -111,10 +120,21 @@ namespace KMA.Tests.Gameplay.Volleyball
         public void SmashAimedAwayFromTheBlockGetsThrough()
         {
             VolleyballMatch match = PlayerReadyToSmashIntoABlock();
-            match.SetMove(Vector2.up);
+
+            // The block is now judged against where the smash crosses the net (close to the
+            // player's near-net contact point here), not its landing spot, so the lateral swing
+            // needed to clear the AI's 1 m reach is much smaller than the eventual landing spread
+            // suggests. A short, wide aim clears it; confirm that precondition directly so the
+            // test stays meaningful if the tuning constants ever change.
+            var stick = new Vector2(-.31f, .95f);
+            match.SetMove(stick);
+            Vector2 aim = VolleyballMatch.AimAtOpponent(Vector2.ClampMagnitude(stick, 1f));
+            float netCrossY = ActionResolver.NetCrossY(match.BallGround, aim);
+            Assert.That(Mathf.Abs(match.Opponent.Position.y - netCrossY), Is.GreaterThan(ActionResolver.BlockLateral));
+
             Assert.That(match.PressAction().Kind, Is.EqualTo(ActionKind.Smash));
             Assert.That(match.BallState, Is.EqualTo(BallState.InPlay));
-            Assert.That(match.Flight.Target, Is.EqualTo(new Vector2(7f, 3f)));
+            Assert.That(match.Flight.Target, Is.EqualTo(aim));
         }
 
         static List<string> RunScripted()

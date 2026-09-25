@@ -168,6 +168,110 @@ namespace KMA.Tests.Gameplay.Volleyball
         }
 
         [Test]
+        public void LateLatePressStillSmashesAsTheDocumentedSoftLob()
+        {
+            var match = FrozenOpponentMatch();
+            match.ForceServerForTest(CourtSide.Opponent);
+            Assert.That(MatchDriver.AdvanceUntil(match, () => match.BallState == BallState.InPlay, 3f), Is.True);
+            float receiveIdeal = match.Flight.TimeAtHeightDescending(ActionResolver.ReceiveContactHeight);
+            match.Player.PlaceAt(match.Flight.GroundAt(receiveIdeal));
+            MatchDriver.AdvanceToFlightTime(match, receiveIdeal);
+            match.PressAction();
+
+            // Pressed +0.25 s past the ideal smash moment: still within the LATE window (<=0.30 s)
+            // but, before the fix, HeightAt(pressTime) had already dropped below SmashMinHeight,
+            // silently falling through instead of smashing.
+            float smashIdeal = match.Flight.TimeAtHeightDescending(ActionResolver.SmashContactHeight);
+            match.Player.PlaceAt(match.Flight.GroundAt(smashIdeal));
+            MatchDriver.AdvanceToFlightTime(match, smashIdeal + .25f);
+            match.SetMove(Vector2.right);
+            ActionDecision smash = match.PressAction();
+            match.SetMove(Vector2.zero);
+
+            Assert.That(smash.Kind, Is.EqualTo(ActionKind.Smash));
+            Assert.That(smash.Grade, Is.EqualTo(TimingGrade.Late));
+            Assert.That(match.Flight.Target, Is.EqualTo(new Vector2(7f, 0f)));
+            Assert.That(CourtSpace.SideOf(match.Flight.Target), Is.EqualTo(CourtSide.Opponent));
+        }
+
+        [Test]
+        public void ThirdTouchDiveSendsAWeakFreeBallOverTheNetInsteadOfAlwaysLosingThePoint()
+        {
+            var match = FrozenOpponentMatch();
+            match.ForceServerForTest(CourtSide.Opponent);
+            Assert.That(MatchDriver.AdvanceUntil(match, () => match.BallState == BallState.InPlay, 3f), Is.True);
+
+            // Touch 1: an early (LATE-graded) receive pushes the set well away from the net so
+            // touch 2 cannot smash and instead becomes another kept receive.
+            float receiveIdeal = match.Flight.TimeAtHeightDescending(ActionResolver.ReceiveContactHeight);
+            match.Player.PlaceAt(match.Flight.GroundAt(receiveIdeal));
+            MatchDriver.AdvanceToFlightTime(match, receiveIdeal - .25f);
+            ActionDecision touch1 = match.PressAction();
+            Assert.That(touch1.Kind, Is.EqualTo(ActionKind.Receive));
+            Assert.That(touch1.Grade, Is.EqualTo(TimingGrade.Late));
+            Assert.That(Mathf.Abs(match.Flight.Target.x), Is.GreaterThan(ActionResolver.SmashNetDistance));
+            Assert.That(match.Rally.Touches, Is.EqualTo(1));
+
+            // Touch 2: still too far from the net to smash, so it's kept as another receive,
+            // reaching the third and final touch.
+            float touch2Ideal = match.Flight.TimeAtHeightDescending(ActionResolver.ReceiveContactHeight);
+            match.Player.PlaceAt(match.Flight.GroundAt(touch2Ideal));
+            MatchDriver.AdvanceToFlightTime(match, touch2Ideal);
+            ActionDecision touch2 = match.PressAction();
+            Assert.That(touch2.Kind, Is.EqualTo(ActionKind.Receive));
+            Assert.That(match.Rally.Touches, Is.EqualTo(2));
+
+            // Touch 3: out of clean reach with the ball dropping past 1 m - only a dive can save
+            // it, and with no touches left it must legally cross the net.
+            float diveIdeal = match.Flight.TimeAtHeightDescending(ActionResolver.ReceiveContactHeight);
+            match.Player.PlaceAt(match.Flight.Target + new Vector2(0f, 1.6f));
+            MatchDriver.AdvanceToFlightTime(match, diveIdeal + .05f);
+            ActionDecision dive = match.PressAction();
+
+            Assert.That(dive.Kind, Is.EqualTo(ActionKind.Dive));
+            Assert.That(match.Rally.Touches, Is.EqualTo(0));
+            Assert.That(match.Rally.Possession, Is.EqualTo(CourtSide.Opponent));
+            Assert.That(CourtSpace.SideOf(match.Flight.Target), Is.EqualTo(CourtSide.Opponent));
+        }
+
+        [Test]
+        public void OpponentReceivingASmashClearsTheWinnerCreditIfTheAiLosesThePointLater()
+        {
+            var match = FrozenOpponentMatch();
+            match.ForceServerForTest(CourtSide.Opponent);
+            Assert.That(MatchDriver.AdvanceUntil(match, () => match.BallState == BallState.InPlay, 3f), Is.True);
+
+            float receiveIdeal = match.Flight.TimeAtHeightDescending(ActionResolver.ReceiveContactHeight);
+            match.Player.PlaceAt(match.Flight.GroundAt(receiveIdeal));
+            MatchDriver.AdvanceToFlightTime(match, receiveIdeal);
+            match.PressAction();
+
+            float smashIdeal = match.Flight.TimeAtHeightDescending(ActionResolver.SmashContactHeight);
+            match.Player.PlaceAt(match.Flight.GroundAt(smashIdeal));
+            MatchDriver.AdvanceToFlightTime(match, smashIdeal);
+            match.SetMove(Vector2.zero);
+            ActionDecision smash = match.PressAction();
+            match.SetMove(Vector2.zero);
+            Assert.That(smash.Kind, Is.EqualTo(ActionKind.Smash));
+            Assert.That(smash.Grade, Is.EqualTo(TimingGrade.Perfect));
+            Assert.That(match.Rally.Possession, Is.EqualTo(CourtSide.Opponent));
+
+            // The AI genuinely receives the smash (a real defensive touch) ...
+            float aiReceiveIdeal = match.Flight.TimeAtHeightDescending(ActionResolver.ReceiveContactHeight);
+            match.Opponent.PlaceAt(match.Flight.GroundAt(aiReceiveIdeal));
+            MatchDriver.AdvanceToFlightTime(match, aiReceiveIdeal);
+            Assert.That(match.Rally.Touches, Is.EqualTo(1));
+            Assert.That(match.Rally.LastToucher, Is.EqualTo(CourtSide.Opponent));
+
+            // ... but is frozen (speed 0) and never reaches its own follow-up set, so that set
+            // simply lands untouched on the AI's own side - the player wins the point, but not
+            // because of the original smash.
+            Assert.That(MatchDriver.AdvanceUntil(match, () => match.BallState == BallState.Dead, 3f), Is.True);
+            Assert.That(match.PlayerPoints, Is.EqualTo(1));
+            Assert.That(match.Winners, Is.Zero);
+        }
+
+        [Test]
         public void FirstToFiveCompletesOnceWithTheSpecScore()
         {
             var match = FrozenOpponentMatch();

@@ -133,7 +133,10 @@ namespace KMA.Gameplay.Volleyball
                 float smashIdeal = flight.TimeAtHeightDescending(SmashContactHeight);
                 float smashOffset = time - smashIdeal;
                 TimingGrade smashGrade = TimingWindows.Grade(smashOffset);
-                if (smashGrade != TimingGrade.Miss && flight.HeightAt(time) >= SmashMinHeight &&
+                // The height gate confirms the set was high enough to smash at all, judged at the
+                // fixed ideal contact moment - not at the actual press time, which would otherwise
+                // penalize a late-but-still-within-window press on top of the timing grade.
+                if (smashGrade != TimingGrade.Miss && flight.HeightAt(smashIdeal) >= SmashMinHeight &&
                     Vector2.Distance(athlete.Position, flight.GroundAt(smashIdeal)) <= Reach)
                     return new ActionDecision(ActionKind.Smash, smashGrade, smashOffset);
             }
@@ -158,10 +161,17 @@ namespace KMA.Gameplay.Volleyball
         static ActionDecision ResolveBlock(in ActionContext context)
         {
             Vector2 position = context.Athlete.Position;
+            Vector2 from = context.Flight.GroundAt(context.FlightTime);
+            float netCrossY = NetCrossY(from, context.OpponentAim);
             bool lined = context.OpponentSmashTell &&
                          Mathf.Abs(position.x) <= BlockNetDistance &&
-                         Mathf.Abs(position.y - context.OpponentAim.y) <= BlockLateral;
+                         Mathf.Abs(position.y - netCrossY) <= BlockLateral;
             return lined ? new ActionDecision(ActionKind.Block, TimingGrade.Miss, 0f) : ActionDecision.None;
         }
+
+        // Where the ball's straight line from `from` to `target` crosses the net (x=0). A block
+        // is judged against the line the ball actually travels, not its eventual landing spot.
+        public static float NetCrossY(Vector2 from, Vector2 target) =>
+            Mathf.Lerp(from.y, target.y, from.x / (from.x - target.x));
     }
 }

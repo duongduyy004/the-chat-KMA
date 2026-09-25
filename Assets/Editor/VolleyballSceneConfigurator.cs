@@ -194,8 +194,14 @@ namespace KMA.EditorTools
             // A flat-color band, not net0.png's sprite: that art was drawn for an isometric
             // camera angle and reads as a diagonal pole rather than a net under this scene's flat
             // top-down camera. See the plan's Task 13.
+            // CourtSpace.ToWorld scales the y (court-width) axis by PixelsPerMetreY /
+            // BackgroundPixelsPerUnit (not 1:1), so the court's on-screen height isn't simply
+            // HalfWidth * 2 world units - measure it via ToWorld so the band reaches both
+            // sidelines. See the spec's amendment on the net0.png-to-flat-band deviation.
+            float netWorldHeight = CourtSpace.ToWorld(new Vector2(0f, CourtSpace.HalfWidth), 0f).y -
+                                    CourtSpace.ToWorld(new Vector2(0f, -CourtSpace.HalfWidth), 0f).y;
             Quad("Net", pixel, NetColor, CourtSpace.ToWorld(Vector2.zero, 0f),
-                new Vector2(NetWidth, CourtSpace.HalfWidth * 2f), VolleyAthleteView.NetSortingOrder);
+                new Vector2(NetWidth, netWorldHeight), VolleyAthleteView.NetSortingOrder);
 
             VolleyAthleteView player = Athlete("Player", false, Color.white);
             VolleyAthleteView opponent = Athlete("Opponent", true, OpponentTint);

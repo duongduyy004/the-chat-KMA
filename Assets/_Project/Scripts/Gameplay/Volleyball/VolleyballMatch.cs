@@ -338,8 +338,21 @@ namespace KMA.Gameplay.Volleyball
                     break;
                 default:
                     Player.Lunge(Flight.Target, DiveLunge);
-                    target = SetTarget(TimingGrade.Late, decision.Offset);
-                    apex = DiveApexHeight;
+                    // On the last available touch a dive can't legally set up for another player
+                    // hit - SetTarget always stays on the player's own side, which would be a
+                    // guaranteed fault. Send it over as a weak free ball instead, mirroring the
+                    // FreeBall branch above.
+                    if (Rally.Touches == RallyState.MaxTouches - 1)
+                    {
+                        target = FreeBallTarget;
+                        apex = FreeBallApexHeight;
+                    }
+                    else
+                    {
+                        target = SetTarget(TimingGrade.Late, decision.Offset);
+                        apex = DiveApexHeight;
+                    }
+
                     animation = AthleteAction.Dive;
                     lockSeconds = DiveSeconds;
                     break;

@@ -72,9 +72,20 @@ namespace KMA.Gameplay.Volleyball
 
             if (Plan.Current.BlocksPlayerSmash && Rally.Possession == CourtSide.Player)
             {
-                float lineY = Rally.Touches >= 1 && Flight.ApexHeight > ActionResolver.SmashContactHeight
-                    ? Flight.GroundAt(Flight.TimeAtHeightDescending(ActionResolver.SmashContactHeight)).y
-                    : Flight.Target.y;
+                float lineY;
+                if (Rally.Touches >= 1 && Flight.ApexHeight > ActionResolver.SmashContactHeight)
+                {
+                    // A smash hasn't been launched yet (its aim depends on the joystick at press
+                    // time), so predict where it would cross the net if hit right now: from the
+                    // player's current contact point toward the current stick aim.
+                    Vector2 contact = Flight.GroundAt(Flight.TimeAtHeightDescending(ActionResolver.SmashContactHeight));
+                    lineY = ActionResolver.NetCrossY(contact, AimAtOpponent(move));
+                }
+                else
+                {
+                    lineY = Flight.Target.y;
+                }
+
                 Opponent.MoveToward(new Vector2(OpponentBlockX, Mathf.Clamp(lineY, -3f, 3f)), deltaTime);
                 return;
             }
@@ -84,6 +95,9 @@ namespace KMA.Gameplay.Volleyball
 
         void OpponentReceive(OpponentStep step)
         {
+            // The AI just kept a player smash alive with a genuine defensive touch, so it's no
+            // longer an unanswered winner even if the point is later lost some other way.
+            lastHitWasPlayerSmash = false;
             Opponent.BeginAction(AthleteAction.Receive, ReceiveSeconds);
             if (step.WeakReceive)
             {
@@ -100,6 +114,9 @@ namespace KMA.Gameplay.Volleyball
 
         void OpponentAttack(OpponentStep step, bool smashing)
         {
+            // Same as OpponentReceive: a successful AI touch means any earlier player smash is no
+            // longer the reason the point is eventually won or lost.
+            lastHitWasPlayerSmash = false;
             Vector2 target = OpponentSmashTell ? OpponentAim : OpponentPlan.AttackTarget(step, Player.Position);
             OpponentSmashTell = false;
             Plan.Advance();
@@ -120,16 +137,20 @@ namespace KMA.Gameplay.Volleyball
             Launch(target, apex, CourtSide.Opponent);
         }
 
-        bool PlayerBlocks(Vector2 target) =>
-            Player.Action == AthleteAction.Block &&
-            Mathf.Abs(Player.Position.x) <= ActionResolver.BlockNetDistance &&
-            Mathf.Abs(Player.Position.y - target.y) <= ActionResolver.BlockLateral;
+        bool PlayerBlocks(Vector2 target)
+        {
+            float netCrossY = ActionResolver.NetCrossY(BallGround, target);
+            return Player.Action == AthleteAction.Block &&
+                   Mathf.Abs(Player.Position.x) <= ActionResolver.BlockNetDistance &&
+                   Mathf.Abs(Player.Position.y - netCrossY) <= ActionResolver.BlockLateral;
+        }
 
         bool OpponentBlocks(Vector2 target)
         {
+            float netCrossY = ActionResolver.NetCrossY(BallGround, target);
             if (!Plan.Current.BlocksPlayerSmash ||
                 Opponent.Position.x > ActionResolver.BlockNetDistance ||
-                Mathf.Abs(Opponent.Position.y - target.y) > ActionResolver.BlockLateral)
+                Mathf.Abs(Opponent.Position.y - netCrossY) > ActionResolver.BlockLateral)
                 return false;
 
             Vector2 from = BallGround;

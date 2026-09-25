@@ -121,6 +121,20 @@ namespace KMA.Tests.Gameplay.Volleyball
         }
 
         [Test]
+        public void AGoodLatePressStillSmashesInsteadOfFallingThroughToReceive()
+        {
+            // The height gate must be judged at the fixed ideal moment (2.6 m), not at the actual
+            // press time: the ball drops below the 2.2 m minimum only ~0.065 s after the ideal
+            // moment, so a +0.15 s press (well inside the GOOD window) must still smash.
+            var set = new BallFlight(new Vector2(-5f, 0f), 1f, new Vector2(-1.5f, 0f), 4f, CourtSide.Player);
+            float ideal = set.TimeAtHeightDescending(ActionResolver.SmashContactHeight);
+            ActionDecision d = Resolve(PlayerAt(set.GroundAt(ideal)), BallState.InPlay, set, ideal + .15f,
+                PlayerPossession(1));
+            Assert.That(d.Kind, Is.EqualTo(ActionKind.Smash));
+            Assert.That(d.Grade, Is.EqualTo(TimingGrade.Good));
+        }
+
+        [Test]
         public void FirstTouchCannotSmash()
         {
             var set = new BallFlight(new Vector2(-5f, 0f), 1f, new Vector2(-1.5f, 0f), 4f, CourtSide.Player);
@@ -156,15 +170,23 @@ namespace KMA.Tests.Gameplay.Volleyball
             rally.RegisterServe(CourtSide.Player);
             var attack = new BallFlight(new Vector2(4f, 0f), 1f, new Vector2(1.5f, 0f), 4f, CourtSide.Opponent);
             var aim = new Vector2(-7f, -3f);
+            // The block is judged against where the smash would cross the net (x=0), not its
+            // landing spot (aim.y).
+            float netCrossY = ActionResolver.NetCrossY(attack.GroundAt(.5f), aim);
 
-            Assert.That(Resolve(PlayerAt(new Vector2(-.8f, -3f)), BallState.InPlay, attack, .5f, rally,
+            Assert.That(Resolve(PlayerAt(new Vector2(-.8f, netCrossY)), BallState.InPlay, attack, .5f, rally,
                 CourtSide.Player, true, aim).Kind, Is.EqualTo(ActionKind.Block));
-            Assert.That(Resolve(PlayerAt(new Vector2(-.8f, 0f)), BallState.InPlay, attack, .5f, rally,
+            Assert.That(Resolve(PlayerAt(new Vector2(-.8f, netCrossY + 2f)), BallState.InPlay, attack, .5f, rally,
                 CourtSide.Player, true, aim).Kind, Is.EqualTo(ActionKind.None));
-            Assert.That(Resolve(PlayerAt(new Vector2(-2.5f, -3f)), BallState.InPlay, attack, .5f, rally,
+            Assert.That(Resolve(PlayerAt(new Vector2(-2.5f, netCrossY)), BallState.InPlay, attack, .5f, rally,
                 CourtSide.Player, true, aim).Kind, Is.EqualTo(ActionKind.None));
-            Assert.That(Resolve(PlayerAt(new Vector2(-.8f, -3f)), BallState.InPlay, attack, .5f, rally,
+            Assert.That(Resolve(PlayerAt(new Vector2(-.8f, netCrossY)), BallState.InPlay, attack, .5f, rally,
                 CourtSide.Player, false, aim).Kind, Is.EqualTo(ActionKind.None));
+
+            // The old (pre-fix) landing-spot position must now fail: it isn't where the ball
+            // actually crosses the net.
+            Assert.That(Resolve(PlayerAt(new Vector2(-.8f, aim.y)), BallState.InPlay, attack, .5f, rally,
+                CourtSide.Player, true, aim).Kind, Is.EqualTo(ActionKind.None));
         }
 
         [Test]
