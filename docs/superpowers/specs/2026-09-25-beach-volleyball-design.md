@@ -27,7 +27,7 @@ rally points wins; the match is capped at 120 s.
 |---|---|---|
 | `beachbkgO.png` | 400×430 | Court background (orthographic lines; the net line is at x=200 px) |
 | `beachbkgIso.png` | 400×430 | Not used |
-| `net0.png` | 270×450 | Net, 6 frames of 45 px; frame 0 is drawn as a static net |
+| `net0.png` | 270×450 | Not used (see amendment 4 below) |
 | `playerIdle/Run.png` | 384×43 | 12 frames of 32 px |
 | `playerReception.png` | 352×43 | 11 frames of 32 px |
 | `playerBlock/Smash.png` | 416×46 / 416×50 | 13 frames of 32 px |
@@ -74,6 +74,13 @@ those classes and draw what they report.
 | `VolleyballInputBridge` | Merges touch input with keyboard input (WASD or arrows plus Space), with the keyboard actions built in code (the map list in `KMA.inputactions` is pinned by `InputAssetContractTests`). Provides `FeedMoveForTest` and `FeedActionForTest`. `GameplayInputRouter` is not modified. |
 | `VolleyballHud` | Score, remaining time, and PERFECT/GOOD/LATE feedback. Built on the existing HUD and `UITheme`. |
 | `Editor/VolleyballSceneConfigurator` | The `KMA/Volleyball/Build Scene` menu. It imports and slices the art and builds `MG_Volleyball.unity`: camera, background, net, athletes, ball, shadow, UI and controller wiring. If a BVA2 source image is missing, it fails and names the file. |
+
+**Amendment 4 (found during implementation, not in the original plan):** the net is drawn as a
+flat, light-coloured band rather than a `net0.png` sprite. `net0.png`'s frame art was drawn for an
+isometric/3-quarter camera looking down the net line, which cannot render correctly on this
+scene's flat top-down camera at any scale — visual QA found it rendering as a broken diagonal pole,
+not a net. `net0.png` stays imported but unused; the band uses the same flat-colour technique the
+scene configurator already uses for the sky and sand.
 
 ## Match flow
 
