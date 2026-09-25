@@ -4009,17 +4009,22 @@ git commit -m "feat(volleyball): add the minigame controller"
   - `VolleyballSceneConfigurator.BuildScene()` (menu `KMA/Volleyball/Build Scene`), `ImportArt()`, const `ScenePath`
   - `MinigameUIAssembler.AssembleScenePath(string scenePath)`
 
-- [ ] **Step 1: Copy the art out of the zip**
+- [ ] **Step 1: Copy the art out of the plan workspace**
+
+`BVA2.zip` was extracted and deleted during setup (it was never committed — only present
+in the working tree). The 10 source PNGs this task needs live at
+`.superpowers/sdd/2026-09-25-beach-volleyball/bva2-art/` (git-ignored; part of this plan's
+SDD workspace, not the repo). Copy from there:
 
 ```bash
-S="$(mktemp -d)"
-unzip -o -q BVA2.zip -x '__MACOSX/*' -d "$S"
+S=".superpowers/sdd/2026-09-25-beach-volleyball/bva2-art"
 mkdir -p Assets/_Project/Art/Characters/BeachVolley Assets/_Project/Art/Environments/Volleyball
 for f in playerIdle playerRun playerReception playerBlock playerSmash playerSlide; do cp "$S/$f.png" Assets/_Project/Art/Characters/BeachVolley/; done
 for f in beachbkgO net0 ballRoll shadow1; do cp "$S/$f.png" Assets/_Project/Art/Environments/Volleyball/; done
 ls Assets/_Project/Art/Characters/BeachVolley Assets/_Project/Art/Environments/Volleyball
 ```
-Expected: 6 PNGs and 4 PNGs listed. Leave `BVA2.zip` itself untracked.
+Expected: 6 PNGs and 4 PNGs listed. If `$S` is missing (this plan's workspace was cleaned),
+ask the controller — the source art needs re-extracting before this task can proceed.
 
 - [ ] **Step 2: Write the failing scene contract test**
 
