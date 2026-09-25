@@ -9,11 +9,13 @@
         "KMA.Gameplay.Shell",
         "KMA.Gameplay.Sprint",
         "KMA.Gameplay.UI",
+        "KMA.Gameplay.Volleyball",
         "KMA.Input",
         "Unity.InputSystem",
         "Unity.RenderPipelines.Core.Runtime",
         "Unity.RenderPipelines.Universal.2D.Runtime",
         "Unity.RenderPipelines.Universal.Runtime",
+        "Unity.2D.Sprite.Editor",
         "Unity.TextMeshPro",
         "UnityEngine.UI"
     ],

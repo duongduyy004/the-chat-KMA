@@ -25,7 +25,8 @@ namespace KMA.Gameplay.UI
             "Assets/_Project/Scenes/Punishment.unity",
             "Assets/_Project/Scenes/Map.unity",
             "Assets/_Project/Scenes/GameOver.unity",
-            "Assets/_Project/Scenes/MG_Football.unity"
+            "Assets/_Project/Scenes/MG_Football.unity",
+            "Assets/_Project/Scenes/MG_Volleyball.unity"
         };
 
         [MenuItem("KMA/S2/Assemble Task 5 Presentation")]
@@ -43,6 +44,15 @@ namespace KMA.Gameplay.UI
 
             AssetDatabase.SaveAssets();
             AssetDatabase.Refresh();
+        }
+
+        public static void AssembleScenePath(string scenePath)
+        {
+            Directory.CreateDirectory(Path.GetDirectoryName(CameraPrefabPath));
+            var cameraPrefab = EnsureCameraPrefab();
+            var scene = EditorSceneManager.OpenScene(scenePath, OpenSceneMode.Single);
+            AssembleScene(scene, cameraPrefab);
+            EditorSceneManager.SaveScene(scene);
         }
 
         static GameObject EnsureCameraPrefab()
