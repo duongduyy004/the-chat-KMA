@@ -310,8 +310,6 @@ MonoBehaviour:
   subjectScenes:
   - Subject: 0
     SceneName: MG_Sprint
-  - Subject: 5
-    SceneName: MG_Badminton
   - Subject: 6
     SceneName: MG_Football
 --- !u!1001 &200000

@@ -11,7 +11,6 @@ namespace KMA.Gameplay.Core
         static readonly SceneRouter.SubjectScene[] Routes =
         {
             new SceneRouter.SubjectScene { Subject = SubjectId.Sprint, SceneName = "MG_Sprint" },
-            new SceneRouter.SubjectScene { Subject = SubjectId.Badminton, SceneName = "MG_Badminton" },
             new SceneRouter.SubjectScene { Subject = SubjectId.Football, SceneName = "MG_Football" }
         };
 

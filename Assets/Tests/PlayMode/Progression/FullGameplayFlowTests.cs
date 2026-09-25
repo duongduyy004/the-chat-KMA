@@ -68,7 +68,7 @@ namespace KMA.Tests.Gameplay.Progression
                 harness.CompleteTransition();
             }
 
-            Assert.That(harness.Session.Records, Has.Count.EqualTo(3));
+            Assert.That(harness.Session.Records, Has.Count.EqualTo(2));
             foreach (var record in harness.Session.Records.Values)
             {
                 Assert.That(record.BestResult.Pass, Is.True);
@@ -76,7 +76,7 @@ namespace KMA.Tests.Gameplay.Progression
                 Assert.That(record.BestResult.Rank, Is.EqualTo(ScoreUtil.ToRank(record.BestResult.Score)));
             }
 
-            Assert.That(harness.Transitions, Has.Count.EqualTo(10));
+            Assert.That(harness.Transitions, Has.Count.EqualTo(8));
             yield return null;
         }
 
@@ -105,7 +105,7 @@ namespace KMA.Tests.Gameplay.Progression
         {
             var harness = GameplayFlowHarness.Create();
 
-            harness.Start(SubjectId.Badminton);
+            harness.Start(SubjectId.Football);
             harness.CompleteTransition();
             harness.Pass(6f);
             harness.RepeatLastCompletion();
@@ -116,7 +116,7 @@ namespace KMA.Tests.Gameplay.Progression
         }
 
         [Test]
-        public void RuntimeRouter_MapsAllThreeProductionSubjects()
+        public void RuntimeRouter_MapsBothProductionSubjects()
         {
             var router = SceneRouter.EnsurePersistentInstance();
 
@@ -124,14 +124,7 @@ namespace KMA.Tests.Gameplay.Progression
             AssertRoute(router, SessionRoute.Map, SubjectId.Sprint);
             AssertRoute(router, SessionRoute.GameOver, null);
             AssertRoute(router, SessionRoute.Subject, SubjectId.Sprint);
-            foreach (var subject in new[]
-            {
-                SubjectId.Badminton,
-                SubjectId.Football
-            })
-            {
-                AssertRoute(router, SessionRoute.Subject, subject);
-            }
+            AssertRoute(router, SessionRoute.Subject, SubjectId.Football);
         }
 
         [UnityTest]
@@ -182,7 +175,7 @@ namespace KMA.Tests.Gameplay.Progression
             var persistenceEvents = 0;
             router.SessionChanged += () => persistenceEvents++;
 
-            Assert.That(router.StartSubject(SubjectId.Badminton), Is.False, "StartSubject must be rejected.");
+            Assert.That(router.StartSubject(SubjectId.Football), Is.False, "StartSubject must be rejected.");
             Assert.That(router.SubmitSubjectResult(SubjectId.Sprint, new MinigameResult(false, 0f, Rank.F)),
                 Is.False, "SubmitSubjectResult must be rejected.");
             Assert.That(router.RestartActiveSubject(), Is.False, "Restart must be rejected.");
@@ -272,7 +265,7 @@ namespace KMA.Tests.Gameplay.Progression
 
             Assert.That(router.RouteToMenu(), Is.True);
             Assert.That(router.IsTransitioning, Is.True);
-            Assert.That(router.StartSubject(SubjectId.Badminton), Is.False);
+            Assert.That(router.StartSubject(SubjectId.Football), Is.False);
             Assert.That(router.SubmitSubjectResult(SubjectId.Sprint, new MinigameResult(false, 0f, Rank.F)),
                 Is.False);
             Assert.That(router.RestartActiveSubject(), Is.False);

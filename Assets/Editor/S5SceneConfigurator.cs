@@ -16,7 +16,7 @@ namespace KMA.EditorTools
     {
         static readonly string[] PlaceholderScenes =
         {
-            "MG_Badminton", "MG_Football"
+            "MG_Football"
         };
 
         [MenuItem("KMA/S5/Generate Placeholder Scenes and Build Routes")]

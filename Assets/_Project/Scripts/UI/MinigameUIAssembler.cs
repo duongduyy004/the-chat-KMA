@@ -25,7 +25,6 @@ namespace KMA.Gameplay.UI
             "Assets/_Project/Scenes/Punishment.unity",
             "Assets/_Project/Scenes/Map.unity",
             "Assets/_Project/Scenes/GameOver.unity",
-            "Assets/_Project/Scenes/MG_Badminton.unity",
             "Assets/_Project/Scenes/MG_Football.unity"
         };
 

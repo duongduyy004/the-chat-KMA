@@ -62,14 +62,14 @@ namespace KMA.Tests.Gameplay.Progression
         {
             var data = SaveData.CreateDefault();
             data.lives = 1;
-            data.tutorialSeen[2] = true;
+            data.tutorialSeen[1] = true;
 
             SaveData migrated = saveSystem.Migrate(data);
 
             Assert.That(migrated, Is.SameAs(data));
             Assert.That(migrated.version, Is.EqualTo(SaveData.CurrentVersion));
             Assert.That(migrated.lives, Is.EqualTo(1));
-            Assert.That(migrated.tutorialSeen[2], Is.True);
+            Assert.That(migrated.tutorialSeen[1], Is.True);
         }
 
         [Test]
@@ -96,13 +96,13 @@ namespace KMA.Tests.Gameplay.Progression
 
             Assert.That(migrated.version, Is.EqualTo(SaveData.CurrentVersion));
             Assert.That(migrated.lives, Is.EqualTo(3));
-            Assert.That(migrated.subjects, Has.Length.EqualTo(3));
+            Assert.That(migrated.subjects, Has.Length.EqualTo(2));
             Assert.That(migrated.subjects[0].id, Is.EqualTo(SubjectId.Sprint));
             Assert.That(migrated.subjects[0].passed, Is.True);
             Assert.That(migrated.subjects[0].bestScore, Is.EqualTo(71f));
             Assert.That(migrated.subjects[0].bestRank, Is.EqualTo(Rank.B));
             Assert.That(migrated.subjects[0].failedVisits, Is.EqualTo(2));
-            Assert.That(migrated.tutorialSeen, Has.Length.EqualTo(3));
+            Assert.That(migrated.tutorialSeen, Has.Length.EqualTo(2));
             Assert.That(migrated.tutorialSeen, Is.All.False);
             Assert.That(migrated.settings.musicVol, Is.EqualTo(1f));
             Assert.That(migrated.settings.sfxVol, Is.EqualTo(1f));
@@ -117,7 +117,7 @@ namespace KMA.Tests.Gameplay.Progression
             versionOne.version = 1;
             versionOne.lives = 4;
             versionOne.subjects[0].passed = true;
-            versionOne.tutorialSeen = new[] { false, false, true, false, false, false, false };
+            versionOne.tutorialSeen = new[] { false, false, false, false, false, false, true };
             versionOne.settings.musicVol = 0.4f;
             versionOne.hasActiveSubject = true;
             versionOne.activeSubject = SubjectId.Football;
@@ -160,7 +160,7 @@ namespace KMA.Tests.Gameplay.Progression
             current.tutorialSeen = new[] { false, true, true, true, true, true, true };
             current.lives = 3;
             current.hasActiveSubject = true;
-            current.activeSubject = SubjectId.Badminton;
+            current.activeSubject = SubjectId.Football;
             current.visitAttempt = 2;
             current.awaitingPunishment = true;
 
@@ -170,21 +170,53 @@ namespace KMA.Tests.Gameplay.Progression
             Assert.That(actual.version, Is.EqualTo(SaveData.CurrentVersion));
             Assert.That(actual.lives, Is.EqualTo(3));
             Assert.That(actual.hasActiveSubject, Is.True);
-            Assert.That(actual.activeSubject, Is.EqualTo(SubjectId.Badminton));
+            Assert.That(actual.activeSubject, Is.EqualTo(SubjectId.Football));
             Assert.That(actual.visitAttempt, Is.EqualTo(2));
             Assert.That(actual.awaitingPunishment, Is.True);
-            Assert.That(actual.subjects, Has.Length.EqualTo(3));
+            Assert.That(actual.subjects, Has.Length.EqualTo(2));
             Assert.That(actual.subjects[0].id, Is.EqualTo(SubjectId.Sprint));
-            Assert.That(actual.subjects[1].id, Is.EqualTo(SubjectId.Badminton));
-            Assert.That(actual.subjects[1].bestScore, Is.EqualTo(7f));
-            Assert.That(actual.subjects[2].id, Is.EqualTo(SubjectId.Football));
-            Assert.That(actual.subjects[2].bestScore, Is.EqualTo(6f));
-            Assert.That(actual.tutorialSeen, Is.EqualTo(new[] { false, true, true }));
+            Assert.That(actual.subjects[1].id, Is.EqualTo(SubjectId.Football));
+            Assert.That(actual.subjects[1].bestScore, Is.EqualTo(6f));
+            Assert.That(actual.tutorialSeen, Is.EqualTo(new[] { false, true }));
 
             var restored = new GameSession();
             restored.Restore(actual);
             Assert.That(restored.ResumeRoute(), Is.EqualTo(SessionRoute.Subject));
-            Assert.That(restored.ActiveSubject, Is.EqualTo(SubjectId.Badminton));
+            Assert.That(restored.ActiveSubject, Is.EqualTo(SubjectId.Football));
+        }
+
+        [Test]
+        public void Load_VersionFourSave_DropsBadmintonAndKeepsRemainingProgress()
+        {
+            var versionFour = SaveData.CreateDefault();
+            versionFour.version = 4;
+            versionFour.subjects = new[]
+            {
+                new SubjectRecordData { id = (SubjectId)0, passed = true, bestScore = 9f, bestRank = Rank.S },
+                new SubjectRecordData { id = (SubjectId)5, passed = true, bestScore = 7f, bestRank = Rank.B },
+                new SubjectRecordData { id = (SubjectId)6, failedVisits = 2 }
+            };
+            versionFour.tutorialSeen = new[] { false, true, true };
+            versionFour.lives = 2;
+            versionFour.hasActiveSubject = true;
+            versionFour.activeSubject = (SubjectId)5;
+            versionFour.visitAttempt = 2;
+            versionFour.awaitingPunishment = true;
+
+            WriteRawSave(versionFour);
+            SaveData actual = saveSystem.Load();
+
+            Assert.That(actual.version, Is.EqualTo(SaveData.CurrentVersion));
+            Assert.That(actual.lives, Is.EqualTo(2));
+            Assert.That(actual.subjects, Has.Length.EqualTo(2));
+            Assert.That(actual.subjects[0].id, Is.EqualTo(SubjectId.Sprint));
+            Assert.That(actual.subjects[0].bestScore, Is.EqualTo(9f));
+            Assert.That(actual.subjects[1].id, Is.EqualTo(SubjectId.Football));
+            Assert.That(actual.subjects[1].failedVisits, Is.EqualTo(2));
+            Assert.That(actual.tutorialSeen, Is.EqualTo(new[] { false, true }));
+            Assert.That(actual.hasActiveSubject, Is.False);
+            Assert.That(actual.visitAttempt, Is.EqualTo(1));
+            Assert.That(actual.awaitingPunishment, Is.False);
         }
 
         [Test]
@@ -231,7 +263,7 @@ namespace KMA.Tests.Gameplay.Progression
         public void Load_CurrentVersionWithDuplicateSubjectIds_ReturnsDefaultData()
         {
             var invalidData = SaveData.CreateDefault();
-            invalidData.subjects[3].id = SubjectId.Sprint;
+            invalidData.subjects[1].id = SubjectId.Sprint;
 
             WriteRawSave(invalidData);
 
@@ -242,7 +274,7 @@ namespace KMA.Tests.Gameplay.Progression
         public void Load_CurrentVersionWithNullSubjectRecord_ReturnsDefaultData()
         {
             var invalidData = SaveData.CreateDefault();
-            invalidData.subjects[3] = null;
+            invalidData.subjects[1] = null;
 
             WriteRawSave(invalidData);
 
@@ -253,7 +285,7 @@ namespace KMA.Tests.Gameplay.Progression
         public void Load_CurrentVersionWithUndefinedSubjectId_ReturnsDefaultData()
         {
             var invalidData = SaveData.CreateDefault();
-            invalidData.subjects[2].id = (SubjectId)999;
+            invalidData.subjects[1].id = (SubjectId)999;
 
             WriteRawSave(invalidData);
 
@@ -277,16 +309,12 @@ namespace KMA.Tests.Gameplay.Progression
 
             Assert.That(actual.version, Is.EqualTo(SaveData.CurrentVersion));
             Assert.That(actual.lives, Is.EqualTo(3));
-            Assert.That(actual.subjects, Has.Length.EqualTo(3));
+            Assert.That(actual.subjects, Has.Length.EqualTo(2));
             Assert.That(actual.subjects[0].id, Is.EqualTo(SubjectId.Sprint));
             Assert.That(actual.subjects[0].passed, Is.False);
-            Assert.That(actual.tutorialSeen, Has.Length.EqualTo(3));
+            Assert.That(actual.tutorialSeen, Has.Length.EqualTo(2));
             Assert.That(actual.tutorialSeen[0], Is.True);
             Assert.That(actual.tutorialSeen[1], Is.False);
-            for (int i = 2; i < actual.tutorialSeen.Length; i++)
-            {
-                Assert.That(actual.tutorialSeen[i], Is.False);
-            }
 
             Assert.That(actual.settings.musicVol, Is.EqualTo(1f));
             Assert.That(actual.settings.sfxVol, Is.EqualTo(1f));
@@ -303,8 +331,8 @@ namespace KMA.Tests.Gameplay.Progression
 
             Assert.That(actual.version, Is.EqualTo(SaveData.CurrentVersion));
             Assert.That(actual.lives, Is.EqualTo(3));
-            Assert.That(actual.subjects, Has.Length.EqualTo(3));
-            Assert.That(actual.tutorialSeen, Has.Length.EqualTo(3));
+            Assert.That(actual.subjects, Has.Length.EqualTo(2));
+            Assert.That(actual.tutorialSeen, Has.Length.EqualTo(2));
             Assert.That(actual.tutorialSeen, Is.All.False);
             Assert.That(actual.settings.musicVol, Is.EqualTo(1f));
             Assert.That(actual.settings.sfxVol, Is.EqualTo(1f));
@@ -372,7 +400,7 @@ namespace KMA.Tests.Gameplay.Progression
             var existing = SaveData.CreateDefault();
             existing.lives = 1;
             existing.subjects[0].passed = true;
-            existing.tutorialSeen[2] = true;
+            existing.tutorialSeen[1] = true;
             existing.settings.musicVol = 0.4f;
             existing.settings.sfxVol = 0.6f;
             existing.settings.vibration = false;
@@ -386,10 +414,10 @@ namespace KMA.Tests.Gameplay.Progression
             SaveData actual = saveSystem.Load();
 
             Assert.That(actual.lives, Is.EqualTo(5));
-            Assert.That(actual.subjects, Has.Length.EqualTo(3));
+            Assert.That(actual.subjects, Has.Length.EqualTo(2));
             Assert.That(actual.subjects[0].passed, Is.False);
             Assert.That(actual.subjects[0].bestScore, Is.EqualTo(0f));
-            Assert.That(actual.tutorialSeen[2], Is.True);
+            Assert.That(actual.tutorialSeen[1], Is.True);
             Assert.That(actual.settings.musicVol, Is.EqualTo(0.4f));
             Assert.That(actual.settings.sfxVol, Is.EqualTo(0.6f));
             Assert.That(actual.settings.vibration, Is.False);
@@ -415,7 +443,7 @@ namespace KMA.Tests.Gameplay.Progression
             Assert.That(data.hasActiveSubject, Is.False);
             Assert.That(data.visitAttempt, Is.EqualTo(1));
             Assert.That(data.awaitingPunishment, Is.False);
-            Assert.That(data.tutorialSeen, Has.Length.EqualTo(3));
+            Assert.That(data.tutorialSeen, Has.Length.EqualTo(2));
             Assert.That(data.tutorialSeen, Is.All.False);
             Assert.That(data.settings.musicVol, Is.EqualTo(1f));
             Assert.That(data.settings.sfxVol, Is.EqualTo(1f));

@@ -122,7 +122,7 @@ namespace KMA.Tests.Gameplay.Progression
                 Assert.That(node.DetailText, Is.EqualTo("HẠNG A  ★ 3"));
                 Assert.That(node.Stars, Is.EqualTo(3));
 
-                node.Configure(SubjectId.Badminton, "Cầu lông", true, null, 5);
+                node.Configure(SubjectId.Football, "Bóng đá", true, null, 5);
                 Assert.That(node.gameObject.activeSelf, Is.True);
                 Assert.That(node.DetailText, Is.EqualTo("ĐANG PHÁT TRIỂN"));
                 Assert.That(node.IsInteractable, Is.False);
@@ -205,7 +205,7 @@ namespace KMA.Tests.Gameplay.Progression
                     Is.EquivalentTo(new[] { "SẮP RA MẮT", "Hít đất" }));
                 Assert.That(futureRow.GetComponentsInChildren<Button>(true), Is.Empty);
                 Assert.That(futureRow.GetComponentsInChildren<MapNodeView>(true), Is.Empty);
-                Assert.That(screen.Nodes, Has.Length.EqualTo(3));
+                Assert.That(screen.Nodes, Has.Length.EqualTo(2));
 
                 Assert.That(requested, Is.Empty,
                     "Presentation-only future chips must never request a campaign subject route.");
@@ -262,11 +262,7 @@ namespace KMA.Tests.Gameplay.Progression
                 Is.EquivalentTo(new[] { SubjectId.Sprint }));
             Assert.That(screen.Nodes.Where(node => !node.IsInteractable &&
                     node.DetailText == "ĐANG PHÁT TRIỂN").Select(node => node.SubjectId),
-                Is.EquivalentTo(new[]
-                {
-                    SubjectId.Badminton,
-                    SubjectId.Football
-                }));
+                Is.EquivalentTo(new[] { SubjectId.Football }));
             Assert.That(GameObject.Find("SelectionGrid").GetComponent<GridLayoutGroup>(), Is.Not.Null);
         }
 
@@ -398,7 +394,6 @@ namespace KMA.Tests.Gameplay.Progression
         }
 
         [Test]
-        [Test]
         public void Continue_WithRestoredProgress_IsEnabled()
         {
             SaveData persisted = SaveData.CreateDefault();
@@ -420,7 +415,7 @@ namespace KMA.Tests.Gameplay.Progression
                 router, Arrange(session => session.StartSubject(SubjectId.Sprint)), true);
             List<SceneRouteTransition> transitions = RecordTransitions(router);
 
-            Assert.That(router.StartSubject(SubjectId.Badminton), Is.False);
+            Assert.That(router.StartSubject(SubjectId.Football), Is.False);
 
             Assert.That(transitions, Is.Empty);
             Assert.That(manager.Session.ActiveSubject, Is.EqualTo(SubjectId.Sprint));
@@ -453,9 +448,9 @@ namespace KMA.Tests.Gameplay.Progression
 
             yield return WaitForRoutedScene(router, "Map");
 
-            Assert.That(router.StartSubject(SubjectId.Badminton), Is.True);
-            Assert.That(manager.Session.ActiveSubject, Is.EqualTo(SubjectId.Badminton));
-            yield return WaitForRoutedScene(router, "MG_Badminton");
+            Assert.That(router.StartSubject(SubjectId.Football), Is.True);
+            Assert.That(manager.Session.ActiveSubject, Is.EqualTo(SubjectId.Football));
+            yield return WaitForRoutedScene(router, "MG_Football");
         }
 
         [UnityTest]
@@ -468,7 +463,7 @@ namespace KMA.Tests.Gameplay.Progression
             persisted.activeSubject = SubjectId.Sprint;
             persisted.visitAttempt = 2;
             persisted.awaitingPunishment = true;
-            persisted.tutorialSeen[2] = true;
+            persisted.tutorialSeen[1] = true;
             persisted.settings.musicVol = 0.3f;
             persisted.settings.vibration = false;
 
@@ -490,7 +485,7 @@ namespace KMA.Tests.Gameplay.Progression
             Assert.That(saved.hasActiveSubject, Is.False);
             Assert.That(saved.visitAttempt, Is.EqualTo(1));
             Assert.That(saved.awaitingPunishment, Is.False);
-            Assert.That(saved.tutorialSeen[2], Is.True);
+            Assert.That(saved.tutorialSeen[1], Is.True);
             Assert.That(saved.settings.musicVol, Is.EqualTo(0.3f));
             Assert.That(saved.settings.vibration, Is.False);
             Assert.That(manager.Session.ResumeRoute(), Is.EqualTo(SessionRoute.Map));

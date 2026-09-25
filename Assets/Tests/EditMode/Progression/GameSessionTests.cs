@@ -12,7 +12,7 @@ namespace KMA.Tests.Gameplay.Progression
             var session = new GameSession();
             session.StartSubject(SubjectId.Sprint);
 
-            Assert.Throws<InvalidOperationException>(() => session.StartSubject(SubjectId.Badminton));
+            Assert.Throws<InvalidOperationException>(() => session.StartSubject(SubjectId.Football));
         }
 
         [Test]
@@ -25,7 +25,7 @@ namespace KMA.Tests.Gameplay.Progression
             Assert.That(session.Lives, Is.EqualTo(4));
             Assert.That(session.GetRecord(SubjectId.Sprint).FailedVisits, Is.EqualTo(1));
 
-            Assert.That(session.StartSubject(SubjectId.Badminton), Is.EqualTo(SessionRoute.Subject));
+            Assert.That(session.StartSubject(SubjectId.Football), Is.EqualTo(SessionRoute.Subject));
         }
 
         [Test]

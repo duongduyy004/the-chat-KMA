@@ -1,6 +1,6 @@
 # The Chat KMA — Gameplay
 
-Unity gameplay prototype for KMA: three retained sports subjects, normalized scoring, and campaign progression.
+Unity gameplay prototype for KMA: two retained sports subjects, normalized scoring, and campaign progression.
 
 ## Project status
 
@@ -8,10 +8,10 @@ Unity gameplay prototype for KMA: three retained sports subjects, normalized sco
 - Input System `1.20.0`
 - NUnit/Unity Test Framework `1.6.0`
 - Android targets landscape, ARM64, IL2CPP, API 25/35, and `com.kma.thechat`. A separate x86_64 APK supports Genymotion; those results are in [demo QA](docs/qa/android-report-demo.md).
-- Sprint is selectable; Badminton and Football remain disabled on the map.
+- Sprint is selectable; Football remains disabled on the map.
 - Historical test snapshots predate the current scope and have not been rerun after recent removals.
 
-The retained subjects are Sprint, Badminton, and Football. Only Sprint is currently selectable on the map.
+The retained subjects are Sprint and Football. Only Sprint is currently selectable on the map.
 
 ## Core gameplay
 
@@ -40,7 +40,6 @@ The shared lifecycle is `Tutorial → Countdown → Play → Resolve`, with exac
 | Scene | Purpose |
 | --- | --- |
 | `MG_Sprint` | Sprint subject with rival pace, stamina, wind cue, and counterplay |
-| `MG_Badminton` | Badminton subject scene |
 | `MG_Football` | Football subject scene |
 | `Punishment` | Recovery challenge for a failed first attempt |
 | `Map` | Return route after subject resolution |

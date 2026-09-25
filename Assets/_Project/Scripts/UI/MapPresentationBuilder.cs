@@ -28,7 +28,6 @@ namespace KMA.Gameplay.UI
         static readonly Entry[] Entries =
         {
             new Entry(SubjectId.Sprint, "Chạy nước rút", new Color32(49, 162, 222, 255), true),
-            new Entry(SubjectId.Badminton, "Cầu lông", new Color32(226, 232, 240, 255), false),
             new Entry(SubjectId.Football, "Bóng đá", new Color32(226, 232, 240, 255), false),
         };
 
@@ -338,14 +337,6 @@ namespace KMA.Gameplay.UI
                     DrawLine(pixels, size, 36, 52, 61, 51, 8);
                     DrawLine(pixels, size, 61, 51, 31, 15, 8);
                     DrawLine(pixels, size, 24, 34, 45, 34, 6);
-                    break;
-                case SubjectId.Badminton:
-                    DrawCircle(pixels, size, 48, 24, 9);
-                    DrawLine(pixels, size, 41, 31, 24, 75, 6);
-                    DrawLine(pixels, size, 55, 31, 72, 75, 6);
-                    DrawLine(pixels, size, 24, 75, 72, 75, 6);
-                    DrawLine(pixels, size, 34, 47, 62, 47, 5);
-                    DrawLine(pixels, size, 29, 61, 67, 61, 5);
                     break;
                 case SubjectId.Football:
                     DrawRing(pixels, size, 48, 48, 34, 6);

@@ -210,11 +210,17 @@ namespace KMA.Gameplay
 
             for (int currentIndex = 0; currentIndex < currentSubjects.Length; currentIndex++)
             {
-                int oldIndex = sourceVersion >= 3
+                int oldIndex = sourceVersion >= 4
                     ? currentSubjects[currentIndex] switch
                     {
                         SubjectId.Sprint => 0,
-                        SubjectId.Badminton => 2,
+                        SubjectId.Football => 2,
+                        _ => -1
+                    }
+                    : sourceVersion == 3
+                    ? currentSubjects[currentIndex] switch
+                    {
+                        SubjectId.Sprint => 0,
                         SubjectId.Football => 3,
                         _ => -1
                     }

@@ -126,7 +126,7 @@ namespace KMA.Tests.Presentation
         }
 
         [Test]
-        public void MapPresentationPlacesThreeSubjectsInUniformGrid()
+        public void MapPresentationPlacesTwoSubjectsInUniformGrid()
         {
             var root = new GameObject("map", typeof(RectTransform));
             try
@@ -139,8 +139,8 @@ namespace KMA.Tests.Presentation
                     .GetComponent<GridLayoutGroup>();
                 Assert.That(grid.constraint, Is.EqualTo(GridLayoutGroup.Constraint.FixedColumnCount));
                 Assert.That(grid.constraintCount, Is.EqualTo(3));
-                Assert.That(grid.transform.childCount, Is.EqualTo(3));
-                Assert.That(root.GetComponentsInChildren<MapNodeView>(true), Has.Length.EqualTo(3));
+                Assert.That(grid.transform.childCount, Is.EqualTo(2));
+                Assert.That(root.GetComponentsInChildren<MapNodeView>(true), Has.Length.EqualTo(2));
                 Assert.That(grid.cellSize.y, Is.GreaterThanOrEqualTo(220f));
                 Assert.That(root.transform.Find("S5MapPresentation/Content/ProgressSection"), Is.Null);
             }
@@ -208,7 +208,7 @@ namespace KMA.Tests.Presentation
                 MapPresentationBuilder.Build(screen, session);
 
                 MapNodeView completed = screen.Nodes.Single(node => node.SubjectId == SubjectId.Sprint);
-                MapNodeView locked = screen.Nodes.Single(node => node.SubjectId == SubjectId.Badminton);
+                MapNodeView locked = screen.Nodes.Single(node => node.SubjectId == SubjectId.Football);
 
                 Assert.That(completed.transform.Find("StatusContainer/Status").GetComponent<Text>().text,
                     Is.EqualTo("✓  HOÀN THÀNH"));
@@ -233,7 +233,7 @@ namespace KMA.Tests.Presentation
                     Assert.That(icon.preserveAspect, Is.True, node.name);
                     return icon.sprite;
                 }).ToArray();
-                Assert.That(iconSprites.Distinct().Count(), Is.EqualTo(3));
+                Assert.That(iconSprites.Distinct().Count(), Is.EqualTo(2));
 
                 foreach (MapNodeView node in screen.Nodes)
                 {
@@ -346,7 +346,7 @@ namespace KMA.Tests.Presentation
                 MapPresentationBuilder.Build(screen, new GameSession());
 
                 MapNodeView ready = screen.Nodes.Single(node => node.SubjectId == SubjectId.Sprint);
-                MapNodeView locked = screen.Nodes.Single(node => node.SubjectId == SubjectId.Badminton);
+                MapNodeView locked = screen.Nodes.Single(node => node.SubjectId == SubjectId.Football);
                 Assert.That(ready.transform.Find("LockIcon"), Is.Null);
                 Image cardLock = locked.transform.Find("LockIcon").GetComponent<Image>();
                 Assert.That(cardLock.sprite, Is.Not.Null);

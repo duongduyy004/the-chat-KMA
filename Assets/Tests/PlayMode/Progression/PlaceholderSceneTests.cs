@@ -14,7 +14,7 @@ namespace KMA.Tests.Gameplay.Progression
             {
                 var completions = 0;
                 controller.Completed += _ => completions++;
-                controller.ConfigureForTest(SubjectId.Badminton);
+                controller.ConfigureForTest(SubjectId.Football);
                 controller.DebugPass();
                 controller.DebugFail();
                 Assert.That(completions, Is.EqualTo(1));
