@@ -36,9 +36,11 @@ namespace KMA.Tests.Gameplay.Core
         }
 
         [Test]
-        public void PausePanel_MenuCanvasRendersAboveGameplaySprites()
+        public void PausePanel_MenuCanvasRendersAboveGameplayHudAndTransitionOverlay()
         {
             var canvasObject = new GameObject("Canvas", typeof(RectTransform), typeof(Canvas));
+            var hudCanvas = canvasObject.GetComponent<Canvas>();
+            hudCanvas.sortingOrder = 500;
             var root = new GameObject("PausePanel", typeof(RectTransform));
             root.transform.SetParent(canvasObject.transform, false);
             var panel = root.AddComponent<PausePanel>();
@@ -52,8 +54,10 @@ namespace KMA.Tests.Gameplay.Core
                 Assert.That(menuCanvas, Is.Not.Null,
                     "The pause menu needs its own sorting canvas so world runners cannot draw over it.");
                 Assert.That(menuCanvas.overrideSorting, Is.True);
-                Assert.That(menuCanvas.sortingOrder, Is.GreaterThan(20),
-                    "Sprint runner sprites use sorting orders up to 20.");
+                Assert.That(menuCanvas.sortingOrder, Is.GreaterThan(hudCanvas.sortingOrder),
+                    "The pause menu must cover the volleyball HUD and controls.");
+                Assert.That(menuCanvas.sortingOrder, Is.GreaterThan(800),
+                    "The transition overlay currently renders at order 800.");
             }
             finally
             {

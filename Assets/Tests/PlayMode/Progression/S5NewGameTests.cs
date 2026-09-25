@@ -156,8 +156,8 @@ namespace KMA.Tests.Gameplay.Progression
                 Assert.That(gridLayout.cellSize.x, Is.Not.EqualTo(220f));
                 Assert.That(grid.GetComponent<LayoutElement>().preferredHeight,
                     Is.GreaterThanOrEqualTo(gridLayout.cellSize.y * 2f + gridLayout.spacing.y));
-                Assert.That(grid.transform.childCount, Is.EqualTo(8));
-                Assert.That(grid.transform.GetChild(7).name, Is.EqualTo("ProgressCard"));
+                Assert.That(grid.transform.childCount, Is.EqualTo(3));
+                Assert.That(grid.transform.GetChild(2).name, Is.EqualTo("FootballNode"));
                 foreach (MapNodeView node in screen.Nodes)
                 {
                     Assert.That(node.GetComponent<Image>().sprite, Is.Not.Null, node.name);

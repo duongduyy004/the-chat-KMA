@@ -86,15 +86,15 @@ namespace KMA.Gameplay.UI
             if (phase == MinigamePhase.Countdown)
                 countdownElapsed = 0f;
 
-            bool useSharedStartPresentation = !IsSprintSource;
+            bool useSharedStartPresentation = !IsSprintSource && !IsVolleyballSource;
             SetActive(tutorialRoot, useSharedStartPresentation && phase == MinigamePhase.Tutorial &&
                 (tutorialOverlay == null || tutorialOverlay.ShouldShow));
-            SetActive(countdownRoot, useSharedStartPresentation && phase == MinigamePhase.Countdown);
+            SetActive(countdownRoot, !IsSprintSource && phase == MinigamePhase.Countdown);
             SetActive(playRoot, useSharedStartPresentation && phase == MinigamePhase.Play);
             SetActive(resolveRoot, phase == MinigamePhase.Resolve);
 
             if (phaseLabel != null)
-                phaseLabel.text = IsSprintSource && phase != MinigamePhase.Resolve
+                phaseLabel.text = (IsSprintSource || IsVolleyballSource) && phase != MinigamePhase.Resolve
                     ? string.Empty
                     : PhaseName(phase);
             if (useSharedStartPresentation)
@@ -107,6 +107,12 @@ namespace KMA.Gameplay.UI
                 return;
 
             UnsubscribeTutorialCompletion();
+
+            if (IsVolleyballSource)
+            {
+                source.SetTutorialGate(false);
+                return;
+            }
 
             if (IsSprintSource)
             {
@@ -139,6 +145,7 @@ namespace KMA.Gameplay.UI
         void ReleaseTutorialGate() => source?.SetTutorialGate(false);
 
         bool IsSprintSource => source != null && source.GetType().Name == "SprintController";
+        bool IsVolleyballSource => source != null && source.GetType().Name == "VolleyballController";
 
         static ISprintStartPresentation FindSprintStartPresentation()
         {

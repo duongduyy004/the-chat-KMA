@@ -7,7 +7,7 @@ namespace KMA.Gameplay.UI
 {
     public sealed class PausePanel : MonoBehaviour
     {
-        const int MenuSortingOrder = 100;
+        const int MenuSortingOrder = 900;
 
         [SerializeField] Button pauseButton;
         [SerializeField] GameObject menuRoot;
@@ -97,7 +97,10 @@ namespace KMA.Gameplay.UI
             menuRect.offsetMax = Vector2.zero;
             var menuCanvas = menuRoot.GetComponent<Canvas>();
             menuCanvas.overrideSorting = true;
-            menuCanvas.sortingOrder = MenuSortingOrder;
+            var parentCanvas = GetComponentInParent<Canvas>();
+            menuCanvas.sortingOrder = parentCanvas
+                ? Mathf.Max(MenuSortingOrder, parentCanvas.sortingOrder + 1)
+                : MenuSortingOrder;
             menuRoot.GetComponent<Image>().color = new Color(0f, 0f, 0f, .7f);
 
             var card = new GameObject("PauseCard", typeof(RectTransform), typeof(CanvasRenderer),

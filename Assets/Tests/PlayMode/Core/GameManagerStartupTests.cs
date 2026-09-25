@@ -62,7 +62,12 @@ namespace KMA.Tests.Gameplay.Core
                     Assert.That(sceneName, Is.EqualTo("Menu"));
                     Assert.That(manager.Session, Is.SameAs(router.Session));
                     Assert.That(manager.Session.Lives, Is.EqualTo(5));
-                    Assert.That(manager.Session.Records.Count, Is.EqualTo(7));
+                    Assert.That(manager.Session.Records.Keys, Is.EquivalentTo(new[]
+                    {
+                        SubjectId.Sprint,
+                        SubjectId.Volleyball,
+                        SubjectId.Football
+                    }));
                     menuLoads++;
                 });
 

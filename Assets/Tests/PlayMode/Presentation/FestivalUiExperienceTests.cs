@@ -81,8 +81,8 @@ namespace KMA.Tests.Presentation
             Assert.That(grid, Is.Not.Null);
             Assert.That(grid.GetComponent<GridLayoutGroup>().cellSize.y,
                 Is.GreaterThanOrEqualTo(220f));
-            Assert.That(grid.childCount, Is.EqualTo(8));
-            Assert.That(grid.GetChild(7).name, Is.EqualTo("ProgressCard"));
+            Assert.That(grid.childCount, Is.EqualTo(3));
+            Assert.That(grid.GetChild(2).name, Is.EqualTo("FootballNode"));
             Assert.That(grid.Find("SprintNode/ActionHint").GetComponent<Text>().text,
                 Is.EqualTo("THI →"));
         }

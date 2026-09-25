@@ -38,6 +38,7 @@ namespace KMA.Gameplay.Volleyball
             Match = new VolleyballMatch();
             Match.Completed += OnMatchCompleted;
             Match.PlayerActed += OnPlayerActed;
+            Match.PointScored += OnPointScored;
             PhaseChanged += OnPhaseChanged;
         }
 
@@ -58,6 +59,7 @@ namespace KMA.Gameplay.Volleyball
 
             Match.Completed -= OnMatchCompleted;
             Match.PlayerActed -= OnPlayerActed;
+            Match.PointScored -= OnPointScored;
         }
 
         protected override void TickPlay(float dt)
@@ -108,6 +110,12 @@ namespace KMA.Gameplay.Volleyball
         {
             if (hud)
                 hud.ShowFeedback(decision);
+        }
+
+        void OnPointScored(CourtSide winner)
+        {
+            if (hud)
+                hud.ShowPoint(winner);
         }
 
         void OnMatchCompleted()

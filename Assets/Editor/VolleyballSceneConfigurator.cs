@@ -43,6 +43,9 @@ namespace KMA.EditorTools
         static readonly Color ContactTint = new Color(1f, .9f, .2f, .85f);
         static readonly Color AimTint = new Color(1f, .25f, .2f, .85f);
         static readonly Color ButtonColor = new Color32(255, 152, 0, 242);
+        static readonly Color Ink = new Color32(10, 40, 61, 255);
+        static readonly Color Cyan = new Color32(75, 230, 244, 255);
+        static readonly Color Coral = new Color32(255, 119, 83, 255);
 
         readonly struct TextureSpec
         {
@@ -202,12 +205,28 @@ namespace KMA.EditorTools
                                     CourtSpace.ToWorld(new Vector2(0f, -CourtSpace.HalfWidth), 0f).y;
             Quad("Net", pixel, NetColor, CourtSpace.ToWorld(Vector2.zero, 0f),
                 new Vector2(NetWidth, netWorldHeight), VolleyAthleteView.NetSortingOrder);
+            float courtX = CourtSpace.ToWorld(new Vector2(CourtSpace.HalfLength, 0f), 0f).x;
+            float courtY = CourtSpace.ToWorld(new Vector2(0f, CourtSpace.HalfWidth), 0f).y;
+            for (int side = -1; side <= 1; side += 2)
+            {
+                Quad(side < 0 ? "NearBaseline" : "FarBaseline", pixel, Color.white,
+                    new Vector3(side * courtX, 0f, 0f), new Vector2(.09f, courtY * 2f), -9);
+                Quad(side < 0 ? "NearSideline" : "FarSideline", pixel, Color.white,
+                    new Vector3(0f, side * courtY, 0f), new Vector2(courtX * 2f, .09f), -9);
+            }
 
             VolleyAthleteView player = Athlete("Player", false, Color.white);
             VolleyAthleteView opponent = Athlete("Opponent", true, OpponentTint);
+            AddAthleteMarker(player.transform, pixel, "Player", Cyan);
+            AddAthleteMarker(opponent.transform, pixel, "Enemy", Coral);
 
             Sprite[] roll = Frames(EnvironmentDir + "/ballRoll.png");
             SpriteRenderer ball = Renderer("Ball", roll[0], Vector3.zero, VolleyBallView.BallSortingOrder);
+            SpriteRenderer ballEdge = Renderer("BallContrast", roll[0], Vector3.zero, VolleyBallView.BallSortingOrder - 1);
+            ballEdge.transform.SetParent(ball.transform, false);
+            ballEdge.transform.localScale = Vector3.one * 1.28f;
+            ballEdge.color = Ink;
+            ball.transform.localScale = Vector3.one * 1.2f;
             ball.gameObject.AddComponent<SpriteFlipbook>().Configure(ball, roll, true, 14f);
             SpriteRenderer shadow = Renderer("BallShadow", shadowSprite, Vector3.zero, VolleyBallView.ShadowSortingOrder);
             shadow.color = ShadowTint;
@@ -247,6 +266,22 @@ namespace KMA.EditorTools
             return view;
         }
 
+        static void AddAthleteMarker(Transform athlete, Sprite pixel, string name, Color accent)
+        {
+            SpriteRenderer edge = Renderer(name + "MarkerEdge", pixel, Vector3.zero, 290);
+            edge.transform.SetParent(athlete, false);
+            edge.transform.localPosition = new Vector3(0f, 1.8f, 0f);
+            edge.transform.localRotation = Quaternion.Euler(0f, 0f, 45f);
+            edge.transform.localScale = new Vector3(.43f, .43f, 1f);
+            edge.color = Ink;
+            SpriteRenderer centre = Renderer(name + "Marker", pixel, Vector3.zero, 291);
+            centre.transform.SetParent(athlete, false);
+            centre.transform.localPosition = edge.transform.localPosition;
+            centre.transform.localRotation = edge.transform.localRotation;
+            centre.transform.localScale = new Vector3(.31f, .31f, 1f);
+            centre.color = accent;
+        }
+
         static SpriteRenderer Renderer(string name, Sprite sprite, Vector3 position, int order)
         {
             var go = new GameObject(name);
@@ -270,34 +305,74 @@ namespace KMA.EditorTools
             GameObject hudRoot = scene.GetRootGameObjects().Single(go => go.name == HudRootName);
             hudRoot.GetComponent<Canvas>().sortingOrder = HudSortingOrder;
             var parent = (RectTransform)(hudRoot.transform.Find("SafeAreaRoot") ?? hudRoot.transform);
+            // The generic HUD belongs to other sports. Its timer, progress and status fields do
+            // not represent volleyball, so hide only its prefab children in this scene.
+            foreach (Transform child in parent)
+                child.gameObject.SetActive(false);
             var font = AssetDatabase.LoadAssetAtPath<TMP_FontAsset>(FontPath);
             Sprite knobSprite = AssetDatabase.GetBuiltinExtraResource<Sprite>(KnobSpritePath);
+            Camera.main.orthographicSize = 5.45f;
 
             RectTransform controls = UiRect("VolleyballControls", parent, Vector2.zero, Vector2.one);
             controls.SetAsFirstSibling();
 
-            RectTransform area = UiRect("JoystickArea", controls, Vector2.zero, new Vector2(.4f, 1f));
+            RectTransform area = UiRect("JoystickArea", controls, Vector2.zero, new Vector2(.38f, .52f));
             area.gameObject.AddComponent<Image>().color = Color.clear;
-            RectTransform stickBase = Circle("JoystickBase", area, knobSprite, 240f, new Color(1f, 1f, 1f, .3f));
-            RectTransform knob = Circle("JoystickKnob", area, knobSprite, 120f, new Color(1f, 1f, 1f, .7f));
+            RectTransform stickBase = Circle("JoystickBase", area, knobSprite, 224f, new Color(.05f, .57f, .7f, .35f));
+            Circle("JoystickRim", stickBase, knobSprite, 195f, new Color(.5f, .96f, 1f, .25f));
+            RectTransform knob = Circle("JoystickKnob", area, knobSprite, 112f, new Color(.72f, 1f, 1f, .75f));
+            Circle("JoystickCore", knob, knobSprite, 61f, new Color(.98f, 1f, 1f, .7f));
             var joystick = area.gameObject.AddComponent<VirtualJoystick>();
-            joystick.Configure(area, stickBase, knob, 100f, new Vector2(0f, -220f));
+            joystick.Configure(area, stickBase, knob, 88f, new Vector2(-135f, -140f));
 
-            RectTransform buttonRect = Circle("ActionButton", controls, knobSprite, 280f, ButtonColor);
+            RectTransform buttonRect = UiRect("ActionButton", controls, Vector2.one, Vector2.one);
             buttonRect.anchorMin = buttonRect.anchorMax = buttonRect.pivot = new Vector2(1f, 0f);
-            buttonRect.anchoredPosition = new Vector2(-140f, 140f);
-            buttonRect.GetComponent<Image>().raycastTarget = true;
+            buttonRect.sizeDelta = new Vector2(310f, 310f);
+            buttonRect.anchoredPosition = new Vector2(-18f, 18f);
+            buttonRect.gameObject.AddComponent<Image>().color = new Color(1f, 1f, 1f, .001f);
+            RectTransform buttonShadow = Circle("ButtonShadow", buttonRect, knobSprite, 231f, new Color(Ink.r, Ink.g, Ink.b, .25f));
+            buttonShadow.anchoredPosition = new Vector2(0f, -8f);
+            Circle("ButtonRim", buttonRect, knobSprite, 238f, new Color32(255, 227, 137, 255));
+            RectTransform buttonFace = Circle("ButtonFace", buttonRect, knobSprite, 218f, ButtonColor);
             var button = buttonRect.gameObject.AddComponent<ActionButton>();
-            Label("Label", buttonRect, font, "ĐÁNH", 64f, Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
+            button.Configure(buttonFace.GetComponent<Image>(), buttonFace);
+            TMP_Text actionLabel = Label("Label", buttonFace, font, "ĐÁNH", 53f,
+                Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
+            actionLabel.color = Ink;
 
-            TMP_Text score = Label("Score", controls, font, VolleyballHud.ScoreText(0, 0), 64f,
-                new Vector2(.5f, 1f), new Vector2(.5f, 1f), new Vector2(0f, -40f), new Vector2(800f, 100f));
-            TMP_Text feedback = Label("Feedback", controls, font, string.Empty, 80f,
-                new Vector2(.5f, .65f), new Vector2(.5f, .65f), Vector2.zero, new Vector2(600f, 120f));
-            TMP_Text hint = Label("Hint", controls, font, VolleyballHud.HintText, 40f,
-                new Vector2(.5f, 0f), new Vector2(.5f, 0f), new Vector2(0f, 40f), new Vector2(1400f, 80f));
+            RectTransform scoreboard = Panel("VolleyballScoreboard", controls, knobSprite,
+                new Vector2(.5f, 1f), new Vector2(650f, 84f), new Vector2(0f, -12f),
+                new Color(Ink.r, Ink.g, Ink.b, .83f));
+            Label("PlayerTitle", scoreboard, font, "PLAYER", 35f,
+                new Vector2(0f, .5f), new Vector2(0f, .5f), new Vector2(136f, 0f), new Vector2(225f, 65f)).color = Cyan;
+            TMP_Text score = Label("Score", scoreboard, font, VolleyballHud.ScoreText(0, 0), 53f,
+                new Vector2(.5f, .5f), new Vector2(.5f, .5f), Vector2.zero, new Vector2(215f, 74f));
+            Label("EnemyTitle", scoreboard, font, "ENEMY", 35f,
+                new Vector2(1f, .5f), new Vector2(1f, .5f), new Vector2(-136f, 0f), new Vector2(225f, 65f)).color = Coral;
+            TMP_Text feedback = Label("Feedback", controls, font, string.Empty, 66f,
+                new Vector2(.5f, .75f), new Vector2(.5f, .75f), Vector2.zero, new Vector2(680f, 100f));
+            feedback.color = new Color32(255, 242, 151, 255);
+            RectTransform hintBanner = Panel("HintBanner", controls, knobSprite,
+                new Vector2(.5f, .045f), new Vector2(860f, 66f), Vector2.zero,
+                new Color(Ink.r, Ink.g, Ink.b, .72f));
+            TMP_Text hint = Label("Hint", hintBanner, font, VolleyballHud.HintText, 31f,
+                Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
             var hud = controls.gameObject.AddComponent<VolleyballHud>();
             hud.Configure(score, feedback, hint);
+            hud.ConfigureHintBackdrop(hintBanner.gameObject);
+
+            var pause = Object.FindFirstObjectByType<PausePanel>();
+            if (pause)
+            {
+                pause.transform.SetParent(parent, false);
+                var pauseRect = (RectTransform)pause.transform;
+                pauseRect.anchorMin = pauseRect.anchorMax = pauseRect.pivot = Vector2.one;
+                pauseRect.sizeDelta = new Vector2(136f, 72f);
+                pauseRect.anchoredPosition = new Vector2(-22f, -18f);
+                pause.GetComponent<Image>().color = new Color(Ink.r, Ink.g, Ink.b, .83f);
+                pause.GetComponentInChildren<Text>().text = "II  PAUSE";
+                pause.GetComponentInChildren<Text>().fontSize = 23;
+            }
 
             var controller = Object.FindFirstObjectByType<VolleyballController>();
             controller.Input.Configure(joystick, button);
@@ -327,6 +402,20 @@ namespace KMA.EditorTools
             RectTransform rect = UiRect(name, parent, new Vector2(.5f, .5f), new Vector2(.5f, .5f));
             rect.sizeDelta = new Vector2(size, size);
             var image = rect.gameObject.AddComponent<Image>();
+            image.sprite = sprite;
+            image.color = color;
+            image.raycastTarget = false;
+            return rect;
+        }
+
+        static RectTransform Panel(string name, Transform parent, Sprite sprite, Vector2 anchor,
+            Vector2 dimensions, Vector2 position, Color color)
+        {
+            RectTransform rect = UiRect(name, parent, anchor, anchor);
+            rect.pivot = new Vector2(.5f, anchor.y >= .99f ? 1f : .5f);
+            rect.sizeDelta = dimensions;
+            rect.anchoredPosition = position;
+            Image image = rect.gameObject.AddComponent<Image>();
             image.sprite = sprite;
             image.color = color;
             image.raycastTarget = false;
