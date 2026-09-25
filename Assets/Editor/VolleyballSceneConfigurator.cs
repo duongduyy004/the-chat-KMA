@@ -29,11 +29,15 @@ namespace KMA.EditorTools
 
         // Tuned by eye in the visual QA task; see the plan's Task 13.
         const float AthletePixelsPerUnit = 26f;
-        const float NetPixelsPerUnit = 43f;
         const float HorizonWorldY = 4.97f;
         const int HudSortingOrder = 500;
+        // net0.png was drawn for an isometric camera angle and reads as a diagonal pole, not a
+        // net, under this scene's flat top-down camera - a flat-color band drawn the same way as
+        // the Sky/Sand quads reads correctly instead. See the plan's Task 13.
+        const float NetWidth = .5f;
         static readonly Color SkyColor = new Color32(91, 200, 224, 255);
         static readonly Color SandColor = new Color32(236, 194, 150, 255);
+        static readonly Color NetColor = new Color(.95f, .95f, .95f, .9f);
         static readonly Color OpponentTint = new Color(1f, .55f, .55f, 1f);
         static readonly Color ShadowTint = new Color(1f, 1f, 1f, .8f);
         static readonly Color ContactTint = new Color(1f, .9f, .2f, .85f);
@@ -69,7 +73,6 @@ namespace KMA.EditorTools
             new TextureSpec(CharacterDir + "/playerBlock.png", 32, AthletePixelsPerUnit, Feet),
             new TextureSpec(CharacterDir + "/playerSmash.png", 32, AthletePixelsPerUnit, Feet),
             new TextureSpec(CharacterDir + "/playerSlide.png", 43, AthletePixelsPerUnit, Feet),
-            new TextureSpec(EnvironmentDir + "/net0.png", 45, NetPixelsPerUnit, Centre),
             new TextureSpec(EnvironmentDir + "/ballRoll.png", 15, CourtSpace.BackgroundPixelsPerUnit, Centre),
             new TextureSpec(EnvironmentDir + "/beachbkgO.png", 0, CourtSpace.BackgroundPixelsPerUnit, Centre),
             new TextureSpec(EnvironmentDir + "/shadow1.png", 0, CourtSpace.BackgroundPixelsPerUnit, Centre),
@@ -188,8 +191,11 @@ namespace KMA.EditorTools
             Quad("Sky", pixel, SkyColor, new Vector3(0f, HorizonWorldY + 10f, 0f), new Vector2(60f, 20f));
             Quad("Sand", pixel, SandColor, new Vector3(0f, HorizonWorldY - 20f, 0f), new Vector2(60f, 40f));
             Renderer("Court", Single(EnvironmentDir + "/beachbkgO.png"), CourtSpace.BackgroundWorldPosition, -20);
-            Renderer("Net", Frames(EnvironmentDir + "/net0.png")[0], CourtSpace.ToWorld(Vector2.zero, 0f),
-                VolleyAthleteView.NetSortingOrder);
+            // A flat-color band, not net0.png's sprite: that art was drawn for an isometric
+            // camera angle and reads as a diagonal pole rather than a net under this scene's flat
+            // top-down camera. See the plan's Task 13.
+            Quad("Net", pixel, NetColor, CourtSpace.ToWorld(Vector2.zero, 0f),
+                new Vector2(NetWidth, CourtSpace.HalfWidth * 2f), VolleyAthleteView.NetSortingOrder);
 
             VolleyAthleteView player = Athlete("Player", false, Color.white);
             VolleyAthleteView opponent = Athlete("Opponent", true, OpponentTint);
@@ -245,9 +251,9 @@ namespace KMA.EditorTools
             return renderer;
         }
 
-        static void Quad(string name, Sprite pixel, Color color, Vector3 position, Vector2 size)
+        static void Quad(string name, Sprite pixel, Color color, Vector3 position, Vector2 size, int order = -30)
         {
-            SpriteRenderer renderer = Renderer(name, pixel, position, -30);
+            SpriteRenderer renderer = Renderer(name, pixel, position, order);
             renderer.color = color;
             renderer.transform.localScale = new Vector3(size.x, size.y, 1f);
         }
