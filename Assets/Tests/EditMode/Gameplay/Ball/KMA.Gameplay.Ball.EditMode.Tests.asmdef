@@ -1,0 +1,26 @@
+{
+    "name": "KMA.Gameplay.Ball.EditMode.Tests",
+    "rootNamespace": "KMA.Tests.Gameplay.Ball",
+    "references": [
+        "UnityEngine.TestRunner",
+        "UnityEditor.TestRunner",
+        "KMA.Gameplay",
+        "KMA.Gameplay.Ball",
+        "KMA.Gameplay.Football"
+    ],
+    "includePlatforms": [
+        "Editor"
+    ],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": true,
+    "precompiledReferences": [
+        "nunit.framework.dll"
+    ],
+    "autoReferenced": true,
+    "defineConstraints": [
+        "UNITY_INCLUDE_TESTS"
+    ],
+    "versionDefines": [],
+    "noEngineReferences": false
+}
