@@ -27,12 +27,13 @@ rally points wins; the match is capped at 120 s.
 |---|---|---|
 | `beachbkgO.png` | 400×430 | Court background (orthographic lines; the net line is at x=200 px) |
 | `beachbkgIso.png` | 400×430 | Not used |
-| `net0.png` | 270×450 | Net, 6 frames of 45 px (idle frame plus a wobble when hit) |
+| `net0.png` | 270×450 | Net, 6 frames of 45 px; frame 0 is drawn as a static net |
 | `playerIdle/Run.png` | 384×43 | 12 frames of 32 px |
 | `playerReception.png` | 352×43 | 11 frames of 32 px |
 | `playerBlock/Smash.png` | 416×46 / 416×50 | 13 frames of 32 px |
 | `playerSlide.png` | 645×43 | Dive, 15 frames of 43 px |
-| `ballFull/Shot/Bounce/BounceHard/Roll.png` | height 20 | Ball spin, shot and bounce sheets, sliced into 20 px-high frames. Frame widths are checked when the sheets are imported. |
+| `ballRoll.png` | 120×20 | Ball spin, 8 frames of 15 px (the one ball sheet used) |
+| `ballFull/Shot/Bounce/BounceHard.png` | height 20 | Not used |
 | `shadow1.png` | 23×10 | Ball shadow |
 | `bubbleOK.png`, `pushbutton.png` | — | Not used; the HUD uses the existing UI theme |
 | `__MACOSX/*` | — | Discarded |
@@ -70,7 +71,7 @@ those classes and draw what they report.
 | `SpriteFlipbook` | A small component that plays a frame array at about 12 fps, looping or once. Used instead of Animator controllers. |
 | `VirtualJoystick` | A floating stick in the left 40% of the screen: it appears where the thumb lands and outputs a normalized Vector2. |
 | `ActionButton` | A fixed button in the bottom right; it timestamps each press. |
-| `VolleyballInputBridge` | Merges touch input with keyboard input (WASD or arrows plus Space), using a new `Volleyball` action map in the existing Input System asset. Provides `FeedMoveForTest` and `FeedActionForTest`. `GameplayInputRouter` is not modified. |
+| `VolleyballInputBridge` | Merges touch input with keyboard input (WASD or arrows plus Space), with the keyboard actions built in code (the map list in `KMA.inputactions` is pinned by `InputAssetContractTests`). Provides `FeedMoveForTest` and `FeedActionForTest`. `GameplayInputRouter` is not modified. |
 | `VolleyballHud` | Score, remaining time, and PERFECT/GOOD/LATE feedback. Built on the existing HUD and `UITheme`. |
 | `Editor/VolleyballSceneConfigurator` | The `KMA/Volleyball/Build Scene` menu. It imports and slices the art and builds `MG_Volleyball.unity`: camera, background, net, athletes, ball, shadow, UI and controller wiring. If a BVA2 source image is missing, it fails and names the file. |
 
@@ -92,7 +93,10 @@ those classes and draw what they report.
 ## Actions (player's button)
 
 Contact height for timing: the ideal moment is when the descending ball passes z = 1.0 m
-(Receive, Dive) or reaches its apex (Smash, Block jump).
+(Receive, FreeBall, Dive) or z = 2.6 m (Smash; a jump spike hits on the way down). A serve
+hit is timed against the top of the toss. "Within reach" means the athlete is within 1.0 m
+of the contact point, which is the ball's ground position at the ideal moment. Positioning
+and timing are judged separately.
 
 | Action | Available when | Result |
 |---|---|---|
@@ -169,7 +173,7 @@ counted. A contact marker on the shadow shrinks toward the ideal moment.
 | `MinigameUIAssembler`, `S5RouteBootstrap`, `S5SceneConfigurator` | Register the new subject wherever Sprint and Football are listed. |
 | `SubjectConfig` | New `ScriptableObjects/Subjects/Volleyball.asset`. |
 | `EditorBuildSettings` | Add `MG_Volleyball.unity`. |
-| Input asset | New `Volleyball` action map: `Move` (Vector2, WASD/arrows) and `Action` (Space). |
+| Input | No change to `KMA.inputactions`. `VolleyballInputBridge` builds `Move` (Vector2, WASD/arrows) and `Action` (Space) in code. |
 | `README.md` | Add Volleyball to the scenes and controls tables and the subject list. |
 
 ## Error handling
@@ -203,7 +207,9 @@ counted. A contact marker on the shadow shrinks toward the ideal moment.
 
 - Scene contract: `MG_Volleyball` loads with a controller, both athletes, the ball, the
   shadow, the joystick, the button and the HUD, with all references wired.
-- A scripted rally: injected move and action input wins a point for the player.
+- Wiring: an injected action press in the loaded scene tosses the serve, and the
+  controller completes exactly once. The rally that wins a point is scripted against
+  `VolleyballMatch` in EditMode.
 - Route: the Map's Volleyball card → `MG_Volleyball` → complete → back to Map.
 
 **Visual:** screenshot checks with the `testing-unity-ui-with-screenshots` skill at
