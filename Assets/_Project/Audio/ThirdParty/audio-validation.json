@@ -1,0 +1,2618 @@
+[
+  {
+    "file": "Kenney/impact-sounds/Audio/footstep_carpet_000.ogg",
+    "seconds": 0.145,
+    "sample_rate": 44100,
+    "channels": 2,
+    "decoded_frames": 6385,
+    "sha256": "b9524658b52a99a20590f8feefc103088637fd13ea8ec35811aee785e1f2f330"
+  },
+  {
+    "file": "Kenney/impact-sounds/Audio/footstep_carpet_001.ogg",
+    "seconds": 0.145,
+    "sample_rate": 44100,
+    "channels": 2,
+    "decoded_frames": 6385,
+    "sha256": "9af3c3f76705107339e72036e4053bdca3eaa50ad31c8c929f42ce8d40e5d781"
+  },
+  {
+    "file": "Kenney/impact-sounds/Audio/footstep_carpet_002.ogg",
+    "seconds": 0.145,
+    "sample_rate": 44100,
+    "channels": 2,
+    "decoded_frames": 6385,
+    "sha256": "9af3c3f76705107339e72036e4053bdca3eaa50ad31c8c929f42ce8d40e5d781"
+  },
+  {
+    "file": "Kenney/impact-sounds/Audio/footstep_carpet_003.ogg",
+    "seconds": 0.145,
+    "sample_rate": 44100,
+    "channels": 2,
+    "decoded_frames": 6385,
+    "sha256": "4ae7454338d57c7d102145919ae653c7d010eb542797c4f25a1c7470be3a7e4c"
+  },
+  {
+    "file": "Kenney/impact-sounds/Audio/footstep_carpet_004.ogg",
+    "seconds": 0.145,
+    "sample_rate": 44100,
+    "channels": 2,
+    "decoded_frames": 6385,
+    "sha256": "4ae7454338d57c7d102145919ae653c7d010eb542797c4f25a1c7470be3a7e4c"
+  },
+  {
+    "file": "Kenney/impact-sounds/Audio/footstep_concrete_000.ogg",
+    "seconds": 0.106,
+    "sample_rate": 44100,
+    "channels": 2,
+    "decoded_frames": 4671,
+    "sha256": "d7267e183067757c92c169de2a379abea592cfca6b39bb2e8feea15221ad79fe"
+  },
+  {
+    "file": "Kenney/impact-sounds/Audio/footstep_concrete_001.ogg",
+    "seconds": 0.108,
+    "sample_rate": 44100,
+    "channels": 2,
+    "decoded_frames": 4747,
+    "sha256": "507a75eb19b897087855a3be3cf11a12d7fa37d143ad535eeebe0b8031c7325d"
+  },
+  {
+    "file": "Kenney/impact-sounds/Audio/footstep_concrete_002.ogg",
+    "seconds": 0.113,
+    "sample_rate": 44100,
+    "channels": 2,
+    "decoded_frames": 4974,
+    "sha256": "b21fa546d74941196b25da8a20b7010abd8c05c4fcf93545d1f344e66a664e13"
+  },
+  {
+    "file": "Kenney/impact-sounds/Audio/footstep_concrete_003.ogg",
+    "seconds": 0.11,
+    "sample_rate": 44100,
+    "channels": 2,
+    "decoded_frames": 4873,
+    "sha256": "8b513c2f0316324060b9174b8f28df6c2147418c506e6a53b77f18e149a5547b"
+  },
+  {
+    "file": "Kenney/impact-sounds/Audio/footstep_concrete_004.ogg",
+    "seconds": 0.114,
+    "sample_rate": 44100,
+    "channels": 2,
+    "decoded_frames": 5043,
+    "sha256": "24dd8db2413e5b81ad181e1205c12a1c7801da5f85715d471b92a4b2f632e45e"
+  },
+  {
+    "file": "Kenney/impact-sounds/Audio/footstep_grass_000.ogg",
+    "seconds": 0.778,
+    "sample_rate": 44100,
+    "channels": 2,
+    "decoded_frames": 34291,
+    "sha256": "9d49497777405d78d7cf7f2888e28277f3a23192300cfd1d79d54876b20f479f"
+  },
+  {
+    "file": "Kenney/impact-sounds/Audio/footstep_grass_001.ogg",
+    "seconds": 0.674,
+    "sample_rate": 44100,
+    "channels": 2,
+    "decoded_frames": 29706,
+    "sha256": "fb28781bd22b2eefdc14077f1adf5c94d7fe9c3a130194633b55f3e0d39d9f04"
+  },
+  {
+    "file": "Kenney/impact-sounds/Audio/footstep_grass_002.ogg",
+    "seconds": 0.692,
+    "sample_rate": 44100,
+    "channels": 2,
+    "decoded_frames": 30537,
+    "sha256": "73a520139f5be716a403bfe9c80e0e94d1e61d8e9de04a354b336392164b53dc"
+  },
+  {
+    "file": "Kenney/impact-sounds/Audio/footstep_grass_003.ogg",
+    "seconds": 0.669,
+    "sample_rate": 44100,
+    "channels": 2,
+    "decoded_frames": 29517,
+    "sha256": "0546e1d8ab2def714425701a18bd34c5ee2794b12e858e5b595aabcf38a34137"
+  },
+  {
+    "file": "Kenney/impact-sounds/Audio/footstep_grass_004.ogg",
+    "seconds": 0.59,
+    "sample_rate": 44100,
+    "channels": 2,
+    "decoded_frames": 26029,
+    "sha256": "086fd4ab3546a507ea5f5c759a9a10e535c95ade13705c238bc0eeffd7d4e8ba"
+  },
+  {
+    "file": "Kenney/impact-sounds/Audio/footstep_snow_000.ogg",
+    "seconds": 0.374,
+    "sample_rate": 44100,
+    "channels": 2,
+    "decoded_frames": 16503,
+    "sha256": "c05fa4a9dc9a7aabc04996466fb589537e49af76de9998d8f9e6270ec92dcef7"
+  },
+  {
+    "file": "Kenney/impact-sounds/Audio/footstep_snow_001.ogg",
+    "seconds": 0.374,
+    "sample_rate": 44100,
+    "channels": 2,
+    "decoded_frames": 16503,
+    "sha256": "980fb9a1c9227aed7995067b0357f373053337f2416316db8ea0438418542fb4"
+  },
+  {
+    "file": "Kenney/impact-sounds/Audio/footstep_snow_002.ogg",
+    "seconds": 0.374,
+    "sample_rate": 44100,
+    "channels": 2,
+    "decoded_frames": 16503,
+    "sha256": "db52bafdc66304f3b999f2c29227826c65993916e630ac2ffbca17d07b263178"
+  },
+  {
+    "file": "Kenney/impact-sounds/Audio/footstep_snow_003.ogg",
+    "seconds": 0.374,
+    "sample_rate": 44100,
+    "channels": 2,
+    "decoded_frames": 16503,
+    "sha256": "68272e3f1cabcabd02d328fd344454d7c04cb58b5a86972fcdd858f845e3d007"
+  },
+  {
+    "file": "Kenney/impact-sounds/Audio/footstep_snow_004.ogg",
+    "seconds": 0.374,
+    "sample_rate": 44100,
+    "channels": 2,
+    "decoded_frames": 16503,
+    "sha256": "7fe9ce5f5732aaa0a50ef02bb1ac162c27f6bd85214e86aaea6e13e7a41dbc00"
+  },
+  {
+    "file": "Kenney/impact-sounds/Audio/footstep_wood_000.ogg",
+    "seconds": 0.25,
+    "sample_rate": 44100,
+    "channels": 2,
+    "decoded_frames": 11007,
+    "sha256": "5f1c252942a220d658121bd9417448cd19649ded9fff2ff15f6e50899373ce8e"
+  },
+  {
+    "file": "Kenney/impact-sounds/Audio/footstep_wood_001.ogg",
+    "seconds": 0.252,
+    "sample_rate": 44100,
+    "channels": 2,
+    "decoded_frames": 11094,
+    "sha256": "e4f68e1c9fd55b4dc8ca89ed2bbab6f200171bc54bdc18aa96b80d8e7336f462"
+  },
+  {
+    "file": "Kenney/impact-sounds/Audio/footstep_wood_002.ogg",
+    "seconds": 0.251,
+    "sample_rate": 44100,
+    "channels": 2,
+    "decoded_frames": 11086,
+    "sha256": "9ff095b05cee5eec40b081defe3f0eef7232bb16d4865ce03b9f6dbab875cfdd"
+  },
+  {
+    "file": "Kenney/impact-sounds/Audio/footstep_wood_003.ogg",
+    "seconds": 0.252,
+    "sample_rate": 44100,
+    "channels": 2,
+    "decoded_frames": 11092,
+    "sha256": "2a68a083daa9eda08fed0ea5da5280dfbe0de226196c576be02f95259dd139d9"
+  },
+  {
+    "file": "Kenney/impact-sounds/Audio/footstep_wood_004.ogg",
+    "seconds": 0.248,
+    "sample_rate": 44100,
+    "channels": 2,
+    "decoded_frames": 10933,
+    "sha256": "b33e0854e2b3f6b6492e25c25ef8f90447a332f7c6bb25dd02edced9581d3441"
+  },
+  {
+    "file": "Kenney/impact-sounds/Audio/impactBell_heavy_000.ogg",
+    "seconds": 1.48,
+    "sample_rate": 44100,
+    "channels": 2,
+    "decoded_frames": 65276,
+    "sha256": "94b8bb5f2d43ab65e4bcc32b28562416e9bc2c51d9fd4be1e333660ee52f977f"
+  },
+  {
+    "file": "Kenney/impact-sounds/Audio/impactBell_heavy_001.ogg",
+    "seconds": 1.741,
+    "sample_rate": 44100,
+    "channels": 2,
+    "decoded_frames": 76772,
+    "sha256": "9df61e3ae9a83dc65e5a1fd3ed19d480876f3b22b963a1b9ef6fa293592dcec4"
+  },
+  {
+    "file": "Kenney/impact-sounds/Audio/impactBell_heavy_002.ogg",
+    "seconds": 0.697,
+    "sample_rate": 44100,
+    "channels": 2,
+    "decoded_frames": 30750,
+    "sha256": "a4171ed1a4a17fb858a38de1c59b5b42e50d8f046c525706c0e3ac8671f189f5"
+  },
+  {
+    "file": "Kenney/impact-sounds/Audio/impactBell_heavy_003.ogg",
+    "seconds": 0.654,
+    "sample_rate": 44100,
+    "channels": 2,
+    "decoded_frames": 28824,
+    "sha256": "5572ccdeb3b62373b86fa955355b3a222c36e815f0636ba16165189a21cf2514"
+  },
+  {
+    "file": "Kenney/impact-sounds/Audio/impactBell_heavy_004.ogg",
+    "seconds": 0.301,
+    "sample_rate": 44100,
+    "channels": 2,
+    "decoded_frames": 13294,
+    "sha256": "49fe4fafa2001bd0d312976796824571ca8429851f285997e1327d17bb34fd00"
+  },
+  {
+    "file": "Kenney/impact-sounds/Audio/impactGeneric_light_000.ogg",
+    "seconds": 0.139,
+    "sample_rate": 44100,
+    "channels": 2,
+    "decoded_frames": 6116,
+    "sha256": "f0e982611e97512fee5f777986b67e8b435434b601f94992ec044f7e89fb5acb"
+  },
+  {
+    "file": "Kenney/impact-sounds/Audio/impactGeneric_light_001.ogg",
+    "seconds": 0.118,
+    "sample_rate": 44100,
+    "channels": 2,
+    "decoded_frames": 5182,
+    "sha256": "c3cd1c073d186ae8fa35788ba94de581f1826e7427a7bb26490b2695fac18efa"
+  },
+  {
+    "file": "Kenney/impact-sounds/Audio/impactGeneric_light_002.ogg",
+    "seconds": 0.14,
+    "sample_rate": 44100,
+    "channels": 2,
+    "decoded_frames": 6156,
+    "sha256": "d0bf60905b59ff630ffe01eb0edeeacd2504eaa8fb6523aeef7d2458b78264d3"
+  },
+  {
+    "file": "Kenney/impact-sounds/Audio/impactGeneric_light_003.ogg",
+    "seconds": 0.138,
+    "sample_rate": 44100,
+    "channels": 2,
+    "decoded_frames": 6085,
+    "sha256": "0e8896706130f6bc88cdf1f0157aaacdbe88dce86cf0330f9136e44eb1209e81"
+  },
+  {
+    "file": "Kenney/impact-sounds/Audio/impactGeneric_light_004.ogg",
+    "seconds": 0.14,
+    "sample_rate": 44100,
+    "channels": 2,
+    "decoded_frames": 6189,
+    "sha256": "f906fa3a37acc4372787b496efcedefa2856045d5ec9456a3bd6c303c0eabb41"
+  },
+  {
+    "file": "Kenney/impact-sounds/Audio/impactGlass_heavy_000.ogg",
+    "seconds": 0.241,
+    "sample_rate": 44100,
+    "channels": 2,
+    "decoded_frames": 10638,
+    "sha256": "b44b39a940e8948e74b9bd3776bff980df43cf220abdaf0d467dc4c43c0244a5"
+  },
+  {
+    "file": "Kenney/impact-sounds/Audio/impactGlass_heavy_001.ogg",
+    "seconds": 0.429,
+    "sample_rate": 44100,
+    "channels": 2,
+    "decoded_frames": 18919,
+    "sha256": "58686e0e562612cc566791844a10e269f8d1921f4766c14ba43976fd0a429f4e"
+  },
+  {
+    "file": "Kenney/impact-sounds/Audio/impactGlass_heavy_002.ogg",
+    "seconds": 0.247,
+    "sample_rate": 44100,
+    "channels": 2,
+    "decoded_frames": 10900,
+    "sha256": "4978654ac840ad519692d5d5ba48a8101cabce13b9a577be73ad589185e5e9ed"
+  },
+  {
+    "file": "Kenney/impact-sounds/Audio/impactGlass_heavy_003.ogg",
+    "seconds": 0.172,
+    "sample_rate": 44100,
+    "channels": 2,
+    "decoded_frames": 7565,
+    "sha256": "aed07b154f24410c17e5262bbef832842fb275d41fe297f721af7501d0e9c23a"
+  },
+  {
+    "file": "Kenney/impact-sounds/Audio/impactGlass_heavy_004.ogg",
+    "seconds": 0.399,
+    "sample_rate": 44100,
+    "channels": 2,
+    "decoded_frames": 17604,
+    "sha256": "c7742b0e33c1733ddaf902aa68464a4f5364e4d4cb6ff11b76a7aa4151a138dd"
+  },
+  {
+    "file": "Kenney/impact-sounds/Audio/impactGlass_light_000.ogg",
+    "seconds": 0.21,
+    "sample_rate": 44100,
+    "channels": 2,
+    "decoded_frames": 9243,
+    "sha256": "d750cf88097d0c3e69920e6e14496e1444e1a9da01aa4cca8f5ec8cb44c57b4f"
+  },
+  {
+    "file": "Kenney/impact-sounds/Audio/impactGlass_light_001.ogg",
+    "seconds": 0.21,
+    "sample_rate": 44100,
+    "channels": 2,
+    "decoded_frames": 9243,
+    "sha256": "05e513fbd42829060eb37855f8c3866722ec5c39a8937c9bfde518cc609effa2"
+  },
+  {
+    "file": "Kenney/impact-sounds/Audio/impactGlass_light_002.ogg",
+    "seconds": 0.21,
+    "sample_rate": 44100,
+    "channels": 2,
+    "decoded_frames": 9243,
+    "sha256": "710db7451bb7857b9140dfe6afe4621ea2188ad65eda3919c569d1bb285b933d"
+  },
+  {
+    "file": "Kenney/impact-sounds/Audio/impactGlass_light_003.ogg",
+    "seconds": 0.21,
+    "sample_rate": 44100,
+    "channels": 2,
+    "decoded_frames": 9243,
+    "sha256": "765290ce32fa108c939a0dbd6fbacbcd05abde622b57b708eb8a64058ef4225a"
+  },
+  {
+    "file": "Kenney/impact-sounds/Audio/impactGlass_light_004.ogg",
+    "seconds": 0.21,
+    "sample_rate": 44100,
+    "channels": 2,
+    "decoded_frames": 9243,
+    "sha256": "f535b7cb7835400d8d28bcf9e1cf047ce3c0eb7a6456bdb1a4a27acbec1ed2cb"
+  },
+  {
+    "file": "Kenney/impact-sounds/Audio/impactGlass_medium_000.ogg",
+    "seconds": 0.543,
+    "sample_rate": 44100,
+    "channels": 2,
+    "decoded_frames": 23962,
+    "sha256": "9252d50bfb85edb17d6073c4a7806e10cdb9de56d3dbfc93a4b9727146d2df6d"
+  },
+  {
+    "file": "Kenney/impact-sounds/Audio/impactGlass_medium_001.ogg",
+    "seconds": 0.543,
+    "sample_rate": 44100,
+    "channels": 2,
+    "decoded_frames": 23962,
+    "sha256": "d3d806cb3012c9ddd87010b30295ccb74d6d8b690077d19e67afd09a9d8feb03"
+  },
+  {
+    "file": "Kenney/impact-sounds/Audio/impactGlass_medium_002.ogg",
+    "seconds": 0.543,
+    "sample_rate": 44100,
+    "channels": 2,
+    "decoded_frames": 23962,
+    "sha256": "48616f22c95589ed9fe55babf0fd012721d7b2ef1b9e85c2ad6408a2cd7c164f"
+  },
+  {
+    "file": "Kenney/impact-sounds/Audio/impactGlass_medium_003.ogg",
+    "seconds": 0.543,
+    "sample_rate": 44100,
+    "channels": 2,
+    "decoded_frames": 23962,
+    "sha256": "dccea1ecc3d942ee5fd217c684632638f6c039c97cd3ae59c75ab15d0c3f0b59"
+  },
+  {
+    "file": "Kenney/impact-sounds/Audio/impactGlass_medium_004.ogg",
+    "seconds": 0.543,
+    "sample_rate": 44100,
+    "channels": 2,
+    "decoded_frames": 23962,
+    "sha256": "853fe77ad46bd0cf106e40e741b039e15b90f73edecd92cde524fbad9e3ebe00"
+  },
+  {
+    "file": "Kenney/impact-sounds/Audio/impactMetal_heavy_000.ogg",
+    "seconds": 0.168,
+    "sample_rate": 44100,
+    "channels": 2,
+    "decoded_frames": 7394,
+    "sha256": "e07045693e4a2b3d165c424e3dab4c781d9ff8880a386880ac89a51315d7f831"
+  },
+  {
+    "file": "Kenney/impact-sounds/Audio/impactMetal_heavy_001.ogg",
+    "seconds": 0.359,
+    "sample_rate": 44100,
+    "channels": 2,
+    "decoded_frames": 15844,
+    "sha256": "83554049f81f4db9209379e103c30bfa63f65c42189a03f300b045c2c82e23ae"
+  },
+  {
+    "file": "Kenney/impact-sounds/Audio/impactMetal_heavy_002.ogg",
+    "seconds": 0.117,
+    "sample_rate": 44100,
+    "channels": 2,
+    "decoded_frames": 5173,
+    "sha256": "b914c8f1eb7c0f34bb165d7c77f4be0351f6be0660c13c53e65424e262e2c093"
+  },
+  {
+    "file": "Kenney/impact-sounds/Audio/impactMetal_heavy_003.ogg",
+    "seconds": 0.207,
+    "sample_rate": 44100,
+    "channels": 2,
+    "decoded_frames": 9125,
+    "sha256": "b0f2ba4dabde9a87eb9c188a19d31e0c2300fd321adeba08d3b9b8aa011d7037"
+  },
+  {
+    "file": "Kenney/impact-sounds/Audio/impactMetal_heavy_004.ogg",
+    "seconds": 0.134,
+    "sample_rate": 44100,
+    "channels": 2,
+    "decoded_frames": 5901,
+    "sha256": "6d65b463c0555dd5be16b8db6d2cbe23a94e07a4637779b8ad17d0db3e500a87"
+  },
+  {
+    "file": "Kenney/impact-sounds/Audio/impactMetal_light_000.ogg",
+    "seconds": 0.351,
+    "sample_rate": 44100,
+    "channels": 2,
+    "decoded_frames": 15500,
+    "sha256": "33b5e6e37c6e9d54e07bf5a89b12c76e879f40c1ea83cdd82714df1d6f9fec6d"
+  },
+  {
+    "file": "Kenney/impact-sounds/Audio/impactMetal_light_001.ogg",
+    "seconds": 0.252,
+    "sample_rate": 44100,
+    "channels": 2,
+    "decoded_frames": 11106,
+    "sha256": "fba69c467ddd85da7b1d82e259f936b876d9ba6a3d6f1b24bdd10468e46bfe08"
+  },
+  {
+    "file": "Kenney/impact-sounds/Audio/impactMetal_light_002.ogg",
+    "seconds": 0.236,
+    "sample_rate": 44100,
+    "channels": 2,
+    "decoded_frames": 10398,
+    "sha256": "25a96f90a9a1f88a531e824e126f0519504625e5635e65a72e4f31611428db29"
+  },
+  {
+    "file": "Kenney/impact-sounds/Audio/impactMetal_light_003.ogg",
+    "seconds": 0.482,
+    "sample_rate": 44100,
+    "channels": 2,
+    "decoded_frames": 21258,
+    "sha256": "92d5db6bfc672d9dc1b4f390b2900504f013187fa36335472554fafefa9050b1"
+  },
+  {
+    "file": "Kenney/impact-sounds/Audio/impactMetal_light_004.ogg",
+    "seconds": 0.213,
+    "sample_rate": 44100,
+    "channels": 2,
+    "decoded_frames": 9411,
+    "sha256": "9b1c35820fba507081261f19ab5f461f69a5e2627a7d91acdb73ca3cfc997979"
+  },
+  {
+    "file": "Kenney/impact-sounds/Audio/impactMetal_medium_000.ogg",
+    "seconds": 0.272,
+    "sample_rate": 44100,
+    "channels": 2,
+    "decoded_frames": 11985,
+    "sha256": "a96f879fec0864a8938e0c745b6996a6c5679c16a234ce31a01cc995e8401003"
+  },
+  {
+    "file": "Kenney/impact-sounds/Audio/impactMetal_medium_001.ogg",
+    "seconds": 0.143,
+    "sample_rate": 44100,
+    "channels": 2,
+    "decoded_frames": 6326,
+    "sha256": "e8a9eaba7c4d27422e4eeb3e6c7100d5d7dc0f83e005efc98c960adcc5265337"
+  },
+  {
+    "file": "Kenney/impact-sounds/Audio/impactMetal_medium_002.ogg",
+    "seconds": 0.119,
+    "sample_rate": 44100,
+    "channels": 2,
+    "decoded_frames": 5254,
+    "sha256": "7e89ce2ca0dbda95ea2b78d4b50791cab35c10d20e9f5ccd45dd0b00e99ff548"
+  },
+  {
+    "file": "Kenney/impact-sounds/Audio/impactMetal_medium_003.ogg",
+    "seconds": 0.254,
+    "sample_rate": 44100,
+    "channels": 2,
+    "decoded_frames": 11200,
+    "sha256": "2a185e2e57211d02c1bdd33b872d6b6a2fe83e6c14f4e56f426a95e717acf08e"
+  },
+  {
+    "file": "Kenney/impact-sounds/Audio/impactMetal_medium_004.ogg",
+    "seconds": 0.109,
+    "sample_rate": 44100,
+    "channels": 2,
+    "decoded_frames": 4826,
+    "sha256": "03e10f800199c7166208e41c11cf4acfac6cc265467f02357da71972bc967295"
+  },
+  {
+    "file": "Kenney/impact-sounds/Audio/impactMining_000.ogg",
+    "seconds": 0.937,
+    "sample_rate": 44100,
+    "channels": 2,
+    "decoded_frames": 41341,
+    "sha256": "36b4ea107222d073c67ca64dde26944975609202d5090b2f2021213c1a7e35cd"
+  },
+  {
+    "file": "Kenney/impact-sounds/Audio/impactMining_001.ogg",
+    "seconds": 0.869,
+    "sample_rate": 44100,
+    "channels": 2,
+    "decoded_frames": 38341,
+    "sha256": "61235a18de3f3d92118235398222dbf51d448f1be70b1c8bc962b10b86f2d9c6"
+  },
+  {
+    "file": "Kenney/impact-sounds/Audio/impactMining_002.ogg",
+    "seconds": 0.805,
+    "sample_rate": 44100,
+    "channels": 2,
+    "decoded_frames": 35486,
+    "sha256": "059558ec751115ca6b1441e00f0adc837c1a3eeb0a066b109e0fd879fc5d0b0c"
+  },
+  {
+    "file": "Kenney/impact-sounds/Audio/impactMining_003.ogg",
+    "seconds": 0.992,
+    "sample_rate": 44100,
+    "channels": 2,
+    "decoded_frames": 43735,
+    "sha256": "4237fa2cd80364ad81cd0af44f67d7497f1c5edcc7bdb02cd22be2ba4580c83d"
+  },
+  {
+    "file": "Kenney/impact-sounds/Audio/impactMining_004.ogg",
+    "seconds": 0.83,
+    "sample_rate": 44100,
+    "channels": 2,
+    "decoded_frames": 36616,
+    "sha256": "8ca3a99d85d845751ad8ce7b40509da58263a62e48cde70e5a30b5ccef4c9a3b"
+  },
+  {
+    "file": "Kenney/impact-sounds/Audio/impactPlank_medium_000.ogg",
+    "seconds": 0.779,
+    "sample_rate": 44100,
+    "channels": 2,
+    "decoded_frames": 34354,
+    "sha256": "8403cd7a043f0391574c88c55dd205743725b5363d2407f6de145f201690b68f"
+  },
+  {
+    "file": "Kenney/impact-sounds/Audio/impactPlank_medium_001.ogg",
+    "seconds": 0.779,
+    "sample_rate": 44100,
+    "channels": 2,
+    "decoded_frames": 34354,
+    "sha256": "d7c304319f8beac616231b62041fa8da74045b62d7155965516efb9b19303df4"
+  },
+  {
+    "file": "Kenney/impact-sounds/Audio/impactPlank_medium_002.ogg",
+    "seconds": 0.779,
+    "sample_rate": 44100,
+    "channels": 2,
+    "decoded_frames": 34354,
+    "sha256": "f6a14da45994229676b4f29e6a35f504b5c2ec2b8166fb1a3b1aa004bc6911ef"
+  },
+  {
+    "file": "Kenney/impact-sounds/Audio/impactPlank_medium_003.ogg",
+    "seconds": 0.779,
+    "sample_rate": 44100,
+    "channels": 2,
+    "decoded_frames": 34354,
+    "sha256": "0602a7b3eab5f53484f10fe775ee4204e7a2ba9703c886b302e012f7f6fab8de"
+  },
+  {
+    "file": "Kenney/impact-sounds/Audio/impactPlank_medium_004.ogg",
+    "seconds": 0.779,
+    "sample_rate": 44100,
+    "channels": 2,
+    "decoded_frames": 34354,
+    "sha256": "6a51318c1c63821ea757622b57fafbf44c16c28129f6d39406a784260d87c447"
+  },
+  {
+    "file": "Kenney/impact-sounds/Audio/impactPlate_heavy_000.ogg",
+    "seconds": 0.489,
+    "sample_rate": 44100,
+    "channels": 2,
+    "decoded_frames": 21550,
+    "sha256": "112d4f93ddcc370b410630f971c0f5d991856102da9c76bc5c5540d388e75aaa"
+  },
+  {
+    "file": "Kenney/impact-sounds/Audio/impactPlate_heavy_001.ogg",
+    "seconds": 0.352,
+    "sample_rate": 44100,
+    "channels": 2,
+    "decoded_frames": 15538,
+    "sha256": "142fd6c77f13d25f318265901163f70f8dfe12f87829169a570025be43de7011"
+  },
+  {
+    "file": "Kenney/impact-sounds/Audio/impactPlate_heavy_002.ogg",
+    "seconds": 0.494,
+    "sample_rate": 44100,
+    "channels": 2,
+    "decoded_frames": 21794,
+    "sha256": "b0cab75d1befa32b4cf215d8ee7e1c400a39182e8b105963b8e310f825b198a1"
+  },
+  {
+    "file": "Kenney/impact-sounds/Audio/impactPlate_heavy_003.ogg",
+    "seconds": 0.347,
+    "sample_rate": 44100,
+    "channels": 2,
+    "decoded_frames": 15283,
+    "sha256": "59775f8979a396c8a793b0a1db206d5bdc651eae808d858e9acaee8ebda5bc6d"
+  },
+  {
+    "file": "Kenney/impact-sounds/Audio/impactPlate_heavy_004.ogg",
+    "seconds": 0.559,
+    "sample_rate": 44100,
+    "channels": 2,
+    "decoded_frames": 24655,
+    "sha256": "e31bfec90630155bcc6af541d1d14ae8202c435c52b42e6b6183fdb6ffb248b0"
+  },
+  {
+    "file": "Kenney/impact-sounds/Audio/impactPlate_light_000.ogg",
+    "seconds": 0.542,
+    "sample_rate": 44100,
+    "channels": 2,
+    "decoded_frames": 23921,
+    "sha256": "6e797cf8a5bfc52d7ed5eb47c227974c1cf2a674954fec5b539cea7d62c7282c"
+  },
+  {
+    "file": "Kenney/impact-sounds/Audio/impactPlate_light_001.ogg",
+    "seconds": 0.655,
+    "sample_rate": 44100,
+    "channels": 2,
+    "decoded_frames": 28871,
+    "sha256": "947915c2eb6ac57ee08fd3a48b297fd108d69abc72076e79882c21cad0eef56e"
+  },
+  {
+    "file": "Kenney/impact-sounds/Audio/impactPlate_light_002.ogg",
+    "seconds": 0.489,
+    "sample_rate": 44100,
+    "channels": 2,
+    "decoded_frames": 21557,
+    "sha256": "8ac5869ea434cf0d364872774efe70b2d666a4f02ba35ddfc1e051d336721be8"
+  },
+  {
+    "file": "Kenney/impact-sounds/Audio/impactPlate_light_003.ogg",
+    "seconds": 0.528,
+    "sample_rate": 44100,
+    "channels": 2,
+    "decoded_frames": 23267,
+    "sha256": "dbfb7c1d002576696df3e9a43d6639ee3f342068398b5e7b55bc2389d20508a9"
+  },
+  {
+    "file": "Kenney/impact-sounds/Audio/impactPlate_light_004.ogg",
+    "seconds": 0.657,
+    "sample_rate": 44100,
+    "channels": 2,
+    "decoded_frames": 28956,
+    "sha256": "9cb33b0c0cce948313f078b60769d2f8e4075472494fc8f8129aa4a23c951897"
+  },
+  {
+    "file": "Kenney/impact-sounds/Audio/impactPlate_medium_000.ogg",
+    "seconds": 0.609,
+    "sample_rate": 44100,
+    "channels": 2,
+    "decoded_frames": 26869,
+    "sha256": "b670d30452983369771081319c268475edaaafe782bf4e8d70bd7eef09d8823c"
+  },
+  {
+    "file": "Kenney/impact-sounds/Audio/impactPlate_medium_001.ogg",
+    "seconds": 0.616,
+    "sample_rate": 44100,
+    "channels": 2,
+    "decoded_frames": 27175,
+    "sha256": "68ba7701b71ef620f498f3038e832157d71ac8db7ad59424545890b250ceb24e"
+  },
+  {
+    "file": "Kenney/impact-sounds/Audio/impactPlate_medium_002.ogg",
+    "seconds": 0.515,
+    "sample_rate": 44100,
+    "channels": 2,
+    "decoded_frames": 22722,
+    "sha256": "68762e1ed49bb59ae6602fad6ce2ebac61958478ddb2668de9106f010cd4b6b0"
+  },
+  {
+    "file": "Kenney/impact-sounds/Audio/impactPlate_medium_003.ogg",
+    "seconds": 0.654,
+    "sample_rate": 44100,
+    "channels": 2,
+    "decoded_frames": 28827,
+    "sha256": "964c5fcfb91e7710e2af25c2243c8b7160756b223b0984bacc9eb25bfeea057b"
+  },
+  {
+    "file": "Kenney/impact-sounds/Audio/impactPlate_medium_004.ogg",
+    "seconds": 0.534,
+    "sample_rate": 44100,
+    "channels": 2,
+    "decoded_frames": 23563,
+    "sha256": "f0e8164081190839caff6c2958361b22780ffba5617f77f2d4ee3a4275b318bf"
+  },
+  {
+    "file": "Kenney/impact-sounds/Audio/impactPunch_heavy_000.ogg",
+    "seconds": 0.649,
+    "sample_rate": 44100,
+    "channels": 2,
+    "decoded_frames": 28622,
+    "sha256": "b33a8f14068aec24ec69ba85e5e87fdc41228975f6a1a3e44a6e7d6fc3d9f8d8"
+  },
+  {
+    "file": "Kenney/impact-sounds/Audio/impactPunch_heavy_001.ogg",
+    "seconds": 0.536,
+    "sample_rate": 44100,
+    "channels": 2,
+    "decoded_frames": 23635,
+    "sha256": "f92f5cb6ba4ff2766497292ffd90865654317eeca976f5652e0708dbdcdc0dd9"
+  },
+  {
+    "file": "Kenney/impact-sounds/Audio/impactPunch_heavy_002.ogg",
+    "seconds": 0.457,
+    "sample_rate": 44100,
+    "channels": 2,
+    "decoded_frames": 20175,
+    "sha256": "7993dd4c156b9979ad69f17be5ebe31850b16039a3857f8477141be54dfee1b3"
+  },
+  {
+    "file": "Kenney/impact-sounds/Audio/impactPunch_heavy_003.ogg",
+    "seconds": 0.474,
+    "sample_rate": 44100,
+    "channels": 2,
+    "decoded_frames": 20895,
+    "sha256": "4ab53b26f4ea575120dcc1348526c9e0db2afc6af7a442aa0489bdead2ca80b6"
+  },
+  {
+    "file": "Kenney/impact-sounds/Audio/impactPunch_heavy_004.ogg",
+    "seconds": 0.536,
+    "sample_rate": 44100,
+    "channels": 2,
+    "decoded_frames": 23653,
+    "sha256": "f4c0c3eb8ab6517583b8218ed03f28923d1b687379aab4c1d5a6d4c10cf8e500"
+  },
+  {
+    "file": "Kenney/impact-sounds/Audio/impactPunch_medium_000.ogg",
+    "seconds": 0.431,
+    "sample_rate": 44100,
+    "channels": 2,
+    "decoded_frames": 18987,
+    "sha256": "486988aa2d6440ffc4c62a0e8ccf3c23673ba84424bd4723378d451b7255eb5c"
+  },
+  {
+    "file": "Kenney/impact-sounds/Audio/impactPunch_medium_001.ogg",
+    "seconds": 0.405,
+    "sample_rate": 44100,
+    "channels": 2,
+    "decoded_frames": 17843,
+    "sha256": "e71d23abcc3f10d9d6bc9615b2a431fff70b12333a5fcdd9964457564ace4349"
+  },
+  {
+    "file": "Kenney/impact-sounds/Audio/impactPunch_medium_002.ogg",
+    "seconds": 0.541,
+    "sample_rate": 44100,
+    "channels": 2,
+    "decoded_frames": 23876,
+    "sha256": "6492f9ccbc8d24dcef607bb1b48790b7870961474561f7fe5601e1c73a3018ef"
+  },
+  {
+    "file": "Kenney/impact-sounds/Audio/impactPunch_medium_003.ogg",
+    "seconds": 0.455,
+    "sample_rate": 44100,
+    "channels": 2,
+    "decoded_frames": 20077,
+    "sha256": "2d7c719c05999e0532f4384e1018e04cd916db715140bf16dee2dff3f820e908"
+  },
+  {
+    "file": "Kenney/impact-sounds/Audio/impactPunch_medium_004.ogg",
+    "seconds": 0.543,
+    "sample_rate": 44100,
+    "channels": 2,
+    "decoded_frames": 23943,
+    "sha256": "4a256878a3afb994ec9a4399336687748e68c7c136872c08c9c797d8c4e2464a"
+  },
+  {
+    "file": "Kenney/impact-sounds/Audio/impactSoft_heavy_000.ogg",
+    "seconds": 0.505,
+    "sample_rate": 44100,
+    "channels": 2,
+    "decoded_frames": 22275,
+    "sha256": "49e7ca88743fca974bb8676ea138b751cfd8f9033b5e7af8736c2a215d6edbc1"
+  },
+  {
+    "file": "Kenney/impact-sounds/Audio/impactSoft_heavy_001.ogg",
+    "seconds": 0.572,
+    "sample_rate": 44100,
+    "channels": 2,
+    "decoded_frames": 25227,
+    "sha256": "4d0096364ba9e46119d2ff6df493fdc101bd2e1efae061da5e5f77a53b3fdcb6"
+  },
+  {
+    "file": "Kenney/impact-sounds/Audio/impactSoft_heavy_002.ogg",
+    "seconds": 0.572,
+    "sample_rate": 44100,
+    "channels": 2,
+    "decoded_frames": 25239,
+    "sha256": "d130ae541951243d3f6ed963d0057450a445ffe117fbf9a084d34eb1635cb563"
+  },
+  {
+    "file": "Kenney/impact-sounds/Audio/impactSoft_heavy_003.ogg",
+    "seconds": 0.544,
+    "sample_rate": 44100,
+    "channels": 2,
+    "decoded_frames": 23998,
+    "sha256": "d00286a2dc62ee5cb4d42bf56120e7050a855f69e655fc1294410aadd337eba3"
+  },
+  {
+    "file": "Kenney/impact-sounds/Audio/impactSoft_heavy_004.ogg",
+    "seconds": 0.501,
+    "sample_rate": 44100,
+    "channels": 2,
+    "decoded_frames": 22092,
+    "sha256": "e008f0b6b14f62339c8fe9f9b45cbd6317ba4f66604c4899053b8017020a36f0"
+  },
+  {
+    "file": "Kenney/impact-sounds/Audio/impactSoft_medium_000.ogg",
+    "seconds": 0.118,
+    "sample_rate": 44100,
+    "channels": 2,
+    "decoded_frames": 5204,
+    "sha256": "7d3ba0bb5e60a11b5d3e558c141303dcf494256675fbf753c0d252d2cf0481e3"
+  },
+  {
+    "file": "Kenney/impact-sounds/Audio/impactSoft_medium_001.ogg",
+    "seconds": 0.183,
+    "sample_rate": 44100,
+    "channels": 2,
+    "decoded_frames": 8083,
+    "sha256": "7642a4fd43e547afe4f7adfadb3dabb681c0ff512f52c1674bae30a726841faf"
+  },
+  {
+    "file": "Kenney/impact-sounds/Audio/impactSoft_medium_002.ogg",
+    "seconds": 0.135,
+    "sample_rate": 44100,
+    "channels": 2,
+    "decoded_frames": 5962,
+    "sha256": "5069e3571a77d7f7aae9ef71d0364aa245fb7d64a7c8cc9956f221d03088c089"
+  },
+  {
+    "file": "Kenney/impact-sounds/Audio/impactSoft_medium_003.ogg",
+    "seconds": 0.14,
+    "sample_rate": 44100,
+    "channels": 2,
+    "decoded_frames": 6184,
+    "sha256": "5c4a1f35fde7e14046931da7bc3d1b23736541b7190ba107e08a379c4ca43cd6"
+  },
+  {
+    "file": "Kenney/impact-sounds/Audio/impactSoft_medium_004.ogg",
+    "seconds": 0.147,
+    "sample_rate": 44100,
+    "channels": 2,
+    "decoded_frames": 6489,
+    "sha256": "b0a4dea90eed47accf50b768beff1166f2f1486fb139e4d025b2427637624bca"
+  },
+  {
+    "file": "Kenney/impact-sounds/Audio/impactTin_medium_000.ogg",
+    "seconds": 0.159,
+    "sample_rate": 44100,
+    "channels": 2,
+    "decoded_frames": 6999,
+    "sha256": "f4bbee66ca191ec744b84fc07ac9ed2a6fda955d51cfed8360f12b62815d3cbd"
+  },
+  {
+    "file": "Kenney/impact-sounds/Audio/impactTin_medium_001.ogg",
+    "seconds": 0.174,
+    "sample_rate": 44100,
+    "channels": 2,
+    "decoded_frames": 7687,
+    "sha256": "84253095543c094d83cd749f42ecfbc96e356b60385f18a192c18eafb25b3cc6"
+  },
+  {
+    "file": "Kenney/impact-sounds/Audio/impactTin_medium_002.ogg",
+    "seconds": 0.134,
+    "sample_rate": 44100,
+    "channels": 2,
+    "decoded_frames": 5900,
+    "sha256": "c1d2c4f9910d4529581ae56a9a9a01454c4619fbb7d6da7616221d8ec58cc0c4"
+  },
+  {
+    "file": "Kenney/impact-sounds/Audio/impactTin_medium_003.ogg",
+    "seconds": 0.215,
+    "sample_rate": 44100,
+    "channels": 2,
+    "decoded_frames": 9462,
+    "sha256": "0d18737d93ba7aa0669f751094cbc1671bbebac4fe207783922938ce75e24334"
+  },
+  {
+    "file": "Kenney/impact-sounds/Audio/impactTin_medium_004.ogg",
+    "seconds": 0.179,
+    "sample_rate": 44100,
+    "channels": 2,
+    "decoded_frames": 7874,
+    "sha256": "fd53e24efec3d5c1cee5a46fee70f97efd4bd01e53ac5d9b5f3b6719dfe9f5aa"
+  },
+  {
+    "file": "Kenney/impact-sounds/Audio/impactWood_heavy_000.ogg",
+    "seconds": 0.313,
+    "sample_rate": 44100,
+    "channels": 2,
+    "decoded_frames": 13805,
+    "sha256": "15ff82332f342c30e469215539e1cc57e11b221aa2cf7e11e811d313a9927f3d"
+  },
+  {
+    "file": "Kenney/impact-sounds/Audio/impactWood_heavy_001.ogg",
+    "seconds": 0.313,
+    "sample_rate": 44100,
+    "channels": 2,
+    "decoded_frames": 13805,
+    "sha256": "f1b07a53ac10c615fff9ba470511fdeb722b5902e1a8520759fc20ad6f546015"
+  },
+  {
+    "file": "Kenney/impact-sounds/Audio/impactWood_heavy_002.ogg",
+    "seconds": 0.313,
+    "sample_rate": 44100,
+    "channels": 2,
+    "decoded_frames": 13805,
+    "sha256": "ce1e06f2a05f2634c645cb72f6a1623e64bc2d92be34917430a61031fb6597d4"
+  },
+  {
+    "file": "Kenney/impact-sounds/Audio/impactWood_heavy_003.ogg",
+    "seconds": 0.313,
+    "sample_rate": 44100,
+    "channels": 2,
+    "decoded_frames": 13805,
+    "sha256": "af07511902b309b3f6d8f0e1fafbe93869127fb88099ebdc0aa6a00a98dc3cb0"
+  },
+  {
+    "file": "Kenney/impact-sounds/Audio/impactWood_heavy_004.ogg",
+    "seconds": 0.313,
+    "sample_rate": 44100,
+    "channels": 2,
+    "decoded_frames": 13805,
+    "sha256": "2c647ae6bd29c72ae2523f7e16e325d8d331b75cc99ab4f637c48a0e11c34677"
+  },
+  {
+    "file": "Kenney/impact-sounds/Audio/impactWood_light_000.ogg",
+    "seconds": 0.266,
+    "sample_rate": 44100,
+    "channels": 2,
+    "decoded_frames": 11713,
+    "sha256": "eb45e35b4bed784d3f120de4afec4b0d6ac09d9e143cce8cfcb7d739e1b1f3c3"
+  },
+  {
+    "file": "Kenney/impact-sounds/Audio/impactWood_light_001.ogg",
+    "seconds": 0.266,
+    "sample_rate": 44100,
+    "channels": 2,
+    "decoded_frames": 11713,
+    "sha256": "4b76bf3ccc8e60d19188f3165b778a7817786faa6887c55d9049bcbeef3b425f"
+  },
+  {
+    "file": "Kenney/impact-sounds/Audio/impactWood_light_002.ogg",
+    "seconds": 0.266,
+    "sample_rate": 44100,
+    "channels": 2,
+    "decoded_frames": 11713,
+    "sha256": "b183cf7a5bd783817e0e4b82af34ac6658fa1927049089dadc8b15c2ecc771dc"
+  },
+  {
+    "file": "Kenney/impact-sounds/Audio/impactWood_light_003.ogg",
+    "seconds": 0.266,
+    "sample_rate": 44100,
+    "channels": 2,
+    "decoded_frames": 11713,
+    "sha256": "cdfbe8af2fe7ff9ee28f337a0a989deee0f327620da456c8413644880e9d0004"
+  },
+  {
+    "file": "Kenney/impact-sounds/Audio/impactWood_light_004.ogg",
+    "seconds": 0.266,
+    "sample_rate": 44100,
+    "channels": 2,
+    "decoded_frames": 11713,
+    "sha256": "e10009f67ddaeb3a59a3e1129cfc1615d84ba60ab578eae07e7092ac223f099c"
+  },
+  {
+    "file": "Kenney/impact-sounds/Audio/impactWood_medium_000.ogg",
+    "seconds": 0.333,
+    "sample_rate": 44100,
+    "channels": 2,
+    "decoded_frames": 14671,
+    "sha256": "1723a9fd25103ed41af06054814e84e65f4a772bac86ab2dc927da93d9592ff5"
+  },
+  {
+    "file": "Kenney/impact-sounds/Audio/impactWood_medium_001.ogg",
+    "seconds": 0.333,
+    "sample_rate": 44100,
+    "channels": 2,
+    "decoded_frames": 14671,
+    "sha256": "15271dbe8e2872dbb0ff1aeb7b12b2d2b92b7c1951c88532b9ab9158c36dfc73"
+  },
+  {
+    "file": "Kenney/impact-sounds/Audio/impactWood_medium_002.ogg",
+    "seconds": 0.333,
+    "sample_rate": 44100,
+    "channels": 2,
+    "decoded_frames": 14671,
+    "sha256": "3f3f1917428b828f733a963167833c707bf88296ff158e1559c57c5cb813d799"
+  },
+  {
+    "file": "Kenney/impact-sounds/Audio/impactWood_medium_003.ogg",
+    "seconds": 0.333,
+    "sample_rate": 44100,
+    "channels": 2,
+    "decoded_frames": 14671,
+    "sha256": "635c37cfcd854b187d643d450ff0397798dcc29ae94da32192b814fae6bd854c"
+  },
+  {
+    "file": "Kenney/impact-sounds/Audio/impactWood_medium_004.ogg",
+    "seconds": 0.333,
+    "sample_rate": 44100,
+    "channels": 2,
+    "decoded_frames": 14671,
+    "sha256": "7ba48f2f99c91c71be420841a91f1e69c0cbc4fe887fcd7213144d67bb87b13a"
+  },
+  {
+    "file": "Kenney/interface-sounds/Audio/back_001.ogg",
+    "seconds": 0.064,
+    "sample_rate": 44100,
+    "channels": 1,
+    "decoded_frames": 2817,
+    "sha256": "07db973f79f6ae0f2edc34561e7592e24d0577455919fb602cb8ecc0da991dcf"
+  },
+  {
+    "file": "Kenney/interface-sounds/Audio/back_002.ogg",
+    "seconds": 0.07,
+    "sample_rate": 44100,
+    "channels": 1,
+    "decoded_frames": 3080,
+    "sha256": "61581c58194e3f19f531072edabbc344204c7e0a2887b8ededce4357bcf09195"
+  },
+  {
+    "file": "Kenney/interface-sounds/Audio/back_003.ogg",
+    "seconds": 0.093,
+    "sample_rate": 44100,
+    "channels": 1,
+    "decoded_frames": 4096,
+    "sha256": "ff5e87de1230b1a5f1fa83e5a4ba9d7eb1c07154267ac34b510a17d4caa03cef"
+  },
+  {
+    "file": "Kenney/interface-sounds/Audio/back_004.ogg",
+    "seconds": 0.073,
+    "sample_rate": 44100,
+    "channels": 1,
+    "decoded_frames": 3219,
+    "sha256": "c22e3c49f42c2a5ba6748e91283efe124f32822469c1258c3e5d7b3d7ab9361c"
+  },
+  {
+    "file": "Kenney/interface-sounds/Audio/bong_001.ogg",
+    "seconds": 0.123,
+    "sample_rate": 44100,
+    "channels": 1,
+    "decoded_frames": 5417,
+    "sha256": "d21d0f0b782445db579d11e2506b24cd1ac9d664ee33aeaf807761aa7b6fd710"
+  },
+  {
+    "file": "Kenney/interface-sounds/Audio/click_001.ogg",
+    "seconds": 0.1,
+    "sample_rate": 44100,
+    "channels": 1,
+    "decoded_frames": 4411,
+    "sha256": "ccfb7fa0cccdd9faec0eb16033c732b1e308d139d80f799161495d58f7adcdb9"
+  },
+  {
+    "file": "Kenney/interface-sounds/Audio/click_002.ogg",
+    "seconds": 0.01,
+    "sample_rate": 44100,
+    "channels": 1,
+    "decoded_frames": 442,
+    "sha256": "adcd1f4adc35f1b41bc1b5bbefeff7aa44f2f3f0d96d3199b544140c7c1e761c"
+  },
+  {
+    "file": "Kenney/interface-sounds/Audio/click_003.ogg",
+    "seconds": 0.01,
+    "sample_rate": 44100,
+    "channels": 1,
+    "decoded_frames": 442,
+    "sha256": "2fa929138bc3a0f432696588f66eac94b8f6d463905ec8808c6461ce4b054292"
+  },
+  {
+    "file": "Kenney/interface-sounds/Audio/click_004.ogg",
+    "seconds": 0.01,
+    "sample_rate": 44100,
+    "channels": 1,
+    "decoded_frames": 442,
+    "sha256": "09e2c1b643b71b9aff9932b4e02d78db116446b9a14b00a5b2a9b28d2668fd8e"
+  },
+  {
+    "file": "Kenney/interface-sounds/Audio/click_005.ogg",
+    "seconds": 0.01,
+    "sample_rate": 44100,
+    "channels": 1,
+    "decoded_frames": 442,
+    "sha256": "a3ee7ebb036bc3cdc218ae52bb27548c4f49bcf07505274f8b61b1af8236acc2"
+  },
+  {
+    "file": "Kenney/interface-sounds/Audio/close_001.ogg",
+    "seconds": 0.148,
+    "sample_rate": 44100,
+    "channels": 1,
+    "decoded_frames": 6517,
+    "sha256": "44af8249b933e0fd35ec957a638bb1a0b01f85b53fbe9674bf77bd3ca3168ef4"
+  },
+  {
+    "file": "Kenney/interface-sounds/Audio/close_002.ogg",
+    "seconds": 0.314,
+    "sample_rate": 44100,
+    "channels": 1,
+    "decoded_frames": 13838,
+    "sha256": "bc4279d2bb2bf86592473eab6a8eab55e51b54a8619315000dbd780a83b102d8"
+  },
+  {
+    "file": "Kenney/interface-sounds/Audio/close_003.ogg",
+    "seconds": 0.314,
+    "sample_rate": 44100,
+    "channels": 1,
+    "decoded_frames": 13838,
+    "sha256": "39a1a7f3bc001766c1881841e9903c6b16f5a10b5666e0791d7f6444677d8b05"
+  },
+  {
+    "file": "Kenney/interface-sounds/Audio/close_004.ogg",
+    "seconds": 0.323,
+    "sample_rate": 44100,
+    "channels": 1,
+    "decoded_frames": 14239,
+    "sha256": "41b41e01ac75f4bc5a9c8dc3b0de744fa7f877757463692783c12a8ae4bfae6b"
+  },
+  {
+    "file": "Kenney/interface-sounds/Audio/confirmation_001.ogg",
+    "seconds": 0.29,
+    "sample_rate": 44100,
+    "channels": 1,
+    "decoded_frames": 12782,
+    "sha256": "063564703b6094d70718a3e787a55cc9141611e4ecd6b6637f8828f79b4a8c3a"
+  },
+  {
+    "file": "Kenney/interface-sounds/Audio/confirmation_002.ogg",
+    "seconds": 0.539,
+    "sample_rate": 44100,
+    "channels": 1,
+    "decoded_frames": 23770,
+    "sha256": "33b17a9a9a2397c62b285c52c33a907fdffb476909c99e42dde603f6a7a8b12c"
+  },
+  {
+    "file": "Kenney/interface-sounds/Audio/confirmation_003.ogg",
+    "seconds": 0.322,
+    "sample_rate": 44100,
+    "channels": 1,
+    "decoded_frames": 14201,
+    "sha256": "3091bf0be0497f825769ee0733ca7bdc3bcd59bd6c6e8f2ba8f93d580ff38022"
+  },
+  {
+    "file": "Kenney/interface-sounds/Audio/confirmation_004.ogg",
+    "seconds": 0.49,
+    "sample_rate": 44100,
+    "channels": 1,
+    "decoded_frames": 21627,
+    "sha256": "568967a3d9f8a8f6af54ea01729c4882284308f2a27d78c07ffd7ee0d6951661"
+  },
+  {
+    "file": "Kenney/interface-sounds/Audio/drop_001.ogg",
+    "seconds": 0.11,
+    "sample_rate": 44100,
+    "channels": 2,
+    "decoded_frames": 4843,
+    "sha256": "692ee3a6f1821402ca649ff735bee9591dc4846c8098fc7d6a90fd15fa57c1af"
+  },
+  {
+    "file": "Kenney/interface-sounds/Audio/drop_002.ogg",
+    "seconds": 0.191,
+    "sample_rate": 44100,
+    "channels": 2,
+    "decoded_frames": 8427,
+    "sha256": "4ac4d1cef7e936965cbf795852ca2020300b9e2ba7daa59f2bf4f1f7bf416218"
+  },
+  {
+    "file": "Kenney/interface-sounds/Audio/drop_003.ogg",
+    "seconds": 0.191,
+    "sample_rate": 44100,
+    "channels": 2,
+    "decoded_frames": 8427,
+    "sha256": "43d086d50f90493a98cd2e09aa6dbf150d164f1578e1ec768d21cb185571ad87"
+  },
+  {
+    "file": "Kenney/interface-sounds/Audio/drop_004.ogg",
+    "seconds": 0.287,
+    "sample_rate": 44100,
+    "channels": 2,
+    "decoded_frames": 12643,
+    "sha256": "10738707f9300f9b963ceba46d5da2ed4a221faf7d39484a643c2d3bc151c5f2"
+  },
+  {
+    "file": "Kenney/interface-sounds/Audio/error_001.ogg",
+    "seconds": 0.165,
+    "sample_rate": 44100,
+    "channels": 2,
+    "decoded_frames": 7257,
+    "sha256": "46e67425d16339772e8d328fb36a49426c9467418686e11beeb71ff84b0f6433"
+  },
+  {
+    "file": "Kenney/interface-sounds/Audio/error_002.ogg",
+    "seconds": 0.165,
+    "sample_rate": 44100,
+    "channels": 2,
+    "decoded_frames": 7257,
+    "sha256": "76810ec365f41078fd0507101da5bb7b8730fe011dde43908329fdabd8575e79"
+  },
+  {
+    "file": "Kenney/interface-sounds/Audio/error_003.ogg",
+    "seconds": 0.533,
+    "sample_rate": 44100,
+    "channels": 2,
+    "decoded_frames": 23526,
+    "sha256": "885b28175c7b511118bcffab95675b48bbac9005cf6514656ebdad979276b3ab"
+  },
+  {
+    "file": "Kenney/interface-sounds/Audio/error_004.ogg",
+    "seconds": 0.103,
+    "sample_rate": 44100,
+    "channels": 2,
+    "decoded_frames": 4529,
+    "sha256": "0b574cea597d96507e782ae9764f88482ce49f46e931e57054bf7150047f2d69"
+  },
+  {
+    "file": "Kenney/interface-sounds/Audio/error_005.ogg",
+    "seconds": 0.5,
+    "sample_rate": 44100,
+    "channels": 1,
+    "decoded_frames": 22052,
+    "sha256": "3f75b11df5b06d68d2c25fbf0e9c9d9e7dd9250562a4007ee34856b8a309a2ae"
+  },
+  {
+    "file": "Kenney/interface-sounds/Audio/error_006.ogg",
+    "seconds": 0.5,
+    "sample_rate": 44100,
+    "channels": 1,
+    "decoded_frames": 22052,
+    "sha256": "a97513d7fd2b12b1210c423be943b4c1ab0e899b11db95855e9b74836e646ae0"
+  },
+  {
+    "file": "Kenney/interface-sounds/Audio/error_007.ogg",
+    "seconds": 0.192,
+    "sample_rate": 44100,
+    "channels": 1,
+    "decoded_frames": 8467,
+    "sha256": "f1ee4c1ac8bfe1a82eacb54b26f49e8974bab93bcf10c01800bc10dbf730f559"
+  },
+  {
+    "file": "Kenney/interface-sounds/Audio/error_008.ogg",
+    "seconds": 0.139,
+    "sample_rate": 44100,
+    "channels": 1,
+    "decoded_frames": 6144,
+    "sha256": "eba17ecb2a426bfd4a8a6acff5f8a86202b6424a77af0fd842e37809a1ab6d81"
+  },
+  {
+    "file": "Kenney/interface-sounds/Audio/glass_001.ogg",
+    "seconds": 0.278,
+    "sample_rate": 44100,
+    "channels": 1,
+    "decoded_frames": 12279,
+    "sha256": "183eebee20eb0a532b0b85104d139cbf2673eb66d95c3cc733ac9ea98362e7e8"
+  },
+  {
+    "file": "Kenney/interface-sounds/Audio/glass_002.ogg",
+    "seconds": 0.125,
+    "sample_rate": 44100,
+    "channels": 1,
+    "decoded_frames": 5526,
+    "sha256": "08e972c73e53c91d6d310e107e80db60edce78ae47225889a028e628a6f3da49"
+  },
+  {
+    "file": "Kenney/interface-sounds/Audio/glass_003.ogg",
+    "seconds": 0.124,
+    "sample_rate": 44100,
+    "channels": 1,
+    "decoded_frames": 5454,
+    "sha256": "9a6f16e3c2eff6fe5d017a4755a28306b14555728831cd00d70308e8f9689566"
+  },
+  {
+    "file": "Kenney/interface-sounds/Audio/glass_004.ogg",
+    "seconds": 0.692,
+    "sample_rate": 44100,
+    "channels": 1,
+    "decoded_frames": 30529,
+    "sha256": "2379b58f953e3d86982aa8cddcae763022c6258e9820171bf905ce58b4e97766"
+  },
+  {
+    "file": "Kenney/interface-sounds/Audio/glass_005.ogg",
+    "seconds": 0.111,
+    "sample_rate": 44100,
+    "channels": 1,
+    "decoded_frames": 4886,
+    "sha256": "1f6c88008d0d9fe449197512811785e1d4638daf408a96a4a02756530e019172"
+  },
+  {
+    "file": "Kenney/interface-sounds/Audio/glass_006.ogg",
+    "seconds": 0.111,
+    "sample_rate": 44100,
+    "channels": 1,
+    "decoded_frames": 4886,
+    "sha256": "840500be48078f1210f1fd7a9ac4e5665ed9b6f4a2b8dce91a237152a65e94cc"
+  },
+  {
+    "file": "Kenney/interface-sounds/Audio/glitch_001.ogg",
+    "seconds": 0.02,
+    "sample_rate": 44100,
+    "channels": 2,
+    "decoded_frames": 883,
+    "sha256": "da78c642bbd95da2c364ed0e991ebbfc5a4c0d281165d932b5819e0dd31a39d2"
+  },
+  {
+    "file": "Kenney/interface-sounds/Audio/glitch_002.ogg",
+    "seconds": 0.03,
+    "sample_rate": 44100,
+    "channels": 2,
+    "decoded_frames": 1324,
+    "sha256": "1da06a2e63ce131f5e0316ca27c75fc0d672db7a8f9b986c70693f2bd992eabc"
+  },
+  {
+    "file": "Kenney/interface-sounds/Audio/glitch_003.ogg",
+    "seconds": 0.01,
+    "sample_rate": 44100,
+    "channels": 2,
+    "decoded_frames": 442,
+    "sha256": "d55e0c64aee9f1ab2ba9523d0e256ca76639c3ec2f230405e2ff25aff36020b3"
+  },
+  {
+    "file": "Kenney/interface-sounds/Audio/glitch_004.ogg",
+    "seconds": 0.023,
+    "sample_rate": 44100,
+    "channels": 2,
+    "decoded_frames": 1010,
+    "sha256": "d0f4db4d12f88592bc328bd621d356d099eaa2dda37bab37a6cf17891c5026d1"
+  },
+  {
+    "file": "Kenney/interface-sounds/Audio/maximize_001.ogg",
+    "seconds": 0.258,
+    "sample_rate": 44100,
+    "channels": 1,
+    "decoded_frames": 11395,
+    "sha256": "fd3e75e1de2f2fda90aceeacaeb0427ac8bddd3b07a6ce2a8f9ba923df3771f9"
+  },
+  {
+    "file": "Kenney/interface-sounds/Audio/maximize_002.ogg",
+    "seconds": 0.258,
+    "sample_rate": 44100,
+    "channels": 1,
+    "decoded_frames": 11390,
+    "sha256": "cc51162cb4506158b953b121bf479aad070056533ade5c5cd2f980183127ceb4"
+  },
+  {
+    "file": "Kenney/interface-sounds/Audio/maximize_003.ogg",
+    "seconds": 0.212,
+    "sample_rate": 44100,
+    "channels": 1,
+    "decoded_frames": 9343,
+    "sha256": "df16f25d45189f5d44d6a482ab20d5067350ca8525a9affa1f8ce599e31a20a5"
+  },
+  {
+    "file": "Kenney/interface-sounds/Audio/maximize_004.ogg",
+    "seconds": 0.418,
+    "sample_rate": 44100,
+    "channels": 1,
+    "decoded_frames": 18432,
+    "sha256": "59c7a24b204be24d2a44a86d1e4d18c2cf51fa0446967a14b2590e8fb3afaf34"
+  },
+  {
+    "file": "Kenney/interface-sounds/Audio/maximize_005.ogg",
+    "seconds": 0.526,
+    "sample_rate": 44100,
+    "channels": 1,
+    "decoded_frames": 23213,
+    "sha256": "0ee06fc3ee494723fc95b2224f9dc0af857f2903e7f94d5d33d8e67f454b3cf7"
+  },
+  {
+    "file": "Kenney/interface-sounds/Audio/maximize_006.ogg",
+    "seconds": 0.38,
+    "sample_rate": 44100,
+    "channels": 1,
+    "decoded_frames": 16756,
+    "sha256": "f050b3bb77cb0b901bc8df43d2cc1872c353aebae10b4030cf8ae681726ad343"
+  },
+  {
+    "file": "Kenney/interface-sounds/Audio/maximize_007.ogg",
+    "seconds": 0.186,
+    "sample_rate": 44100,
+    "channels": 1,
+    "decoded_frames": 8192,
+    "sha256": "3400931f3f3a1e9cf253efef9069bcdf053edd2234e4ee9bf88977c389943484"
+  },
+  {
+    "file": "Kenney/interface-sounds/Audio/maximize_008.ogg",
+    "seconds": 0.225,
+    "sample_rate": 44100,
+    "channels": 1,
+    "decoded_frames": 9938,
+    "sha256": "57c074e600e193a303ce781c04c0ccc191c6030f9f106594fd94a65e55435c17"
+  },
+  {
+    "file": "Kenney/interface-sounds/Audio/maximize_009.ogg",
+    "seconds": 0.225,
+    "sample_rate": 44100,
+    "channels": 1,
+    "decoded_frames": 9913,
+    "sha256": "b4d56386258b3cc1c8f6e5a22465f8cd65de3d4309e022664050f43151e466cd"
+  },
+  {
+    "file": "Kenney/interface-sounds/Audio/minimize_001.ogg",
+    "seconds": 0.258,
+    "sample_rate": 44100,
+    "channels": 1,
+    "decoded_frames": 11395,
+    "sha256": "8481912bc7fa5828924a00ef15b6cd613b994956e0817bd3122065c9b2896d2d"
+  },
+  {
+    "file": "Kenney/interface-sounds/Audio/minimize_002.ogg",
+    "seconds": 0.258,
+    "sample_rate": 44100,
+    "channels": 1,
+    "decoded_frames": 11390,
+    "sha256": "670e47846dc003fe29d39c8dfebb8635bfcacae3c0916392c0e8bff659493ad6"
+  },
+  {
+    "file": "Kenney/interface-sounds/Audio/minimize_003.ogg",
+    "seconds": 0.212,
+    "sample_rate": 44100,
+    "channels": 1,
+    "decoded_frames": 9343,
+    "sha256": "400e1041499de85ec8b5529a35ff36787288175c4696cf2018ecff24a3a3fd29"
+  },
+  {
+    "file": "Kenney/interface-sounds/Audio/minimize_004.ogg",
+    "seconds": 0.418,
+    "sample_rate": 44100,
+    "channels": 1,
+    "decoded_frames": 18432,
+    "sha256": "fcfe6fbb03a728e90b907f34d2ec7bf3ea1857397c3e47ee01990c1be059e4f6"
+  },
+  {
+    "file": "Kenney/interface-sounds/Audio/minimize_005.ogg",
+    "seconds": 0.526,
+    "sample_rate": 44100,
+    "channels": 1,
+    "decoded_frames": 23213,
+    "sha256": "4e6792a98c75d3ff187c0c55561c38c569e02c64757ebebb98831cfe84e3e172"
+  },
+  {
+    "file": "Kenney/interface-sounds/Audio/minimize_006.ogg",
+    "seconds": 0.38,
+    "sample_rate": 44100,
+    "channels": 1,
+    "decoded_frames": 16756,
+    "sha256": "39d7c47855b9642f43548b7b132c20e20a1490c7eb13d10008c32fcb24da19f8"
+  },
+  {
+    "file": "Kenney/interface-sounds/Audio/minimize_007.ogg",
+    "seconds": 0.186,
+    "sample_rate": 44100,
+    "channels": 1,
+    "decoded_frames": 8192,
+    "sha256": "e951505044de0d5d87b72ce7f312ac3fbbdde025ec8c10db70f9d2651a2c8947"
+  },
+  {
+    "file": "Kenney/interface-sounds/Audio/minimize_008.ogg",
+    "seconds": 0.225,
+    "sample_rate": 44100,
+    "channels": 1,
+    "decoded_frames": 9938,
+    "sha256": "bc14c17875436dcaaf809c25db5e61454dbc35612880f329ff37a95ef9b6a865"
+  },
+  {
+    "file": "Kenney/interface-sounds/Audio/minimize_009.ogg",
+    "seconds": 0.225,
+    "sample_rate": 44100,
+    "channels": 1,
+    "decoded_frames": 9913,
+    "sha256": "885c20fc8b5b52226288794842a403821cd16e9800ec1d76be7a2f1655542eb8"
+  },
+  {
+    "file": "Kenney/interface-sounds/Audio/open_001.ogg",
+    "seconds": 0.148,
+    "sample_rate": 44100,
+    "channels": 1,
+    "decoded_frames": 6517,
+    "sha256": "a27c6bb0df7da1e6af5dd5937593c98bc58b6e513f42fe6a3254cd6a6949c648"
+  },
+  {
+    "file": "Kenney/interface-sounds/Audio/open_002.ogg",
+    "seconds": 0.314,
+    "sample_rate": 44100,
+    "channels": 1,
+    "decoded_frames": 13838,
+    "sha256": "24ff224fe2c09c6aed1b41249825382dc74cf324b887ff279d8494912ce2beee"
+  },
+  {
+    "file": "Kenney/interface-sounds/Audio/open_003.ogg",
+    "seconds": 0.314,
+    "sample_rate": 44100,
+    "channels": 1,
+    "decoded_frames": 13838,
+    "sha256": "bcdca6b5c9c33aa15ca3fb18a1fa8d98a01b528b85be08c5a610e57c75fc022d"
+  },
+  {
+    "file": "Kenney/interface-sounds/Audio/open_004.ogg",
+    "seconds": 0.323,
+    "sample_rate": 44100,
+    "channels": 1,
+    "decoded_frames": 14239,
+    "sha256": "4e02b8287bc4d9e7bf7a889cb9e48613c8eb22a310dfb0bf29c2bfd0a1e4bea5"
+  },
+  {
+    "file": "Kenney/interface-sounds/Audio/pluck_001.ogg",
+    "seconds": 0.102,
+    "sample_rate": 44100,
+    "channels": 2,
+    "decoded_frames": 4517,
+    "sha256": "be97ec4893a02d6eccfb678daa76c83e34cb2583b834ec2593d2641def739fa4"
+  },
+  {
+    "file": "Kenney/interface-sounds/Audio/pluck_002.ogg",
+    "seconds": 0.165,
+    "sample_rate": 44100,
+    "channels": 2,
+    "decoded_frames": 7257,
+    "sha256": "c977fe249ff42d1c93a552b33abc13a8399df3879fa510475426e5c4bbac1da9"
+  },
+  {
+    "file": "Kenney/interface-sounds/Audio/question_001.ogg",
+    "seconds": 0.491,
+    "sample_rate": 44100,
+    "channels": 1,
+    "decoded_frames": 21639,
+    "sha256": "abb8f9e4eb2071491b0b15f84ee302386b1847609310c1b000ae174639a6cc5a"
+  },
+  {
+    "file": "Kenney/interface-sounds/Audio/question_002.ogg",
+    "seconds": 0.333,
+    "sample_rate": 44100,
+    "channels": 1,
+    "decoded_frames": 14664,
+    "sha256": "46056f10c70dda860e93bd27b66f4d33c0b7154eff28def06471b50028efa5b3"
+  },
+  {
+    "file": "Kenney/interface-sounds/Audio/question_003.ogg",
+    "seconds": 0.332,
+    "sample_rate": 44100,
+    "channels": 1,
+    "decoded_frames": 14663,
+    "sha256": "00bafc564e29c12e99da584864a750260e7110378251d63d3aa5b3d727836efe"
+  },
+  {
+    "file": "Kenney/interface-sounds/Audio/question_004.ogg",
+    "seconds": 0.332,
+    "sample_rate": 44100,
+    "channels": 1,
+    "decoded_frames": 14662,
+    "sha256": "585ecb58b529dc49b5c5ce5ba93427bf73b7052bae55e49c43ba8f169c93ac99"
+  },
+  {
+    "file": "Kenney/interface-sounds/Audio/scratch_001.ogg",
+    "seconds": 0.139,
+    "sample_rate": 44100,
+    "channels": 1,
+    "decoded_frames": 6144,
+    "sha256": "5c294d2e1a6b6d07ee2d75b17105a55ad3527e5482dd60652dc49c2ea4c70096"
+  },
+  {
+    "file": "Kenney/interface-sounds/Audio/scratch_002.ogg",
+    "seconds": 0.139,
+    "sample_rate": 44100,
+    "channels": 1,
+    "decoded_frames": 6144,
+    "sha256": "2b07edafc1f3f49c4813f2b0ae9481c566c1f9962a22d5f5b79da7111e058e56"
+  },
+  {
+    "file": "Kenney/interface-sounds/Audio/scratch_003.ogg",
+    "seconds": 0.123,
+    "sample_rate": 44100,
+    "channels": 1,
+    "decoded_frames": 5443,
+    "sha256": "2d80371b55ebe2e8b916b84093a8ae7717d09a80c6b617079ade5bd0dacba7b7"
+  },
+  {
+    "file": "Kenney/interface-sounds/Audio/scratch_004.ogg",
+    "seconds": 0.325,
+    "sample_rate": 44100,
+    "channels": 1,
+    "decoded_frames": 14336,
+    "sha256": "26009c67ef90ee7a5a2bc458ef9e7f5a9da83da9397a830cff9e4a1813914687"
+  },
+  {
+    "file": "Kenney/interface-sounds/Audio/scratch_005.ogg",
+    "seconds": 0.325,
+    "sample_rate": 44100,
+    "channels": 1,
+    "decoded_frames": 14336,
+    "sha256": "65742c15dca9853611e1c9e83bd04ac0d693f79896715cafa90bad39745d7a62"
+  },
+  {
+    "file": "Kenney/interface-sounds/Audio/scroll_001.ogg",
+    "seconds": 1.0,
+    "sample_rate": 44100,
+    "channels": 1,
+    "decoded_frames": 44101,
+    "sha256": "320c6aafb2c7a503eae508dc443b72d7f7c0a317bfd16813157ed400cd04cf16"
+  },
+  {
+    "file": "Kenney/interface-sounds/Audio/scroll_002.ogg",
+    "seconds": 1.0,
+    "sample_rate": 44100,
+    "channels": 1,
+    "decoded_frames": 44101,
+    "sha256": "6fbcda22bc45349c66f1ba4b56d6c211b12264e83667de4b9af1e4ffcef74be5"
+  },
+  {
+    "file": "Kenney/interface-sounds/Audio/scroll_003.ogg",
+    "seconds": 1.0,
+    "sample_rate": 44100,
+    "channels": 1,
+    "decoded_frames": 44101,
+    "sha256": "c2fecaa6e37c73d7141d0bd303d1c2231428d97c19ce83d50236a56804818643"
+  },
+  {
+    "file": "Kenney/interface-sounds/Audio/scroll_004.ogg",
+    "seconds": 1.0,
+    "sample_rate": 44100,
+    "channels": 1,
+    "decoded_frames": 44101,
+    "sha256": "431398a3c12ba3aa30ead97f3e2f9b05eb00978facf04b31bda138ab77a2f54c"
+  },
+  {
+    "file": "Kenney/interface-sounds/Audio/scroll_005.ogg",
+    "seconds": 1.0,
+    "sample_rate": 44100,
+    "channels": 1,
+    "decoded_frames": 44101,
+    "sha256": "e39d059462225efa31f758fb2e01871cc96781972b5062873a24a55c88174e02"
+  },
+  {
+    "file": "Kenney/interface-sounds/Audio/select_001.ogg",
+    "seconds": 0.043,
+    "sample_rate": 44100,
+    "channels": 2,
+    "decoded_frames": 1909,
+    "sha256": "aec0c31ea934a35936ae0d2ab8fac8123c93aa5647f935853a58dbaf90278b7a"
+  },
+  {
+    "file": "Kenney/interface-sounds/Audio/select_002.ogg",
+    "seconds": 0.043,
+    "sample_rate": 44100,
+    "channels": 2,
+    "decoded_frames": 1909,
+    "sha256": "4cc6ac5341b9b2c86fef80c347de028e9ab9f2e037586ac7d9fa59a403a1c012"
+  },
+  {
+    "file": "Kenney/interface-sounds/Audio/select_003.ogg",
+    "seconds": 0.383,
+    "sample_rate": 44100,
+    "channels": 1,
+    "decoded_frames": 16880,
+    "sha256": "9a612fd2f513d52a296906b41071c990f75defe56be3bee60d2d4e2423b51b8b"
+  },
+  {
+    "file": "Kenney/interface-sounds/Audio/select_004.ogg",
+    "seconds": 0.383,
+    "sample_rate": 44100,
+    "channels": 1,
+    "decoded_frames": 16880,
+    "sha256": "eb6cb435f3f2ab14f85f46a2bdd9073ec511d0f1f8d8c890c6636045703a5fd4"
+  },
+  {
+    "file": "Kenney/interface-sounds/Audio/select_005.ogg",
+    "seconds": 0.383,
+    "sample_rate": 44100,
+    "channels": 1,
+    "decoded_frames": 16880,
+    "sha256": "ad09146e4ea33b931b2f5dfb4051a4f1fe4a36f1a48c42c5e9269c292ae21214"
+  },
+  {
+    "file": "Kenney/interface-sounds/Audio/select_006.ogg",
+    "seconds": 1.944,
+    "sample_rate": 44100,
+    "channels": 1,
+    "decoded_frames": 85727,
+    "sha256": "b44550fa8d3276c072ce7c3c1315d949f7a28a95bc22b3618ad4eea62eac8abe"
+  },
+  {
+    "file": "Kenney/interface-sounds/Audio/select_007.ogg",
+    "seconds": 0.047,
+    "sample_rate": 44100,
+    "channels": 1,
+    "decoded_frames": 2070,
+    "sha256": "cd4390dd2b24f09016a5fa1be63334fa0f1859811f4cf29c02e8e2750f6a2cd0"
+  },
+  {
+    "file": "Kenney/interface-sounds/Audio/select_008.ogg",
+    "seconds": 0.047,
+    "sample_rate": 44100,
+    "channels": 1,
+    "decoded_frames": 2070,
+    "sha256": "f703b6b1c62dae1c246a46d5c2442802588f68be2df4d17e0d65cf7e0dbfc826"
+  },
+  {
+    "file": "Kenney/interface-sounds/Audio/switch_001.ogg",
+    "seconds": 0.618,
+    "sample_rate": 44100,
+    "channels": 2,
+    "decoded_frames": 27239,
+    "sha256": "3b74efad87f1e69dbd1d05c5ad952ab90859b5a3d11da6ec5bd79b4f03b42afa"
+  },
+  {
+    "file": "Kenney/interface-sounds/Audio/switch_002.ogg",
+    "seconds": 0.611,
+    "sample_rate": 44100,
+    "channels": 2,
+    "decoded_frames": 26943,
+    "sha256": "6fc395be2ad1f99ce318a5d28f98fb76dbeb676d83a0b28239d8c1fb90736180"
+  },
+  {
+    "file": "Kenney/interface-sounds/Audio/switch_003.ogg",
+    "seconds": 0.5,
+    "sample_rate": 44100,
+    "channels": 2,
+    "decoded_frames": 22050,
+    "sha256": "ca12dd32103f401481d5aff56d5e9831174e99bb577139c09b07d046eb8b837e"
+  },
+  {
+    "file": "Kenney/interface-sounds/Audio/switch_004.ogg",
+    "seconds": 0.5,
+    "sample_rate": 44100,
+    "channels": 2,
+    "decoded_frames": 22050,
+    "sha256": "541c19cc1ab712a9efc5765df602e7d0da09d9cafdd297ce1e19b092289fd62f"
+  },
+  {
+    "file": "Kenney/interface-sounds/Audio/switch_005.ogg",
+    "seconds": 0.612,
+    "sample_rate": 44100,
+    "channels": 2,
+    "decoded_frames": 26986,
+    "sha256": "e94dfab6fd6558068ab3ea97e22e4b4f16b83ee440e6abf33ec4c4e9fbe8a70e"
+  },
+  {
+    "file": "Kenney/interface-sounds/Audio/switch_006.ogg",
+    "seconds": 0.611,
+    "sample_rate": 44100,
+    "channels": 2,
+    "decoded_frames": 26925,
+    "sha256": "2676ddc4e341ee557b4d1dc8767ef8655540d66fb3ded6a1614080dbc4dc6f18"
+  },
+  {
+    "file": "Kenney/interface-sounds/Audio/switch_007.ogg",
+    "seconds": 0.614,
+    "sample_rate": 44100,
+    "channels": 2,
+    "decoded_frames": 27093,
+    "sha256": "eeaf60c2abc7e1b715e2b032401bcbf6b3753b77f96b238f861a034a75515967"
+  },
+  {
+    "file": "Kenney/interface-sounds/Audio/tick_001.ogg",
+    "seconds": 0.023,
+    "sample_rate": 44100,
+    "channels": 1,
+    "decoded_frames": 1024,
+    "sha256": "9d057b918024c787bbe6c00beed13a7ef72a3fa0c259add3cef36582792f4230"
+  },
+  {
+    "file": "Kenney/interface-sounds/Audio/tick_002.ogg",
+    "seconds": 0.023,
+    "sample_rate": 44100,
+    "channels": 1,
+    "decoded_frames": 1024,
+    "sha256": "869442f54214be902ec7437f79e400dc91c1bfd90d18a6dd2d5b7e41ffbf457b"
+  },
+  {
+    "file": "Kenney/interface-sounds/Audio/tick_004.ogg",
+    "seconds": 0.055,
+    "sample_rate": 44100,
+    "channels": 1,
+    "decoded_frames": 2417,
+    "sha256": "0253d5f7d8d2afbbc370eac2a4539bb844239f0c98343e516d376b137c06d27c"
+  },
+  {
+    "file": "Kenney/interface-sounds/Audio/toggle_001.ogg",
+    "seconds": 0.139,
+    "sample_rate": 44100,
+    "channels": 1,
+    "decoded_frames": 6144,
+    "sha256": "ca1d2dde5f0b286abac4f070e23edab8f30927c8a533665cdf2ac6492a415e49"
+  },
+  {
+    "file": "Kenney/interface-sounds/Audio/toggle_002.ogg",
+    "seconds": 0.139,
+    "sample_rate": 44100,
+    "channels": 1,
+    "decoded_frames": 6144,
+    "sha256": "1f564f5520cfa0764028ce245ad97599d3ece8f0ab504554c403af92ac72b900"
+  },
+  {
+    "file": "Kenney/interface-sounds/Audio/toggle_003.ogg",
+    "seconds": 0.139,
+    "sample_rate": 44100,
+    "channels": 1,
+    "decoded_frames": 6144,
+    "sha256": "7e69aba356d590826cce291bbd9dc6a85d7c53858b0e3712fcad30e1ad080b23"
+  },
+  {
+    "file": "Kenney/interface-sounds/Audio/toggle_004.ogg",
+    "seconds": 0.066,
+    "sample_rate": 44100,
+    "channels": 1,
+    "decoded_frames": 2918,
+    "sha256": "d7bf2236fc95a0fe1e3b278259392bcb062644e2d4ec5f9c96f7c09a9928262f"
+  },
+  {
+    "file": "Kenney/music-jingles/Audio/8-Bit jingles/jingles_NES00.ogg",
+    "seconds": 1.758,
+    "sample_rate": 44100,
+    "channels": 2,
+    "decoded_frames": 77521,
+    "sha256": "1010c9b566d6c090ff03a4aaaf7439e26eb4cc4f20373800d0b7e6a9057b795d"
+  },
+  {
+    "file": "Kenney/music-jingles/Audio/8-Bit jingles/jingles_NES01.ogg",
+    "seconds": 0.408,
+    "sample_rate": 44100,
+    "channels": 2,
+    "decoded_frames": 18010,
+    "sha256": "dac403c193e8b6277375c25182ba75bb6868e0e453f0ac2de368d079016e0476"
+  },
+  {
+    "file": "Kenney/music-jingles/Audio/8-Bit jingles/jingles_NES02.ogg",
+    "seconds": 0.391,
+    "sample_rate": 44100,
+    "channels": 2,
+    "decoded_frames": 17227,
+    "sha256": "2c0b9dcc14bdae6d66ecb40d0351e61b4b2fc570e7b13821974e2057f07c93e7"
+  },
+  {
+    "file": "Kenney/music-jingles/Audio/8-Bit jingles/jingles_NES03.ogg",
+    "seconds": 0.604,
+    "sample_rate": 44100,
+    "channels": 2,
+    "decoded_frames": 26624,
+    "sha256": "64b146c4b737d4a74d60316554bdb667cfbe20681a71722948c5f70f83af7d92"
+  },
+  {
+    "file": "Kenney/music-jingles/Audio/8-Bit jingles/jingles_NES04.ogg",
+    "seconds": 0.604,
+    "sample_rate": 44100,
+    "channels": 2,
+    "decoded_frames": 26623,
+    "sha256": "f396b3bb91cf939b51b64c734db01187d70a59cf74dd83cb9d6746e00552d50e"
+  },
+  {
+    "file": "Kenney/music-jingles/Audio/8-Bit jingles/jingles_NES05.ogg",
+    "seconds": 0.906,
+    "sample_rate": 44100,
+    "channels": 2,
+    "decoded_frames": 39935,
+    "sha256": "f488e856ca7e01df286c7e3edc853bfa7bfde91e1d39754f611bda2e844ef37d"
+  },
+  {
+    "file": "Kenney/music-jingles/Audio/8-Bit jingles/jingles_NES06.ogg",
+    "seconds": 0.799,
+    "sample_rate": 44100,
+    "channels": 2,
+    "decoded_frames": 35237,
+    "sha256": "7b54cb3d789b6f8451ca1a81649ec5d43a4ef87c8be81e6811980dca3d3302d8"
+  },
+  {
+    "file": "Kenney/music-jingles/Audio/8-Bit jingles/jingles_NES07.ogg",
+    "seconds": 0.746,
+    "sample_rate": 44100,
+    "channels": 2,
+    "decoded_frames": 32888,
+    "sha256": "eac9e04c7ccdf10c9e0350e53a99f6bfb925eda725a6273b2972329170ab56a0"
+  },
+  {
+    "file": "Kenney/music-jingles/Audio/8-Bit jingles/jingles_NES08.ogg",
+    "seconds": 0.621,
+    "sample_rate": 44100,
+    "channels": 2,
+    "decoded_frames": 27406,
+    "sha256": "ed99f241626d54754c8e73af1b2e9146e04a4a4a6ba353671dd9f1501c6c8109"
+  },
+  {
+    "file": "Kenney/music-jingles/Audio/8-Bit jingles/jingles_NES09.ogg",
+    "seconds": 0.444,
+    "sample_rate": 44100,
+    "channels": 2,
+    "decoded_frames": 19576,
+    "sha256": "4924318115351d89bb69ab719e514933cc7ecac2947570824ed97d162508819e"
+  },
+  {
+    "file": "Kenney/music-jingles/Audio/8-Bit jingles/jingles_NES10.ogg",
+    "seconds": 0.408,
+    "sample_rate": 44100,
+    "channels": 2,
+    "decoded_frames": 18010,
+    "sha256": "9fb44945db139fcb2ea16ed786d8aff1b44ca6a749828bc433ad19f383de7e1c"
+  },
+  {
+    "file": "Kenney/music-jingles/Audio/8-Bit jingles/jingles_NES11.ogg",
+    "seconds": 0.835,
+    "sample_rate": 44100,
+    "channels": 2,
+    "decoded_frames": 36803,
+    "sha256": "ee06814cd4e703bdd501b8035d143061b7fa21cf3b5ab2d0cb4e014dabf1054a"
+  },
+  {
+    "file": "Kenney/music-jingles/Audio/8-Bit jingles/jingles_NES12.ogg",
+    "seconds": 0.852,
+    "sample_rate": 44100,
+    "channels": 2,
+    "decoded_frames": 37586,
+    "sha256": "ac678f8435036f800f4b2244e6d6b929bfdd012640698ab9815b35b86bfbcd29"
+  },
+  {
+    "file": "Kenney/music-jingles/Audio/8-Bit jingles/jingles_NES13.ogg",
+    "seconds": 1.048,
+    "sample_rate": 44100,
+    "channels": 2,
+    "decoded_frames": 46199,
+    "sha256": "da3b3d2334dcd7713f06dd3c0af28e224d1df8ee8792d9907f5a77c1630807d7"
+  },
+  {
+    "file": "Kenney/music-jingles/Audio/8-Bit jingles/jingles_NES14.ogg",
+    "seconds": 0.373,
+    "sample_rate": 44100,
+    "channels": 2,
+    "decoded_frames": 16444,
+    "sha256": "d1ccfd0aa466abe7240e7fb011390513c244884288b98366799bc763c6cff62d"
+  },
+  {
+    "file": "Kenney/music-jingles/Audio/8-Bit jingles/jingles_NES15.ogg",
+    "seconds": 0.426,
+    "sample_rate": 44100,
+    "channels": 2,
+    "decoded_frames": 18793,
+    "sha256": "f5b12417d8f0283b15c0f481cb35569dbf3b8c5a79ad117594bcea64dd0eb8c8"
+  },
+  {
+    "file": "Kenney/music-jingles/Audio/8-Bit jingles/jingles_NES16.ogg",
+    "seconds": 0.515,
+    "sample_rate": 44100,
+    "channels": 2,
+    "decoded_frames": 22708,
+    "sha256": "f39a24acc1a4be5e10628e43ca049c24a1e94c6f8d2953506cb000d5da5761cd"
+  },
+  {
+    "file": "Kenney/music-jingles/Audio/Hit jingles/jingles_HIT00.ogg",
+    "seconds": 0.284,
+    "sample_rate": 44100,
+    "channels": 2,
+    "decoded_frames": 12529,
+    "sha256": "e23d8c9e971a4e34484bc834a3ec1d560811ec6f5edd5efa2c61e583c18c504a"
+  },
+  {
+    "file": "Kenney/music-jingles/Audio/Hit jingles/jingles_HIT01.ogg",
+    "seconds": 0.506,
+    "sample_rate": 44100,
+    "channels": 2,
+    "decoded_frames": 22317,
+    "sha256": "ddca9df332d7cdab525bbbe62ca26e9d61aa64bfa626d9516d5c53eb91c45322"
+  },
+  {
+    "file": "Kenney/music-jingles/Audio/Hit jingles/jingles_HIT02.ogg",
+    "seconds": 0.524,
+    "sample_rate": 44100,
+    "channels": 2,
+    "decoded_frames": 23099,
+    "sha256": "1ebd52ba108c0e749d2814c54e44bba6c39d111fa30d025fddfac70538e0e241"
+  },
+  {
+    "file": "Kenney/music-jingles/Audio/Hit jingles/jingles_HIT03.ogg",
+    "seconds": 0.746,
+    "sample_rate": 44100,
+    "channels": 2,
+    "decoded_frames": 32887,
+    "sha256": "889d4c2b76c7edd63138b3a976c3f7337aaba3de90019d19bca70ec958c93014"
+  },
+  {
+    "file": "Kenney/music-jingles/Audio/Hit jingles/jingles_HIT04.ogg",
+    "seconds": 0.639,
+    "sample_rate": 44100,
+    "channels": 2,
+    "decoded_frames": 28190,
+    "sha256": "7c20cd8d6b98e583822e1f58abc596900a07ba75ca690ec599efe5ea58981211"
+  },
+  {
+    "file": "Kenney/music-jingles/Audio/Hit jingles/jingles_HIT05.ogg",
+    "seconds": 0.613,
+    "sample_rate": 44100,
+    "channels": 2,
+    "decoded_frames": 27015,
+    "sha256": "fe67e9e1d8c9da2228cc6c83fe5778c75397f87192e070ce7d956e270743cb30"
+  },
+  {
+    "file": "Kenney/music-jingles/Audio/Hit jingles/jingles_HIT06.ogg",
+    "seconds": 0.515,
+    "sample_rate": 44100,
+    "channels": 2,
+    "decoded_frames": 22708,
+    "sha256": "a793813952205365f72f45d96d82195b8c3a6fbcc57b338b60c6fc0fc6f7db35"
+  },
+  {
+    "file": "Kenney/music-jingles/Audio/Hit jingles/jingles_HIT07.ogg",
+    "seconds": 0.284,
+    "sample_rate": 44100,
+    "channels": 2,
+    "decoded_frames": 12529,
+    "sha256": "b35d7bea586f6412be312753a50b708e9505ce86c42e5549117c18f8da00a4e6"
+  },
+  {
+    "file": "Kenney/music-jingles/Audio/Hit jingles/jingles_HIT08.ogg",
+    "seconds": 0.284,
+    "sample_rate": 44100,
+    "channels": 2,
+    "decoded_frames": 12529,
+    "sha256": "e82b1d3cf1020b99347acdcf76090150397d06ac90403a2718e7a738bf75f01d"
+  },
+  {
+    "file": "Kenney/music-jingles/Audio/Hit jingles/jingles_HIT09.ogg",
+    "seconds": 0.746,
+    "sample_rate": 44100,
+    "channels": 2,
+    "decoded_frames": 32888,
+    "sha256": "3114537d0d82f83c98037b4867c67dae4faa09e904405e511a9336088d022554"
+  },
+  {
+    "file": "Kenney/music-jingles/Audio/Hit jingles/jingles_HIT10.ogg",
+    "seconds": 0.746,
+    "sample_rate": 44100,
+    "channels": 2,
+    "decoded_frames": 32888,
+    "sha256": "8e246cd4099bb170dbd53a9c4c1e2113c57f4c5469abf4fcb7953cd6ae894bff"
+  },
+  {
+    "file": "Kenney/music-jingles/Audio/Hit jingles/jingles_HIT11.ogg",
+    "seconds": 0.959,
+    "sample_rate": 44100,
+    "channels": 2,
+    "decoded_frames": 42284,
+    "sha256": "40d6f3fb92225d039a9196c5cda98c9366efdc837c10b9b6d01d94dfafae8ec9"
+  },
+  {
+    "file": "Kenney/music-jingles/Audio/Hit jingles/jingles_HIT12.ogg",
+    "seconds": 0.275,
+    "sample_rate": 44100,
+    "channels": 2,
+    "decoded_frames": 12137,
+    "sha256": "4ef863027af0574b7f2e83a48d9cb67922a72f3ea1b361a0f767630e135fb3af"
+  },
+  {
+    "file": "Kenney/music-jingles/Audio/Hit jingles/jingles_HIT13.ogg",
+    "seconds": 0.293,
+    "sample_rate": 44100,
+    "channels": 2,
+    "decoded_frames": 12920,
+    "sha256": "6673791db0a0ba935f49381ad60008092a4662440c2a973510c440d0a98c1996"
+  },
+  {
+    "file": "Kenney/music-jingles/Audio/Hit jingles/jingles_HIT14.ogg",
+    "seconds": 0.417,
+    "sample_rate": 44100,
+    "channels": 2,
+    "decoded_frames": 18401,
+    "sha256": "1ae8616ed3df0c9c0f154fb65f688f8f45eea165d50f37fdc0b086955270b35f"
+  },
+  {
+    "file": "Kenney/music-jingles/Audio/Hit jingles/jingles_HIT15.ogg",
+    "seconds": 1.163,
+    "sample_rate": 44100,
+    "channels": 2,
+    "decoded_frames": 51289,
+    "sha256": "e2929ad1acb0ff929f2367eb06d4a57d3c543be9f5a8b6a7fad7e44e440474e1"
+  },
+  {
+    "file": "Kenney/music-jingles/Audio/Hit jingles/jingles_HIT16.ogg",
+    "seconds": 0.293,
+    "sample_rate": 44100,
+    "channels": 2,
+    "decoded_frames": 12920,
+    "sha256": "8b17f8af468e06cc158d5afb3853fde2e4baf9dc072b7f65b9a0fe8cb083ef2c"
+  },
+  {
+    "file": "Kenney/music-jingles/Audio/Pizzicato jingles/jingles_PIZZI00.ogg",
+    "seconds": 0.494,
+    "sample_rate": 44100,
+    "channels": 2,
+    "decoded_frames": 21793,
+    "sha256": "b442ade3308a2bbda4b8c572c86f9f1071c7bdbcfb1e6f915d35c605b61bd475"
+  },
+  {
+    "file": "Kenney/music-jingles/Audio/Pizzicato jingles/jingles_PIZZI01.ogg",
+    "seconds": 1.002,
+    "sample_rate": 44100,
+    "channels": 2,
+    "decoded_frames": 44204,
+    "sha256": "3f8f2534a297d19386c233a7ee4fa8737cc40870dd206010263760e1983dde46"
+  },
+  {
+    "file": "Kenney/music-jingles/Audio/Pizzicato jingles/jingles_PIZZI02.ogg",
+    "seconds": 0.956,
+    "sample_rate": 44100,
+    "channels": 2,
+    "decoded_frames": 42148,
+    "sha256": "4967dc3cd31257716f455ef50f8980378726ce086954c7a5563c0c57ee129e3e"
+  },
+  {
+    "file": "Kenney/music-jingles/Audio/Pizzicato jingles/jingles_PIZZI03.ogg",
+    "seconds": 1.147,
+    "sample_rate": 44100,
+    "channels": 2,
+    "decoded_frames": 50577,
+    "sha256": "88da900ec74a79fb845f2dcf2068383998833a9ee1b87a23f074924781af5700"
+  },
+  {
+    "file": "Kenney/music-jingles/Audio/Pizzicato jingles/jingles_PIZZI04.ogg",
+    "seconds": 0.564,
+    "sample_rate": 44100,
+    "channels": 2,
+    "decoded_frames": 24878,
+    "sha256": "f98fa4af012d443da636a2d90f2926adc2384ec833851918f88426be9a25acf9"
+  },
+  {
+    "file": "Kenney/music-jingles/Audio/Pizzicato jingles/jingles_PIZZI05.ogg",
+    "seconds": 0.536,
+    "sample_rate": 44100,
+    "channels": 2,
+    "decoded_frames": 23643,
+    "sha256": "017e600a154f504039b302b4848a5ad5870248280b4320b037f1d82324988bf5"
+  },
+  {
+    "file": "Kenney/music-jingles/Audio/Pizzicato jingles/jingles_PIZZI06.ogg",
+    "seconds": 0.69,
+    "sample_rate": 44100,
+    "channels": 2,
+    "decoded_frames": 30428,
+    "sha256": "6389d8d473c7d82375396da01584f12459039be0e709be0265ef9bda7a1ebb0c"
+  },
+  {
+    "file": "Kenney/music-jingles/Audio/Pizzicato jingles/jingles_PIZZI07.ogg",
+    "seconds": 1.324,
+    "sample_rate": 44100,
+    "channels": 2,
+    "decoded_frames": 58390,
+    "sha256": "91870588924e0e498c6eb8d4f4ccf8595c9e7dc51fb553797b551062e642ce7c"
+  },
+  {
+    "file": "Kenney/music-jingles/Audio/Pizzicato jingles/jingles_PIZZI08.ogg",
+    "seconds": 0.569,
+    "sample_rate": 44100,
+    "channels": 2,
+    "decoded_frames": 25083,
+    "sha256": "b3cb6e790980c68be38e8d5cd2e50c408a1c9d8a7aa46ca855ab9b36c6be12c4"
+  },
+  {
+    "file": "Kenney/music-jingles/Audio/Pizzicato jingles/jingles_PIZZI09.ogg",
+    "seconds": 0.569,
+    "sample_rate": 44100,
+    "channels": 2,
+    "decoded_frames": 25083,
+    "sha256": "582b561bcfc53c90ef3fef8549829d3be8e01dcd9a0312363d8ed9ca83ed2565"
+  },
+  {
+    "file": "Kenney/music-jingles/Audio/Pizzicato jingles/jingles_PIZZI10.ogg",
+    "seconds": 0.797,
+    "sample_rate": 44100,
+    "channels": 2,
+    "decoded_frames": 35157,
+    "sha256": "baf50beffc4cc2dbb92c9d596a22732a8b5249c7648b681c0df6d0af6c561478"
+  },
+  {
+    "file": "Kenney/music-jingles/Audio/Pizzicato jingles/jingles_PIZZI11.ogg",
+    "seconds": 0.793,
+    "sample_rate": 44100,
+    "channels": 2,
+    "decoded_frames": 34951,
+    "sha256": "072fe661c6ce8c7672afaf0af51e27533d6effe99d35584b01d864bde800ecc1"
+  },
+  {
+    "file": "Kenney/music-jingles/Audio/Pizzicato jingles/jingles_PIZZI12.ogg",
+    "seconds": 0.993,
+    "sample_rate": 44100,
+    "channels": 2,
+    "decoded_frames": 43793,
+    "sha256": "f5fc4c01b106e6317acaee1bffb51704e41c85b0fa7529dff86b447bdabf150c"
+  },
+  {
+    "file": "Kenney/music-jingles/Audio/Pizzicato jingles/jingles_PIZZI13.ogg",
+    "seconds": 0.881,
+    "sample_rate": 44100,
+    "channels": 2,
+    "decoded_frames": 38858,
+    "sha256": "44f5b9d0d3ed9835a015e72199b4b82acc2e7f322c342c4f8f8bf1abd3537214"
+  },
+  {
+    "file": "Kenney/music-jingles/Audio/Pizzicato jingles/jingles_PIZZI14.ogg",
+    "seconds": 0.923,
+    "sample_rate": 44100,
+    "channels": 2,
+    "decoded_frames": 40708,
+    "sha256": "b6c0e64f9e69883e411e1b7595db5b516019a6e5b720c360bec8f75977549b28"
+  },
+  {
+    "file": "Kenney/music-jingles/Audio/Pizzicato jingles/jingles_PIZZI15.ogg",
+    "seconds": 0.811,
+    "sample_rate": 44100,
+    "channels": 2,
+    "decoded_frames": 35774,
+    "sha256": "ae6c65768979a16ec802e8fb911c362a6b1423e92302d59d35dab10407324bc3"
+  },
+  {
+    "file": "Kenney/music-jingles/Audio/Pizzicato jingles/jingles_PIZZI16.ogg",
+    "seconds": 0.462,
+    "sample_rate": 44100,
+    "channels": 2,
+    "decoded_frames": 20354,
+    "sha256": "1b1211b6360aae37ea685fee057bcabd034a749c1dfac6a9d643086d96e9b9aa"
+  },
+  {
+    "file": "Kenney/music-jingles/Audio/Sax jingles/jingles_SAX00.ogg",
+    "seconds": 0.391,
+    "sample_rate": 44100,
+    "channels": 2,
+    "decoded_frames": 17227,
+    "sha256": "f87605d2a3c717e6a26e584f57d24eac44e47f5a01470dad18809e5d6c9eb618"
+  },
+  {
+    "file": "Kenney/music-jingles/Audio/Sax jingles/jingles_SAX01.ogg",
+    "seconds": 0.888,
+    "sample_rate": 44100,
+    "channels": 2,
+    "decoded_frames": 39152,
+    "sha256": "272b8160616d0f924f447df3f8543ab83440c5e41168107bd5abe1140894122b"
+  },
+  {
+    "file": "Kenney/music-jingles/Audio/Sax jingles/jingles_SAX02.ogg",
+    "seconds": 0.87,
+    "sample_rate": 44100,
+    "channels": 2,
+    "decoded_frames": 38369,
+    "sha256": "70a6c8cf7d2d391eededdb6121371e01f859130595da08413a28ea0608a82e3f"
+  },
+  {
+    "file": "Kenney/music-jingles/Audio/Sax jingles/jingles_SAX03.ogg",
+    "seconds": 1.119,
+    "sample_rate": 44100,
+    "channels": 2,
+    "decoded_frames": 49331,
+    "sha256": "f240f7c553c9d621db62d8fb8ebbdf0c8e74ec3a1ad2dfa16c9728cec2dcff6d"
+  },
+  {
+    "file": "Kenney/music-jingles/Audio/Sax jingles/jingles_SAX04.ogg",
+    "seconds": 0.391,
+    "sample_rate": 44100,
+    "channels": 2,
+    "decoded_frames": 17227,
+    "sha256": "94eeaa26800f6a04eb71b9d9e4f25c19d779109f6903d17811d2a881d2f5614d"
+  },
+  {
+    "file": "Kenney/music-jingles/Audio/Sax jingles/jingles_SAX05.ogg",
+    "seconds": 0.462,
+    "sample_rate": 44100,
+    "channels": 2,
+    "decoded_frames": 20359,
+    "sha256": "de8be60bc25c74e9c7dcf10bbca8e1fed1ec90efd555bb74080c756591622817"
+  },
+  {
+    "file": "Kenney/music-jingles/Audio/Sax jingles/jingles_SAX06.ogg",
+    "seconds": 0.515,
+    "sample_rate": 44100,
+    "channels": 2,
+    "decoded_frames": 22708,
+    "sha256": "f2dd409878c90e435da196108658d6efda598afec0a1b8994a2ffb5dcaaa5bf6"
+  },
+  {
+    "file": "Kenney/music-jingles/Audio/Sax jingles/jingles_SAX07.ogg",
+    "seconds": 1.74,
+    "sample_rate": 44100,
+    "channels": 2,
+    "decoded_frames": 76738,
+    "sha256": "241c8570fbded819ee0205e4be3efa80aeb834a70df89318da88f9e219798b11"
+  },
+  {
+    "file": "Kenney/music-jingles/Audio/Sax jingles/jingles_SAX08.ogg",
+    "seconds": 0.391,
+    "sample_rate": 44100,
+    "channels": 2,
+    "decoded_frames": 17227,
+    "sha256": "2c1fbd5088016bbf264f01daaead97a58153493891ae226611c0239830e1cf0c"
+  },
+  {
+    "file": "Kenney/music-jingles/Audio/Sax jingles/jingles_SAX09.ogg",
+    "seconds": 0.373,
+    "sample_rate": 44100,
+    "channels": 2,
+    "decoded_frames": 16444,
+    "sha256": "dc8022ce4257957c0e7bcbd7504a2ea49b8c05df9f61f822ce85277e87e5ba8a"
+  },
+  {
+    "file": "Kenney/music-jingles/Audio/Sax jingles/jingles_SAX10.ogg",
+    "seconds": 0.639,
+    "sample_rate": 44100,
+    "channels": 2,
+    "decoded_frames": 28190,
+    "sha256": "ee9092e858526e3638f7a639f25c2218f14432466c3e4dd7e1e84073925390ae"
+  },
+  {
+    "file": "Kenney/music-jingles/Audio/Sax jingles/jingles_SAX11.ogg",
+    "seconds": 0.621,
+    "sample_rate": 44100,
+    "channels": 2,
+    "decoded_frames": 27406,
+    "sha256": "ccc09671f1cb59ba556e4041daa1f31de396ac3ba79245951876fdece78b5dcd"
+  },
+  {
+    "file": "Kenney/music-jingles/Audio/Sax jingles/jingles_SAX12.ogg",
+    "seconds": 0.852,
+    "sample_rate": 44100,
+    "channels": 2,
+    "decoded_frames": 37586,
+    "sha256": "be483e806ae449c37d21f192921c4bb382a19b8739b2dc2c9c4bed15b34f2dd9"
+  },
+  {
+    "file": "Kenney/music-jingles/Audio/Sax jingles/jingles_SAX13.ogg",
+    "seconds": 0.781,
+    "sample_rate": 44100,
+    "channels": 2,
+    "decoded_frames": 34454,
+    "sha256": "9a7d20a4e7d3196cded11bac0de584f230264a4bdb695a8b136493dff8f273d8"
+  },
+  {
+    "file": "Kenney/music-jingles/Audio/Sax jingles/jingles_SAX14.ogg",
+    "seconds": 0.746,
+    "sample_rate": 44100,
+    "channels": 2,
+    "decoded_frames": 32888,
+    "sha256": "05bad8a2e9e557f73dcc947f7d8b525d25d0346be75965e0611bc47fcbf2aa0f"
+  },
+  {
+    "file": "Kenney/music-jingles/Audio/Sax jingles/jingles_SAX15.ogg",
+    "seconds": 0.604,
+    "sample_rate": 44100,
+    "channels": 2,
+    "decoded_frames": 26623,
+    "sha256": "9bf90fa491bd9aa868ba735f76f3ffb8bf15e1b9d4a0bd5236cb91cd770dd38a"
+  },
+  {
+    "file": "Kenney/music-jingles/Audio/Sax jingles/jingles_SAX16.ogg",
+    "seconds": 0.408,
+    "sample_rate": 44100,
+    "channels": 2,
+    "decoded_frames": 18010,
+    "sha256": "4d18848cf2d60c39d80808efa747386e329cca246381fc2ee32d16bba915f8b0"
+  },
+  {
+    "file": "Kenney/music-jingles/Audio/Steel jingles/jingles_STEEL00.ogg",
+    "seconds": 0.933,
+    "sample_rate": 44100,
+    "channels": 2,
+    "decoded_frames": 41137,
+    "sha256": "8799eb726d784ae0aa1a9df80648a873ac60015bc00aea12c8e2dd1431a2bd7d"
+  },
+  {
+    "file": "Kenney/music-jingles/Audio/Steel jingles/jingles_STEEL01.ogg",
+    "seconds": 1.375,
+    "sample_rate": 44100,
+    "channels": 2,
+    "decoded_frames": 60651,
+    "sha256": "099b192f120f7eb7c24613be277428628b9ec9c81e1f8420254abce336fbe7e5"
+  },
+  {
+    "file": "Kenney/music-jingles/Audio/Steel jingles/jingles_STEEL02.ogg",
+    "seconds": 1.387,
+    "sample_rate": 44100,
+    "channels": 2,
+    "decoded_frames": 61178,
+    "sha256": "891c2b48d3586744b38be18b8c5a35f46ac30fe06efb48f70f3f5528a0cec0c3"
+  },
+  {
+    "file": "Kenney/music-jingles/Audio/Steel jingles/jingles_STEEL03.ogg",
+    "seconds": 1.387,
+    "sample_rate": 44100,
+    "channels": 2,
+    "decoded_frames": 61178,
+    "sha256": "21233e95b5e2c167293484c9906264c632a5f1fe45744d1d5b52ba1dfb0a18fb"
+  },
+  {
+    "file": "Kenney/music-jingles/Audio/Steel jingles/jingles_STEEL04.ogg",
+    "seconds": 0.909,
+    "sample_rate": 44100,
+    "channels": 2,
+    "decoded_frames": 40082,
+    "sha256": "65be5fe4af66574f4725602e454b7ea8d2613ab536a4a719fcb3810a240fdecf"
+  },
+  {
+    "file": "Kenney/music-jingles/Audio/Steel jingles/jingles_STEEL05.ogg",
+    "seconds": 0.945,
+    "sample_rate": 44100,
+    "channels": 2,
+    "decoded_frames": 41665,
+    "sha256": "7e1f170ee00a8265723342c8d30e797a64641603a2c59c2316d3357b8c5f60d6"
+  },
+  {
+    "file": "Kenney/music-jingles/Audio/Steel jingles/jingles_STEEL06.ogg",
+    "seconds": 1.375,
+    "sample_rate": 44100,
+    "channels": 2,
+    "decoded_frames": 60650,
+    "sha256": "7a332720d8a70ac87fe1eae55e440466c2b9a3b39068a946faa30da7753b1df8"
+  },
+  {
+    "file": "Kenney/music-jingles/Audio/Steel jingles/jingles_STEEL07.ogg",
+    "seconds": 1.555,
+    "sample_rate": 44100,
+    "channels": 2,
+    "decoded_frames": 68562,
+    "sha256": "206b5cb18870c1faa393047cb857eda28441b9682380c9eb5910119ea04c2ece"
+  },
+  {
+    "file": "Kenney/music-jingles/Audio/Steel jingles/jingles_STEEL08.ogg",
+    "seconds": 0.801,
+    "sample_rate": 44100,
+    "channels": 2,
+    "decoded_frames": 35336,
+    "sha256": "8b0df04c5e9e1adfd1d7a99c111894956e18374db03c681e14f2fd2c7d387626"
+  },
+  {
+    "file": "Kenney/music-jingles/Audio/Steel jingles/jingles_STEEL09.ogg",
+    "seconds": 0.586,
+    "sample_rate": 44100,
+    "channels": 2,
+    "decoded_frames": 25843,
+    "sha256": "6eba3198a05a3388be4a1edc2d11135ac2b924d8418704e94636d3e0af3c2854"
+  },
+  {
+    "file": "Kenney/music-jingles/Audio/Steel jingles/jingles_STEEL10.ogg",
+    "seconds": 0.909,
+    "sample_rate": 44100,
+    "channels": 2,
+    "decoded_frames": 40082,
+    "sha256": "88a6645658b15dc327a2377ca7354e364625f081cd6ff9fda0b46dc54f664b71"
+  },
+  {
+    "file": "Kenney/music-jingles/Audio/Steel jingles/jingles_STEEL11.ogg",
+    "seconds": 0.825,
+    "sample_rate": 44100,
+    "channels": 2,
+    "decoded_frames": 36390,
+    "sha256": "86e97f88473e77119c24cc2fbcc711b3343a0b665d4297ea684f59ea17fc998e"
+  },
+  {
+    "file": "Kenney/music-jingles/Audio/Steel jingles/jingles_STEEL12.ogg",
+    "seconds": 1.256,
+    "sample_rate": 44100,
+    "channels": 2,
+    "decoded_frames": 55377,
+    "sha256": "17842dd21980be3373a01cc575eec8ddb86e2a49c3afcef7365fc5d907233c0b"
+  },
+  {
+    "file": "Kenney/music-jingles/Audio/Steel jingles/jingles_STEEL13.ogg",
+    "seconds": 1.052,
+    "sample_rate": 44100,
+    "channels": 2,
+    "decoded_frames": 46411,
+    "sha256": "1eddde22f0894c2267d558198d7fbfb289423929d0a060a3c4f5e1b6ab83be49"
+  },
+  {
+    "file": "Kenney/music-jingles/Audio/Steel jingles/jingles_STEEL14.ogg",
+    "seconds": 1.375,
+    "sample_rate": 44100,
+    "channels": 2,
+    "decoded_frames": 60651,
+    "sha256": "a24f6f6f76063d8e0442b15e660896ec4dd11a7be45d19f71088408e002c99f8"
+  },
+  {
+    "file": "Kenney/music-jingles/Audio/Steel jingles/jingles_STEEL15.ogg",
+    "seconds": 0.945,
+    "sample_rate": 44100,
+    "channels": 2,
+    "decoded_frames": 41664,
+    "sha256": "764db253add93d5824a9329faceeb4247e10cf49a4e4e1653a46fa366d5b2138"
+  },
+  {
+    "file": "Kenney/music-jingles/Audio/Steel jingles/jingles_STEEL16.ogg",
+    "seconds": 0.909,
+    "sample_rate": 44100,
+    "channels": 2,
+    "decoded_frames": 40083,
+    "sha256": "03f2048dc74dae100bc29b8cd59b4497ac7a057dae32c207916495c5dc214083"
+  },
+  {
+    "file": "Kenney/music-jingles/Preview.ogg",
+    "seconds": 13.017,
+    "sample_rate": 48000,
+    "channels": 2,
+    "decoded_frames": 624817,
+    "sha256": "e3cf15383007de5c5f5dd68027ea87ee4c8c0a7e382a2252ead55c1f21608c60"
+  },
+  {
+    "file": "KevinMacLeod/Beachfront Celebration.mp3",
+    "seconds": 187.298,
+    "sample_rate": 44100,
+    "channels": 2,
+    "decoded_frames": 8259840,
+    "sha256": "73ffcea8277780253b4e42dcbc3c5b3c50ba8ad343023372726a8678f43cc68e"
+  },
+  {
+    "file": "KevinMacLeod/Cipher2.mp3",
+    "seconds": 231.262,
+    "sample_rate": 44100,
+    "channels": 2,
+    "decoded_frames": 10198656,
+    "sha256": "d3d0614535a61d748e2fd8d5117fc4d781022a7624794802a2462d8af3fdd522"
+  },
+  {
+    "file": "KevinMacLeod/Monkeys Spinning Monkeys.mp3",
+    "seconds": 125.074,
+    "sample_rate": 44100,
+    "channels": 2,
+    "decoded_frames": 5515776,
+    "sha256": "a5bb345c23849ad0786aa0bc5157a9f2d4039660fe00282e55754d475f36dc14"
+  },
+  {
+    "file": "KevinMacLeod/Move Forward.mp3",
+    "seconds": 69.251,
+    "sample_rate": 44100,
+    "channels": 2,
+    "decoded_frames": 3053952,
+    "sha256": "6403c88035499302aced0a9e7bba0f668665434bc4d4b923923beb9f588afafa"
+  },
+  {
+    "file": "KevinMacLeod/Winner Winner.mp3",
+    "seconds": 198.06,
+    "sample_rate": 44100,
+    "channels": 2,
+    "decoded_frames": 8734464,
+    "sha256": "665d711ecfb4313a08e81067ec394732bbcff1f5d76d709259855e1b740475e0"
+  },
+  {
+    "file": "crowd-cheer.wav",
+    "seconds": 20.405,
+    "sample_rate": 44100,
+    "channels": 2,
+    "decoded_frames": 899871,
+    "sha256": "013fb6874fa3b7ee383755130a8dbb8d838327ea75186e32c78ac556e9360184"
+  },
+  {
+    "file": "referee-whistle.wav",
+    "seconds": 0.536,
+    "sample_rate": 48000,
+    "channels": 1,
+    "decoded_frames": 25723,
+    "sha256": "dabb55c15266ff62fc9df14e7b4b249295bb7112bcccb209b8ba234999fefdc1"
+  },
+  {
+    "file": "running-footsteps.wav",
+    "seconds": 33.5,
+    "sample_rate": 48000,
+    "channels": 2,
+    "decoded_frames": 1608000,
+    "sha256": "3e75b43efa1a9e42a28565734a83bb2e8bfd5ba59dd4ce60e8b9ecc3294dee8f"
+  },
+  {
+    "file": "sand-footsteps.wav",
+    "seconds": 26.424,
+    "sample_rate": 44100,
+    "channels": 2,
+    "decoded_frames": 1165316,
+    "sha256": "2bfee18eea1c721337436200e0671c534bd5e100f5df86a4d749ec7fb6439fb7"
+  },
+  {
+    "file": "soccer-ball-kick.wav",
+    "seconds": 13.859,
+    "sample_rate": 48000,
+    "channels": 1,
+    "decoded_frames": 665237,
+    "sha256": "d7b3dc69c36b8ff05c4b4ff965895532df5f63b5ff0d5c085c3d3b74f164384e"
+  },
+  {
+    "file": "volleyball-hit.wav",
+    "seconds": 0.404,
+    "sample_rate": 48000,
+    "channels": 2,
+    "decoded_frames": 19406,
+    "sha256": "23b712c0a41e209323d4ad0d26a158937ba7bb0ff5b5a6455207bd25bc4f9604"
+  }
+]

@@ -1,0 +1,142 @@
+[
+  {
+    "file": "run-step-1.wav",
+    "source": "running-footsteps.wav",
+    "start_seconds": 9.53,
+    "duration_seconds": 0.24,
+    "gain": 2.225095550423223,
+    "edits": "Trim, stereo to mono, normalize peak to -6 dBFS, fade edges",
+    "source_sha256": "3e75b43efa1a9e42a28565734a83bb2e8bfd5ba59dd4ce60e8b9ecc3294dee8f",
+    "sha256": "94bbcec5ddc160bc521e9e09eec6962ef318592ab4e7269ec26a50a716bef6d5"
+  },
+  {
+    "file": "run-step-2.wav",
+    "source": "running-footsteps.wav",
+    "start_seconds": 11.99,
+    "duration_seconds": 0.24,
+    "gain": 2.082995959459513,
+    "edits": "Trim, stereo to mono, normalize peak to -6 dBFS, fade edges",
+    "source_sha256": "3e75b43efa1a9e42a28565734a83bb2e8bfd5ba59dd4ce60e8b9ecc3294dee8f",
+    "sha256": "da1ba1f5d09b55077627d003dff0ad2a9994dd96cca16617fe10588367ef37de"
+  },
+  {
+    "file": "run-step-3.wav",
+    "source": "running-footsteps.wav",
+    "start_seconds": 22.52,
+    "duration_seconds": 0.24,
+    "gain": 1.6674136488229763,
+    "edits": "Trim, stereo to mono, normalize peak to -6 dBFS, fade edges",
+    "source_sha256": "3e75b43efa1a9e42a28565734a83bb2e8bfd5ba59dd4ce60e8b9ecc3294dee8f",
+    "sha256": "44565019e72cc9b0ad591baba648359128382c65ea6f9fa101f8628a06fa36cd"
+  },
+  {
+    "file": "run-step-4.wav",
+    "source": "running-footsteps.wav",
+    "start_seconds": 23.54,
+    "duration_seconds": 0.24,
+    "gain": 1.9844289916647249,
+    "edits": "Trim, stereo to mono, normalize peak to -6 dBFS, fade edges",
+    "source_sha256": "3e75b43efa1a9e42a28565734a83bb2e8bfd5ba59dd4ce60e8b9ecc3294dee8f",
+    "sha256": "fde7097038a6ce9e00df879da73d48ac4c2075aa7d9ff19518bcf74d9c814e0b"
+  },
+  {
+    "file": "sand-step-1.wav",
+    "source": "sand-footsteps.wav",
+    "start_seconds": 2.8,
+    "duration_seconds": 0.4,
+    "gain": 5.9502451425458505,
+    "edits": "Trim, stereo to mono, normalize peak to -6 dBFS, fade edges",
+    "source_sha256": "2bfee18eea1c721337436200e0671c534bd5e100f5df86a4d749ec7fb6439fb7",
+    "sha256": "630946103999e038b78f61e28eb43c1852e518902accb425aeab83c9049bcac2"
+  },
+  {
+    "file": "sand-step-2.wav",
+    "source": "sand-footsteps.wav",
+    "start_seconds": 3.45,
+    "duration_seconds": 0.4,
+    "gain": 6.331980676328502,
+    "edits": "Trim, stereo to mono, normalize peak to -6 dBFS, fade edges",
+    "source_sha256": "2bfee18eea1c721337436200e0671c534bd5e100f5df86a4d749ec7fb6439fb7",
+    "sha256": "5c6fc9a83a92d5c0b3d52fb2c4dde896a05b3acbfba59f0514f0cffebee08fe4"
+  },
+  {
+    "file": "sand-step-3.wav",
+    "source": "sand-footsteps.wav",
+    "start_seconds": 5.56,
+    "duration_seconds": 0.4,
+    "gain": 3.925251557259224,
+    "edits": "Trim, stereo to mono, normalize peak to -6 dBFS, fade edges",
+    "source_sha256": "2bfee18eea1c721337436200e0671c534bd5e100f5df86a4d749ec7fb6439fb7",
+    "sha256": "8bdf0617f1260811753e65d830713a8496e130ed49fea39226b1d4c5d07d8fbf"
+  },
+  {
+    "file": "sand-step-4.wav",
+    "source": "sand-footsteps.wav",
+    "start_seconds": 6.76,
+    "duration_seconds": 0.4,
+    "gain": 3.8810849224209405,
+    "edits": "Trim, stereo to mono, normalize peak to -6 dBFS, fade edges",
+    "source_sha256": "2bfee18eea1c721337436200e0671c534bd5e100f5df86a4d749ec7fb6439fb7",
+    "sha256": "2c80fee1b7213e37cb0f15322ab0a91f71c87f02d7b3c5d44876d29d68089ca1"
+  },
+  {
+    "file": "kick-1.wav",
+    "source": "soccer-ball-kick.wav",
+    "start_seconds": 0.53,
+    "duration_seconds": 0.45,
+    "gain": 0.9420353361176089,
+    "edits": "Trim, stereo to mono, normalize peak to -6 dBFS, fade edges",
+    "source_sha256": "d7b3dc69c36b8ff05c4b4ff965895532df5f63b5ff0d5c085c3d3b74f164384e",
+    "sha256": "c22d61711e300610089d74dd800974e6ebc1ab35e65428c038e43bdc861c966a"
+  },
+  {
+    "file": "kick-2.wav",
+    "source": "soccer-ball-kick.wav",
+    "start_seconds": 1.92,
+    "duration_seconds": 0.45,
+    "gain": 0.6031677095985299,
+    "edits": "Trim, stereo to mono, normalize peak to -6 dBFS, fade edges",
+    "source_sha256": "d7b3dc69c36b8ff05c4b4ff965895532df5f63b5ff0d5c085c3d3b74f164384e",
+    "sha256": "f6e72d207c56c633a690fb1c7d9f96ab6a425075640cfcabf2c6739671a86929"
+  },
+  {
+    "file": "kick-3.wav",
+    "source": "soccer-ball-kick.wav",
+    "start_seconds": 3.62,
+    "duration_seconds": 0.45,
+    "gain": 0.6725366922027155,
+    "edits": "Trim, stereo to mono, normalize peak to -6 dBFS, fade edges",
+    "source_sha256": "d7b3dc69c36b8ff05c4b4ff965895532df5f63b5ff0d5c085c3d3b74f164384e",
+    "sha256": "d53ab0cfeb18ea1df4bd205b8260aed9df663048d613999dcd089319b5716ec5"
+  },
+  {
+    "file": "cheer.wav",
+    "source": "crowd-cheer.wav",
+    "start_seconds": 0.0,
+    "duration_seconds": 2.3,
+    "gain": 0.5,
+    "edits": "Trim, stereo to mono, normalize peak to -6 dBFS, fade edges",
+    "source_sha256": "013fb6874fa3b7ee383755130a8dbb8d838327ea75186e32c78ac556e9360184",
+    "sha256": "198b2584027f9237dd9c36555545b3f529aa13e7397c6bd95636764d9f8549b6"
+  },
+  {
+    "file": "volley-hit.wav",
+    "source": "volleyball-hit.wav",
+    "start_seconds": 0.0,
+    "duration_seconds": 0.404,
+    "gain": 0.5000457805585228,
+    "edits": "Trim, stereo to mono, normalize peak to -6 dBFS, fade edges",
+    "source_sha256": "23b712c0a41e209323d4ad0d26a158937ba7bb0ff5b5a6455207bd25bc4f9604",
+    "sha256": "af125a3a55a95a4b28406b8f443361ad939648b6b35cff8686ae5415f63ef9e4"
+  },
+  {
+    "file": "whistle.wav",
+    "source": "referee-whistle.wav",
+    "start_seconds": 0.0,
+    "duration_seconds": 0.5358958333333333,
+    "gain": 0.9102222222222223,
+    "edits": "Trim, stereo to mono, normalize peak to -6 dBFS, fade edges",
+    "source_sha256": "dabb55c15266ff62fc9df14e7b4b249295bb7112bcccb209b8ba234999fefdc1",
+    "sha256": "8a2aef5cf6020350fcf1261ad6b8270d2dd74780052ef4aa7acbb62fb345af3a"
+  }
+]

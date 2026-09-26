@@ -1,0 +1,17 @@
+Music by Kevin MacLeod (incompetech.com)
+License: Creative Commons Attribution 4.0 International
+https://creativecommons.org/licenses/by/4.0/
+
+Move Forward - ISRC USUAN1300018
+Monkeys Spinning Monkeys - ISRC USUAN1400011
+Cipher - ISRC USUAN1100844 (original filename: Cipher2.mp3)
+Beachfront Celebration - ISRC USUAN1200022
+Winner Winner! - ISRC USUAN1400036 (original filename: Winner Winner.mp3)
+
+Source for each track:
+https://incompetech.com/music/royalty-free/index.html?isrc=ISRC
+Replace ISRC with the identifier above; exact URLs are in download-manifest.json.
+
+Downloaded from the composer's official website on 2026-09-26.
+Audio files have not been edited. If edited later, describe the changes in the game credits.
+Include track titles, composer, source and license link in the shipped game's credits.
