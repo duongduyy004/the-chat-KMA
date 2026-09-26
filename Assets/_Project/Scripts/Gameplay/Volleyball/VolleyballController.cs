@@ -12,6 +12,7 @@ namespace KMA.Gameplay.Volleyball
         [SerializeField] VolleyBallView ballView;
         [SerializeField] VolleyballInputBridge input;
         [SerializeField] VolleyballHud hud;
+        float stepDistance;
 
         public VolleyballMatch Match { get; private set; }
         public MinigameResult LastResult { get; private set; }
@@ -72,10 +73,23 @@ namespace KMA.Gameplay.Volleyball
                 return;
             }
 
+            BallFlight previousFlight = Match.Flight;
+            Vector2 previousPosition = Match.Player.Position;
             Match.SetMove(input.Move);
             for (int presses = input.ConsumePresses(); presses > 0; presses--)
                 Match.PressAction();
             Match.Tick(step);
+            if (Match.Flight != previousFlight && Match.BallState == BallState.InPlay)
+                GameAudio.Play(GameSound.VolleyHit);
+            float moved = Vector2.Distance(previousPosition, Match.Player.Position);
+            // Ignore the between-point reset that teleports the athlete to the serve spot.
+            if (moved <= VolleyballMatch.PlayerSpeed * step * 1.5f)
+                stepDistance += moved;
+            if (stepDistance >= .85f)
+            {
+                stepDistance %= .85f;
+                GameAudio.Play(GameSound.SandStep);
+            }
         }
 
         void LateUpdate()
@@ -114,6 +128,8 @@ namespace KMA.Gameplay.Volleyball
 
         void OnPointScored(CourtSide winner)
         {
+            if (Match.PlayerPoints < VolleyballMatch.PointsToWin && Match.OpponentPoints < VolleyballMatch.PointsToWin)
+                GameAudio.Play(winner == CourtSide.Player ? GameSound.Point : GameSound.Miss);
             if (hud)
                 hud.ShowPoint(winner);
         }

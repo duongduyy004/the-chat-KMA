@@ -20,6 +20,7 @@ namespace KMA.Gameplay
         bool terminalResolved;
         bool inputRouterSubscribed;
         int cadenceCombo;
+        float stepDistance;
 
         public bool InputActionsReady => directInputEnabled && leftAction != null && rightAction != null;
         public Side ExpectedSide => rules == null ? Side.Left : rules.ExpectedSide;
@@ -182,7 +183,14 @@ namespace KMA.Gameplay
             statusText: "TAP LEFT / RIGHT");
         protected override void TickPlay(float dt)
         {
+            float before = rules.Snapshot.Distance;
             rules.Tick(dt);
+            stepDistance += Mathf.Max(0f, rules.Snapshot.Distance - before);
+            if (dt > 0f && stepDistance >= 1.6f)
+            {
+                stepDistance %= 1.6f;
+                GameAudio.Play(GameSound.RunStep);
+            }
             EvaluateTerminalOutcome();
         }
 
