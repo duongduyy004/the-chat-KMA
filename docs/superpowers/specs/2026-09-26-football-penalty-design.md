@@ -2,7 +2,7 @@
 
 Ngày: 2026-09-26
 
-Trạng thái: thiết kế trong hội thoại đã được duyệt; bản spec này chờ người dùng duyệt trước khi lập kế hoạch triển khai.
+Trạng thái: thiết kế trong hội thoại và bản spec này đã được người dùng duyệt ngày 2026-09-26; kế hoạch triển khai được viết ở bước tiếp theo.
 
 ## 1. Mục tiêu và phạm vi đã thống nhất
 
