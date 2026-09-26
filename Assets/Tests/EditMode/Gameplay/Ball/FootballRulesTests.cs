@@ -1,147 +1,167 @@
 using KMA.Gameplay;
 using NUnit.Framework;
-using UnityEngine;
 
 namespace KMA.Tests.Gameplay.Ball
 {
     public sealed class FootballRulesTests
     {
-        [TestCase(2, false)]
-        [TestCase(3, true)]
-        [TestCase(5, true)]
-        public void FiveKicks_PassAtThreeGoals(int goals, bool pass)
+        [Test]
+        public void AimLocksAndPowerOscillatesWhileHeld()
         {
-            Assert.That(FootballRules.ForTest(5, goals).BuildResult().Pass, Is.EqualTo(pass));
+            var rules = NewRules();
+
+            Assert.That(rules.BeginCharge(), Is.False);
+            Assert.That(rules.Start(), Is.True);
+            rules.Tick(.85f);
+            Assert.That(rules.AimX, Is.EqualTo(.9f).Within(.0001f));
+            Assert.That(rules.LockAim(), Is.True);
+            rules.Tick(60f);
+            Assert.That(rules.AimX, Is.EqualTo(.9f).Within(.0001f));
+            Assert.That(rules.BeginCharge(), Is.True);
+            rules.Tick(1.4f);
+            Assert.That(rules.Power, Is.EqualTo(1f).Within(.0001f));
+            rules.Tick(1.4f);
+            Assert.That(rules.Power, Is.EqualTo(0f).Within(.0001f));
+            Assert.That(rules.ReleaseShot(), Is.True);
+            Assert.That(rules.ReleaseShot(), Is.False);
         }
 
-        [Test]
-        public void PhaseActivatesExactlyOneDifficultyModifier()
+        [TestCase(2, false, 0f)]
+        [TestCase(3, true, 6f)]
+        [TestCase(4, true, 8f)]
+        [TestCase(5, true, 10f)]
+        public void FiveKicksRequireThreeGoals(int goalsExpected, bool passed, float expectedScore)
         {
-            var phase = new FootballPhase(GKReaction.Fast, TargetWidth.Normal);
+            var rules = NewRules();
+            Assert.That(rules.Start(), Is.True);
 
-            Assert.That(phase.ActiveModifierCount, Is.EqualTo(1));
-        }
+            for (int kick = 0; kick < 5; kick++)
+            {
+                AdvanceAimToRightEdge(rules);
 
-        [Test]
-        public void PhaseRejectsConflictingOrMissingDifficultyModifiers()
-        {
-            Assert.That(() => new FootballPhase(GKReaction.Fast, TargetWidth.Narrow),
-                Throws.ArgumentException);
-            Assert.That(() => new FootballPhase(GKReaction.Normal, TargetWidth.Normal),
-                Throws.ArgumentException);
-        }
+                Assert.That(rules.LockAim(), Is.True, $"lock aim for kick {kick + 1}");
+                Assert.That(rules.BeginCharge(), Is.True, $"begin kick {kick + 1}");
+                if (kick < goalsExpected)
+                    rules.Tick(1.19f); // Normal force reaches exactly .85 on its rising half.
+                else
+                    rules.Tick(2.8f); // One full power cycle returns to zero for a short MISS.
+                Assert.That(rules.ReleaseShot(), Is.True);
+                Assert.That(rules.Kicks, Is.EqualTo(kick)); // Count commits after shot outcome.
+                rules.Tick(.18f);
+                rules.Tick(1.91f);
 
-        [Test]
-        public void DifficultyModifierChangesKeeperResolution()
-        {
-            var fast = new GKPattern(new FootballPhase(GKReaction.Fast, TargetWidth.Normal),
-                .5f, .25f, .7f, .1f, ShotKind.Curve);
-            var slow = new GKPattern(new FootballPhase(GKReaction.Slow, TargetWidth.Normal),
-                .5f, .25f, .7f, .1f, ShotKind.Curve);
-            var shot = new FootballShot(.9f, .75f, .2f, ShotKind.Curve);
-
-            Assert.That(fast.Resolve(shot), Is.False);
-            Assert.That(slow.Resolve(shot), Is.True);
-        }
-
-        [Test]
-        public void TargetWidthModifierChangesKeeperResolution()
-        {
-            var narrow = new GKPattern(new FootballPhase(GKReaction.Normal, TargetWidth.Narrow),
-                .5f, .25f, .5f, .1f, ShotKind.Curve);
-            var wide = new GKPattern(new FootballPhase(GKReaction.Normal, TargetWidth.Wide),
-                .5f, .25f, .5f, .1f, ShotKind.Curve);
-            var shot = new FootballShot(.8f, .75f, .2f, ShotKind.Curve);
-
-            Assert.That(narrow.Resolve(shot), Is.True);
-            Assert.That(wide.Resolve(shot), Is.False);
-        }
-
-        [Test]
-        public void AuthoredShotResolution_RejectsMismatchedKeeperPattern()
-        {
-            var lifecycle = new MinigameLifecycle(2f, 3f);
-            var rules = new FootballRules(lifecycle: lifecycle);
-
-            Assert.That(rules.ResolveAuthoredShot(GoalShot(rules.PatternSet.Patterns[0]), rules.PatternSet.Patterns[1]), Is.False);
-            lifecycle.Tick(2f);
-            lifecycle.Tick(3f);
-
-            for (var kick = 0; kick < 5; kick++)
-                Assert.That(rules.ResolveAuthoredShot(GoalShot(rules.PatternSet.Patterns[kick])), Is.True);
+                if (kick < 4)
+                    Assert.That(rules.State, Is.EqualTo(FootballState.Aiming));
+                else
+                    Assert.That(rules.State, Is.EqualTo(FootballState.MatchResult));
+            }
 
             Assert.That(rules.Kicks, Is.EqualTo(5));
-            Assert.That(rules.Goals, Is.EqualTo(5));
-            Assert.That(rules.Phase, Is.EqualTo(MinigamePhase.Resolve));
-            Assert.That(rules.ResolveAuthoredShot(GoalShot(rules.PatternSet.Patterns[0])), Is.False);
+            Assert.That(rules.Goals, Is.EqualTo(goalsExpected));
+            Assert.That(rules.BuildResult().Pass, Is.EqualTo(passed));
+            Assert.That(rules.BuildResult().Score, Is.EqualTo(expectedScore));
+            Assert.That(rules.LockAim(), Is.False);
         }
 
         [Test]
-        public void AuthoredShot_UsesPreselectedKeeperPatternWithoutRandomness()
+        public void ThreeGoalsDoNotEndTheMatchBeforeFifthKick()
         {
-            var first = new FootballRules();
-            var second = new FootballRules();
-            var shot = new FootballShot(.95f, .8f, .2f, ShotKind.Curve);
+            var rules = NewRules();
+            rules.Start();
 
-            Assert.That(first.ResolveAuthoredShot(shot), Is.EqualTo(second.ResolveAuthoredShot(shot)));
-            Assert.That(first.LastKeeperPattern, Is.SameAs(first.PatternSet.Patterns[0]));
-            Assert.That(first.LastShot, Is.EqualTo(shot));
-        }
-
-        [Test]
-        public void AuthoredShot_RequiresTheAuthoredShotCounterplay()
-        {
-            var rules = new FootballRules();
-
-            Assert.That(rules.ResolveAuthoredShot(new FootballShot(.5f, .2f, 0f, ShotKind.Power)), Is.False);
-            var firstKick = new FootballRules();
-            Assert.That(firstKick.ResolveAuthoredShot(new FootballShot(.95f, .8f, .2f, ShotKind.Curve)), Is.True);
-        }
-
-        [Test]
-        public void BuildResult_UsesFoundationScoreAndRequiresAllFiveKicks()
-        {
-            var rules = new FootballRules();
-
-            for (var kick = 0; kick < 4; kick++)
-                rules.ResolveAuthoredShot(kick < 2 ? GoalShot(rules.PatternSet.Patterns[kick]) :
-                    MissShot(rules.PatternSet.Patterns[kick]));
-
-            Assert.That(rules.BuildResult().Pass, Is.False);
-
-            rules.ResolveAuthoredShot(MissShot(rules.PatternSet.Patterns[4]));
-            var result = rules.BuildResult();
-
-            Assert.That(result.Pass, Is.False);
-            Assert.That(result.Score, Is.Zero);
-        }
-
-        [Test]
-        public void AuthoredShots_ThreeGoalsInFiveKicks_Pass()
-        {
-            var rules = new FootballRules();
-
-            for (var kick = 0; kick < 5; kick++)
-                Assert.That(rules.ResolveAuthoredShot(kick < 3 ? GoalShot(rules.PatternSet.Patterns[kick]) :
-                    MissShot(rules.PatternSet.Patterns[kick])), Is.EqualTo(kick < 3));
+            for (int i = 0; i < 4; i++)
+            {
+                AdvanceAimToRightEdge(rules);
+                rules.LockAim();
+                rules.BeginCharge();
+                rules.Tick(i < 3 ? 1.19f : 2.8f);
+                rules.ReleaseShot();
+                rules.Tick(.18f);
+                rules.Tick(1.91f);
+            }
 
             Assert.That(rules.Goals, Is.EqualTo(3));
-            Assert.That(rules.BuildResult().Pass, Is.True);
-            Assert.That(rules.BuildResult().Score, Is.InRange(0f, 10f));
+            Assert.That(rules.State, Is.EqualTo(FootballState.Aiming));
+            Assert.That(rules.Kicks, Is.EqualTo(4));
         }
 
-        static FootballShot GoalShot(GKPattern pattern)
+        [Test]
+        public void InvalidDeltaDoesNotMutateState()
         {
-            var placement = pattern.KeeperPlacement > .5f ?
-                pattern.KeeperPlacement - pattern.Coverage - .2f :
-                pattern.KeeperPlacement + pattern.Coverage + .2f;
-            return new FootballShot(Mathf.Clamp01(placement),
-                1f, 1f, pattern.CounterShot);
+            var rules = NewRules();
+            rules.Start();
+            rules.Tick(.3f);
+            float before = rules.AimX;
+
+            rules.Tick(float.NaN);
+            rules.Tick(float.PositiveInfinity);
+            rules.Tick(-1f);
+
+            Assert.That(rules.AimX, Is.EqualTo(before));
+            Assert.That(rules.State, Is.EqualTo(FootballState.Aiming));
         }
 
-        static FootballShot MissShot(GKPattern pattern)
+        [Test]
+        public void LargeAndSmallTicksProduceTheSameAimAndPower()
         {
-            return new FootballShot(pattern.KeeperPlacement, 0f, 0f, pattern.CounterShot);
+            var large = NewRules();
+            var small = NewRules();
+            large.Start();
+            small.Start();
+
+            large.Tick(5.3f);
+            for (int i = 0; i < 53; i++) small.Tick(.1f);
+
+            Assert.That(large.AimX, Is.EqualTo(small.AimX).Within(.0001f));
+            large.LockAim();
+            small.LockAim();
+            large.BeginCharge();
+            small.BeginCharge();
+            large.Tick(3.7f);
+            for (int i = 0; i < 37; i++) small.Tick(.1f);
+
+            Assert.That(large.Power, Is.EqualTo(small.Power).Within(.0001f));
+            Assert.That(large.State, Is.EqualTo(small.State));
+        }
+
+        [Test]
+        public void DefaultNoiseIsSampledOnlyForPowerAboveAccuracyLimit()
+        {
+            int calls = 0;
+            var rules = new FootballRules(FootballTuning.For(FootballDifficulty.Normal), () =>
+            {
+                calls++;
+                return 0f;
+            });
+            rules.Start();
+            rules.LockAim();
+            rules.BeginCharge();
+            rules.Tick(1.19f);
+            rules.ReleaseShot();
+            Assert.That(calls, Is.Zero);
+
+            var highPower = new FootballRules(FootballTuning.For(FootballDifficulty.Normal), () =>
+            {
+                calls++;
+                return .5f;
+            });
+            highPower.Start();
+            highPower.LockAim();
+            highPower.BeginCharge();
+                highPower.Tick(1.204f);
+            highPower.ReleaseShot();
+            Assert.That(calls, Is.EqualTo(1));
+        }
+
+        static FootballRules NewRules() =>
+            new FootballRules(FootballTuning.For(FootballDifficulty.Normal), () => 0f);
+
+        static void AdvanceAimToRightEdge(FootballRules rules)
+        {
+            for (int i = 0; i < 20000 && rules.AimX < .8998f; i++)
+                rules.Tick(.0001f);
+            Assert.That(rules.State, Is.EqualTo(FootballState.Aiming));
+            Assert.That(rules.AimX, Is.EqualTo(.9f).Within(.0002f));
         }
     }
 }
