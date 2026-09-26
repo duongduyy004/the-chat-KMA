@@ -6,7 +6,11 @@
         "KMA.Gameplay",
         "KMA.Gameplay.Progression",
         "KMA.Gameplay.Core",
-        "KMA.Gameplay.UI"
+        "KMA.Gameplay.UI",
+        "KMA.Gameplay.Sprint",
+        "KMA.Gameplay.Volleyball",
+        "KMA.Gameplay.Football",
+        "UnityEngine.UI"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],
