@@ -12,7 +12,10 @@
         "KMA.Gameplay.Shell",
         "KMA.Gameplay.UI",
         "Unity.InputSystem",
-        "Unity.InputSystem.TestFramework"
+        "Unity.InputSystem.TestFramework",
+        "KMA.Gameplay.Football",
+        "UnityEngine.UI",
+        "Unity.TextMeshPro"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],

@@ -6,6 +6,7 @@ using UnityEngine;
 using UnityEngine.SceneManagement;
 
 [assembly: InternalsVisibleTo("KMA.Gameplay.UI.PlayMode.Tests")]
+[assembly: InternalsVisibleTo("KMA.Gameplay.Progression.PlayMode.Tests")]
 
 namespace KMA.Gameplay.Core
 {
@@ -97,6 +98,10 @@ namespace KMA.Gameplay.Core
         IResultPreviewPanel pendingResultPanel;
         Action<string> pendingResultPanelHandler;
         SubjectId? activeSubject;
+        SubjectId? pendingResultSubject;
+        MinigameResult pendingSubjectResult;
+        Func<SceneRouteTransition, Action, bool> routeAcceptanceForTests;
+        string lastRouteError;
         bool awaitingSubjectScene;
         bool menuLoading;
         GameSession session;
@@ -203,15 +208,33 @@ namespace KMA.Gameplay.Core
             transitioner = new SessionRouteTransitioner(session, this);
         }
 
-        public bool SubmitSubjectResult(SubjectId subject, MinigameResult result)
+        public bool SubmitSubjectResult(SubjectId subject, MinigameResult result) =>
+            TrySubmitSubjectResult(subject, result, false);
+
+        bool TrySubmitSubjectResult(SubjectId subject, MinigameResult result, bool retry)
         {
-            if (IsTransitioning)
+            if (IsTransitioning || result == null)
+                return false;
+            if (retry && (subject != SubjectId.Football || result.Pass))
                 return false;
 
             int livesBefore = session.Lives;
             SaveData previous = session.ToSaveData();
-            SessionRoute route = session.SubmitResult(subject, result);
-            if (!TryRouteMutatedSession(previous, route, subject))
+            lastRouteError = null;
+            SessionRoute route;
+            try
+            {
+                route = session.SubmitResult(subject, result);
+                if (retry && session.Lives > 0)
+                    route = session.StartSubject(subject);
+            }
+            catch
+            {
+                session.Restore(previous);
+                throw;
+            }
+
+            if (!TryRouteMutatedSession(previous, route, route == SessionRoute.Subject ? subject : null))
                 return false;
             SessionChanged?.Invoke();
 
@@ -219,7 +242,6 @@ namespace KMA.Gameplay.Core
                 SubjectCompleted?.Invoke(subject, result);
             else if (session.Lives < livesBefore)
                 LifeLost?.Invoke(session.Lives);
-
             return true;
         }
 
@@ -280,7 +302,12 @@ namespace KMA.Gameplay.Core
             return true;
         }
 
-        public bool ExitActiveSubjectToMap() => Route(SessionRoute.Map);
+        public bool ExitActiveSubjectToMap()
+        {
+            if (pendingResultPanel != null && pendingResultSubject == SubjectId.Football && pendingSubjectResult != null)
+                return HandlePendingResultAction(ResultPanelActions.Continue);
+            return Route(SessionRoute.Map);
+        }
 
         public void BindSubject(MinigameBase controller, SubjectId subject)
         {
@@ -302,16 +329,48 @@ namespace KMA.Gameplay.Core
                 throw new InvalidOperationException("A ResultPanel is required to continue from a subject result.");
 
             UnbindResultPanel();
-            Action<string> handler = _ =>
-            {
-                UnbindResultPanel();
-                SubmitSubjectResult(subject, result);
-            };
+            if (subject == SubjectId.Football && panel is IRetryResultPreviewPanel retryPanel)
+                retryPanel.ConfigureRetry(result.Pass ? session.Lives : Mathf.Max(0, session.Lives - 1));
+
+            Action<string> handler = action => { HandlePendingResultAction(action); };
 
             pendingResultPanel = panel;
             pendingResultPanelHandler = handler;
+            pendingResultSubject = subject;
+            pendingSubjectResult = result;
             panel.ActionRequested += handler;
             panel.Show(result, previewRoute.ToString());
+        }
+
+        bool HandlePendingResultAction(string action)
+        {
+            if (pendingResultPanel == null || !pendingResultSubject.HasValue || pendingSubjectResult == null)
+                return false;
+
+            var subject = pendingResultSubject.Value;
+            var result = pendingSubjectResult;
+            bool retry = action == ResultPanelActions.Retry && subject == SubjectId.Football && !result.Pass &&
+                pendingResultPanel is IRetryResultPreviewPanel retryPanel && retryPanel.RetryAvailable;
+            if (action == ResultPanelActions.Retry && !retry)
+                return false;
+
+            var actionablePanel = pendingResultPanel as IRetryResultPreviewPanel;
+            actionablePanel?.SetActionPending(true, null);
+            try
+            {
+                bool committed = TrySubmitSubjectResult(subject, result, retry);
+                if (committed)
+                    UnbindResultPanel();
+                else
+                    actionablePanel?.SetActionPending(false, lastRouteError ?? "Không thể chuyển cảnh. Vui lòng thử lại.");
+                return committed;
+            }
+            catch (Exception exception)
+            {
+                lastRouteError = exception.Message;
+                actionablePanel?.SetActionPending(false, "Không thể chuyển cảnh. Vui lòng thử lại.");
+                return false;
+            }
         }
 
         public bool Route(SessionRoute route, SubjectId? subject = null)
@@ -356,11 +415,22 @@ namespace KMA.Gameplay.Core
         public bool Begin(SceneRouteTransition transition, Action onCompleted)
         {
             TransitionStarted?.Invoke(transition);
+            if (routeAcceptanceForTests != null)
+                return routeAcceptanceForTests(transition, onCompleted);
             return StartSceneLoad(transition.SceneName, onCompleted);
         }
 
-        internal void ConfigureSceneLoaderForTests(Func<string, AsyncOperation> loader) =>
+        internal void ConfigureSceneLoaderForTests(Func<string, AsyncOperation> loader)
+        {
+            routeAcceptanceForTests = null;
             sceneLoader = loader ?? LoadSingleScene;
+        }
+
+        internal void ConfigureRouteAcceptanceForTests(Func<SceneRouteTransition, Action, bool> accept)
+        {
+            routeAcceptanceForTests = accept;
+            transitioner = new SessionRouteTransitioner(session, this);
+        }
 
         void OnSceneLoaded(Scene scene, LoadSceneMode mode)
         {
@@ -423,6 +493,8 @@ namespace KMA.Gameplay.Core
                 pendingResultPanel.ActionRequested -= pendingResultPanelHandler;
             pendingResultPanel = null;
             pendingResultPanelHandler = null;
+            pendingResultSubject = null;
+            pendingSubjectResult = null;
         }
 
         static IResultPreviewPanel FindResultPanel()
@@ -500,6 +572,7 @@ namespace KMA.Gameplay.Core
         void FailSceneLoad(string sceneName, Action onCompleted, string reason)
         {
             string message = $"Could not load scene '{sceneName}': {reason}";
+            lastRouteError = message;
             Debug.LogError(message, this);
             SceneLoadFailed?.Invoke(message);
             onCompleted?.Invoke();
