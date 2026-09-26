@@ -168,7 +168,7 @@ namespace KMA.Gameplay.Core
             saveSystem = new SaveSystem();
             loadData = saveSystem.Load;
             saveData = saveSystem.Save;
-            hasExistingSave = () => saveSystem.HasSave;
+            hasExistingSave = () => saveSystem.HasLoadedValidSave;
             router = SceneRouter.EnsurePersistentInstance();
             loadScene = sceneName => router.TryLoadScene(sceneName);
 
@@ -190,7 +190,7 @@ namespace KMA.Gameplay.Core
             session.Restore(loaded);
             settings = loaded.settings ?? Settings.CreateDefault();
             tutorialSeen = CloneTutorialFlags(loaded.tutorialSeen);
-            RefreshSavedCampaign(hasExistingSave != null && hasExistingSave());
+            HasSavedCampaign = hasExistingSave != null && hasExistingSave() && !loaded.settingsOnly;
 
             router.LoadSession(session);
             SubscribeToRouter();
@@ -209,19 +209,21 @@ namespace KMA.Gameplay.Core
             router.SessionChanged -= OnSessionChanged;
         }
 
-        void OnSessionChanged() => SaveCurrentState();
+        void OnSessionChanged()
+        {
+            HasSavedCampaign = true;
+            SaveCurrentState();
+        }
 
         void SaveCurrentState()
         {
             SaveData current = session.ToSaveData();
+            current.settingsOnly = !HasSavedCampaign;
             current.settings = settings;
             current.tutorialSeen = CloneTutorialFlags(tutorialSeen);
             saveData(current);
-            RefreshSavedCampaign(true);
-        }
 
-        void RefreshSavedCampaign(bool saveExists) =>
-            HasSavedCampaign = saveExists;
+        }
 
         void ApplySettings()
         {

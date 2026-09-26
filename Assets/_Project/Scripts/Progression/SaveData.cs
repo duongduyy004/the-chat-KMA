@@ -8,6 +8,8 @@ namespace KMA.Gameplay
         public const int CurrentVersion = 6;
 
         public int version;
+        // Absent in legacy saves, which already represent a campaign.
+        public bool settingsOnly;
         public int lives;
         public SubjectRecordData[] subjects;
         public bool hasActiveSubject;

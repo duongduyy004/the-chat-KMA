@@ -36,9 +36,11 @@ namespace KMA.Gameplay
         public string SavePath { get; }
 
         public bool HasSave => File.Exists(SavePath);
+        public bool HasLoadedValidSave { get; private set; }
 
         public SaveData Load()
         {
+            HasLoadedValidSave = false;
             if (!File.Exists(SavePath))
             {
                 return SaveData.CreateDefault();
@@ -73,7 +75,8 @@ namespace KMA.Gameplay
                 }
 
                 SaveData migrated = Migrate(data);
-                return IsCurrentVersionStructureValid(migrated) ? migrated : SaveData.CreateDefault();
+                HasLoadedValidSave = IsCurrentVersionStructureValid(migrated);
+                return HasLoadedValidSave ? migrated : SaveData.CreateDefault();
             }
             catch (Exception exception) when (exception is IOException || exception is UnauthorizedAccessException || exception is ArgumentException)
             {
@@ -132,6 +135,7 @@ namespace KMA.Gameplay
             {
                 version = SaveData.CurrentVersion,
                 lives = data.lives,
+                settingsOnly = data.settingsOnly,
                 subjects = MigrateSubjects(data.subjects, defaults.subjects),
                 hasActiveSubject = data.version >= 2 && data.hasActiveSubject &&
                                    Enum.IsDefined(typeof(SubjectId), data.activeSubject),

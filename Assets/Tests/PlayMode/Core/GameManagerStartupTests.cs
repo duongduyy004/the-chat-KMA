@@ -227,6 +227,32 @@ namespace KMA.Tests.Gameplay.Core
         }
 
         [Test]
+        public void SettingsAndPause_BeforePlaying_DoNotEnableContinueAfterRelaunch()
+        {
+            SceneRouter router = CreateRouter();
+            SaveData persisted = null;
+            GameManager manager = CreateInitializedManager(router,
+                data => persisted = JsonUtility.FromJson<SaveData>(JsonUtility.ToJson(data)));
+            var updated = Settings.CreateDefault();
+            updated.musicVol = .25f;
+            updated.sfxVol = .5f;
+            updated.vibration = false;
+            manager.UpdateSettings(updated);
+            manager.SendMessage("OnApplicationPause", true);
+            Assert.That(manager.HasSavedCampaign, Is.False);
+            UnityEngine.Object.DestroyImmediate(manager.gameObject);
+
+            manager = CreateInactiveManager();
+            manager.ConfigureStartup(() => persisted, _ => { }, router, _ => { },
+                configuredHasExistingSave: () => true);
+            manager.gameObject.SetActive(true);
+            Assert.That(manager.HasSavedCampaign, Is.False);
+            Assert.That(manager.Settings.musicVol, Is.EqualTo(.25f));
+            Assert.That(manager.Settings.sfxVol, Is.EqualTo(.5f));
+            Assert.That(manager.Settings.vibration, Is.False);
+        }
+
+        [Test]
         public void SaveDataTutorialSeenStore_MarksSprintInTheAuthoritativeSave()
         {
             SceneRouter router = CreateRouter();

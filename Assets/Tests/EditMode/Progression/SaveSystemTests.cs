@@ -27,6 +27,42 @@ namespace KMA.Tests.Gameplay.Progression
         }
 
         [Test]
+        public void SettingsOnlySave_RoundTripsWithoutBecomingACampaign()
+        {
+            var data = SaveData.CreateDefault();
+            data.settingsOnly = true;
+            data.settings.musicVol = .25f;
+            saveSystem.Save(data);
+            var loaded = saveSystem.Load();
+            Assert.That(saveSystem.HasLoadedValidSave, Is.True);
+            Assert.That(loaded.settingsOnly, Is.True);
+            Assert.That(loaded.settings.musicVol, Is.EqualTo(.25f));
+        }
+
+        [Test]
+        public void ExistingSaveWithoutSettingsOnlyMarker_RemainsACampaign()
+        {
+            saveSystem.Save(SaveData.CreateDefault());
+            var json = File.ReadAllText(saveSystem.SavePath)
+                .Replace("\"settingsOnly\": false,", "");
+            File.WriteAllText(saveSystem.SavePath, json);
+            var loaded = saveSystem.Load();
+            Assert.That(saveSystem.HasLoadedValidSave, Is.True);
+            Assert.That(loaded.settingsOnly, Is.False);
+        }
+
+        [Test]
+        public void CorruptedSave_AfterValidLoad_DoesNotQualifyForContinue()
+        {
+            saveSystem.Save(SaveData.CreateDefault());
+            saveSystem.Load();
+            Assert.That(saveSystem.HasLoadedValidSave, Is.True);
+            File.WriteAllText(saveSystem.SavePath, "broken json");
+            saveSystem.Load();
+            Assert.That(saveSystem.HasLoadedValidSave, Is.False);
+        }
+
+        [Test]
         public void SaveAndLoad_RoundTripsCampaignAndPreferenceData()
         {
             var expected = SaveData.CreateDefault();
