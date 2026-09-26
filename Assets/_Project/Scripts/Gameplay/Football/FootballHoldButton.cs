@@ -1,6 +1,7 @@
 using System;
 using UnityEngine;
 using UnityEngine.EventSystems;
+using UnityEngine.UI;
 
 namespace KMA.Gameplay
 {
@@ -23,6 +24,9 @@ namespace KMA.Gameplay
             if (!value)
                 Cancel();
             interactable = value;
+            var button = GetComponent<Button>();
+            if (button)
+                button.interactable = value;
         }
 
         public void OnPointerDown(PointerEventData eventData)
