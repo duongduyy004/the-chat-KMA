@@ -1,7 +1,11 @@
 {
     "name": "KMA.Gameplay.Football",
     "rootNamespace": "KMA.Gameplay",
-    "references": ["KMA.Gameplay"],
+    "references": [
+        "KMA.Gameplay",
+        "Unity.InputSystem",
+        "UnityEngine.UI"
+    ],
     "includePlatforms": [],
     "excludePlatforms": [],
     "allowUnsafeCode": false,
