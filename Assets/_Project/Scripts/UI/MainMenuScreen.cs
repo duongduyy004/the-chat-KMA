@@ -13,7 +13,6 @@ namespace KMA.Gameplay.UI
         public event Action NewGameRequested;
         public event Action NewGameConfirmationRequested;
         public event Action ContinueRequested;
-        public event Action PlayRequested;
         public event Action SettingsRequested;
         public event Action QuitRequested;
         public bool IsConfirmingNewGame { get; private set; }
@@ -27,9 +26,13 @@ namespace KMA.Gameplay.UI
                 button.interactable = canContinue;
         }
 
-        public void Play() => PlayRequested?.Invoke();
         public void NewGame()
         {
+            if (!CanContinue)
+            {
+                NewGameRequested?.Invoke();
+                return;
+            }
             IsConfirmingNewGame = true;
             NewGameConfirmationRequested?.Invoke();
         }

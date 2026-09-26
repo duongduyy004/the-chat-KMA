@@ -143,7 +143,6 @@ namespace KMA.EditorTools
             CreateText(safeArea, "HomeTitle", "THỂ CHẤT KMA",
                 Fixed(new Vector2(-500f, 245f), new Vector2(620f, 110f)), 56f, headingFont, Gold);
 
-            ConfigureButton(scene, "PLAYButton", "CHƠI", new Vector2(-500f, 105f), Coral);
             ConfigureButton(scene, "CONTINUEButton", "TIẾP TỤC", new Vector2(-500f, -10f), Blue);
             ConfigureButton(scene, "NEW GAMEButton", "CHƠI MỚI", new Vector2(-500f, -125f), Blue);
             ConfigureButton(scene, "SETTINGSButton", "CÀI ĐẶT", new Vector2(-500f, -240f), Navy);
@@ -184,7 +183,7 @@ namespace KMA.EditorTools
             text.text = label;
             text.fontSize = 30;
             text.fontStyle = FontStyle.Bold;
-            text.color = objectName == "PLAYButton" ? Navy : Color.white;
+            text.color = objectName == "NEW GAMEButton" ? Navy : Color.white;
         }
 
         static Slider CreateLoadingBar(Transform parent)

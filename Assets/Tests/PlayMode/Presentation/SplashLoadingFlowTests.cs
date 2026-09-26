@@ -284,7 +284,7 @@ namespace KMA.Tests.Presentation
             while (!load.isDone)
                 yield return null;
 
-            AssertLabel("PLAYButton", "CHƠI");
+            Assert.That(GameObject.Find("PLAYButton"), Is.Null);
             AssertLabel("CONTINUEButton", "TIẾP TỤC");
             AssertLabel("NEW GAMEButton", "CHƠI MỚI");
             AssertLabel("SETTINGSButton", "CÀI ĐẶT");
@@ -296,7 +296,7 @@ namespace KMA.Tests.Presentation
         }
 
         [UnityTest]
-        public IEnumerator HomePlayButton_RoutesThroughTheRealRuntimeBinding()
+        public IEnumerator HomeNewGameButton_RoutesThroughTheRealRuntimeBinding()
         {
             // The button reaches Map through SceneRouter, which only exists once the
             // Bootstrap route has run, so Menu must be entered the way the game enters it.
@@ -309,10 +309,11 @@ namespace KMA.Tests.Presentation
             Assert.That(SceneRouter.Instance, Is.Not.Null,
                 "The Bootstrap route must publish the runtime the menu buttons bind to.");
 
-            Button play = GameObject.Find("PLAYButton").GetComponent<Button>();
+            Button play = GameObject.Find("NEW GAMEButton").GetComponent<Button>();
             Assert.That(play, Is.Not.Null);
 
             play.onClick.Invoke();
+            UnityEngine.Object.FindFirstObjectByType<MainMenuScreen>()?.ConfirmNewGame();
 
             yield return WaitForScene("Map");
         }
@@ -329,8 +330,9 @@ namespace KMA.Tests.Presentation
 
             menu.Configure(false);
             menu.Continue();
-            menu.NewGame();
             Assert.That(continues, Is.Zero);
+            menu.Configure(true);
+            menu.NewGame();
             Assert.That(newGames, Is.Zero);
 
             menu.Configure(true);

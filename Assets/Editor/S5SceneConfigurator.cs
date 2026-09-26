@@ -83,7 +83,6 @@ namespace KMA.EditorTools
                 if (menu)
                 {
                     var screen = safeArea.AddComponent<MainMenuScreen>();
-                    AddButton(safeArea.transform, "PLAY", new Vector2(0f, 180f), screen.Play);
                     AddButton(safeArea.transform, "CONTINUE", new Vector2(0f, 60f), screen.Continue);
                     AddButton(safeArea.transform, "NEW GAME", new Vector2(0f, -60f), screen.NewGame);
                     AddButton(safeArea.transform, "SETTINGS", new Vector2(0f, -180f), screen.OpenSettings);

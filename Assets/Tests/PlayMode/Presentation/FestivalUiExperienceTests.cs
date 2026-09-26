@@ -43,16 +43,38 @@ namespace KMA.Tests.Presentation
 
             Transform panel = GameObject.Find("FestivalMenuPanel")?.transform;
             Assert.That(panel, Is.Not.Null);
-            Button play = FindButton("PLAYButton");
-            Assert.That(play, Is.Not.Null);
-            Assert.That(play.transform.IsChildOf(panel), Is.True);
-            Assert.That(play.GetComponent<LayoutElement>().preferredHeight,
-                Is.GreaterThanOrEqualTo(92f));
+            var buttons = panel.GetComponentsInChildren<Button>();
+            Assert.That(buttons.Select(button => button.name), Is.EqualTo(new[]
+            {
+                "CONTINUEButton", "NEW GAMEButton", "SETTINGSButton", "QUITButton"
+            }));
 
-            Transform utilityRow = panel.Find("UtilityRow");
-            Assert.That(utilityRow, Is.Not.Null);
-            Assert.That(FindButton("SETTINGSButton").transform.IsChildOf(utilityRow), Is.True);
-            Assert.That(FindButton("QUITButton").transform.IsChildOf(utilityRow), Is.True);
+        }
+
+        [UnityTest]
+        public IEnumerator Settings_OpenAdjustAndReturn_UsesVisibleRuntimeControls()
+        {
+            yield return SceneManager.LoadSceneAsync("Menu", LoadSceneMode.Single);
+            yield return null;
+            var menu = Object.FindFirstObjectByType<MainMenuScreen>();
+            FindButton("SETTINGSButton").onClick.Invoke();
+            var settings = Object.FindFirstObjectByType<SettingsScreen>();
+            Assert.That(settings, Is.Not.Null, "Settings must remain active when the menu is hidden.");
+            Assert.That(menu.IsVisible, Is.False);
+            var sliders = settings.GetComponentsInChildren<Slider>();
+            Assert.That(sliders.Length, Is.EqualTo(2));
+            sliders.Single(slider => slider.name == "MusicSlider").value = .25f;
+            sliders.Single(slider => slider.name == "SfxSlider").value = .5f;
+            var toggle = settings.GetComponentInChildren<Toggle>();
+            Assert.That(toggle, Is.Not.Null);
+            toggle.isOn = false;
+            Assert.That(settings.CurrentSettings.musicVol, Is.EqualTo(.25f));
+            Assert.That(settings.CurrentSettings.sfxVol, Is.EqualTo(.5f));
+            Assert.That(settings.CurrentSettings.vibration, Is.False);
+            settings.GetComponentsInChildren<Button>().Single(button => button.name == "BackButton")
+                .onClick.Invoke();
+            Assert.That(menu.IsVisible, Is.True);
+            Assert.That(settings.gameObject.activeInHierarchy, Is.False);
         }
 
         [UnityTest]

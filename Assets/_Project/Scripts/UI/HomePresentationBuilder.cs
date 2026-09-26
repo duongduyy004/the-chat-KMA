@@ -73,28 +73,14 @@ namespace KMA.Gameplay.UI
             actions.childForceExpandHeight = false;
             LayoutElement stackLayout = actionStack.gameObject.AddComponent<LayoutElement>();
             stackLayout.flexibleWidth = 1f;
-            stackLayout.preferredHeight = 268f;
+            stackLayout.preferredHeight = 342f;
 
-            Button play = FindButton(screen, "PLAYButton") ?? CreateButton(screen.transform, "PLAYButton", "CHƠI");
-            Button continueButton = FindButton(screen, "CONTINUEButton");
-            Button newGame = FindButton(screen, "NEW GAMEButton");
-            StyleAction(play, actionStack, Coral, Navy, 92f, 34);
-            StyleAction(continueButton, actionStack, Blue, Color.white, 74f, 29);
-            StyleAction(newGame, actionStack, new Color32(20, 98, 148, 255), Color.white, 74f, 29);
-
-            RectTransform utilityRow = Rect(panel, "UtilityRow");
-            HorizontalLayoutGroup utilities = utilityRow.gameObject.AddComponent<HorizontalLayoutGroup>();
-            utilities.spacing = 10f;
-            utilities.childAlignment = TextAnchor.MiddleCenter;
-            utilities.childControlWidth = true;
-            utilities.childControlHeight = true;
-            utilities.childForceExpandWidth = true;
-            utilities.childForceExpandHeight = false;
-            utilityRow.gameObject.AddComponent<LayoutElement>().preferredHeight = 64f;
-            StyleAction(FindButton(screen, "SETTINGSButton"), utilityRow, new Color32(13, 57, 92, 255),
-                Color.white, 62f, 24);
-            StyleAction(FindButton(screen, "QUITButton"), utilityRow, new Color32(13, 57, 92, 255),
-                Color.white, 62f, 24);
+            StyleAction(FindButton(screen, "CONTINUEButton"), actionStack, Blue, Color.white, 78f, 29);
+            StyleAction(FindButton(screen, "NEW GAMEButton"), actionStack, Coral, Navy, 78f, 29);
+            StyleAction(FindButton(screen, "SETTINGSButton"), actionStack, new Color32(13, 57, 92, 255),
+                Color.white, 78f, 27);
+            StyleAction(FindButton(screen, "QUITButton"), actionStack, new Color32(13, 57, 92, 255),
+                Color.white, 78f, 27);
 
             Text footer = Label(panel, "FestivalFooter", "HÀNH TRÌNH RÈN LUYỆN THỂ CHẤT", 15,
                 new Color32(190, 219, 239, 255), TextAnchor.MiddleCenter);
@@ -155,16 +141,6 @@ namespace KMA.Gameplay.UI
         static Button FindButton(MainMenuScreen screen, string name) =>
             screen.GetComponentsInChildren<Button>(true)
                 .FirstOrDefault(candidate => string.Equals(candidate.name, name, StringComparison.Ordinal));
-
-        static Button CreateButton(Transform parent, string name, string label)
-        {
-            RectTransform rect = Rect(parent, name);
-            Image image = rect.gameObject.AddComponent<Image>();
-            Button button = rect.gameObject.AddComponent<Button>();
-            button.targetGraphic = image;
-            Text(rect, "Label", label, 30, Navy, TextAnchor.MiddleCenter);
-            return button;
-        }
 
         static void SetLayout(GameObject target, float height)
         {

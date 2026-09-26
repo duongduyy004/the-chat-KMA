@@ -82,6 +82,7 @@ namespace KMA.Tests.Gameplay.Progression
             {
                 var calls = 0;
                 screen.NewGameRequested += () => calls++;
+                screen.Configure(true);
                 screen.NewGame();
                 Assert.That(screen.IsConfirmingNewGame, Is.True);
                 Assert.That(calls, Is.Zero);
@@ -328,6 +329,38 @@ namespace KMA.Tests.Gameplay.Progression
         }
 
         [Test]
+        public void NewGame_WithoutCampaign_StartsImmediately()
+        {
+            var menu = Track(new GameObject("FreshMenu")).AddComponent<MainMenuScreen>();
+            menu.Configure(false);
+            int starts = 0;
+            menu.NewGameRequested += () => starts++;
+            menu.NewGame();
+            Assert.That(starts, Is.EqualTo(1));
+            Assert.That(menu.IsConfirmingNewGame, Is.False);
+        }
+
+        [UnityTest]
+        public IEnumerator NewGame_FromSettingsOnlySave_EnablesContinueAfterReload()
+        {
+            var persisted = SaveData.CreateDefault();
+            persisted.settingsOnly = true;
+            persisted.settings.musicVol = .25f;
+            var router = CreateRouter();
+            var manager = CreateManager(router, persisted, true,
+                data => persisted = JsonUtility.FromJson<SaveData>(JsonUtility.ToJson(data)));
+            var menu = CreateShellMenu();
+            Assert.That(menu.CanContinue, Is.False);
+            menu.NewGame();
+            yield return WaitForRoutedScene(router, "Map");
+            Assert.That(persisted.settingsOnly, Is.False);
+            UnityEngine.Object.DestroyImmediate(manager.gameObject);
+            manager = CreateManager(router, persisted, true);
+            Assert.That(manager.HasSavedCampaign, Is.True);
+            Assert.That(manager.Settings.musicVol, Is.EqualTo(.25f));
+        }
+
+        [Test]
         public void Continue_WithoutAnExistingSave_IsDisabledAndRequestsNoRoute()
         {
             SceneRouter router = CreateRouter();
@@ -423,7 +456,7 @@ namespace KMA.Tests.Gameplay.Progression
         }
 
         [UnityTest]
-        public IEnumerator Play_AfterRestoringAnActiveAttempt_ClearsItSoTheMapStaysUsable()
+        public IEnumerator RouteToMap_AfterRestoringAnActiveAttempt_ClearsItSoTheMapStaysUsable()
         {
             SaveData persisted = Arrange(session => session.StartSubject(SubjectId.Sprint));
 
@@ -435,7 +468,7 @@ namespace KMA.Tests.Gameplay.Progression
 
             Assert.That(manager.Session.ActiveSubject, Is.EqualTo(SubjectId.Sprint));
 
-            menu.Play();
+            router.Route(SessionRoute.Map);
 
             Assert.That(transitions, Has.Count.EqualTo(1));
             Assert.That(transitions[0].Route, Is.EqualTo(SessionRoute.Map));

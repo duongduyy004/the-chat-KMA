@@ -26,13 +26,22 @@ namespace KMA.Gameplay.Shell
 
             if (mainMenu != null)
             {
+                // Settings is authored under SafeArea (also MainMenuScreen). Give it a
+                // sibling safe-area root so hiding the menu cannot hide settings too.
+                if (settings != null && settings.transform.IsChildOf(mainMenu.transform))
+                {
+                    settings.transform.SetParent(mainMenu.transform.parent, false);
+                    settings.gameObject.AddComponent<RectTransform>();
+                    settings.gameObject.AddComponent<SafeAreaFitter>();
+                }
+                if (settings != null)
+                    SettingsPresentationBuilder.Build(settings);
                 HomePresentationBuilder.Build(mainMenu);
                 mainMenu.Show();
                 settings?.Hide();
                 calibrate?.Hide();
                 EnsureNewGameConfirmation();
                 mainMenu.Configure(GameManager.Instance != null && GameManager.Instance.HasSavedCampaign);
-                mainMenu.PlayRequested += OpenMap;
                 mainMenu.ContinueRequested += ContinueCampaign;
                 mainMenu.NewGameRequested += StartNewGame;
                 mainMenu.NewGameConfirmationRequested += ShowNewGameConfirmation;
@@ -69,7 +78,6 @@ namespace KMA.Gameplay.Shell
         {
             if (mainMenu != null)
             {
-                mainMenu.PlayRequested -= OpenMap;
                 mainMenu.ContinueRequested -= ContinueCampaign;
                 mainMenu.NewGameRequested -= StartNewGame;
                 mainMenu.NewGameConfirmationRequested -= ShowNewGameConfirmation;
@@ -100,13 +108,6 @@ namespace KMA.Gameplay.Shell
             }
         }
 
-        static void OpenMap()
-        {
-            var router = SceneRouter.Instance;
-            if (router != null)
-                router.Route(SessionRoute.Map);
-        }
-
         static void ContinueCampaign()
         {
             var router = SceneRouter.Instance;
@@ -120,7 +121,6 @@ namespace KMA.Gameplay.Shell
 
         void BindMainMenuButtons()
         {
-            BindButton("PLAYButton", mainMenu.Play);
             BindButton("CONTINUEButton", mainMenu.Continue);
             BindButton("NEW GAMEButton", mainMenu.NewGame);
             BindButton("SETTINGSButton", mainMenu.OpenSettings);
@@ -129,7 +129,6 @@ namespace KMA.Gameplay.Shell
 
         void UnbindMainMenuButtons()
         {
-            UnbindButton("PLAYButton", mainMenu.Play);
             UnbindButton("CONTINUEButton", mainMenu.Continue);
             UnbindButton("NEW GAMEButton", mainMenu.NewGame);
             UnbindButton("SETTINGSButton", mainMenu.OpenSettings);
@@ -154,6 +153,7 @@ namespace KMA.Gameplay.Shell
         void OpenSettings()
         {
             confirmationRoot?.SetActive(false);
+            mainMenu?.CancelNewGame();
             mainMenu?.Hide();
             calibrate?.Hide();
             settings?.Configure(GameManager.Instance?.Settings);
@@ -171,6 +171,7 @@ namespace KMA.Gameplay.Shell
         {
             settings?.Hide();
             calibrate?.Hide();
+            mainMenu?.Configure(GameManager.Instance != null && GameManager.Instance.HasSavedCampaign);
             mainMenu?.Show();
         }
 
