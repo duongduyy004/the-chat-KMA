@@ -21,7 +21,7 @@ namespace KMA.Tests.Gameplay.Progression
             var session = new GameSession();
             session.StartSubject(SubjectId.Sprint);
 
-            Assert.That(session.SubmitResult(SubjectId.Sprint, Failed()), Is.EqualTo(SessionRoute.Map));
+            Assert.That(session.SubmitResult(SubjectId.Sprint, CreateFailureResult()), Is.EqualTo(SessionRoute.Map));
             Assert.That(session.Lives, Is.EqualTo(4));
             Assert.That(session.GetRecord(SubjectId.Sprint).FailedVisits, Is.EqualTo(1));
 
@@ -34,11 +34,11 @@ namespace KMA.Tests.Gameplay.Progression
             var session = new GameSession();
 
             session.StartSubject(SubjectId.Sprint);
-            Assert.That(session.SubmitResult(SubjectId.Sprint, Failed()), Is.EqualTo(SessionRoute.Map));
+            Assert.That(session.SubmitResult(SubjectId.Sprint, CreateFailureResult()), Is.EqualTo(SessionRoute.Map));
             Assert.That(session.Lives, Is.EqualTo(4));
 
             session.StartSubject(SubjectId.Sprint);
-            Assert.That(session.SubmitResult(SubjectId.Sprint, Failed()), Is.EqualTo(SessionRoute.Map));
+            Assert.That(session.SubmitResult(SubjectId.Sprint, CreateFailureResult()), Is.EqualTo(SessionRoute.Map));
             Assert.That(session.Lives, Is.EqualTo(3));
             Assert.That(session.GetRecord(SubjectId.Sprint).FailedVisits, Is.EqualTo(2));
         }
@@ -49,7 +49,7 @@ namespace KMA.Tests.Gameplay.Progression
             var session = new GameSession();
             session.StartSubject(SubjectId.Sprint);
 
-            SessionRoute route = session.SubmitResult(SubjectId.Sprint, Failed());
+            SessionRoute route = session.SubmitResult(SubjectId.Sprint, CreateFailureResult());
 
             Assert.That(route, Is.Not.EqualTo(SessionRoute.Punishment));
             Assert.That(route, Is.Not.EqualTo(SessionRoute.RetrySubject));
@@ -65,7 +65,7 @@ namespace KMA.Tests.Gameplay.Progression
             for (var attempt = 0; attempt < 5; attempt++)
             {
                 session.StartSubject(SubjectId.Sprint);
-                Assert.That(session.SubmitResult(SubjectId.Sprint, Failed()),
+                Assert.That(session.SubmitResult(SubjectId.Sprint, CreateFailureResult()),
                     Is.EqualTo(attempt == 4 ? SessionRoute.GameOver : SessionRoute.Map));
             }
 
@@ -125,8 +125,7 @@ namespace KMA.Tests.Gameplay.Progression
             Assert.That(session.GetRecord(SubjectId.Sprint).BestScore, Is.Zero);
         }
 
-        [Test]
-        static MinigameResult Failed() => new MinigameResult(false, 0, Rank.F);
+        static MinigameResult CreateFailureResult() => new MinigameResult(false, 0, Rank.F);
 
         static MinigameResult Passed(float score) => new MinigameResult(true, score, ScoreUtil.ToRank(score));
     }

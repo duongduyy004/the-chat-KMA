@@ -58,6 +58,28 @@ namespace KMA.Tests.Gameplay.Progression
         }
 
         [Test]
+        public void SaveAndLoad_PreservesExistingFootballBestScoreAndRank()
+        {
+            var expected = SaveData.CreateDefault();
+            var football = Array.Find(expected.subjects, record => record.id == SubjectId.Football);
+            Assert.That(football, Is.Not.Null);
+            football.passed = true;
+            football.bestScore = 8f;
+            football.bestRank = Rank.A;
+            football.failedVisits = 2;
+
+            saveSystem.Save(expected);
+            var actual = saveSystem.Load();
+            var restored = Array.Find(actual.subjects, record => record.id == SubjectId.Football);
+
+            Assert.That(restored, Is.Not.Null);
+            Assert.That(restored.passed, Is.True);
+            Assert.That(restored.bestScore, Is.EqualTo(8f));
+            Assert.That(restored.bestRank, Is.EqualTo(Rank.A));
+            Assert.That(restored.failedVisits, Is.EqualTo(2));
+        }
+
+        [Test]
         public void Migrate_CurrentVersion_ReturnsTheSameDataWithoutChanges()
         {
             var data = SaveData.CreateDefault();

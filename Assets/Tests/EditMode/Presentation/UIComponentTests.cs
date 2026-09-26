@@ -210,22 +210,23 @@ namespace KMA.Tests.Presentation
                 MapPresentationBuilder.Build(screen, session);
 
                 MapNodeView completed = screen.Nodes.Single(node => node.SubjectId == SubjectId.Sprint);
-                MapNodeView locked = screen.Nodes.Single(node => node.SubjectId == SubjectId.Football);
+                MapNodeView football = screen.Nodes.Single(node => node.SubjectId == SubjectId.Football);
 
                 Assert.That(completed.transform.Find("StatusContainer/Status").GetComponent<Text>().text,
                     Is.EqualTo("✓  HOÀN THÀNH"));
                 Assert.That(completed.transform.Find("DetailContainer").gameObject.activeSelf, Is.True);
                 Assert.That(completed.transform.Find("ActionHint").GetComponent<Text>().text,
                     Is.EqualTo("THI →"));
-                Assert.That(locked.transform.Find("StatusContainer/Status").GetComponent<Text>().text,
-                    Is.EqualTo("🔒  ĐANG PHÁT TRIỂN"));
-                Assert.That(locked.DetailText, Is.EqualTo("ĐANG PHÁT TRIỂN"));
-                Assert.That(locked.transform.Find("DetailContainer").gameObject.activeSelf, Is.False);
-                Assert.That(locked.transform.Find("ActionHint"), Is.Null);
+                Assert.That(football.transform.Find("StatusContainer/Status").GetComponent<Text>().text,
+                    Is.EqualTo("SẴN SÀNG"));
+                Assert.That(football.DetailText, Is.EqualTo("SẴN SÀNG"));
+                Assert.That(football.transform.Find("DetailContainer").gameObject.activeSelf, Is.False);
+                Assert.That(football.transform.Find("ActionHint").GetComponent<Text>().text,
+                    Is.EqualTo("THI →"));
 
                 Assert.That(completed.GetComponent<BrutalButton>(), Is.Not.Null);
-                Assert.That(locked.GetComponent<BrutalButton>(), Is.Null);
-                Assert.That(locked.GetComponent<Button>(), Is.Null);
+                Assert.That(football.GetComponent<BrutalButton>(), Is.Not.Null);
+                Assert.That(football.GetComponent<Button>(), Is.Not.Null);
 
                 var iconSprites = screen.Nodes.Select(node =>
                 {
@@ -339,7 +340,7 @@ namespace KMA.Tests.Presentation
         }
 
         [Test]
-        public void LockedCardsRenderLockPictograms()
+        public void AvailableSportsCardsRenderWithoutLockPictograms()
         {
             var root = new GameObject("map", typeof(RectTransform));
             try
@@ -347,13 +348,11 @@ namespace KMA.Tests.Presentation
                 var screen = root.AddComponent<MapScreen>();
                 MapPresentationBuilder.Build(screen, new GameSession());
 
-                MapNodeView ready = screen.Nodes.Single(node => node.SubjectId == SubjectId.Sprint);
-                MapNodeView locked = screen.Nodes.Single(node => node.SubjectId == SubjectId.Football);
-                Assert.That(ready.transform.Find("LockIcon"), Is.Null);
-                Image cardLock = locked.transform.Find("LockIcon").GetComponent<Image>();
-                Assert.That(cardLock.sprite, Is.Not.Null);
-                Assert.That(cardLock.preserveAspect, Is.True);
-                Assert.That(cardLock.raycastTarget, Is.False);
+                foreach (MapNodeView available in screen.Nodes)
+                {
+                    Assert.That(available.IsInteractable, Is.True, available.DisplayName);
+                    Assert.That(available.transform.Find("LockIcon"), Is.Null, available.DisplayName);
+                }
 
             }
             finally

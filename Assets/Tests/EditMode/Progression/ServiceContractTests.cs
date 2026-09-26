@@ -156,7 +156,7 @@ namespace KMA.Tests.Gameplay.Progression
         }
 
         [Test]
-        public void SubjectConfigs_ContainSevenEnumBackedAndThreeComingSoonAssets()
+        public void SubjectConfigs_ContainThreePlayableSportsAndOneComingSoonActivity()
         {
             string[] assetGuids = AssetDatabase.FindAssets("t:SubjectConfig", new[] { SubjectFolder });
             UnityEngine.Object[] assets = assetGuids
@@ -164,7 +164,7 @@ namespace KMA.Tests.Gameplay.Progression
                 .Select(AssetDatabase.LoadMainAssetAtPath)
                 .ToArray();
 
-            Assert.That(assets, Has.Length.EqualTo(10));
+            Assert.That(assets, Has.Length.EqualTo(4));
             Assert.That(assets, Is.All.Not.Null);
 
             var playableIds = new HashSet<SubjectId>();
@@ -194,7 +194,7 @@ namespace KMA.Tests.Gameplay.Progression
             }
 
             Assert.That(playableIds, Is.EquivalentTo((SubjectId[])Enum.GetValues(typeof(SubjectId))));
-            Assert.That(comingSoonNames, Is.EquivalentTo(new[] { "Hít đất", "Nhịp điệu", "Bơi lội" }));
+            Assert.That(comingSoonNames, Is.EquivalentTo(new[] { "Hít đất" }));
 
             Type configType = RequireAssemblyCSharpType("KMA.Gameplay.SubjectConfig");
             Assert.That(configType.GetField("sceneName",

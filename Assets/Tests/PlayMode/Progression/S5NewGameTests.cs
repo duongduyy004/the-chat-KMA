@@ -259,10 +259,10 @@ namespace KMA.Tests.Gameplay.Progression
             var screen = Object.FindFirstObjectByType<MapScreen>(FindObjectsInactive.Include);
             Assert.That(screen.transform.Find("S5MapPresentation"), Is.Not.Null);
             Assert.That(screen.Nodes.Where(node => node.IsInteractable).Select(node => node.SubjectId),
-                Is.EquivalentTo(new[] { SubjectId.Sprint, SubjectId.Volleyball }));
+                Is.EquivalentTo(new[] { SubjectId.Sprint, SubjectId.Volleyball, SubjectId.Football }));
             Assert.That(screen.Nodes.Where(node => !node.IsInteractable &&
                     node.DetailText == "ĐANG PHÁT TRIỂN").Select(node => node.SubjectId),
-                Is.EquivalentTo(new[] { SubjectId.Football }));
+                Is.Empty);
             Assert.That(GameObject.Find("SelectionGrid").GetComponent<GridLayoutGroup>(), Is.Not.Null);
         }
 

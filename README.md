@@ -8,10 +8,10 @@ Unity gameplay prototype for KMA: three sports subjects, normalized scoring, and
 - Input System `1.20.0`
 - NUnit/Unity Test Framework `1.6.0`
 - Android targets landscape, ARM64, IL2CPP, API 25/35, and `com.kma.thechat`. A separate x86_64 APK supports Genymotion; those results are in [demo QA](docs/qa/android-report-demo.md).
-- Sprint and Volleyball are selectable; Football remains disabled on the map.
-- Historical test snapshots predate the current scope and have not been rerun after recent removals.
+- Sprint, Volleyball, and Football are selectable from the map.
+- Football is an offline 2D penalty shootout: five kicks, AIM to lock direction, hold/release SHOOT for power, and at least three goals to win. Easy, Normal, and Hard tune aim speed, power cycling, and keeper reaction.
 
-The subjects are Sprint, Volleyball and Football. Sprint and Volleyball are selectable on the map.
+The subjects are Sprint, Volleyball and Football. All three are selectable on the map.
 
 ## Core gameplay
 
@@ -33,6 +33,8 @@ The shared lifecycle is `Tutorial → Countdown → Play → Resolve`, with exac
 4. A second failure costs one life.
 5. Failure costs one life and returns to Map, or to GameOver when no lives remain.
 
+Football uses a custom result screen. A failed attempt offers Retry, which consumes one life and starts a fresh five-kick attempt directly; Continue returns to the campaign route.
+
 `SceneRouter` keeps the live `GameSession` across scene loads and guards against duplicate transitions.
 
 ## Scenes
@@ -41,7 +43,7 @@ The shared lifecycle is `Tutorial → Countdown → Play → Resolve`, with exac
 | --- | --- |
 | `MG_Sprint` | Sprint subject with rival pace, stamina, wind cue, and counterplay |
 | `MG_Volleyball` | 1v1 beach volleyball against an authored AI; first to 5 points within 120 s |
-| `MG_Football` | Football subject scene |
+| `MG_Football` | Five-kick penalty shootout with cartoon field, goal, player, goalkeeper, and touch controls |
 | `Punishment` | Recovery challenge for a failed first attempt |
 | `Map` | Return route after subject resolution |
 | `GameOver` | Route after lives are exhausted |
@@ -55,6 +57,8 @@ The shared lifecycle is `Tutorial → Countdown → Play → Resolve`, with exac
 | Punishment | `Space` tap-mash, `H` rhythm hold, Left/Right arrows alternate tap |
 
 Touch input is supported by the shared gameplay input router and Punishment input bridge where required.
+
+Football is designed for Android landscape at 16:9 and uses on-screen AIM and SHOOT controls. The game contains no team match or internet dependency.
 
 ## Open the project
 
@@ -137,7 +141,7 @@ rtk proxy "$KMA_UNITY_EDITOR" -batchmode -projectPath . \
   -testResults /tmp/kma-playmode.xml -logFile /tmp/kma-playmode.log
 ```
 
-The last recorded suite counts predate the current scope; they have not been rerun after the removals.
+Use `tools/run-unity-tests.sh` to validate a focused fixture and require its XML summary to report at least one test, zero failures, and `Passed` before treating it as verified.
 
 Test runs regenerate `Assets/_Project/Fonts/Nunito-Bold.asset` — the dynamic TextMeshPro atlas caching newly rendered glyphs. Revert it rather than committing it.
 
@@ -151,3 +155,5 @@ Superseded by the counts above, kept for provenance: Task 1 verified `209/209` E
 - [`docs/superpowers/plans/2026-08-24-gameplay-foundation.md`](docs/superpowers/plans/2026-08-24-gameplay-foundation.md) — score, timing, and lifecycle contracts
 - [`docs/superpowers/plans/2026-08-24-running-minigames.md`](docs/superpowers/plans/2026-08-24-running-minigames.md) — Sprint
 - [`docs/superpowers/plans/2026-08-24-ball-minigames.md`](docs/superpowers/plans/2026-08-24-ball-minigames.md) — shared ball gameplay systems
+- [`docs/superpowers/specs/2026-09-26-football-penalty-design.md`](docs/superpowers/specs/2026-09-26-football-penalty-design.md) — Football penalty shootout design
+- [`docs/qa/football-penalty.md`](docs/qa/football-penalty.md) — Football tests, visual QA, and Android build evidence

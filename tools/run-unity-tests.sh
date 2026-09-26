@@ -5,9 +5,13 @@
 # Unity may exit 0 even when tests fail, so use the test XML as the result.
 set -u
 
-PLATFORM="${1:?usage: run-unity-tests.sh <EditMode|PlayMode> <filter> <name>}"
-FILTER="${2:?filter required}"
-NAME="${3:?result name required}"
+if [[ $# -lt 3 ]]; then
+  echo "usage: tools/run-unity-tests.sh <EditMode|PlayMode> <filter> <name>" >&2
+  exit 2
+fi
+PLATFORM="$1"
+FILTER="$2"
+NAME="$3"
 UNITY="${UNITY:-}"
 OUT="Builds/TestResults"
 

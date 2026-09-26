@@ -1,5 +1,7 @@
 # Football Vertical Slice Implementation Plan
 
+> **Superseded:** This swipe-based free-kick proposal was replaced by the approved five-kick penalty shootout in [the 2026-09-26 design](../specs/2026-09-26-football-penalty-design.md) and [implementation plan](2026-09-26-football-penalty.md). Do not execute this plan.
+
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
 **Goal:** Add a playable Football free-kick scene with swipe placement/force/spin, trajectory preview, five authored goalkeeper patterns, three-goal pass logic, routing, and save.
