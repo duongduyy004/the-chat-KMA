@@ -12,6 +12,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 807d8ad41eec3e755ba7f3974e994185, type: 3}
   m_Name: FootballDifficulty
   m_EditorClassIdentifier:
-  easy: {x: 2.4, y: 1.4, z: 0.4, w: 0.75}
-  normal: {x: 1.7, y: 1.4, z: 0.27, w: 1.2}
-  hard: {x: 1.1, y: 0.9, z: 0.15, w: 1.7}
+  easy: {x: 2.4, y: 0.38, z: 1.9}
+  normal: {x: 2.042035, y: 0.23, z: 2.5}
+  hard: {x: 1.7, y: 0.15, z: 3.2}

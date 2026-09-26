@@ -1,5 +1,7 @@
 # Football Penalty Shootout QA
 
+> Historical AIM-based implementation. Current goal-facing implementation and fresh evidence: [football-goal-flight.md](football-goal-flight.md).
+
 Date: 2026-09-26
 Unity: 6000.3.23f1
 Target: Android, landscape, ARM64/IL2CPP

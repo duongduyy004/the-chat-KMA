@@ -2,6 +2,8 @@
 
 Ngày: 2026-09-26
 
+> Phần AIM/đường bóng/hình ảnh được thay thế bởi [thiết kế goal-flight](2026-09-26-football-goal-flight-design.md) theo preview người dùng đã duyệt. Luồng kết quả/mạng/retry vẫn được giữ.
+
 Trạng thái: thiết kế trong hội thoại và bản spec này đã được người dùng duyệt ngày 2026-09-26; kế hoạch triển khai được viết ở bước tiếp theo.
 
 ## 1. Mục tiêu và phạm vi đã thống nhất

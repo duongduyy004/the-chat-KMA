@@ -6,19 +6,19 @@ namespace KMA.Gameplay
 {
     public sealed class FootballInputBridge : MonoBehaviour
     {
-        Button aimButton;
+        Slider directionSlider;
         FootballHoldButton shootButton;
         bool configured;
         bool listenersBound;
         bool aimEnabled;
         bool shootEnabled;
 
-        public event Action AimPressed;
+        public event Action<float> AimChanged;
         public event Action ShootPressed;
         public event Action ShootReleased;
         public event Action ShootCancelled;
 
-        public void Configure(Button aim, FootballHoldButton shoot)
+        public void Configure(Slider aim, FootballHoldButton shoot)
         {
             if (aim == null)
                 throw new ArgumentNullException(nameof(aim));
@@ -27,7 +27,7 @@ namespace KMA.Gameplay
 
             CancelActivePointer();
             Unbind();
-            aimButton = aim;
+            directionSlider = aim;
             shootButton = shoot;
             configured = true;
             aimEnabled = false;
@@ -74,7 +74,7 @@ namespace KMA.Gameplay
             if (!configured || listenersBound)
                 return;
 
-            aimButton.onClick.AddListener(HandleAimPressed);
+            directionSlider.onValueChanged.AddListener(HandleAimChanged);
             shootButton.Pressed += HandleShootPressed;
             shootButton.Released += HandleShootReleased;
             shootButton.Cancelled += HandleShootCancelled;
@@ -86,7 +86,7 @@ namespace KMA.Gameplay
             if (!listenersBound)
                 return;
 
-            aimButton.onClick.RemoveListener(HandleAimPressed);
+            directionSlider.onValueChanged.RemoveListener(HandleAimChanged);
             shootButton.Pressed -= HandleShootPressed;
             shootButton.Released -= HandleShootReleased;
             shootButton.Cancelled -= HandleShootCancelled;
@@ -95,16 +95,16 @@ namespace KMA.Gameplay
 
         void ApplyEnabledState()
         {
-            if (aimButton != null)
-                aimButton.interactable = aimEnabled;
+            if (directionSlider != null)
+                directionSlider.interactable = aimEnabled;
             if (shootButton != null)
                 shootButton.SetInteractable(shootEnabled);
         }
 
-        void HandleAimPressed()
+        void HandleAimChanged(float value)
         {
             if (aimEnabled)
-                AimPressed?.Invoke();
+                AimChanged?.Invoke(value);
         }
 
         void HandleShootPressed()

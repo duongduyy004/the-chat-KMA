@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="-70 -103 140 130" width="140" height="130"><defs>
+ <linearGradient id="sky" x2="0" y2="1"><stop stop-color="#80c8d5" /><stop offset="1" stop-color="#e4eedb" /></linearGradient>
+ <linearGradient id="grass" x2="0" y2="1"><stop stop-color="#73aa65" /><stop offset="1" stop-color="#285d48" /></linearGradient>
+ <pattern id="net" width="23" height="20" patternUnits="userSpaceOnUse"><path d="M23 0H0V20" fill="none" stroke="#effff5" stroke-opacity=".36" stroke-width="1.3" /></pattern>
+ <pattern id="seats" width="24" height="18" patternUnits="userSpaceOnUse"><rect x="5" y="5" width="12" height="6" rx="3" fill="#dbe5cd" opacity=".45" /></pattern>
+ <filter id="shadow"><feDropShadow dx="0" dy="5" stdDeviation="5" flood-opacity=".22" /></filter>
+</defs>
+<g id="keeper">
+<ellipse cy="15" rx="48" ry="9" fill="#163a36" opacity=".28" />
+<g stroke-linecap="round" stroke-linejoin="round"><path d="M-12 -5L-24 13M12 -5L25 13" stroke="#19384b" stroke-width="16" /><path d="M-28 15H-15M21 15H33" stroke="#f2eee2" stroke-width="8" /><path d="M-18 -50L-36 -32L-51 -47M18 -50L36 -32L51 -47" fill="none" stroke="#edb644" stroke-width="14" /><path d="M-53 -48L-58 -57M53 -48L58 -57" stroke="#f8f4dd" stroke-width="12" /><path d="M-19 -55H19L15 -8H-15Z" fill="#f5c44f" /><circle cy="-75" r="16" fill="#d59870" /><path d="M-16 -78Q-16 -101 13 -88L16 -77" fill="#273d3d" /></g>
+</g>
+</svg>

@@ -1,69 +1,86 @@
 using KMA.Gameplay;
 using NUnit.Framework;
+using UnityEngine;
 
 namespace KMA.Tests.Gameplay.Ball
 {
     public sealed class FootballShotSolverTests
     {
-        FootballTuning slowKeeper;
-
-        [SetUp]
-        public void SetUp() => slowKeeper = new FootballTuning(1.7f, 1.4f, 3f, .75f);
-
-        [TestCase(.119f, true, .9f)]
-        [TestCase(.12f, false, .9f)]
-        [TestCase(1f, false, .4f)]
-        public void FlightTimeUsesPowerAndShortShotThreshold(float power, bool isShort, float flight)
+        static FootballFlightSimulation Finish(float direction, float power, bool keeper = false)
         {
-            var shot = FootballShotSolver.Create(.9f, power, 0f);
-
-            Assert.That(shot.IsShort, Is.EqualTo(isShort));
-            Assert.That(shot.FlightSeconds, Is.EqualTo(flight).Within(.0001f));
-            Assert.That(FootballShotSolver.Resolve(shot, slowKeeper),
-                Is.EqualTo(isShort ? FootballOutcome.Miss : FootballOutcome.Goal));
+            var flight = new FootballFlightSimulation(FootballShotSolver.Create(direction, power), FootballTuning.For(FootballDifficulty.Normal), keeper);
+            for (int i = 0; i < 4000 && !flight.Done; i++) flight.Step();
+            Assert.That(flight.Done, Is.True);
+            return flight;
         }
-
         [Test]
-        public void AccurateShotDoesNotDriftAndHighPowerDriftsExactlyOnce()
+        public void FreeFlightObeysVelocityAndGravity()
         {
-            Assert.That(FootballShotSolver.Create(.9f, .85f, 1f).TargetX, Is.EqualTo(.9f));
-            Assert.That(FootballShotSolver.Create(.9f, 1f, 1f).TargetX, Is.EqualTo(1.2f).Within(.0001f));
-            Assert.That(FootballShotSolver.Resolve(
-                FootballShotSolver.Create(.9f, 1f, 1f), slowKeeper), Is.EqualTo(FootballOutcome.Miss));
+            var shot = FootballShotSolver.Create(.4f, .5f);
+            var flight = new FootballFlightSimulation(shot, FootballTuning.For(FootballDifficulty.Normal), false);
+            for (int i = 0; i < 24; i++) flight.Step();
+            var expected = new Vector3(0f, .11f, 0f) + shot.Velocity * .1f + Vector3.down * (.5f * 9.81f * .1f * .1f);
+            Assert.That(Vector3.Distance(flight.Position, expected), Is.LessThan(.0001f));
         }
-
+        [TestCase(.55f, .5f, FootballOutcome.Goal)]
+        [TestCase(.55f, 1f, FootballOutcome.High)]
+        [TestCase(1f, .5f, FootballOutcome.Wide)]
+        [TestCase(0f, 0f, FootballOutcome.Short)]
+        [TestCase(3.66f / 4.3f, .5f, FootballOutcome.Post)]
+        public void PhysicalContactsDetermineOutcome(float direction, float power, FootballOutcome outcome)
+        { Assert.That(Finish(direction, power).Outcome, Is.EqualTo(outcome)); }
         [Test]
-        public void KeeperRespectsReactionDelayAndReachBoundary()
+        public void WeakShotBouncesAndStopsBeforeGoal()
         {
-            var shot = FootballShotSolver.Create(.3f, .85f, 0f);
-            Assert.That(FootballShotSolver.KeeperX(shot, slowKeeper, .2f), Is.Zero);
-            var responsiveKeeper = new FootballTuning(1.7f, 1.4f, .2f, .75f);
-            Assert.That(FootballShotSolver.KeeperX(shot, responsiveKeeper, 1f), Is.EqualTo(.3f).Within(.0001f));
-            Assert.That(FootballShotSolver.Resolve(
-                FootballShotSolver.Create(.22f, .85f, 0f), slowKeeper), Is.EqualTo(FootballOutcome.Saved));
-            Assert.That(FootballShotSolver.Resolve(
-                FootballShotSolver.Create(.2201f, .85f, 0f), slowKeeper), Is.EqualTo(FootballOutcome.Goal));
+            var flight = Finish(.5f, 0f);
+            Assert.That(flight.Bounces, Is.GreaterThan(0));
+            Assert.That(flight.Position.z, Is.LessThan(11f));
+            Assert.That(flight.Position.y, Is.GreaterThanOrEqualTo(.11f));
         }
-
-        [TestCase(.96f, FootballOutcome.Goal)]
-        [TestCase(.9601f, FootballOutcome.Miss)]
-        public void BallMustFitInsideTheGoal(float targetX, FootballOutcome expected)
-        {
-            var shot = FootballShotSolver.Create(.9f, 1f, (targetX - .9f) / .3f);
-
-            Assert.That(FootballShotSolver.Resolve(shot, slowKeeper), Is.EqualTo(expected));
-        }
-
         [Test]
-        public void InvalidShotArgumentsAreRejected()
+        public void CrossbarAndPostReboundTowardField()
         {
-            Assert.That(() => FootballShotSolver.Create(float.NaN, .5f, 0f),
-                Throws.TypeOf<System.ArgumentOutOfRangeException>());
-            Assert.That(() => FootballShotSolver.Create(0f, .5f, 1.01f),
-                Throws.TypeOf<System.ArgumentOutOfRangeException>());
-            Assert.That(() => FootballShotSolver.KeeperX(
-                FootballShotSolver.Create(0f, .5f, 0f), slowKeeper, float.NaN),
-                Throws.TypeOf<System.ArgumentOutOfRangeException>());
+            float angle = 22f * Mathf.Deg2Rad;
+            float speed = Mathf.Sqrt(9.81f * 121f / (2f * Mathf.Cos(angle) * Mathf.Cos(angle) * (.11f + 11f * Mathf.Tan(angle) - 2.44f)));
+            var bar = Finish(0f, (speed - 6f) / 20f);
+            Assert.That(bar.Outcome, Is.EqualTo(FootballOutcome.Crossbar));
+            Assert.That(bar.Velocity.z, Is.LessThanOrEqualTo(0f));
+            Assert.That(Finish(3.66f / 4.3f, .5f).Velocity.z, Is.LessThanOrEqualTo(0f));
         }
+        [Test]
+        public void KeeperReactsAfterDelayAndSavesActualContact()
+        {
+            var f = new FootballFlightSimulation(FootballShotSolver.Create(.6f, .5f), FootballTuning.For(FootballDifficulty.Normal));
+            for (int i = 0; i < 48; i++) f.Step();
+            Assert.That(f.KeeperX, Is.Zero);
+            for (int i = 0; i < 48; i++) f.Step();
+            Assert.That(f.KeeperX, Is.GreaterThan(0f));
+            Assert.That(Finish(0f, .5f, true).Outcome, Is.EqualTo(FootballOutcome.Saved));
+        }
+        [Test]
+        public void PredictionMatchesLiveFlightWithoutKeeper()
+        {
+            var shot = FootballShotSolver.Create(.55f, .5f);
+            var tuning = FootballTuning.For(FootballDifficulty.Normal);
+            var points = new Vector3[140];
+            int count = FootballShotSolver.Predict(shot, tuning, points);
+            var flight = new FootballFlightSimulation(shot, tuning, false);
+            while (!flight.Outcome.HasValue) flight.Step();
+            Assert.That(Vector3.Distance(points[count - 1], flight.Position), Is.LessThan(.0001f));
+            Assert.That(count, Is.GreaterThan(2));
+        }
+        [Test]
+        public void IdenticalShotsAreDeterministicAndMirroredShotsAreSymmetric()
+        {
+            var a = Finish(.55f, .5f); var b = Finish(.55f, .5f); var c = Finish(-.55f, .5f);
+            Assert.That(a.Position, Is.EqualTo(b.Position));
+            Assert.That(a.Position.x, Is.EqualTo(-c.Position.x).Within(.0001f));
+            Assert.That(a.Outcome, Is.EqualTo(c.Outcome));
+            Assert.That(FootballShotSolver.Project(new Vector3(0f, .11f, 11f)).z,
+                Is.LessThan(FootballShotSolver.Project(new Vector3(0f, .11f, 0f)).z));
+        }
+        [TestCase(float.NaN, .5f)] [TestCase(1.01f, .5f)] [TestCase(0f, float.PositiveInfinity)]
+        public void InvalidShotArgumentsAreRejected(float aim, float power)
+        { Assert.That(() => FootballShotSolver.Create(aim, power), Throws.TypeOf<System.ArgumentOutOfRangeException>()); }
     }
 }

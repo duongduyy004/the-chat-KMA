@@ -4,27 +4,25 @@ namespace KMA.Gameplay
 {
     public readonly struct FootballTuning
     {
-        public FootballTuning(float aimTraverseSeconds, float powerRiseSeconds,
+        public FootballTuning(float powerRiseSeconds,
             float keeperReactionSeconds, float keeperSpeed)
         {
-            AimTraverseSeconds = PositiveFinite(aimTraverseSeconds, nameof(aimTraverseSeconds));
             PowerRiseSeconds = PositiveFinite(powerRiseSeconds, nameof(powerRiseSeconds));
             KeeperReactionSeconds = PositiveFinite(keeperReactionSeconds, nameof(keeperReactionSeconds));
             KeeperSpeed = PositiveFinite(keeperSpeed, nameof(keeperSpeed));
         }
 
-        public float AimTraverseSeconds { get; }
         public float PowerRiseSeconds { get; }
         public float KeeperReactionSeconds { get; }
         public float KeeperSpeed { get; }
-        public bool IsValid => IsPositiveFinite(AimTraverseSeconds) && IsPositiveFinite(PowerRiseSeconds) &&
+        public bool IsValid => IsPositiveFinite(PowerRiseSeconds) &&
             IsPositiveFinite(KeeperReactionSeconds) && IsPositiveFinite(KeeperSpeed);
 
         public static FootballTuning For(FootballDifficulty difficulty) => difficulty switch
         {
-            FootballDifficulty.Easy => new FootballTuning(2.4f, 1.4f, .40f, .75f),
-            FootballDifficulty.Normal => new FootballTuning(1.7f, 1.4f, .27f, 1.20f),
-            FootballDifficulty.Hard => new FootballTuning(1.1f, .9f, .15f, 1.70f),
+            FootballDifficulty.Easy => new FootballTuning(2.4f, .38f, 1.9f),
+            FootballDifficulty.Normal => new FootballTuning(2.042035f, .23f, 2.5f),
+            FootballDifficulty.Hard => new FootballTuning(1.7f, .15f, 3.2f),
             _ => throw new ArgumentOutOfRangeException(nameof(difficulty), difficulty,
                 "Unknown Football difficulty.")
         };

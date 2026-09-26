@@ -11,7 +11,7 @@ MonoBehaviour:
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 9dcb792ef8d440b0b4c0aeec82ff5de6, type: 3}
   m_Name: Football
-  m_EditorClassIdentifier:
+  m_EditorClassIdentifier: 
   subjectId: 6
   displayName: "B\xF3ng \u0111\xE1"
   icon: {fileID: 0}

@@ -10,147 +10,84 @@ namespace KMA.Tests.Gameplay.Football
     {
         GameObject root;
         FootballRules rules;
-
-        [SetUp]
-        public void SetUp()
+        [SetUp] public void SetUp(){root=new GameObject("FootballPresentationTests");rules=new FootballRules(FootballTuning.For(FootballDifficulty.Normal));}
+        [TearDown] public void TearDown()=>Object.DestroyImmediate(root);
+        T Make<T>(string name) where T:Component
         {
-            root = new GameObject("FootballPresentationTests");
-            rules = new FootballRules(FootballTuning.For(FootballDifficulty.Normal), () => 0f);
+            var go=new GameObject(name,typeof(RectTransform));go.transform.SetParent(root.transform);var existing=go.GetComponent<T>();return existing ? existing : go.AddComponent<T>();
         }
-
-        [TearDown]
-        public void TearDown() => Object.DestroyImmediate(root);
-
-        [TestCase(FootballDifficulty.Easy, 2.4f, 1.4f, .40f, .75f)]
-        [TestCase(FootballDifficulty.Normal, 1.7f, 1.4f, .27f, 1.20f)]
-        [TestCase(FootballDifficulty.Hard, 1.1f, .9f, .15f, 1.70f)]
-        public void DifficultyConfigMatchesSimulationTuning(FootballDifficulty difficulty,
-            float aim, float power, float reaction, float speed)
+        [Test]
+        public void PreviewAppearsOnlyWhileChargingAndHidesOnReleaseCancelAndDisable()
         {
-            var config = ScriptableObject.CreateInstance<FootballDifficultyConfig>();
-            var tuning = config.Get(difficulty);
-            Assert.That(tuning.AimTraverseSeconds, Is.EqualTo(aim));
-            Assert.That(tuning.PowerRiseSeconds, Is.EqualTo(power));
-            Assert.That(tuning.KeeperReactionSeconds, Is.EqualTo(reaction));
-            Assert.That(tuning.KeeperSpeed, Is.EqualTo(speed));
-            Object.DestroyImmediate(config);
+            var p=root.AddComponent<FootballPresentation>();
+            var ball=Make<SpriteRenderer>("Ball");var shadow=Make<SpriteRenderer>("Shadow");var crosshair=Make<SpriteRenderer>("Crosshair");
+            var dot=Make<SpriteRenderer>("Dot");var left=Make<RectTransform>("Left");var right=Make<RectTransform>("Right");
+            left.position=Vector3.left;right.position=Vector3.right;
+            p.Configure(Make<SpriteRenderer>("Field"),Make<SpriteRenderer>("Goal"),ball,shadow,
+                Make<SpriteRenderer>("Player"),Make<SpriteRenderer>("Keeper"),crosshair,left,right,new[]{dot});
+            rules.Start();rules.SetAim(.7f);p.Render(rules);
+            Assert.That(crosshair.enabled,Is.False);Assert.That(dot.enabled,Is.False);
+            rules.BeginCharge();rules.Tick(1f);p.Render(rules);
+            Assert.That(crosshair.enabled,Is.True);Assert.That(dot.enabled,Is.True);
+            rules.CancelCharge();p.Render(rules);Assert.That(crosshair.enabled,Is.False);Assert.That(dot.enabled,Is.False);
+            rules.BeginCharge();rules.Tick(.9f);p.Render(rules);rules.ReleaseShot();p.Render(rules);
+            Assert.That(crosshair.enabled,Is.False);Assert.That(dot.enabled,Is.False);
+            rules.Tick(.6f);p.Render(rules);
+            Assert.That(Vector3.Distance(ball.transform.position,FootballPresentation.BallToWorld(rules.Flight.Position)),Is.LessThan(.0001f));
+            Assert.That(ball.transform.localScale.x,Is.LessThan(1f));
+            Assert.That(shadow.transform.position.y,Is.LessThan(ball.transform.position.y));
+            rules.Tick(20f);rules.BeginCharge();p.Render(rules);p.enabled=false;
+            Assert.That(crosshair.enabled,Is.False);Assert.That(dot.enabled,Is.False);
+        }
+        [Test]
+        public void AimArrowTracksDirectionBeforeChargingAndHidesAfterRelease()
+        {
+            var p = root.AddComponent<FootballPresentation>();
+            var ball = Make<SpriteRenderer>("Ball");
+            var left = Make<RectTransform>("Left");
+            var right = Make<RectTransform>("Right");
+            left.position = Vector3.left; right.position = Vector3.right;
+            p.Configure(Make<SpriteRenderer>("Field"), Make<SpriteRenderer>("Goal"), ball,
+                Make<SpriteRenderer>("Shadow"), Make<SpriteRenderer>("Player"), Make<SpriteRenderer>("Keeper"),
+                Make<SpriteRenderer>("Crosshair"), left, right);
+            rules.Start();
+            foreach (float aim in new[] { -1f, 0f, 1f })
+            {
+                rules.SetAim(aim); p.Render(rules);
+                var arrow = p.GetComponentInChildren<LineRenderer>();
+                Assert.That(arrow, Is.Not.Null, "An aiming arrow must exist before holding SHOOT");
+                Assert.That(arrow.enabled, Is.True);
+                Vector3 direction = arrow.GetPosition(1) - arrow.GetPosition(0);
+                Assert.That(direction.y, Is.GreaterThan(0f));
+                Assert.That(direction.x, aim < 0 ? Is.LessThan(0f) : aim > 0 ? Is.GreaterThan(0f) : Is.EqualTo(0f).Within(.001f));
+                Assert.That(Vector3.Distance(arrow.GetPosition(0), ball.transform.position), Is.LessThan(.6f));
+            }
+            rules.BeginCharge(); rules.Tick(.8f); p.Render(rules);
+            var visibleArrow = p.GetComponentInChildren<LineRenderer>();
+            Assert.That(visibleArrow.enabled, Is.True);
+            rules.ReleaseShot(); p.Render(rules);
+            Assert.That(visibleArrow.enabled, Is.False);
+            rules.Tick(20f); p.Render(rules);
+            Assert.That(visibleArrow.enabled, Is.True);
+            p.enabled = false;
+            Assert.That(visibleArrow.enabled, Is.False);
         }
 
         [Test]
-        public void RenderGatesAimAndShootAndShowsHighPowerWarning()
+        public void HudShowsDirectionPowerAndOutcomeWithoutOverridingInputOwnership()
         {
-            var refs = CreateHud();
-            var hud = root.AddComponent<FootballHud>();
-            hud.Configure(refs.aim, refs.shoot, refs.power, refs.percent, refs.warning, refs.score, refs.remaining, refs.markers, refs.startPanel);
-            hud.Render(rules);
-            Assert.That(refs.shoot.IsInteractable, Is.False);
-
-            rules.Start();
-            rules.LockAim();
-            hud.Render(rules);
-            Assert.That(refs.aim.interactable, Is.False);
-            Assert.That(refs.shoot.IsInteractable, Is.True);
-
-            rules.BeginCharge();
-            rules.Tick(1.26f);
-            hud.Render(rules);
-            Assert.That(refs.percent.text, Is.EqualTo("90%"));
-            Assert.That(refs.warning.activeSelf, Is.True);
-        }
-
-        [Test]
-        public void GoalPlanePositionsBallAndKeeperUsingSerializedPostWorldPoints()
-        {
-            var presentation = root.AddComponent<FootballPresentation>();
-            var refs = CreatePresentation();
-            presentation.Configure(refs.field, refs.goal, refs.ball, refs.shadow, refs.player, refs.keeper,
-                refs.crosshair, refs.leftPost, refs.rightPost);
-
-            rules.Start();
-            rules.Tick(.4f);
-            rules.LockAim();
-            rules.BeginCharge();
-            rules.Tick(.7f);
-            rules.ReleaseShot();
-            rules.Tick(1.08f);
-            presentation.Render(rules);
-
-            Assert.That(rules.State, Is.EqualTo(FootballState.ShotResult));
-            Assert.That(refs.ball.transform.position.x,
-                Is.EqualTo(presentation.GoalXToWorld(rules.LastShot.Value.TargetX).x).Within(.001f));
-            Assert.That(refs.keeper.transform.position.x,
-                Is.EqualTo(presentation.GoalXToWorld(rules.KeeperX).x).Within(.001f));
-        }
-
-        [Test]
-        public void HudScoreAndRemainingKicksComeFromRules()
-        {
-            var refs = CreateHud();
-            var hud = root.AddComponent<FootballHud>();
-            hud.Configure(refs.aim, refs.shoot, refs.power, refs.percent, refs.warning, refs.score, refs.remaining, refs.markers, refs.startPanel);
-            rules.Start();
-            rules.LockAim();
-            rules.BeginCharge();
-            rules.Tick(.7f);
-            rules.ReleaseShot();
-            rules.Tick(1.18f);
-            hud.Render(rules);
-
-            Assert.That(refs.score.text, Is.EqualTo("BÀN: 0"));
-            Assert.That(refs.remaining.text, Is.EqualTo("CÒN 4 LƯỢT"));
-            Assert.That(refs.markers[0].text, Is.EqualTo(rules.Outcomes[0].ToString().ToUpperInvariant()));
-        }
-
-        HudRefs CreateHud()
-        {
-            var aim = new GameObject("AIM", typeof(RectTransform), typeof(CanvasRenderer), typeof(Image), typeof(Button)).GetComponent<Button>();
-            var shoot = new GameObject("SHOOT", typeof(RectTransform), typeof(CanvasRenderer), typeof(Image),
-                typeof(Button), typeof(FootballHoldButton)).GetComponent<FootballHoldButton>();
-            var power = new GameObject("Power", typeof(RectTransform), typeof(CanvasRenderer), typeof(Image)).GetComponent<Image>();
-            power.type = Image.Type.Filled;
-            var percent = new GameObject("Percent").AddComponent<TextMeshPro>();
-            var score = new GameObject("Score").AddComponent<TextMeshPro>();
-            var remaining = new GameObject("Remaining").AddComponent<TextMeshPro>();
-            var warning = new GameObject("Warning");
-            var start = new GameObject("Start");
-            var markers = new TMP_Text[5];
-            for (int i = 0; i < markers.Length; i++) markers[i] = new GameObject("Marker").AddComponent<TextMeshPro>();
-            return new HudRefs(aim, shoot, power, percent, warning, score, remaining, markers, start);
-        }
-
-        PresentationRefs CreatePresentation()
-        {
-            SpriteRenderer Make(string name) => new GameObject(name).AddComponent<SpriteRenderer>();
-            var left = new GameObject("LeftPost").transform;
-            var right = new GameObject("RightPost").transform;
-            left.position = new Vector3(-4, 0, 0);
-            right.position = new Vector3(4, 0, 0);
-            return new PresentationRefs(Make("Field"), Make("Goal"), Make("Ball"), Make("Shadow"),
-                Make("Player"), Make("Keeper"), Make("Crosshair"), left, right);
-        }
-
-        readonly struct HudRefs
-        {
-            public HudRefs(Button aim, FootballHoldButton shoot, Image power, TMP_Text percent, GameObject warning,
-                TMP_Text score, TMP_Text remaining, TMP_Text[] markers, GameObject startPanel)
-            { this.aim=aim; this.shoot=shoot; this.power=power; this.percent=percent; this.warning=warning;
-              this.score=score; this.remaining=remaining; this.markers=markers; this.startPanel=startPanel; }
-            public readonly Button aim;
-            public readonly FootballHoldButton shoot;
-            public readonly Image power;
-            public readonly TMP_Text percent, score, remaining;
-            public readonly GameObject warning, startPanel;
-            public readonly TMP_Text[] markers;
-        }
-
-        readonly struct PresentationRefs
-        {
-            public PresentationRefs(SpriteRenderer field, SpriteRenderer goal, SpriteRenderer ball, SpriteRenderer shadow,
-                SpriteRenderer player, SpriteRenderer keeper, SpriteRenderer crosshair, Transform leftPost, Transform rightPost)
-            { this.field=field; this.goal=goal; this.ball=ball; this.shadow=shadow; this.player=player;
-              this.keeper=keeper; this.crosshair=crosshair; this.leftPost=leftPost; this.rightPost=rightPost; }
-            public readonly SpriteRenderer field, goal, ball, shadow, player, keeper, crosshair;
-            public readonly Transform leftPost, rightPost;
+            var slider=Make<Slider>("Direction");slider.minValue=-1f;slider.maxValue=1f;
+            var shoot=Make<FootballHoldButton>("Shoot");var power=Make<Image>("Power");power.type=Image.Type.Filled;
+            var percent=Make<TextMeshProUGUI>("Percent");var score=Make<TextMeshProUGUI>("Score");var remaining=Make<TextMeshProUGUI>("Remaining");
+            var warning=Make<RectTransform>("Warning").gameObject;var start=Make<RectTransform>("Start").gameObject;
+            var markers=new TMP_Text[5];for(int i=0;i<5;i++)markers[i]=Make<TextMeshProUGUI>("Marker"+i);
+            var hud=root.AddComponent<FootballHud>();hud.Configure(slider,shoot,power,percent,warning,score,remaining,markers,start);
+            rules.Start();rules.SetAim(-.4f);rules.BeginCharge();rules.Tick(FootballTuning.For(FootballDifficulty.Normal).PowerRiseSeconds);
+            slider.interactable=false;shoot.SetInteractable(false);hud.Render(rules);
+            Assert.That(slider.value,Is.EqualTo(-.4f));Assert.That(percent.text,Is.EqualTo("100%"));Assert.That(warning.activeSelf,Is.True);
+            Assert.That(slider.interactable,Is.False);Assert.That(shoot.IsInteractable,Is.False);
+            rules.ReleaseShot();rules.Tick(20f);hud.Render(rules);
+            Assert.That(score.text,Is.EqualTo("BÀN: 0"));Assert.That(remaining.text,Is.EqualTo("CÒN 4 LƯỢT"));Assert.That(markers[0].text,Is.EqualTo("×"));
         }
     }
 }

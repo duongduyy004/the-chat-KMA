@@ -7,7 +7,9 @@ namespace KMA.Gameplay
 {
     public sealed class FootballHud : MonoBehaviour
     {
-        [SerializeField] Button aimButton;
+        [SerializeField] Slider directionSlider;
+        [SerializeField] TMP_Text directionLabel;
+        [SerializeField] TMP_Text shotFeedback;
         [SerializeField] FootballHoldButton shootButton;
         [SerializeField] Image powerFill;
         [SerializeField] TMP_Text powerPercent;
@@ -27,15 +29,17 @@ namespace KMA.Gameplay
         bool listenersBound;
 
         public event Action<FootballDifficulty> StartRequested;
-        public Button AimButton => aimButton;
+        public Slider DirectionSlider => directionSlider;
         public FootballHoldButton ShootButton => shootButton;
 
-        public void Configure(Button aim, FootballHoldButton shoot, Image fill, TMP_Text percent,
+        public void Configure(Slider aim, FootballHoldButton shoot, Image fill, TMP_Text percent,
             GameObject warning, TMP_Text score, TMP_Text remaining, TMP_Text[] markers, GameObject start,
             Button startAction = null, Button easy = null, Button normal = null, Button hard = null,
-            GameObject countdown = null, TMP_Text countdownText = null)
+            GameObject countdown = null, TMP_Text countdownText = null, TMP_Text directionText = null, TMP_Text feedback = null)
         {
-            aimButton = aim;
+            directionSlider = aim;
+            directionLabel = directionText;
+            shotFeedback = feedback;
             shootButton = shoot;
             powerFill = fill;
             powerPercent = percent;
@@ -54,7 +58,7 @@ namespace KMA.Gameplay
             UpdateDifficultyButtons();
         }
 
-        public bool ValidateReferences() => aimButton && shootButton && powerFill && powerPercent && overPowerWarning &&
+        public bool ValidateReferences() => directionSlider && shootButton && powerFill && powerPercent && overPowerWarning &&
             scoreLabel && remainingLabel && kickMarkers != null && kickMarkers.Length == 5 &&
             Array.TrueForAll(kickMarkers, marker => marker) && startPanel;
 
@@ -65,7 +69,7 @@ namespace KMA.Gameplay
                 startPanel.SetActive(true);
             if (countdownPanel)
                 countdownPanel.SetActive(false);
-            if (aimButton) aimButton.interactable = false;
+            if (directionSlider) directionSlider.interactable = false;
             if (shootButton) shootButton.SetInteractable(false);
             UpdateDifficultyButtons();
         }
@@ -107,13 +111,27 @@ namespace KMA.Gameplay
             for (int i = 0; kickMarkers != null && i < kickMarkers.Length; i++)
             {
                 if (!kickMarkers[i]) continue;
-                kickMarkers[i].text = i < rules.Outcomes.Count ? rules.Outcomes[i].ToString().ToUpperInvariant() : "•";
+                kickMarkers[i].text = i < rules.Outcomes.Count ? (rules.Outcomes[i] == FootballOutcome.Goal ? "●" : "×") : "•";
             }
             if (startPanel && rules.State != FootballState.Start)
                 startPanel.SetActive(false);
-            if (aimButton) aimButton.interactable = rules.State == FootballState.Aiming;
-            if (shootButton) shootButton.SetInteractable(rules.State == FootballState.AimLocked || rules.State == FootballState.Charging);
+            if (directionSlider) directionSlider.SetValueWithoutNotify(rules.AimX);
+            if (directionLabel) directionLabel.text = Mathf.Abs(rules.AimX) < .02f ? "GIỮA" :
+                (rules.AimX < 0f ? "TRÁI " : "PHẢI ") + Mathf.RoundToInt(Mathf.Abs(rules.AimX) * 100f) + "%";
+            if (shotFeedback) shotFeedback.text = OutcomeText(rules.Flight?.Outcome);
         }
+
+        static string OutcomeText(FootballOutcome? outcome) => outcome switch
+        {
+            FootballOutcome.Goal => "VÀO!",
+            FootballOutcome.Saved => "THỦ MÔN CẢN PHÁ",
+            FootballOutcome.Post => "TRÚNG CỘT DỌC",
+            FootballOutcome.Crossbar => "TRÚNG XÀ NGANG",
+            FootballOutcome.Wide => "CHỆCH KHUNG THÀNH",
+            FootballOutcome.High => "BÓNG VƯỢT XÀ",
+            FootballOutcome.Short => "BÓNG DỪNG TRƯỚC GOAL",
+            _ => string.Empty
+        };
 
         void OnEnable() => BindButtons();
         void OnDisable()

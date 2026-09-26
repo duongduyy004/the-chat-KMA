@@ -15,6 +15,9 @@ namespace KMA.Tests.EditorTools
 {
     public sealed class FootballSceneConfiguratorTests
     {
+        [TearDown]
+        public void ReleaseBuiltSceneAfterTest() => EditorSceneManager.NewScene(NewSceneSetup.EmptyScene, NewSceneMode.Single);
+
         [Test]
         public void RepeatedBuildAndSharedAssemblerKeepOneSourcedFootballScene()
         {
@@ -47,12 +50,14 @@ namespace KMA.Tests.EditorTools
             Assert.That(presentation.ValidateReferences(), Is.True);
             Assert.That(eventSystem, Is.Not.Null);
             Assert.That(eventSystem.GetComponent<InputSystemUIInputModule>(), Is.Not.Null);
-            var aim = GameObject.Find("AIM").GetComponent<RectTransform>();
-            Assert.That(aim.anchorMin.x, Is.LessThan(aim.anchorMax.x));
-            Assert.That(aim.anchorMin.x, Is.EqualTo(.82f).Within(.001f));
-            Assert.That(aim.anchorMax.x, Is.EqualTo(1f).Within(.001f));
-            Assert.That((aim.anchorMax.x - aim.anchorMin.x) * 1920f, Is.GreaterThanOrEqualTo(180f));
-            Assert.That((aim.anchorMax.y - aim.anchorMin.y) * 1080f, Is.GreaterThanOrEqualTo(140f));
+            var back = GameObject.Find("BackButton").GetComponent<UnityEngine.UI.Button>();
+            Assert.That(back.onClick.GetPersistentEventCount(), Is.EqualTo(1), "Back must remain wired after saving/loading the scene");
+            var slider = GameObject.Find("DirectionSlider").GetComponent<UnityEngine.UI.Slider>();
+            Assert.That(slider.minValue, Is.EqualTo(-1f));
+            Assert.That(slider.maxValue, Is.EqualTo(1f));
+            Assert.That(slider.handleRect, Is.Not.Null);
+            Assert.That(GameObject.Find("AIM"), Is.Null);
+            Assert.That(GameObject.Find("TrajectoryDot0").GetComponent<SpriteRenderer>().enabled, Is.False);
             Assert.That(GameObject.Find("S2_HUD_Minigame"), Is.Null);
             var subject = AssetDatabase.LoadAssetAtPath<ScriptableObject>("Assets/_Project/ScriptableObjects/Subjects/Football.asset");
             Assert.That(subject, Is.Not.Null);

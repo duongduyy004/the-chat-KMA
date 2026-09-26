@@ -21,9 +21,9 @@ namespace KMA.Gameplay
 
         public void SetInteractable(bool value)
         {
-            if (!value)
-                Cancel();
+            bool cancel = interactable && !value;
             interactable = value;
+            if (cancel) Cancel();
             var button = GetComponent<Button>();
             if (button)
                 button.interactable = value;
@@ -46,6 +46,8 @@ namespace KMA.Gameplay
             activePointer = NoPointer;
             Released?.Invoke();
         }
+
+        void OnDisable() => Cancel();
 
         public void Cancel()
         {

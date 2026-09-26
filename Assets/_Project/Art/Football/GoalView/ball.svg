@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="-18 -18 36 36" width="36" height="36"><defs>
+ <linearGradient id="sky" x2="0" y2="1"><stop stop-color="#80c8d5" /><stop offset="1" stop-color="#e4eedb" /></linearGradient>
+ <linearGradient id="grass" x2="0" y2="1"><stop stop-color="#73aa65" /><stop offset="1" stop-color="#285d48" /></linearGradient>
+ <pattern id="net" width="23" height="20" patternUnits="userSpaceOnUse"><path d="M23 0H0V20" fill="none" stroke="#effff5" stroke-opacity=".36" stroke-width="1.3" /></pattern>
+ <pattern id="seats" width="24" height="18" patternUnits="userSpaceOnUse"><rect x="5" y="5" width="12" height="6" rx="3" fill="#dbe5cd" opacity=".45" /></pattern>
+ <filter id="shadow"><feDropShadow dx="0" dy="5" stdDeviation="5" flood-opacity=".22" /></filter>
+</defs>
+<g id="ball"><circle r="17" fill="#fffcec" stroke="#d2d9cc" stroke-width="1.5" /><path d="M-5 -7L5 -8L10 1L3 8L-7 4ZM-16 -4L-10 -13L-7 -16M9 -14L15 -7L16 -1M-9 13L-1 16L7 13" fill="#243f45" /><path d="M-5 -7L-10 -13M5 -8L9 -14M10 1L16 -1M3 8L7 13M-7 4L-9 13M-7 4L-16 -4" stroke="#243f45" fill="none" /></g>
+</svg>

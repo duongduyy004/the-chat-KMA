@@ -1,167 +1,76 @@
 using KMA.Gameplay;
 using NUnit.Framework;
+using UnityEngine;
 
 namespace KMA.Tests.Gameplay.Ball
 {
     public sealed class FootballRulesTests
     {
+        static FootballRules NewRules() => new FootballRules(FootballTuning.For(FootballDifficulty.Normal));
         [Test]
-        public void AimLocksAndPowerOscillatesWhileHeld()
+        public void PreviewContract_ChargeStartsDirectlyFromAiming()
         {
             var rules = NewRules();
-
             Assert.That(rules.BeginCharge(), Is.False);
-            Assert.That(rules.Start(), Is.True);
-            rules.Tick(.85f);
-            Assert.That(rules.AimX, Is.EqualTo(.9f).Within(.0001f));
-            Assert.That(rules.LockAim(), Is.True);
-            rules.Tick(60f);
-            Assert.That(rules.AimX, Is.EqualTo(.9f).Within(.0001f));
+            rules.Start();
             Assert.That(rules.BeginCharge(), Is.True);
-            rules.Tick(1.4f);
+            Assert.That(rules.PreviewVisible, Is.True);
+        }
+        [Test]
+        public void AimIsManualAndLockedOnlyWhileCharging()
+        {
+            var rules = NewRules(); rules.Start(); rules.SetAim(-.6f); rules.Tick(60f);
+            Assert.That(rules.AimX, Is.EqualTo(-.6f));
+            rules.BeginCharge(); Assert.That(rules.SetAim(.9f), Is.False);
+            rules.Tick(FootballTuning.For(FootballDifficulty.Normal).PowerRiseSeconds);
             Assert.That(rules.Power, Is.EqualTo(1f).Within(.0001f));
-            rules.Tick(1.4f);
-            Assert.That(rules.Power, Is.EqualTo(0f).Within(.0001f));
-            Assert.That(rules.ReleaseShot(), Is.True);
+            rules.CancelCharge(); Assert.That(rules.State, Is.EqualTo(FootballState.Aiming));
+            Assert.That(rules.PreviewVisible, Is.False); Assert.That(rules.Power, Is.Zero);
+            Assert.That(rules.Kicks, Is.Zero); Assert.That(rules.SetAim(.4f), Is.True);
+        }
+        [Test]
+        public void PredictionIsAvailableOnlyWhileHeld()
+        {
+            var rules = NewRules(); var points = new Vector3[140]; rules.Start();
+            Assert.That(rules.GetPreview(points), Is.Zero);
+            rules.BeginCharge();rules.Tick(1f);Assert.That(rules.GetPreview(points), Is.GreaterThan(2));
+            Assert.That(rules.ReleaseShot(), Is.True);Assert.That(rules.GetPreview(points), Is.Zero);
             Assert.That(rules.ReleaseShot(), Is.False);
         }
-
-        [TestCase(2, false, 0f)]
-        [TestCase(3, true, 6f)]
-        [TestCase(4, true, 8f)]
-        [TestCase(5, true, 10f)]
-        public void FiveKicksRequireThreeGoals(int goalsExpected, bool passed, float expectedScore)
+        [TestCase(2,false,0f)] [TestCase(3,true,6f)] [TestCase(4,true,8f)] [TestCase(5,true,10f)]
+        public void FiveKicksRequireThreeGoals(int goals, bool passed, float score)
         {
-            var rules = NewRules();
-            Assert.That(rules.Start(), Is.True);
-
-            for (int kick = 0; kick < 5; kick++)
+            // Very slow keeper isolates scoring from opponent difficulty.
+            var rules = new FootballRules(new FootballTuning(2f, 10f, .1f)); rules.Start();
+            for(int i=0;i<5;i++)
             {
-                AdvanceAimToRightEdge(rules);
-
-                Assert.That(rules.LockAim(), Is.True, $"lock aim for kick {kick + 1}");
-                Assert.That(rules.BeginCharge(), Is.True, $"begin kick {kick + 1}");
-                if (kick < goalsExpected)
-                    rules.Tick(1.19f); // Normal force reaches exactly .85 on its rising half.
-                else
-                    rules.Tick(2.8f); // One full power cycle returns to zero for a short MISS.
-                Assert.That(rules.ReleaseShot(), Is.True);
-                Assert.That(rules.Kicks, Is.EqualTo(kick)); // Count commits after shot outcome.
-                rules.Tick(.18f);
-                rules.Tick(1.91f);
-
-                if (kick < 4)
-                    Assert.That(rules.State, Is.EqualTo(FootballState.Aiming));
-                else
-                    Assert.That(rules.State, Is.EqualTo(FootballState.MatchResult));
+                rules.SetAim(.55f);rules.BeginCharge();if(i<goals)rules.Tick(1f);
+                rules.ReleaseShot();rules.Tick(20f);
+                Assert.That(rules.Kicks, Is.EqualTo(i+1));
+                Assert.That(rules.State, Is.EqualTo(i==4?FootballState.MatchResult:FootballState.Aiming));
             }
-
-            Assert.That(rules.Kicks, Is.EqualTo(5));
-            Assert.That(rules.Goals, Is.EqualTo(goalsExpected));
-            Assert.That(rules.BuildResult().Pass, Is.EqualTo(passed));
-            Assert.That(rules.BuildResult().Score, Is.EqualTo(expectedScore));
-            Assert.That(rules.LockAim(), Is.False);
+            Assert.That(rules.Goals, Is.EqualTo(goals));Assert.That(rules.BuildResult().Pass, Is.EqualTo(passed));
+            Assert.That(rules.BuildResult().Score, Is.EqualTo(score));
+            rules.Tick(50f);Assert.That(rules.Kicks, Is.EqualTo(5));
         }
-
         [Test]
-        public void ThreeGoalsDoNotEndTheMatchBeforeFifthKick()
+        public void LargeAndSmallTicksProduceSamePowerAndFlight()
         {
-            var rules = NewRules();
-            rules.Start();
-
-            for (int i = 0; i < 4; i++)
-            {
-                AdvanceAimToRightEdge(rules);
-                rules.LockAim();
-                rules.BeginCharge();
-                rules.Tick(i < 3 ? 1.19f : 2.8f);
-                rules.ReleaseShot();
-                rules.Tick(.18f);
-                rules.Tick(1.91f);
-            }
-
-            Assert.That(rules.Goals, Is.EqualTo(3));
-            Assert.That(rules.State, Is.EqualTo(FootballState.Aiming));
-            Assert.That(rules.Kicks, Is.EqualTo(4));
+            var a=NewRules();var b=NewRules();a.Start();b.Start();a.BeginCharge();b.BeginCharge();
+            a.Tick(1f);for(int i=0;i<100;i++)b.Tick(.01f);
+            Assert.That(a.Power,Is.EqualTo(b.Power).Within(.0001f));a.ReleaseShot();b.ReleaseShot();
+            a.Tick(.68f);for(int i=0;i<68;i++)b.Tick(.01f);
+            Assert.That(Vector3.Distance(a.Flight.Position,b.Flight.Position),Is.LessThan(.05f));
+            a.Tick(20f);b.Tick(20f);Assert.That(a.Outcomes[0],Is.EqualTo(b.Outcomes[0]));
         }
-
         [Test]
-        public void InvalidDeltaDoesNotMutateState()
+        public void InvalidInputsDoNotMutateState()
         {
-            var rules = NewRules();
-            rules.Start();
-            rules.Tick(.3f);
-            float before = rules.AimX;
-
-            rules.Tick(float.NaN);
-            rules.Tick(float.PositiveInfinity);
-            rules.Tick(-1f);
-
-            Assert.That(rules.AimX, Is.EqualTo(before));
-            Assert.That(rules.State, Is.EqualTo(FootballState.Aiming));
-        }
-
-        [Test]
-        public void LargeAndSmallTicksProduceTheSameAimAndPower()
-        {
-            var large = NewRules();
-            var small = NewRules();
-            large.Start();
-            small.Start();
-
-            large.Tick(5.3f);
-            for (int i = 0; i < 53; i++) small.Tick(.1f);
-
-            Assert.That(large.AimX, Is.EqualTo(small.AimX).Within(.0001f));
-            large.LockAim();
-            small.LockAim();
-            large.BeginCharge();
-            small.BeginCharge();
-            large.Tick(3.7f);
-            for (int i = 0; i < 37; i++) small.Tick(.1f);
-
-            Assert.That(large.Power, Is.EqualTo(small.Power).Within(.0001f));
-            Assert.That(large.State, Is.EqualTo(small.State));
-        }
-
-        [Test]
-        public void DefaultNoiseIsSampledOnlyForPowerAboveAccuracyLimit()
-        {
-            int calls = 0;
-            var rules = new FootballRules(FootballTuning.For(FootballDifficulty.Normal), () =>
-            {
-                calls++;
-                return 0f;
-            });
-            rules.Start();
-            rules.LockAim();
-            rules.BeginCharge();
-            rules.Tick(1.19f);
-            rules.ReleaseShot();
-            Assert.That(calls, Is.Zero);
-
-            var highPower = new FootballRules(FootballTuning.For(FootballDifficulty.Normal), () =>
-            {
-                calls++;
-                return .5f;
-            });
-            highPower.Start();
-            highPower.LockAim();
-            highPower.BeginCharge();
-                highPower.Tick(1.204f);
-            highPower.ReleaseShot();
-            Assert.That(calls, Is.EqualTo(1));
-        }
-
-        static FootballRules NewRules() =>
-            new FootballRules(FootballTuning.For(FootballDifficulty.Normal), () => 0f);
-
-        static void AdvanceAimToRightEdge(FootballRules rules)
-        {
-            for (int i = 0; i < 20000 && rules.AimX < .8998f; i++)
-                rules.Tick(.0001f);
-            Assert.That(rules.State, Is.EqualTo(FootballState.Aiming));
-            Assert.That(rules.AimX, Is.EqualTo(.9f).Within(.0002f));
+            var rules=NewRules();rules.Start();float aim=rules.AimX;
+            Assert.That(rules.SetAim(float.NaN),Is.False);Assert.That(rules.SetAim(2f),Is.False);
+            rules.Tick(float.NaN);rules.Tick(float.PositiveInfinity);rules.Tick(-1f);
+            Assert.That(rules.AimX,Is.EqualTo(aim));Assert.That(rules.State,Is.EqualTo(FootballState.Aiming));
+            Assert.That(()=>rules.BuildResult(),Throws.TypeOf<System.InvalidOperationException>());
         }
     }
 }

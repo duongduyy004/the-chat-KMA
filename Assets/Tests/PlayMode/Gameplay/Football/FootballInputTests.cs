@@ -10,7 +10,7 @@ namespace KMA.Tests.Gameplay.Football
     {
         GameObject root;
         EventSystem eventSystem;
-        Button aim;
+        Slider aim;
         FootballHoldButton shoot;
         FootballInputBridge bridge;
 
@@ -19,9 +19,9 @@ namespace KMA.Tests.Gameplay.Football
         {
             root = new GameObject("FootballInputTests");
             eventSystem = new GameObject("EventSystem").AddComponent<EventSystem>();
-            var aimObject = new GameObject("AIM", typeof(RectTransform), typeof(CanvasRenderer), typeof(Image), typeof(Button));
+            var aimObject = new GameObject("AIM", typeof(RectTransform), typeof(CanvasRenderer), typeof(Image), typeof(Slider));
             aimObject.transform.SetParent(root.transform);
-            aim = aimObject.GetComponent<Button>();
+            aim = aimObject.GetComponent<Slider>();
             var shootObject = new GameObject("SHOOT", typeof(RectTransform), typeof(CanvasRenderer), typeof(Image),
                 typeof(Button), typeof(FootballHoldButton));
             shootObject.transform.SetParent(root.transform);
@@ -74,31 +74,31 @@ namespace KMA.Tests.Gameplay.Football
         }
 
         [Test]
-        public void ShootBeforeAimAndRepeatedBridgeEnableDoNotRaiseExtraEvents()
+        public void DisabledSliderAndRepeatedBridgeEnableDoNotRaiseExtraEvents()
         {
             int aims = 0;
-            bridge.AimPressed += () => aims++;
+            bridge.AimChanged += _ => aims++;
             bridge.SetEnabled(false, false);
             Assert.That(aim.interactable, Is.False);
-            aim.onClick.Invoke();
+            aim.onValueChanged.Invoke(.5f);
             Assert.That(aims, Is.Zero);
 
             bridge.SetEnabled(true, false);
             bridge.enabled = false;
             bridge.enabled = true;
-            aim.onClick.Invoke();
+            aim.onValueChanged.Invoke(.5f);
 
             Assert.That(aims, Is.EqualTo(1));
         }
 
         [Test]
-        public void PauseCancellationReturnsChargingRulesToLockedAimWithoutAShot()
+        public void PauseCancellationReturnsChargingRulesToAimingWithoutAShot()
         {
-            var rules = new FootballRules(FootballTuning.For(FootballDifficulty.Normal), () => 0f);
+            var rules = new FootballRules(FootballTuning.For(FootballDifficulty.Normal));
             rules.Start();
-            rules.LockAim();
+            rules.SetAim(0f);
             bridge.Configure(aim, shoot);
-            bridge.AimPressed += () => rules.LockAim();
+            bridge.AimChanged += _ => rules.SetAim(0f);
             bridge.ShootPressed += () => rules.BeginCharge();
             bridge.ShootReleased += () => rules.ReleaseShot();
             bridge.ShootCancelled += rules.CancelCharge;
@@ -108,7 +108,7 @@ namespace KMA.Tests.Gameplay.Football
             rules.Tick(.5f);
             bridge.CancelActivePointer();
 
-            Assert.That(rules.State, Is.EqualTo(FootballState.AimLocked));
+            Assert.That(rules.State, Is.EqualTo(FootballState.Aiming));
             Assert.That(rules.Power, Is.Zero);
             Assert.That(rules.Kicks, Is.Zero);
         }

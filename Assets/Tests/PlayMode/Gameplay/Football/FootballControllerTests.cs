@@ -28,6 +28,25 @@ namespace KMA.Tests.Gameplay.Football
         }
 
         [Test]
+        public void ReenablingControllerRestoresInputAndCancelsHeldShot()
+        {
+            fixture.controller.enabled = false;
+            fixture.controller.enabled = true;
+            Assert.That(fixture.controller.BeginMatch(FootballDifficulty.Normal), Is.True);
+            AdvanceLifecycle(10f); TickPlay(.01f);
+            fixture.aim.onValueChanged.Invoke(-.6f);
+            Assert.That(fixture.controller.Rules.AimX, Is.EqualTo(-.6f));
+            PointerDown(fixture.shoot.gameObject, 81);
+            Assert.That(fixture.controller.Rules.State, Is.EqualTo(FootballState.Charging));
+            fixture.controller.enabled = false;
+            Assert.That(fixture.controller.Rules.State, Is.EqualTo(FootballState.Aiming));
+            fixture.controller.enabled = true;
+            PointerDown(fixture.shoot.gameObject, 82);
+            Assert.That(fixture.controller.Rules.State, Is.EqualTo(FootballState.Charging));
+            Assert.That(fixture.controller.Rules.Kicks, Is.Zero);
+        }
+
+        [Test]
         public void StartGateDoesNotStartSimulationUntilPlayerStartsAndCountdownCompletes()
         {
             Assert.That(fixture.score.text, Is.EqualTo("BÀN: 0"));
@@ -36,7 +55,7 @@ namespace KMA.Tests.Gameplay.Football
             Assert.That(fixture.controller.PresentationPhase, Is.EqualTo(MinigamePhase.Tutorial));
             AdvanceLifecycle(20f);
             Assert.That(fixture.controller.Rules.State, Is.EqualTo(FootballState.Start));
-            fixture.aim.onClick.Invoke();
+            fixture.aim.onValueChanged.Invoke(.5f);
             Assert.That(fixture.controller.Rules.State, Is.EqualTo(FootballState.Start));
             Assert.That(fixture.controller.BeginMatch(FootballDifficulty.Hard), Is.True);
             Assert.That(fixture.controller.BeginMatch(FootballDifficulty.Easy), Is.False);
@@ -59,12 +78,12 @@ namespace KMA.Tests.Gameplay.Football
             for (int i = 0; i < 5; i++)
             {
                 Assert.That(fixture.controller.Rules.State, Is.EqualTo(FootballState.Aiming));
-                fixture.controller.Rules.LockAim();
+                fixture.controller.Rules.SetAim(0f);
                 fixture.controller.Rules.BeginCharge();
                 fixture.controller.Rules.Tick(.7f);
                 fixture.controller.Rules.ReleaseShot();
                 Assert.That(completed, Is.Zero);
-                TickPlay(3f);
+                TickPlay(20f);
             }
 
             Assert.That(fixture.controller.Rules.State, Is.EqualTo(FootballState.MatchResult));
@@ -82,13 +101,13 @@ namespace KMA.Tests.Gameplay.Football
             fixture.controller.BeginMatch(FootballDifficulty.Normal);
             AdvanceLifecycle(10f);
             TickPlay(.01f);
-            fixture.aim.onClick.Invoke();
-            Assert.That(fixture.controller.Rules.State, Is.EqualTo(FootballState.AimLocked));
+            fixture.aim.onValueChanged.Invoke(.5f);
+            Assert.That(fixture.controller.Rules.State, Is.EqualTo(FootballState.Aiming));
             PointerDown(fixture.shoot.gameObject, 5);
             fixture.controller.Rules.Tick(.3f);
             Assert.That(fixture.controller.Rules.State, Is.EqualTo(FootballState.Charging));
             SendPause(true);
-            Assert.That(fixture.controller.Rules.State, Is.EqualTo(FootballState.AimLocked));
+            Assert.That(fixture.controller.Rules.State, Is.EqualTo(FootballState.Aiming));
             Assert.That(fixture.controller.Rules.Kicks, Is.Zero);
             SendPause(false);
 
@@ -142,7 +161,7 @@ namespace KMA.Tests.Gameplay.Football
         {
             public readonly GameObject root;
             public readonly FootballController controller;
-            public readonly Button aim;
+            public readonly Slider aim;
             public readonly FootballHoldButton shoot;
             public readonly FootballResultPanel resultPanel;
             public readonly TMP_Text score;
@@ -156,9 +175,9 @@ namespace KMA.Tests.Gameplay.Football
                 root = new GameObject("FootballControllerFixture");
                 root.SetActive(false);
                 config = ScriptableObject.CreateInstance<FootballDifficultyConfig>();
-                var aimObject = new GameObject("AIM", typeof(RectTransform), typeof(CanvasRenderer), typeof(Image), typeof(Button));
+                var aimObject = new GameObject("AIM", typeof(RectTransform), typeof(CanvasRenderer), typeof(Image), typeof(Slider));
                 aimObject.transform.SetParent(root.transform);
-                aim = aimObject.GetComponent<Button>();
+                aim = aimObject.GetComponent<Slider>();
                 var shootObject = new GameObject("SHOOT", typeof(RectTransform), typeof(CanvasRenderer), typeof(Image),
                     typeof(Button), typeof(FootballHoldButton));
                 shootObject.transform.SetParent(root.transform);

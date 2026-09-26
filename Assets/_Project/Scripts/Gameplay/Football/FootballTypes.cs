@@ -11,7 +11,6 @@ namespace KMA.Gameplay
     {
         Start,
         Aiming,
-        AimLocked,
         Charging,
         Kicking,
         Flying,
@@ -23,6 +22,10 @@ namespace KMA.Gameplay
     {
         Goal,
         Saved,
-        Miss
+        Wide,
+        High,
+        Short,
+        Post,
+        Crossbar
     }
 }

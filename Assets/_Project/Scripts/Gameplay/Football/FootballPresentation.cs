@@ -1,116 +1,133 @@
+using System;
 using UnityEngine;
 
 namespace KMA.Gameplay
 {
     public sealed class FootballPresentation : MonoBehaviour
     {
-        [SerializeField] SpriteRenderer field;
-        [SerializeField] SpriteRenderer goal;
-        [SerializeField] SpriteRenderer ball;
-        [SerializeField] SpriteRenderer ballShadow;
-        [SerializeField] SpriteRenderer player;
-        [SerializeField] SpriteRenderer goalkeeper;
-        [SerializeField] SpriteRenderer crosshair;
-        [SerializeField] Transform leftGoalPoint;
-        [SerializeField] Transform rightGoalPoint;
-        [SerializeField] Color aimColor = Color.white;
-        [SerializeField] Color lockedColor = new Color(1f, .82f, .08f, 1f);
-
-        Vector3 ballStart;
-        Vector3 playerStart;
-        Vector3 keeperStart;
-        Quaternion playerRotation;
+        public const float PixelToWorld = .016f;
+        [SerializeField] SpriteRenderer field, goal, ball, ballShadow, player, goalkeeper, crosshair;
+        [SerializeField] SpriteRenderer goalNet;
+        [SerializeField] Transform leftGoalPoint, rightGoalPoint;
+        [SerializeField] SpriteRenderer[] trajectoryDots = Array.Empty<SpriteRenderer>();
+        readonly Vector3[] previewPoints = new Vector3[140];
+        LineRenderer aimArrow;
+        Vector3 ballScale, shadowScale, playerRest, netRest;
         bool configured;
 
         public void Configure(SpriteRenderer fieldView, SpriteRenderer goalView, SpriteRenderer ballView,
             SpriteRenderer shadowView, SpriteRenderer playerView, SpriteRenderer keeperView,
-            SpriteRenderer crosshairView, Transform leftPoint, Transform rightPoint)
+            SpriteRenderer crosshairView, Transform leftPoint, Transform rightPoint, SpriteRenderer[] dots = null, SpriteRenderer net = null)
         {
-            field = fieldView;
-            goal = goalView;
-            ball = ballView;
-            ballShadow = shadowView;
-            player = playerView;
-            goalkeeper = keeperView;
-            crosshair = crosshairView;
-            leftGoalPoint = leftPoint;
-            rightGoalPoint = rightPoint;
+            field = fieldView; goal = goalView; ball = ballView; ballShadow = shadowView;
+            player = playerView; goalkeeper = keeperView; crosshair = crosshairView;
+            leftGoalPoint = leftPoint; rightGoalPoint = rightPoint;
+            goalNet = net;
+            trajectoryDots = dots ?? Array.Empty<SpriteRenderer>();
             CaptureRestPositions();
+            HidePreview();
         }
-
         public bool ValidateReferences() => field && goal && ball && ballShadow && player && goalkeeper && crosshair &&
             leftGoalPoint && rightGoalPoint && Vector3.Distance(leftGoalPoint.position, rightGoalPoint.position) > .01f;
-
-        public Vector3 GoalXToWorld(float x)
+        public static Vector3 ScreenToWorld(float x, float y) => new Vector3((x - 600f) * PixelToWorld, (337.5f - y) * PixelToWorld, 0f);
+        public static Vector3 BallToWorld(Vector3 position)
         {
-            if (!leftGoalPoint || !rightGoalPoint)
-                return transform.position;
-            return Vector3.Lerp(leftGoalPoint.position, rightGoalPoint.position, Mathf.Clamp01((x + 1f) * .5f));
+            Vector3 projected = FootballShotSolver.Project(position);
+            return ScreenToWorld(projected.x, projected.y);
         }
-
         public void Render(FootballRules rules)
         {
-            if (rules == null || !ValidateReferences())
-                return;
-            if (!configured)
-                CaptureRestPositions();
-
-            bool aiming = rules.State == FootballState.Aiming || rules.State == FootballState.AimLocked ||
-                rules.State == FootballState.Charging;
-            crosshair.enabled = aiming;
-            if (aiming)
+            if (rules == null || !ValidateReferences()) return;
+            if (!configured) CaptureRestPositions();
+            if (rules.PreviewVisible)
             {
-                Vector3 point = GoalXToWorld(rules.AimX);
-                crosshair.transform.position = point;
-                crosshair.color = rules.State == FootballState.Aiming ? aimColor : lockedColor;
+                int count = rules.GetPreview(previewPoints);
+                for (int i = 0; i < trajectoryDots.Length; i++)
+                {
+                    trajectoryDots[i].enabled = i < count;
+                    if (i < count) trajectoryDots[i].transform.position = BallToWorld(previewPoints[i]);
+                }
+                if (count > 0)
+                {
+                    crosshair.enabled = true;
+                    crosshair.transform.position = BallToWorld(previewPoints[count - 1]);
+                }
             }
-
-            if (rules.State == FootballState.Kicking && rules.LastShot.HasValue)
+            else HidePreview();
+            var flight = rules.Flight;
+            if (goalNet)
             {
-                float kick = Mathf.Clamp01(rules.StateElapsed / .18f);
-                player.transform.localRotation = playerRotation * Quaternion.Euler(0f, 0f, -24f * Mathf.Sin(kick * Mathf.PI));
-                ball.transform.position = ballStart + Vector3.right * (kick * .12f) + Vector3.up * (kick * .08f);
+                float elapsed = flight?.OutcomeElapsed ?? 0f;
+                float ripple = flight?.Outcome == FootballOutcome.Goal ? Mathf.Sin(elapsed * 35f) * Mathf.Exp(-elapsed * 4f) * 4f * PixelToWorld : 0f;
+                goalNet.transform.position = netRest + Vector3.up * ripple;
             }
-            else if ((rules.State == FootballState.Flying || rules.State == FootballState.ShotResult) && rules.LastShot.HasValue)
-            {
-                var shot = rules.LastShot.Value;
-                float t = shot.FlightSeconds <= 0f ? 1f : Mathf.Clamp01(rules.FlightElapsed / shot.FlightSeconds);
-                Vector3 target = GoalXToWorld(shot.TargetX);
-                Vector3 position = Vector3.Lerp(ballStart, target, t);
-                bool shortShot = shot.IsShort;
-                position.y += shortShot ? 0f : Mathf.Sin(t * Mathf.PI) * .75f;
-                ball.transform.position = position;
-                float scale = Mathf.Lerp(1f, shortShot ? .7f : .42f, t);
-                ball.transform.localScale = Vector3.one * scale;
-                ballShadow.transform.position = Vector3.Lerp(ballStart, new Vector3(target.x, ballStart.y, ballStart.z), t);
-                ballShadow.transform.localScale = Vector3.one * Mathf.Lerp(1f, .45f, t);
-                goalkeeper.transform.position = GoalXToWorld(rules.KeeperX);
-                float dive = Mathf.Clamp(rules.KeeperX * 30f, -28f, 28f);
-                goalkeeper.transform.rotation = Quaternion.Euler(0f, 0f, -dive);
-                crosshair.enabled = false;
-            }
-            else
-            {
-                ball.transform.position = ballStart;
-                ball.transform.localScale = Vector3.one;
-                ballShadow.transform.position = ballStart;
-                ballShadow.transform.localScale = Vector3.one;
-                player.transform.localRotation = playerRotation;
-                goalkeeper.transform.position = keeperStart;
-                goalkeeper.transform.rotation = Quaternion.identity;
-            }
+            bool flying = flight != null && rules.State != FootballState.Kicking;
+            Vector3 position = flying ? flight.Position : new Vector3(0f, FootballShotSolver.BallRadius, 0f);
+            Vector3 point = FootballShotSolver.Project(position);
+            ball.transform.position = ScreenToWorld(point.x, point.y);
+            ball.transform.localScale = ballScale * point.z;
+            ball.transform.rotation = Quaternion.Euler(0f, 0f, flying ? -flight.Time * 550f : 0f);
+            Vector3 ground = FootballShotSolver.Project(new Vector3(position.x, 0f, position.z));
+            ballShadow.transform.position = ScreenToWorld(ground.x, ground.y);
+            ballShadow.transform.localScale = shadowScale * point.z;
+            float keeperX = flying ? flight.KeeperX : 0f;
+            goalkeeper.transform.position = ScreenToWorld(600f + keeperX * 300f / FootballShotSolver.GoalHalfWidth, 281f);
+            goalkeeper.transform.rotation = Quaternion.Euler(0f, 0f, flying ? -flight.KeeperAngle : 0f);
+            float swing = rules.State == FootballState.Kicking ? Mathf.Sin(Mathf.Clamp01(rules.StateElapsed / .18f) * Mathf.PI) : 0f;
+            player.transform.position = playerRest + Vector3.right * (swing * .32f);
+            player.transform.rotation = Quaternion.Euler(0f, 0f, swing * 7f);
+            RenderAimArrow(rules);
         }
+        void RenderAimArrow(FootballRules rules)
+        {
+            bool visible = rules.State == FootballState.Aiming || rules.State == FootballState.Charging;
+            if (!aimArrow && visible)
+            {
+                var arrowObject = new GameObject("AimArrow");
+                arrowObject.transform.SetParent(transform, false);
+                aimArrow = arrowObject.AddComponent<LineRenderer>();
+                aimArrow.sharedMaterial = ball.sharedMaterial;
+                aimArrow.useWorldSpace = true;
+                aimArrow.sortingLayerID = ball.sortingLayerID;
+                aimArrow.sortingOrder = ball.sortingOrder + 3;
+                aimArrow.startColor = aimArrow.endColor = new Color32(255, 202, 40, 255);
+                aimArrow.startWidth = aimArrow.endWidth = .10f;
+                aimArrow.numCapVertices = 4;
+                aimArrow.numCornerVertices = 4;
+                aimArrow.positionCount = 5;
+            }
+            if (!aimArrow) return;
+            aimArrow.enabled = visible;
+            if (!visible) return;
 
-        void Awake() => CaptureRestPositions();
-
+            // Project the launch tangent using the same shot model as the actual ball.
+            Vector3 origin = new Vector3(0f, FootballShotSolver.BallRadius, 0f);
+            Vector3 velocity = FootballShotSolver.Create(rules.AimX, 0f).Velocity;
+            Vector3 direction = (BallToWorld(origin + velocity * .01f) - BallToWorld(origin)).normalized;
+            Vector3 side = new Vector3(-direction.y, direction.x, 0f);
+            Vector3 tail = ball.transform.position + direction * .4f;
+            Vector3 tip = tail + direction * 1.2f;
+            aimArrow.SetPosition(0, tail);
+            aimArrow.SetPosition(1, tip);
+            aimArrow.SetPosition(2, tip - direction * .32f + side * .25f);
+            aimArrow.SetPosition(3, tip);
+            aimArrow.SetPosition(4, tip - direction * .32f - side * .25f);
+        }
+        public void HidePreview()
+        {
+            if (aimArrow) aimArrow.enabled = false;
+            if (crosshair) crosshair.enabled = false;
+            foreach (var dot in trajectoryDots) if (dot) dot.enabled = false;
+        }
+        void Awake() { CaptureRestPositions(); HidePreview(); }
+        void OnDisable() => HidePreview();
         void CaptureRestPositions()
         {
-            if (!ball || !ballShadow || !player || !goalkeeper)
-                return;
-            ballStart = ball.transform.position;
-            playerStart = player.transform.position;
-            keeperStart = goalkeeper.transform.position;
-            playerRotation = player.transform.localRotation;
+            if (!ball || !ballShadow || !player) return;
+            ballScale = ball.transform.localScale;
+            shadowScale = ballShadow.transform.localScale;
+            playerRest = player.transform.position;
+            if (goalNet) netRest = goalNet.transform.position;
             configured = true;
         }
     }

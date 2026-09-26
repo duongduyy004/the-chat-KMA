@@ -1,6 +1,6 @@
 # PLAN — Vượt Thể KMA
 
-> Phạm vi hiện tại của prototype Unity: Sprint, Volleyball và Football. Sprint và Volleyball có thể chơi; Football đang khóa trên bản đồ.
+> Phạm vi hiện tại của prototype Unity: Sprint, Volleyball và Football. Cả ba môn có thể chọn trên bản đồ; Football dùng thanh hướng và giữ/thả SÚT theo preview đã duyệt.
 
 ## 1. Nền tảng
 
@@ -21,7 +21,7 @@
 |---|---|---|
 | Sprint | `MG_Sprint` | Có thể chơi |
 | Volleyball | `MG_Volleyball` | Có thể chơi |
-| Football | `MG_Football` | Khóa |
+| Football | `MG_Football` | Penalty: thanh hướng, lực sút và trọng lực |
 
 Mỗi môn có luật và điều kiện hoàn thành riêng. Kết quả dùng cùng thang điểm và vòng đời chung: `Tutorial → Countdown → Play → Resolve`.
 

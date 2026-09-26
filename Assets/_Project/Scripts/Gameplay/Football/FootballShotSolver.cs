@@ -5,83 +5,58 @@ namespace KMA.Gameplay
 {
     public readonly struct FootballShot
     {
-        internal FootballShot(float aimX, float power, float targetX, float flightSeconds, bool isShort)
+        public FootballShot(float aimX, float power)
         {
+            if (!FootballTuning.IsFinite(aimX) || Mathf.Abs(aimX) > 1f)
+                throw new ArgumentOutOfRangeException(nameof(aimX));
+            if (!FootballTuning.IsFinite(power) || power < 0f || power > 1f)
+                throw new ArgumentOutOfRangeException(nameof(power));
             AimX = aimX;
             Power = power;
-            TargetX = targetX;
-            FlightSeconds = flightSeconds;
-            IsShort = isShort;
+            float theta = Mathf.Atan(aimX * 4.3f / FootballShotSolver.GoalDistance);
+            float alpha = 22f * Mathf.Deg2Rad;
+            float speed = 6f + 20f * power;
+            Velocity = new Vector3(speed * Mathf.Cos(alpha) * Mathf.Sin(theta),
+                speed * Mathf.Sin(alpha), speed * Mathf.Cos(alpha) * Mathf.Cos(theta));
         }
-
         public float AimX { get; }
         public float Power { get; }
-        public float TargetX { get; }
-        public float FlightSeconds { get; }
-        public bool IsShort { get; }
+        public Vector3 Velocity { get; }
     }
 
     public static class FootballShotSolver
     {
-        const float AimLimit = .9f;
-        const float PowerAccuracyLimit = .85f;
-        const float ShortShotLimit = .12f;
-        const float BallRadius = .04f;
-        const float KeeperReach = .18f;
-        const float KeeperLimit = .82f;
+        public const float StepSeconds = 1f / 240f;
+        public const float BallRadius = .11f;
+        public const float Gravity = 9.81f;
+        public const float GoalDistance = 11f;
+        public const float GoalHalfWidth = 3.66f;
+        public const float GoalHeight = 2.44f;
+        public const float PresentationSpeed = .8f;
+        public static FootballShot Create(float aimX, float power) => new FootballShot(aimX, power);
 
-        public static FootballShot Create(float aimX, float power, float signedNoise)
+        // Pixel-space projection shared by sprites, trajectory dots and keeper contact shapes.
+        public static Vector3 Project(Vector3 point)
         {
-            ValidateRange(aimX, -AimLimit, AimLimit, nameof(aimX));
-            ValidateRange(power, 0f, 1f, nameof(power));
-            ValidateRange(signedNoise, -1f, 1f, nameof(signedNoise));
+            float depth = 5f / (5f + Mathf.Max(-1f, point.z));
+            float vertical = 149f / GoalHeight * depth / (5f / 16f);
+            return new Vector3(600f + point.x * (300f / GoalHalfWidth) * depth / (5f / 16f),
+                211.090909f + 290.909091f * depth - point.y * vertical, vertical * BallRadius / 17f);
+        }
 
-            bool isShort = power < ShortShotLimit;
-            float flightSeconds = isShort
-                ? .9f
-                : Mathf.Lerp(.90f, .40f, (power - ShortShotLimit) / (1f - ShortShotLimit));
-            float targetX = aimX;
-            if (power > PowerAccuracyLimit)
+        public static int Predict(FootballShot shot, FootballTuning tuning, Vector3[] points)
+        {
+            if (points == null || points.Length == 0) return 0;
+            var simulation = new FootballFlightSimulation(shot, tuning, false);
+            int count = 0;
+            for (int i = 0; i < 2200 && count < points.Length - 1; i++)
             {
-                float errorRadius = .30f * (power - PowerAccuracyLimit) / (1f - PowerAccuracyLimit);
-                targetX += signedNoise * errorRadius;
+                if (i % 16 == 0) points[count++] = simulation.Position;
+                if (simulation.Outcome.HasValue) break;
+                simulation.Step();
             }
-
-            return new FootballShot(aimX, power, targetX, flightSeconds, isShort);
-        }
-
-        public static float KeeperX(FootballShot shot, FootballTuning tuning, float flightTime)
-        {
-            tuning.EnsureValid();
-            if (!FootballTuning.IsFinite(flightTime) || flightTime < 0f)
-                throw new ArgumentOutOfRangeException(nameof(flightTime));
-
-            float reactionTime = Mathf.Max(0f, flightTime - tuning.KeeperReactionSeconds);
-            float target = Mathf.Clamp(shot.TargetX, -KeeperLimit, KeeperLimit);
-            float distance = Mathf.Min(Mathf.Abs(target), tuning.KeeperSpeed * reactionTime);
-            return Mathf.Sign(target) * distance;
-        }
-
-        public static FootballOutcome Resolve(FootballShot shot, FootballTuning tuning)
-        {
-            if (shot.IsShort)
-                return FootballOutcome.Miss;
-
-            if (Mathf.Abs(shot.TargetX) + BallRadius > 1f + 1e-6f)
-                return FootballOutcome.Miss;
-
-            float keeperX = KeeperX(shot, tuning, shot.FlightSeconds);
-            if (Mathf.Abs(shot.TargetX - keeperX) <= KeeperReach + BallRadius)
-                return FootballOutcome.Saved;
-
-            return FootballOutcome.Goal;
-        }
-
-        static void ValidateRange(float value, float min, float max, string name)
-        {
-            if (!FootballTuning.IsFinite(value) || value < min || value > max)
-                throw new ArgumentOutOfRangeException(name, value,
-                    $"Value must be finite and within [{min}, {max}].");
+            points[count++] = simulation.Position;
+            return count;
         }
     }
 }

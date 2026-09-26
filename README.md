@@ -9,7 +9,7 @@ Unity gameplay prototype for KMA: three sports subjects, normalized scoring, and
 - NUnit/Unity Test Framework `1.6.0`
 - Android targets landscape, ARM64, IL2CPP, API 25/35, and `com.kma.thechat`. A separate x86_64 APK supports Genymotion; those results are in [demo QA](docs/qa/android-report-demo.md).
 - Sprint, Volleyball, and Football are selectable from the map.
-- Football is an offline 2D penalty shootout: five kicks, AIM to lock direction, hold/release SHOOT for power, and at least three goals to win. Easy, Normal, and Hard tune aim speed, power cycling, and keeper reaction.
+- Football is an offline goal-facing 2D penalty shootout: select direction with the slider, hold SHOOT to preview the ballistic path and choose power, then release to kick. The preview is visible only while holding. Five kicks and at least three goals to win; Easy, Normal, and Hard tune charging and goalkeeper reaction/speed.
 
 The subjects are Sprint, Volleyball and Football. All three are selectable on the map.
 
@@ -58,7 +58,7 @@ Football uses a custom result screen. A failed attempt offers Retry, which consu
 
 Touch input is supported by the shared gameplay input router and Punishment input bridge where required.
 
-Football is designed for Android landscape at 16:9 and uses on-screen AIM and SHOOT controls. The game contains no team match or internet dependency.
+Football is designed for Android landscape at 16:9 and uses an on-screen direction slider and hold/release SHOOT control. The game contains no team match or internet dependency.
 
 ## Open the project
 
@@ -155,5 +155,5 @@ Superseded by the counts above, kept for provenance: Task 1 verified `209/209` E
 - [`docs/superpowers/plans/2026-08-24-gameplay-foundation.md`](docs/superpowers/plans/2026-08-24-gameplay-foundation.md) — score, timing, and lifecycle contracts
 - [`docs/superpowers/plans/2026-08-24-running-minigames.md`](docs/superpowers/plans/2026-08-24-running-minigames.md) — Sprint
 - [`docs/superpowers/plans/2026-08-24-ball-minigames.md`](docs/superpowers/plans/2026-08-24-ball-minigames.md) — shared ball gameplay systems
-- [`docs/superpowers/specs/2026-09-26-football-penalty-design.md`](docs/superpowers/specs/2026-09-26-football-penalty-design.md) — Football penalty shootout design
-- [`docs/qa/football-penalty.md`](docs/qa/football-penalty.md) — Football tests, visual QA, and Android build evidence
+- [`docs/superpowers/specs/2026-09-26-football-goal-flight-design.md`](docs/superpowers/specs/2026-09-26-football-goal-flight-design.md) — Approved goal-facing Football flight design
+- [`docs/qa/football-goal-flight.md`](docs/qa/football-goal-flight.md) — Football tests, visual QA, and Android build evidence

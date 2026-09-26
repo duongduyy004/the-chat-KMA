@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="576 494 48 16" width="48" height="16"><defs>
+ <linearGradient id="sky" x2="0" y2="1"><stop stop-color="#80c8d5" /><stop offset="1" stop-color="#e4eedb" /></linearGradient>
+ <linearGradient id="grass" x2="0" y2="1"><stop stop-color="#73aa65" /><stop offset="1" stop-color="#285d48" /></linearGradient>
+ <pattern id="net" width="23" height="20" patternUnits="userSpaceOnUse"><path d="M23 0H0V20" fill="none" stroke="#effff5" stroke-opacity=".36" stroke-width="1.3" /></pattern>
+ <pattern id="seats" width="24" height="18" patternUnits="userSpaceOnUse"><rect x="5" y="5" width="12" height="6" rx="3" fill="#dbe5cd" opacity=".45" /></pattern>
+ <filter id="shadow"><feDropShadow dx="0" dy="5" stdDeviation="5" flood-opacity=".22" /></filter>
+</defs>
+<ellipse id="ballShadow" cx="600" cy="502" rx="21" ry="7" fill="#153f32" opacity=".35" />
+</svg>

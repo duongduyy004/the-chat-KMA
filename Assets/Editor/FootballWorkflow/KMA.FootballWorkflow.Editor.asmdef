@@ -1,0 +1,1 @@
+{"name":"KMA.FootballWorkflow.Editor","references":["KMA.EditorTools","KMA.Gameplay","KMA.Gameplay.Football","UnityEditor.TestRunner","UnityEngine.TestRunner","UnityEngine.UI"],"includePlatforms":["Editor"]}

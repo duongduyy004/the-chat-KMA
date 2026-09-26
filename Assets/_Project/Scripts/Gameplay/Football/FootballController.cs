@@ -1,6 +1,7 @@
 using System;
 using System.Runtime.CompilerServices;
 using KMA.Gameplay.UI;
+using KMA.Gameplay.Core;
 using UnityEngine;
 
 [assembly: InternalsVisibleTo("KMA.Gameplay.Football.PlayMode.Tests")]
@@ -22,11 +23,13 @@ namespace KMA.Gameplay
         MinigameResult lastResult;
         FootballDifficulty selectedDifficulty = FootballDifficulty.Normal;
         bool ready;
+        bool listenersBound;
         bool matchRequested;
         bool rulesStarted;
         bool resultSubmitted;
         bool appPaused;
         bool hasFocus = true;
+        FootballFlightSimulation kickedFlight, soundedOutcomeFlight;
 
         public FootballRules Rules => rules;
         public MinigameResult LastResult => lastResult;
@@ -73,14 +76,9 @@ namespace KMA.Gameplay
 
             selectedDifficulty = preferredDifficulty;
             rules = new FootballRules(difficultyConfig.Get(selectedDifficulty));
-            inputBridge.Configure(hud.AimButton, hud.ShootButton);
-            inputBridge.AimPressed += LockAim;
-            inputBridge.ShootPressed += BeginCharge;
-            inputBridge.ShootReleased += ReleaseShot;
-            inputBridge.ShootCancelled += CancelCharge;
-            hud.StartRequested += OnStartRequested;
-            resultPanel.ActionRequested += OnResultAction;
+            inputBridge.Configure(hud.DirectionSlider, hud.ShootButton);
             ready = true;
+            BindListeners();
             inputBridge.SetEnabled(false, false);
 
             bool startRetry = retryRequested;
@@ -95,12 +93,19 @@ namespace KMA.Gameplay
 
         public bool ValidateReferences() => difficultyConfig && inputBridge && presentation && hud && resultPanel &&
             hud.ValidateReferences() && presentation.ValidateReferences() && resultPanel.ValidateReferences() &&
-            hud.AimButton && hud.ShootButton;
+            hud.DirectionSlider && hud.ShootButton;
 
         protected override void Update()
         {
-            if (!ready || IsSuspended)
+            if (!ready) return;
+            if (IsSuspended)
+            {
+                inputBridge.CancelActivePointer();
+                inputBridge.SetEnabled(false, false);
+                presentation.Render(rules);
+                hud.Render(rules);
                 return;
+            }
             base.Update();
             hud.Render(rules);
             presentation.Render(rules);
@@ -120,7 +125,9 @@ namespace KMA.Gameplay
             if (!rulesStarted)
                 return;
 
+            FootballFlightSimulation previousFlight = rules.Flight;
             rules.Tick(deltaTime);
+            UpdateAudio(rules.Flight ?? previousFlight);
             RefreshInputAvailability();
             if (rules.State == FootballState.MatchResult)
             {
@@ -134,9 +141,28 @@ namespace KMA.Gameplay
 
         protected override MinigameHudState BuildHudState() => MinigameHudState.Empty;
 
-        void LockAim()
+        void UpdateAudio(FootballFlightSimulation flight)
         {
-            if (ready && matchRequested && PresentationPhase == MinigamePhase.Play && rules.LockAim())
+            if (flight == null) return;
+            if (flight.Time > 0f && flight != kickedFlight)
+            {
+                kickedFlight = flight;
+                GameAudio.Play(GameSound.Kick);
+            }
+            if (!flight.Outcome.HasValue || flight == soundedOutcomeFlight) return;
+            soundedOutcomeFlight = flight;
+            GameAudio.Play(flight.Outcome.Value switch
+            {
+                FootballOutcome.Goal => GameSound.Cheer,
+                FootballOutcome.Saved => GameSound.Save,
+                FootballOutcome.Post or FootballOutcome.Crossbar => GameSound.Post,
+                _ => GameSound.Miss
+            });
+        }
+
+        void SetAim(float direction)
+        {
+            if (ready && matchRequested && PresentationPhase == MinigamePhase.Play && rules.SetAim(direction))
                 RefreshInputAvailability();
         }
 
@@ -149,7 +175,10 @@ namespace KMA.Gameplay
         void ReleaseShot()
         {
             if (ready && matchRequested && PresentationPhase == MinigamePhase.Play && rules.ReleaseShot())
+            {
+                presentation.HidePreview();
                 RefreshInputAvailability();
+            }
         }
 
         void CancelCharge()
@@ -157,6 +186,7 @@ namespace KMA.Gameplay
             if (rules != null)
                 rules.CancelCharge();
             RefreshInputAvailability();
+            if (presentation && rules != null) presentation.Render(rules);
         }
 
         void RefreshInputAvailability()
@@ -168,7 +198,7 @@ namespace KMA.Gameplay
                 return;
             }
             inputBridge.SetEnabled(rules.State == FootballState.Aiming,
-                rules.State == FootballState.AimLocked || rules.State == FootballState.Charging);
+                rules.State == FootballState.Aiming || rules.State == FootballState.Charging);
         }
 
         void OnApplicationPause(bool paused)
@@ -205,22 +235,59 @@ namespace KMA.Gameplay
                 retryRequested = false;
         }
 
+        void OnEnable()
+        {
+            if (!ready) return;
+            BindListeners();
+            RefreshInputAvailability();
+        }
+
+        void BindListeners()
+        {
+            if (!ready || listenersBound) return;
+            inputBridge.AimChanged += SetAim;
+            inputBridge.ShootPressed += BeginCharge;
+            inputBridge.ShootReleased += ReleaseShot;
+            inputBridge.ShootCancelled += CancelCharge;
+            hud.StartRequested += OnStartRequested;
+            resultPanel.ActionRequested += OnResultAction;
+            listenersBound = true;
+        }
+
+        public void ExitToMap()
+        {
+            if (!ready) return;
+            inputBridge.CancelActivePointer();
+            if (resultSubmitted)
+            {
+                // The result owner commits the loss/win exactly once before routing.
+                if (resultPanel.IsVisible) resultPanel.Continue();
+                return;
+            }
+            SceneRouter.Instance?.ExitActiveSubjectToMap();
+        }
+
         void OnDisable()
         {
             if (inputBridge)
             {
                 inputBridge.CancelActivePointer();
                 inputBridge.SetEnabled(false, false);
-                inputBridge.AimPressed -= LockAim;
-                inputBridge.ShootPressed -= BeginCharge;
-                inputBridge.ShootReleased -= ReleaseShot;
-                inputBridge.ShootCancelled -= CancelCharge;
+                if (listenersBound)
+                {
+                    inputBridge.AimChanged -= SetAim;
+                    inputBridge.ShootPressed -= BeginCharge;
+                    inputBridge.ShootReleased -= ReleaseShot;
+                    inputBridge.ShootCancelled -= CancelCharge;
+                }
             }
-            if (hud) hud.StartRequested -= OnStartRequested;
-            if (resultPanel) resultPanel.ActionRequested -= OnResultAction;
+            if (listenersBound && hud) hud.StartRequested -= OnStartRequested;
+            if (listenersBound && resultPanel) resultPanel.ActionRequested -= OnResultAction;
+            listenersBound = false;
+            if (presentation) presentation.HidePreview();
         }
 
-        bool IsSuspended => appPaused || !hasFocus;
+        bool IsSuspended => appPaused || !hasFocus || Time.timeScale == 0f;
 
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
         static void ResetSessionPreference()

@@ -6,6 +6,7 @@ using KMA.Gameplay.Core;
 using KMA.Gameplay.UI;
 using TMPro;
 using UnityEditor;
+using UnityEditor.Events;
 using UnityEditor.SceneManagement;
 using UnityEngine;
 using UnityEngine.EventSystems;
@@ -32,6 +33,7 @@ namespace KMA.EditorTools
         {
             if (!File.Exists(ScenePath))
                 throw new FileNotFoundException("MG_Football scene is missing; refusing to create a new scene identity.", ScenePath);
+            ImportGoalViewArt();
             EnsureConfiguration();
             AssetDatabase.Refresh(ImportAssetOptions.ForceSynchronousImport);
             var scene = EditorSceneManager.OpenScene(ScenePath, OpenSceneMode.Single);
@@ -70,40 +72,68 @@ namespace KMA.EditorTools
             camera.farClipPlane = 100f;
             AddUrpCameraData(cameraRoot);
 
-            Sprite fieldSprite = LoadSprite("Environment/field.png");
-            Sprite goalSprite = LoadSprite("Environment/goal.png");
-            Sprite ballSprite = LoadSprite("Environment/ball.png");
-            Sprite playerSprite = LoadSprite("Characters/player.png");
-            Sprite keeperSprite = LoadSprite("Characters/keeper.png");
-            Sprite crosshairSprite = LoadSprite("UI/crosshair.png");
-
+            var cameraFit = cameraRoot.AddComponent<FootballCameraFit>();
             var world = new GameObject("FootballWorld");
             SceneManager.MoveGameObjectToScene(world, scene);
             var presentation = world.AddComponent<FootballPresentation>();
-            var field = Renderer(world.transform, "Field", fieldSprite, new Vector3(0f, -1.1f, 1f), 0,
-                new Vector2(21.5f, 10.2f));
-            field.color = Grass;
-            var goal = Renderer(world.transform, "Goal", goalSprite, new Vector3(0f, 2.35f, 0f), 10,
-                new Vector2(11f, 4f));
-            var keeper = Renderer(world.transform, "Goalkeeper", keeperSprite, new Vector3(0f, 1.95f, -.2f), 20,
-                new Vector2(1.65f, 2.1f));
-            var player = Renderer(world.transform, "Player", playerSprite, new Vector3(-4.9f, -3.15f, -.3f), 21,
-                new Vector2(1.45f, 1.82f));
-            var ball = Renderer(world.transform, "Ball", ballSprite, new Vector3(0f, -3.65f, -.5f), 25,
-                new Vector2(.42f, .48f));
-            var shadow = Renderer(world.transform, "BallShadow", ballSprite, new Vector3(0f, -3.65f, -.4f), 24,
-                new Vector2(.48f, .12f));
-            shadow.color = new Color(0f, 0f, 0f, .38f);
-            var crosshair = Renderer(world.transform, "AimCrosshair", crosshairSprite, new Vector3(0f, 2.05f, -.6f), 30,
-                new Vector2(.7f, .7f));
-            crosshair.color = Gold;
-            var leftPost = new GameObject("GoalLeftInsidePost").transform;
-            leftPost.SetParent(world.transform, false);
-            leftPost.position = new Vector3(-4.35f, 1.65f, -.2f);
-            var rightPost = new GameObject("GoalRightInsidePost").transform;
-            rightPost.SetParent(world.transform, false);
-            rightPost.position = new Vector3(4.35f, 1.65f, -.2f);
-            presentation.Configure(field, goal, ball, shadow, player, keeper, crosshair, leftPost, rightPost);
+            SpriteRenderer Layer(string name, string image, float x, float y, float width, float height, int order) =>
+                Renderer(world.transform, name, LoadSprite("GoalView/" + image + ".png"),
+                    FootballPresentation.ScreenToWorld(x, y), order, new Vector2(width, height) * FootballPresentation.PixelToWorld);
+            var field = Layer("Field", "field", 600, 337.5f, 1200, 675, 0);
+            cameraFit.Configure(field);
+            var goal = Layer("Goal", "goal", 600, 230, 620, 170, 10);
+            var net = Layer("GoalNet", "net", 600, 230, 620, 170, 11);
+            var keeper = Layer("Goalkeeper", "keeper", 600, 281, 140, 130, 20);
+            var player = Layer("Player", "player", 490, 486, 140, 230, 21);
+            var ball = Layer("Ball", "ball", 600, 486, 36, 36, 25);
+            var shadow = Layer("BallShadow", "shadow", 600, 502, 48, 16, 19);
+            var crosshair = Layer("AimCrosshair", "crosshair", 600, 213, 44, 44, 30);
+            crosshair.color = new Color32(224, 255, 150, 255);
+            crosshair.enabled = false;
+            var dots = new SpriteRenderer[140];
+            for (int i = 0; i < dots.Length; i++)
+            {
+                dots[i] = Layer("TrajectoryDot" + i, "knob", 600, 486, 5, 5, 29);
+                dots[i].color = new Color(.85f, 1f, .6f, .75f);
+                dots[i].enabled = false;
+            }
+            var left = new GameObject("GoalLeftInsidePost").transform;
+            left.SetParent(world.transform, false);
+            left.position = FootballPresentation.ScreenToWorld(300, 302);
+            var right = new GameObject("GoalRightInsidePost").transform;
+            right.SetParent(world.transform, false);
+            right.position = FootballPresentation.ScreenToWorld(900, 302);
+            presentation.Configure(field, goal, ball, shadow, player, keeper, crosshair, left, right, dots, net);
+        }
+
+        static void ImportGoalViewArt()
+        {
+            foreach (string file in Directory.GetFiles(ArtRoot + "GoalView", "*.png"))
+            {
+                AssetDatabase.ImportAsset(file, ImportAssetOptions.ForceSynchronousImport);
+                var importer = (TextureImporter)AssetImporter.GetAtPath(file);
+                importer.textureType = TextureImporterType.Sprite;
+                importer.spriteImportMode = SpriteImportMode.Single;
+                importer.alphaIsTransparency = true;
+                importer.mipmapEnabled = false;
+                importer.textureCompression = TextureImporterCompression.Uncompressed;
+                importer.maxTextureSize = 4096;
+                importer.spritePixelsPerUnit = Path.GetFileNameWithoutExtension(file) == "panel" ? 50f : 200f;
+                importer.filterMode = FilterMode.Bilinear;
+                var settings = new TextureImporterSettings();
+                importer.ReadTextureSettings(settings);
+                settings.spriteMeshType = SpriteMeshType.FullRect;
+                settings.spriteAlignment = (int)SpriteAlignment.Custom;
+                settings.spritePivot = Path.GetFileNameWithoutExtension(file) switch
+                {
+                    "keeper" => new Vector2(.5f, 27f / 130f),
+                    "player" => new Vector2(65f / 140f, .5f),
+                    _ => new Vector2(.5f, .5f)
+                };
+                settings.spriteBorder = Path.GetFileNameWithoutExtension(file) == "panel" ? new Vector4(12f, 12f, 12f, 12f) : Vector4.zero;
+                importer.SetTextureSettings(settings);
+                importer.SaveAndReimport();
+            }
         }
 
         static void BuildUi(Scene scene)
@@ -122,9 +152,9 @@ namespace KMA.EditorTools
             safe.gameObject.AddComponent<SafeAreaFitter>();
             var hud = safe.gameObject.AddComponent<FootballHud>();
 
-            var panelSprite = LoadSprite("UI/panel.png");
-            var buttonSprite = LoadSprite("UI/button.png");
-            var fillSprite = LoadSprite("UI/power-fill.png");
+            var panelSprite = LoadSprite("GoalView/panel.png");
+            var buttonSprite = LoadSprite("GoalView/panel.png");
+            var fillSprite = LoadSprite("GoalView/fill.png");
 
             Text(safe, "ScoreLabel", "BÀN: 0", font, 42, Color.white, TextAlignmentOptions.Center,
                 new Vector2(.38f, .91f), new Vector2(.62f, .99f));
@@ -135,36 +165,38 @@ namespace KMA.EditorTools
                 markerLabels[i] = Text(safe, "KickMarker" + (i + 1), "•", font, 25, Gold, TextAlignmentOptions.Center,
                     new Vector2(.405f + i * .038f, .855f), new Vector2(.435f + i * .038f, .905f));
 
+            var directionPanel = Panel(safe, "DirectionPanel", panelSprite, new Vector2(.025f, .025f), new Vector2(.395f, .205f),
+                Vector2.zero, Vector2.zero, new Color32(18, 60, 52, 235));
+            Text(directionPanel.transform, "DirectionTitle", "HƯỚNG BÓNG", font, 26, Color.white,
+                TextAlignmentOptions.Left, new Vector2(.05f, .72f), new Vector2(.58f, .96f));
+            var directionText = Text(directionPanel.transform, "DirectionValue", "PHẢI 55%", font, 24, Gold,
+                TextAlignmentOptions.Right, new Vector2(.58f, .72f), new Vector2(.95f, .96f));
+            var direction = CreateDirectionSlider(directionPanel.transform, buttonSprite);
+            Text(directionPanel.transform, "DirectionHint", "Kéo chọn hướng · Giữ SÚT để xem đường bay", font, 21, Color.white,
+                TextAlignmentOptions.Center, new Vector2(.04f, .02f), new Vector2(.96f, .28f));
             var powerBackground = CreateImage(safe, "PowerBarBackground", buttonSprite, Ink,
-                new Vector2(.025f, .19f), new Vector2(.245f, .235f), Vector2.zero, Vector2.zero);
-            var power = CreateImage(powerBackground.transform, "PowerFill", fillSprite, Color.white,
+                new Vector2(.80f, .16f), new Vector2(.975f, .20f), Vector2.zero, Vector2.zero);
+            var power = CreateImage(powerBackground.transform, "PowerFill", fillSprite, new Color32(214, 247, 137, 255),
                 Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
             power.type = Image.Type.Filled;
             power.fillMethod = Image.FillMethod.Horizontal;
             power.fillOrigin = (int)Image.OriginHorizontal.Left;
-            var percent = Text(powerBackground.transform, "PowerPercent", "0%", font, 26, Color.white,
+            var percent = Text(powerBackground.transform, "PowerPercent", "0%", font, 24, Color.white,
                 TextAlignmentOptions.Center, Vector2.zero, Vector2.one);
-            percent.raycastTarget = false;
-            var warning = new GameObject("OverPowerWarning", typeof(RectTransform));
-            warning.transform.SetParent(safe, false);
-            var warningRect = warning.GetComponent<RectTransform>();
-            Anchor(warningRect, new Vector2(.025f, .24f), new Vector2(.26f, .285f));
-            var warningText = warning.AddComponent<TextMeshProUGUI>();
-            Style(warningText, font, 25, new Color32(255, 80, 55, 255), TextAlignmentOptions.Left);
-            warningText.text = "QUÁ LỰC - GIẢM ĐỘ CHÍNH XÁC";
+            var warning = Text(safe, "OverPowerWarning", "DỄ VƯỢT XÀ", font, 24, new Color32(255, 152, 117, 255),
+                TextAlignmentOptions.Center, new Vector2(.79f, .205f), new Vector2(.985f, .25f)).gameObject;
             warning.SetActive(false);
-
-            var shoot = Button(safe, "SHOOT", "SHOOT", buttonSprite, Gold, font, 44,
-                new Vector2(0f, 0f), new Vector2(.18f, .175f), new Vector2(50f, 42f), new Vector2(0f, 0f));
+            var shoot = Button(safe, "SHOOT", "GIỮ ĐỂ SÚT", buttonSprite, new Color32(214, 247, 137, 255), font, 34,
+                new Vector2(.80f, .035f), new Vector2(.975f, .145f), Vector2.zero, new Vector2(.5f, .5f));
             var hold = shoot.gameObject.AddComponent<FootballHoldButton>();
-            var aim = Button(safe, "AIM", "AIM", buttonSprite, new Color32(77, 178, 243, 255), font, 44,
-                new Vector2(.82f, 0f), new Vector2(1f, .175f), new Vector2(-50f, 42f), new Vector2(1f, 0f));
+            var feedback = Text(safe, "ShotFeedback", "", font, 48, Color.white,
+                TextAlignmentOptions.Center, new Vector2(.20f, .69f), new Vector2(.80f, .79f));
 
             var startPanel = Panel(safe, "StartPanel", panelSprite, new Vector2(.5f, .5f), new Vector2(.5f, .5f),
                 Vector2.zero, new Vector2(850f, 585f), new Color32(248, 250, 252, 252));
             Text(startPanel.transform, "StartTitle", "LOẠT SÚT LUÂN LƯU", font, 54, Ink,
                 TextAlignmentOptions.Center, new Vector2(.06f, .76f), new Vector2(.94f, .94f));
-            Text(startPanel.transform, "StartInstructions", "Canh hướng bằng AIM. Giữ SHOOT để chọn lực, rồi thả để sút.\nGhi ít nhất 3 bàn sau 5 lượt.",
+            Text(startPanel.transform, "StartInstructions", "Kéo thanh chọn hướng. Giữ SÚT để xem đường bay, thả để đá.\nGhi ít nhất 3 bàn sau 5 lượt.",
                 font, 29, Ink, TextAlignmentOptions.Center, new Vector2(.08f, .57f), new Vector2(.92f, .77f));
             Text(startPanel.transform, "DifficultyTitle", "ĐỘ KHÓ", font, 25, Ink,
                 TextAlignmentOptions.Center, new Vector2(.1f, .45f), new Vector2(.9f, .55f));
@@ -207,11 +239,10 @@ namespace KMA.EditorTools
 
             var back = Button(safe, "BackButton", "‹", buttonSprite, Color.white, font, 48,
                 new Vector2(0f, .91f), new Vector2(.065f, 1f), new Vector2(34f, -24f), new Vector2(0f, 1f));
-            back.onClick.AddListener(() => SceneRouter.Instance?.ExitActiveSubjectToMap());
 
-            hud.Configure(aim, hold, power, percent, warning, FindText(safe, "ScoreLabel"),
+            hud.Configure(direction, hold, power, percent, warning, FindText(safe, "ScoreLabel"),
                 FindText(safe, "RemainingLabel"), markerLabels, startPanel, startButton, easy, normal, hard,
-                countdownPanel, countdown);
+                countdownPanel, countdown, directionText, feedback);
             hud.ShowStart(FootballDifficulty.Normal);
 
             var result = resultRoot.AddComponent<FootballResultPanel>();
@@ -225,8 +256,30 @@ namespace KMA.EditorTools
             var presentation = world.GetComponent<FootballPresentation>();
             var controller = input.gameObject.AddComponent<FootballController>();
             controller.Configure(config, input, presentation, hud, result);
+            UnityEventTools.AddPersistentListener(back.onClick, controller.ExitToMap);
             input.gameObject.AddComponent<MinigamePresentationOwner>();
             EnsureEventSystem(scene);
+        }
+
+        static Slider CreateDirectionSlider(Transform parent, Sprite sprite)
+        {
+            var rect = Rect(parent, "DirectionSlider", new Vector2(.06f, .28f), new Vector2(.94f, .74f), Vector2.zero, Vector2.zero);
+            var hit = rect.gameObject.AddComponent<Image>();
+            hit.color = new Color(0f, 0f, 0f, 0f);
+            var track = CreateImage(rect, "Track", sprite, new Color32(125, 163, 119, 255),
+                new Vector2(0f, .40f), new Vector2(1f, .60f), Vector2.zero, Vector2.zero);
+            track.raycastTarget = false;
+            var area = Rect(rect, "HandleSlideArea", new Vector2(0f, .5f), new Vector2(1f, .5f), Vector2.zero, new Vector2(-36f, 42f));
+            var handle = CreateImage(area, "Handle", LoadSprite("GoalView/knob.png"), new Color32(214, 247, 137, 255),
+                new Vector2(.5f, .5f), new Vector2(.5f, .5f), Vector2.zero, new Vector2(42f, 0f));
+            var slider = rect.gameObject.AddComponent<Slider>();
+            slider.handleRect = handle.rectTransform;
+            slider.targetGraphic = handle;
+            slider.direction = Slider.Direction.LeftToRight;
+            slider.minValue = -1f;
+            slider.maxValue = 1f;
+            slider.value = .55f;
+            return slider;
         }
 
         static void ConfigureSubjectAsset()
@@ -335,7 +388,7 @@ namespace KMA.EditorTools
             var rect = Rect(parent, name, min, max, position, size);
             var image = rect.gameObject.AddComponent<Image>();
             image.sprite = sprite;
-            image.type = Image.Type.Simple;
+            image.type = Image.Type.Sliced;
             image.color = color;
             return rect.gameObject;
         }
@@ -358,7 +411,7 @@ namespace KMA.EditorTools
             var image = rect.gameObject.AddComponent<Image>();
             image.sprite = sprite;
             image.color = color;
-            image.type = Image.Type.Simple;
+            image.type = Image.Type.Sliced;
             var button = rect.gameObject.AddComponent<Button>();
             button.targetGraphic = image;
             button.transition = Selectable.Transition.ColorTint;
