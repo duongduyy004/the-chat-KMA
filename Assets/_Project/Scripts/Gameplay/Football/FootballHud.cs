@@ -99,8 +99,8 @@ namespace KMA.Gameplay
         {
             if (rules == null)
                 return;
-            if (scoreLabel) scoreLabel.text = rules.Goals.ToString();
-            if (remainingLabel) remainingLabel.text = Mathf.Max(0, 5 - rules.Kicks).ToString();
+            if (scoreLabel) scoreLabel.text = "BÀN: " + rules.Goals;
+            if (remainingLabel) remainingLabel.text = "CÒN " + Mathf.Max(0, 5 - rules.Kicks) + " LƯỢT";
             if (powerFill) powerFill.fillAmount = rules.Power;
             if (powerPercent) powerPercent.text = Mathf.RoundToInt(rules.Power * 100f) + "%";
             if (overPowerWarning) overPowerWarning.SetActive(rules.Power > .85f);

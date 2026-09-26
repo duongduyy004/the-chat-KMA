@@ -47,6 +47,12 @@ namespace KMA.Tests.EditorTools
             Assert.That(presentation.ValidateReferences(), Is.True);
             Assert.That(eventSystem, Is.Not.Null);
             Assert.That(eventSystem.GetComponent<InputSystemUIInputModule>(), Is.Not.Null);
+            var aim = GameObject.Find("AIM").GetComponent<RectTransform>();
+            Assert.That(aim.anchorMin.x, Is.LessThan(aim.anchorMax.x));
+            Assert.That(aim.anchorMin.x, Is.EqualTo(.82f).Within(.001f));
+            Assert.That(aim.anchorMax.x, Is.EqualTo(1f).Within(.001f));
+            Assert.That((aim.anchorMax.x - aim.anchorMin.x) * 1920f, Is.GreaterThanOrEqualTo(180f));
+            Assert.That((aim.anchorMax.y - aim.anchorMin.y) * 1080f, Is.GreaterThanOrEqualTo(140f));
             Assert.That(GameObject.Find("S2_HUD_Minigame"), Is.Null);
             var subject = AssetDatabase.LoadAssetAtPath<ScriptableObject>("Assets/_Project/ScriptableObjects/Subjects/Football.asset");
             Assert.That(subject, Is.Not.Null);

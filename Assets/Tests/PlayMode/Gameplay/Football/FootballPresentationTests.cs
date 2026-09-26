@@ -96,8 +96,8 @@ namespace KMA.Tests.Gameplay.Football
             rules.Tick(1.18f);
             hud.Render(rules);
 
-            Assert.That(refs.score.text, Is.EqualTo("0"));
-            Assert.That(refs.remaining.text, Is.EqualTo("4"));
+            Assert.That(refs.score.text, Is.EqualTo("BÀN: 0"));
+            Assert.That(refs.remaining.text, Is.EqualTo("CÒN 4 LƯỢT"));
             Assert.That(refs.markers[0].text, Is.EqualTo(rules.Outcomes[0].ToString().ToUpperInvariant()));
         }
 

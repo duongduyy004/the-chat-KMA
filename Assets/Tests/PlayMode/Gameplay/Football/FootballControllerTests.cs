@@ -30,6 +30,8 @@ namespace KMA.Tests.Gameplay.Football
         [Test]
         public void StartGateDoesNotStartSimulationUntilPlayerStartsAndCountdownCompletes()
         {
+            Assert.That(fixture.score.text, Is.EqualTo("BÀN: 0"));
+            Assert.That(fixture.remaining.text, Is.EqualTo("CÒN 5 LƯỢT"));
             Assert.That(fixture.controller.Rules.State, Is.EqualTo(FootballState.Start));
             Assert.That(fixture.controller.PresentationPhase, Is.EqualTo(MinigamePhase.Tutorial));
             AdvanceLifecycle(20f);
@@ -143,6 +145,8 @@ namespace KMA.Tests.Gameplay.Football
             public readonly Button aim;
             public readonly FootballHoldButton shoot;
             public readonly FootballResultPanel resultPanel;
+            public readonly TMP_Text score;
+            public readonly TMP_Text remaining;
             readonly FootballDifficultyConfig config;
             readonly EventSystem eventSystem;
 
@@ -173,7 +177,9 @@ namespace KMA.Tests.Gameplay.Football
                 for (int i = 0; i < markers.Length; i++) markers[i] = Text("Kick" + i);
                 var warning = new GameObject("Warning", typeof(RectTransform)); warning.transform.SetParent(root.transform);
                 var start = new GameObject("Start", typeof(RectTransform)); start.transform.SetParent(root.transform);
-                hud.Configure(aim, shoot, fill, Text("Percent"), warning, Text("Score"), Text("Remaining"), markers, start);
+                score = Text("Score");
+                remaining = Text("Remaining");
+                hud.Configure(aim, shoot, fill, Text("Percent"), warning, score, remaining, markers, start);
                 var input = root.AddComponent<FootballInputBridge>();
                 var presentation = root.AddComponent<FootballPresentation>();
                 SpriteRenderer Make(string name)

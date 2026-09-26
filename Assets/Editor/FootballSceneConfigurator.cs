@@ -117,7 +117,7 @@ namespace KMA.EditorTools
             var scaler = canvasRoot.GetComponent<CanvasScaler>();
             scaler.uiScaleMode = CanvasScaler.ScaleMode.ScaleWithScreenSize;
             scaler.referenceResolution = new Vector2(1920f, 1080f);
-            scaler.matchWidthOrHeight = .5f;
+            scaler.matchWidthOrHeight = 1f;
             var safe = Rect(canvasRoot.transform, "SafeAreaRoot", Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
             safe.gameObject.AddComponent<SafeAreaFitter>();
             var hud = safe.gameObject.AddComponent<FootballHud>();
@@ -158,7 +158,7 @@ namespace KMA.EditorTools
                 new Vector2(0f, 0f), new Vector2(.18f, .175f), new Vector2(50f, 42f), new Vector2(0f, 0f));
             var hold = shoot.gameObject.AddComponent<FootballHoldButton>();
             var aim = Button(safe, "AIM", "AIM", buttonSprite, new Color32(77, 178, 243, 255), font, 44,
-                new Vector2(1f, 0f), new Vector2(.18f, .175f), new Vector2(-50f, 42f), new Vector2(1f, 0f));
+                new Vector2(.82f, 0f), new Vector2(1f, .175f), new Vector2(-50f, 42f), new Vector2(1f, 0f));
 
             var startPanel = Panel(safe, "StartPanel", panelSprite, new Vector2(.5f, .5f), new Vector2(.5f, .5f),
                 Vector2.zero, new Vector2(850f, 585f), new Color32(248, 250, 252, 252));
