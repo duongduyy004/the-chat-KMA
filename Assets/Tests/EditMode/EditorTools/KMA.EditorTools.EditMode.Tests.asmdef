@@ -6,7 +6,12 @@
         "UnityEditor.TestRunner",
         "KMA.EditorTools",
         "Unity.InputSystem",
-        "UnityEngine.UI"
+        "UnityEngine.UI",
+        "KMA.Gameplay.Football",
+        "KMA.Gameplay.UI",
+        "KMA.Gameplay.Progression",
+        "Unity.TextMeshPro",
+        "KMA.Gameplay"
     ],
     "includePlatforms": [
         "Editor"

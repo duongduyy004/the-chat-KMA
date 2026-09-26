@@ -81,6 +81,13 @@ namespace KMA.Gameplay.UI
         static void AssembleScene(Scene scene, GameObject cameraPrefab)
         {
             var cameraObject = EnsureSceneCamera(scene, cameraPrefab);
+            if (FindInScene<MinigamePresentationOwner>(scene) != null)
+            {
+                RemoveGameplayPresentation(scene);
+                EnsureEventSystem(scene);
+                EditorSceneManager.MarkSceneDirty(scene);
+                return;
+            }
             if (!IsGameplayScene(scene))
             {
                 RemoveGameplayPresentation(scene);

@@ -17,16 +17,23 @@ namespace KMA.Gameplay
         [SerializeField] TMP_Text[] kickMarkers = new TMP_Text[5];
         [SerializeField] GameObject startPanel;
         [SerializeField] Button startButton;
+        [SerializeField] Button easyButton;
+        [SerializeField] Button normalButton;
+        [SerializeField] Button hardButton;
+        [SerializeField] GameObject countdownPanel;
+        [SerializeField] TMP_Text countdownLabel;
 
         FootballDifficulty selectedDifficulty = FootballDifficulty.Normal;
-        bool startSubscribed;
+        bool listenersBound;
 
         public event Action<FootballDifficulty> StartRequested;
         public Button AimButton => aimButton;
         public FootballHoldButton ShootButton => shootButton;
 
         public void Configure(Button aim, FootballHoldButton shoot, Image fill, TMP_Text percent,
-            GameObject warning, TMP_Text score, TMP_Text remaining, TMP_Text[] markers, GameObject start)
+            GameObject warning, TMP_Text score, TMP_Text remaining, TMP_Text[] markers, GameObject start,
+            Button startAction = null, Button easy = null, Button normal = null, Button hard = null,
+            GameObject countdown = null, TMP_Text countdownText = null)
         {
             aimButton = aim;
             shootButton = shoot;
@@ -37,7 +44,14 @@ namespace KMA.Gameplay
             remainingLabel = remaining;
             kickMarkers = markers;
             startPanel = start;
-            SubscribeStart();
+            startButton = startAction;
+            easyButton = easy;
+            normalButton = normal;
+            hardButton = hard;
+            countdownPanel = countdown;
+            countdownLabel = countdownText;
+            BindButtons();
+            UpdateDifficultyButtons();
         }
 
         public bool ValidateReferences() => aimButton && shootButton && powerFill && powerPercent && overPowerWarning &&
@@ -49,11 +63,35 @@ namespace KMA.Gameplay
             selectedDifficulty = selected;
             if (startPanel)
                 startPanel.SetActive(true);
+            if (countdownPanel)
+                countdownPanel.SetActive(false);
             if (aimButton) aimButton.interactable = false;
             if (shootButton) shootButton.SetInteractable(false);
+            UpdateDifficultyButtons();
         }
 
-        public void SetDifficulty(FootballDifficulty selected) => selectedDifficulty = selected;
+        public void HideStart()
+        {
+            if (startPanel) startPanel.SetActive(false);
+        }
+
+        public void ShowCountdown(string message)
+        {
+            HideStart();
+            if (countdownLabel) countdownLabel.text = message ?? string.Empty;
+            if (countdownPanel) countdownPanel.SetActive(true);
+        }
+
+        public void HideCountdown()
+        {
+            if (countdownPanel) countdownPanel.SetActive(false);
+        }
+
+        public void SetDifficulty(FootballDifficulty selected)
+        {
+            selectedDifficulty = selected;
+            UpdateDifficultyButtons();
+        }
 
         public void RequestStart() => StartRequested?.Invoke(selectedDifficulty);
 
@@ -77,20 +115,42 @@ namespace KMA.Gameplay
             if (shootButton) shootButton.SetInteractable(rules.State == FootballState.AimLocked || rules.State == FootballState.Charging);
         }
 
-        void OnEnable() => SubscribeStart();
+        void OnEnable() => BindButtons();
         void OnDisable()
         {
-            if (startSubscribed && startButton)
-                startButton.onClick.RemoveListener(RequestStart);
-            startSubscribed = false;
+            if (!listenersBound) return;
+            if (startButton) startButton.onClick.RemoveListener(RequestStart);
+            if (easyButton) easyButton.onClick.RemoveListener(SelectEasy);
+            if (normalButton) normalButton.onClick.RemoveListener(SelectNormal);
+            if (hardButton) hardButton.onClick.RemoveListener(SelectHard);
+            listenersBound = false;
         }
 
-        void SubscribeStart()
+        void BindButtons()
         {
-            if (startSubscribed || !startButton)
-                return;
-            startButton.onClick.AddListener(RequestStart);
-            startSubscribed = true;
+            if (listenersBound) return;
+            if (startButton) startButton.onClick.AddListener(RequestStart);
+            if (easyButton) easyButton.onClick.AddListener(SelectEasy);
+            if (normalButton) normalButton.onClick.AddListener(SelectNormal);
+            if (hardButton) hardButton.onClick.AddListener(SelectHard);
+            listenersBound = startButton || easyButton || normalButton || hardButton;
+        }
+
+        void SelectEasy() => SetDifficulty(FootballDifficulty.Easy);
+        void SelectNormal() => SetDifficulty(FootballDifficulty.Normal);
+        void SelectHard() => SetDifficulty(FootballDifficulty.Hard);
+
+        void UpdateDifficultyButtons()
+        {
+            SetDifficultyTint(easyButton, selectedDifficulty == FootballDifficulty.Easy);
+            SetDifficultyTint(normalButton, selectedDifficulty == FootballDifficulty.Normal);
+            SetDifficultyTint(hardButton, selectedDifficulty == FootballDifficulty.Hard);
+        }
+
+        static void SetDifficultyTint(Button button, bool selected)
+        {
+            if (button && button.targetGraphic)
+                button.targetGraphic.color = selected ? new Color32(255, 211, 76, 255) : Color.white;
         }
     }
 }

@@ -29,7 +29,7 @@ namespace KMA.Gameplay.UI
         {
             new Entry(SubjectId.Sprint, "Chạy nước rút", new Color32(49, 162, 222, 255), true),
             new Entry(SubjectId.Volleyball, "Bóng chuyền", new Color32(245, 158, 46, 255), true),
-            new Entry(SubjectId.Football, "Bóng đá", new Color32(226, 232, 240, 255), false),
+            new Entry(SubjectId.Football, "Bóng đá", new Color32(53, 169, 91, 255), true),
         };
 
         public static void Build(MapScreen screen, GameSession session)

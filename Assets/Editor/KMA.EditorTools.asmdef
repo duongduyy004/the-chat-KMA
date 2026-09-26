@@ -17,7 +17,8 @@
         "Unity.RenderPipelines.Universal.Runtime",
         "Unity.2D.Sprite.Editor",
         "Unity.TextMeshPro",
-        "UnityEngine.UI"
+        "UnityEngine.UI",
+        "KMA.Gameplay.Football"
     ],
     "includePlatforms": [
         "Editor"
