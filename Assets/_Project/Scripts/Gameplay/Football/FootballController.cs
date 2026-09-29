@@ -10,6 +10,9 @@ namespace KMA.Gameplay
 {
     public sealed class FootballController : MinigameBase
     {
+        public override bool UsesSharedTutorial => false;
+        public override bool OwnsStartGate => true;
+
         static FootballDifficulty preferredDifficulty = FootballDifficulty.Normal;
         static bool retryRequested;
 

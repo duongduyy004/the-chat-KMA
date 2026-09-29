@@ -5,6 +5,8 @@ namespace KMA.Gameplay.Volleyball
 {
     public sealed class VolleyballController : MinigameBase
     {
+        public override bool UsesSharedTutorial => false;
+
         public const float MaxStep = .1f;
 
         [SerializeField] VolleyAthleteView playerView;

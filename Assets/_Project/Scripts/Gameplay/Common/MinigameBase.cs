@@ -27,6 +27,15 @@ namespace KMA.Gameplay
 
         public MinigamePhase PresentationPhase => Lifecycle == null ? MinigamePhase.Tutorial : Lifecycle.Phase;
 
+        /// PhaseOverlay shows the shared tutorial card and holds the start gate while it is open.
+        public virtual bool UsesSharedTutorial => true;
+
+        /// PhaseOverlay shows the shared 3-2-1 countdown.
+        public virtual bool UsesSharedCountdown => true;
+
+        /// The minigame opens its own start gate, so PhaseOverlay must leave the gate alone.
+        public virtual bool OwnsStartGate => false;
+
         public void SetTutorialGate(bool closed) => Lifecycle?.SetTutorialGate(closed);
 
         protected virtual void Awake() => Lifecycle = new MinigameLifecycle(tutorialSeconds, countdownSeconds);

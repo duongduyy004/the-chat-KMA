@@ -57,7 +57,7 @@ namespace KMA.Gameplay.UI
 
         void Update()
         {
-            if (IsSprintSource || DisplayedPhase != MinigamePhase.Countdown)
+            if ((source != null && !source.UsesSharedCountdown) || DisplayedPhase != MinigamePhase.Countdown)
                 return;
 
             countdownElapsed += Time.deltaTime;
@@ -86,18 +86,17 @@ namespace KMA.Gameplay.UI
             if (phase == MinigamePhase.Countdown)
                 countdownElapsed = 0f;
 
-            bool useSharedStartPresentation = !IsSprintSource && !IsVolleyballSource;
-            SetActive(tutorialRoot, useSharedStartPresentation && phase == MinigamePhase.Tutorial &&
+            bool sharedTutorial = source == null || source.UsesSharedTutorial;
+            bool sharedCountdown = source == null || source.UsesSharedCountdown;
+            SetActive(tutorialRoot, sharedTutorial && phase == MinigamePhase.Tutorial &&
                 (tutorialOverlay == null || tutorialOverlay.ShouldShow));
-            SetActive(countdownRoot, !IsSprintSource && phase == MinigamePhase.Countdown);
-            SetActive(playRoot, useSharedStartPresentation && phase == MinigamePhase.Play);
+            SetActive(countdownRoot, sharedCountdown && phase == MinigamePhase.Countdown);
+            SetActive(playRoot, sharedTutorial && phase == MinigamePhase.Play);
             SetActive(resolveRoot, phase == MinigamePhase.Resolve);
 
             if (phaseLabel != null)
-                phaseLabel.text = (IsSprintSource || IsVolleyballSource) && phase != MinigamePhase.Resolve
-                    ? string.Empty
-                    : PhaseName(phase);
-            if (useSharedStartPresentation)
+                phaseLabel.text = !sharedTutorial && phase != MinigamePhase.Resolve ? string.Empty : PhaseName(phase);
+            if (sharedCountdown)
                 RefreshCountdown();
         }
 
@@ -108,15 +107,13 @@ namespace KMA.Gameplay.UI
 
             UnsubscribeTutorialCompletion();
 
-            if (IsVolleyballSource)
-            {
-                source.SetTutorialGate(false);
-                return;
-            }
-
-            if (IsSprintSource)
-            {
+            if (source.OwnsStartGate)
                 FindSprintStartPresentation()?.Bind(source);
+
+            if (!source.UsesSharedTutorial)
+            {
+                if (!source.OwnsStartGate)
+                    source.SetTutorialGate(false);
                 return;
             }
 
@@ -143,9 +140,6 @@ namespace KMA.Gameplay.UI
         }
 
         void ReleaseTutorialGate() => source?.SetTutorialGate(false);
-
-        bool IsSprintSource => source != null && source.GetType().Name == "SprintController";
-        bool IsVolleyballSource => source != null && source.GetType().Name == "VolleyballController";
 
         static ISprintStartPresentation FindSprintStartPresentation()
         {

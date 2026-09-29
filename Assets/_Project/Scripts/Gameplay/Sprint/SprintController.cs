@@ -7,6 +7,10 @@ namespace KMA.Gameplay
 {
     public sealed class SprintController : MinigameBase
     {
+        public override bool UsesSharedTutorial => false;
+        public override bool UsesSharedCountdown => false;
+        public override bool OwnsStartGate => true;
+
         [SerializeField] RivalPaceProfileAsset[] rivalProfiles;
         [SerializeField] InputActionAsset inputActions;
         [SerializeField] bool directInputEnabled = true;
