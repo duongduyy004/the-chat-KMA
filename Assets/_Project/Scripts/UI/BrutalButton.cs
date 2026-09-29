@@ -13,7 +13,6 @@ namespace KMA.Gameplay.UI
         [SerializeField] RectTransform shadow;
         [SerializeField] UnityEvent onPressed;
 
-        Vector2 visualRestPosition;
         Vector2 shadowRestPosition;
         Coroutine restoreRoutine;
 
@@ -57,24 +56,23 @@ namespace KMA.Gameplay.UI
 
         void CacheRestPositions()
         {
-            if (visual != null)
-                visualRestPosition = visual.anchoredPosition;
             if (shadow != null)
                 shadowRestPosition = shadow.anchoredPosition;
         }
 
         void ApplyPressed()
         {
-            CacheRestPositions();
-            CurrentVisualOffset = PressedOffset;
-            if (visual != null)
-                visual.anchoredPosition = visualRestPosition + PressedOffset;
+            if (shadow != null && CurrentVisualOffset == Vector2.zero)
+                shadowRestPosition = shadow.anchoredPosition;
+            SetVisualOffset(PressedOffset);
             if (shadow != null)
                 shadow.anchoredPosition = Vector2.zero;
         }
 
         void RestoreOverTime()
         {
+            if (CurrentVisualOffset == Vector2.zero)
+                return;
             if (!isActiveAndEnabled)
             {
                 RestoreImmediately();
@@ -103,10 +101,11 @@ namespace KMA.Gameplay.UI
 
         void SetVisualOffset(Vector2 offset)
         {
-            CurrentVisualOffset = offset;
+            // Apply only the change: a layout group owns the rest position, so never write an absolute one.
             if (visual != null)
-                visual.anchoredPosition = visualRestPosition + offset;
-            if (shadow != null)
+                visual.anchoredPosition += offset - CurrentVisualOffset;
+            CurrentVisualOffset = offset;
+            if (shadow != null && offset == Vector2.zero)
                 shadow.anchoredPosition = shadowRestPosition;
         }
     }
