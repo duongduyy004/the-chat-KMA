@@ -75,8 +75,8 @@ namespace KMA.Tests.Presentation
             }
         }
 
-        [Test]
-        public void PresentationPrefabsBindFontsEffectsAndPassiveResultFields()
+        [UnityTest]
+        public IEnumerator PresentationPrefabsBindFontsEffectsAndPassiveResultFields()
         {
             var phasePrefab = AssetDatabase.LoadAssetAtPath<GameObject>(
                 "Assets/_Project/Prefabs/UI/PhaseOverlay.prefab");
@@ -118,6 +118,7 @@ namespace KMA.Tests.Presentation
                 var panel = resultObject.GetComponent<ResultPanel>();
                 Assert.That(panel, Is.Not.Null);
                 panel.Show(new MinigameResult(false, 987.6f, Rank.B), "MapPreview");
+                yield return new WaitForSecondsRealtime(1.5f); // the score now counts up from 0
 
                 var labels = resultObject.GetComponentsInChildren<TMP_Text>(true)
                     .ToDictionary(label => label.name, label => label.text);

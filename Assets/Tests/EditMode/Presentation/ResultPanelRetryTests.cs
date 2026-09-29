@@ -139,7 +139,8 @@ namespace KMA.Tests.Presentation
             Transform content = root.transform.Find("Content");
             Assert.That(content.localScale, Is.EqualTo(Vector3.one));
             var group = content.GetComponent<CanvasGroup>();
-            Assert.That(group == null || Mathf.Approximately(group.alpha, 1f), Is.True);
+            if (group != null)
+                Assert.That(group.alpha, Is.EqualTo(1f), "the snap path must leave the modal fully opaque");
             Assert.That(score.text, Is.EqualTo("8"));
         }
 

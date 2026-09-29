@@ -216,7 +216,28 @@ namespace KMA.Gameplay.UI
                 SnapRevealed();
                 return;
             }
+            PrepareReveal();
             StartCoroutine(AnimateReveal(finalScore));
+        }
+
+        /// Puts every animated element in its pre-stage state so nothing shows before its turn.
+        void PrepareReveal()
+        {
+            CanvasGroup scrim = ScrimGroup();
+            if (scrim != null) scrim.alpha = 0f;
+            CanvasGroup modal = ModalGroup();
+            if (modal != null)
+            {
+                modal.alpha = 0f;
+                contentRoot.transform.localScale = Vector3.one * .9f;
+            }
+            if (statusLabel != null)
+            {
+                Color c = statusLabel.color;
+                statusLabel.color = new Color(c.r, c.g, c.b, 0f);
+            }
+            if (scoreLabel != null) scoreLabel.text = "0";
+            if (rankLabel != null) rankLabel.rectTransform.localScale = Vector3.one * .6f;
         }
 
         CanvasGroup ScrimGroup()
@@ -291,6 +312,7 @@ namespace KMA.Gameplay.UI
             if (label == null)
                 yield break;
             Color target = label.color;
+            target.a = 1f;
             float elapsed = 0f;
             while (elapsed < duration)
             {
