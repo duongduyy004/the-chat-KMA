@@ -3,6 +3,7 @@
     "rootNamespace": "KMA.Gameplay.Volleyball",
     "references": [
         "KMA.Gameplay",
+        "KMA.Gameplay.UI",
         "Unity.InputSystem",
         "UnityEngine.UI",
         "Unity.TextMeshPro"

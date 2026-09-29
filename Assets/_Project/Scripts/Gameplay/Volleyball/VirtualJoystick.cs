@@ -1,3 +1,4 @@
+using KMA.UI.Kit;
 using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.UI;
@@ -17,7 +18,7 @@ namespace KMA.Gameplay.Volleyball
         [SerializeField, Min(1f)] float radius = 100f;
         [SerializeField] Vector2 restPosition;
         [SerializeField] Image baseImage;
-        [SerializeField] Image knobImage;
+        [SerializeField] Image rimImage;
 
         int pointerId = NoPointer;
         Vector2 origin;
@@ -34,7 +35,7 @@ namespace KMA.Gameplay.Volleyball
             radius = Mathf.Max(1f, stickRadius);
             restPosition = rest;
             baseImage = stickBase ? stickBase.GetComponent<Image>() : null;
-            knobImage = knob ? knob.GetComponent<Image>() : null;
+            rimImage = stickBase ? stickBase.Find("JoystickRim")?.GetComponent<Image>() : null;
             Release();
         }
 
@@ -65,10 +66,7 @@ namespace KMA.Gameplay.Volleyball
             origin = local;
             if (stickBase)
                 stickBase.anchoredPosition = origin;
-            if (baseImage)
-                baseImage.color = new Color(.05f, .65f, .78f, .6f);
-            if (knobImage)
-                knobImage.color = new Color(.72f, 1f, 1f, .95f);
+            KitControlState.Apply(baseImage, rimImage, ControlState.Hint);
             Drag(local);
         }
 
@@ -93,10 +91,7 @@ namespace KMA.Gameplay.Volleyball
                 stickBase.anchoredPosition = restPosition;
             if (knob)
                 knob.anchoredPosition = restPosition;
-            if (baseImage)
-                baseImage.color = new Color(.05f, .57f, .7f, .35f);
-            if (knobImage)
-                knobImage.color = new Color(.72f, 1f, 1f, .75f);
+            KitControlState.Apply(baseImage, rimImage, ControlState.Rest);
         }
 
         void OnDisable() => Release();

@@ -1,11 +1,14 @@
 #if UNITY_EDITOR
 using System;
 using KMA.EditorTools;
+using KMA.Gameplay.UI;
 using KMA.Gameplay.Volleyball;
+using KMA.UI.Kit;
 using NUnit.Framework;
 using UnityEditor;
 using UnityEditor.SceneManagement;
 using UnityEngine;
+using UnityEngine.UI;
 using Object = UnityEngine.Object;
 
 namespace KMA.Tests.EditorTools
@@ -80,6 +83,35 @@ namespace KMA.Tests.EditorTools
                 $"{markerName} must not cover the head of {view.name} (tallest pose reaches {headTop:0.00}).");
         }
 
+
+        [Test]
+        public void ControlsScoreboardAndPauseAreDrawnWithTheUiKit()
+        {
+            VolleyballSceneConfigurator.BuildScene();
+            EditorSceneManager.OpenScene(VolleyballSceneConfigurator.ScenePath, OpenSceneMode.Single);
+            UiKitAssets assets = UiKitAssets.Load();
+
+            foreach (Image image in Object.FindObjectsByType<Image>(FindObjectsInactive.Exclude, FindObjectsSortMode.None))
+                if (image.sprite != null)
+                    Assert.That(image.sprite.name, Is.Not.EqualTo("Knob"), image.name + " still stretches the built-in knob");
+
+            var scoreboard = GameObject.Find("VolleyballScoreboard").GetComponent<Image>();
+            Assert.That(scoreboard.sprite, Is.SameAs(assets.RoundRect24));
+            Assert.That(scoreboard.type, Is.EqualTo(Image.Type.Sliced), "a rounded panel, not a stretched ellipse");
+
+            var action = Object.FindFirstObjectByType<ActionButton>();
+            var feedback = action.GetComponent<KitPressFeedback>();
+            Assert.That(feedback, Is.Not.Null);
+            Assert.That(feedback.RestColor, Is.EqualTo(MinigameUiTheme.Accent));
+
+            Assert.That(GameObject.Find("JoystickBase").GetComponent<Image>().sprite, Is.SameAs(assets.Circle));
+            Assert.That(GameObject.Find("PlayerTitle").GetComponent<TMPro.TMP_Text>().color, Is.EqualTo(MinigameUiTheme.Player));
+            Assert.That(GameObject.Find("EnemyTitle").GetComponent<TMPro.TMP_Text>().color, Is.EqualTo(MinigameUiTheme.Energy));
+
+            var pause = Object.FindFirstObjectByType<PausePanel>();
+            Assert.That(pause.GetComponent<Image>().sprite, Is.SameAs(assets.RoundRect20));
+            Assert.That(Object.FindObjectsByType<Text>(FindObjectsInactive.Include, FindObjectsSortMode.None), Is.Empty);
+        }
         // World height, above the feet pivot, of the highest opaque pixel of an imported Toon pose.
         static float OpaqueTop(Sprite sprite)
         {

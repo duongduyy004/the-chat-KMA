@@ -4,6 +4,7 @@ using System.IO;
 using System.Linq;
 using KMA.Gameplay.UI;
 using KMA.Gameplay.Volleyball;
+using KMA.UI.Kit;
 using TMPro;
 using UnityEditor;
 using UnityEditor.SceneManagement;
@@ -26,9 +27,7 @@ namespace KMA.EditorTools
         const float MarkerWorldHeight = 2.4f;
         const string EnvironmentDir = "Assets/_Project/Art/Environments/Volleyball";
         const string PixelPath = EnvironmentDir + "/Pixel.png";
-        const string FontPath = "Assets/_Project/Fonts/Baloo2-ExtraBold.asset";
         const string HudRootName = "S2_HUD_Minigame";
-        const string KnobSpritePath = "UI/Skin/Knob.psd";
 
         // Tuned by eye in the visual QA task; see the plan's Task 13.
         const float HorizonWorldY = 4.97f;
@@ -42,10 +41,7 @@ namespace KMA.EditorTools
         static readonly Color ShadowTint = new Color(1f, 1f, 1f, .8f);
         static readonly Color ContactTint = new Color(1f, .9f, .2f, .85f);
         static readonly Color AimTint = new Color(1f, .25f, .2f, .85f);
-        static readonly Color ButtonColor = new Color32(255, 152, 0, 242);
-        static readonly Color Ink = new Color32(10, 40, 61, 255);
-        static readonly Color Cyan = new Color32(75, 230, 244, 255);
-        static readonly Color Coral = new Color32(255, 119, 83, 255);
+        static readonly Color BallInk = new Color32(10, 40, 61, 255);
 
         readonly struct TextureSpec
         {
@@ -109,7 +105,7 @@ namespace KMA.EditorTools
             if (r > 1f)
                 return Color.clear;
             if (r > .88f)
-                return Ink;
+                return BallInk;
             for (int k = 0; k < 3; k++)
             {
                 float angle = (90f + k * 120f) * Mathf.Deg2Rad;
@@ -213,8 +209,8 @@ namespace KMA.EditorTools
 
             VolleyAthleteView player = Athlete("Player", false, ToonCharacterArt.Hero);
             VolleyAthleteView opponent = Athlete("Opponent", true, OpponentCharacter);
-            AddAthleteMarker(player.transform, pixel, "Player", Cyan);
-            AddAthleteMarker(opponent.transform, pixel, "Enemy", Coral);
+            AddAthleteMarker(player.transform, pixel, "Player", MinigameUiTheme.Player);
+            AddAthleteMarker(opponent.transform, pixel, "Enemy", MinigameUiTheme.Energy);
 
             SpriteRenderer ball = Renderer("Ball", Single(BallPath), Vector3.zero, VolleyBallView.BallSortingOrder);
             SpriteRenderer shadow = Renderer("BallShadow", shadowSprite, Vector3.zero, VolleyBallView.ShadowSortingOrder);
@@ -263,7 +259,7 @@ namespace KMA.EditorTools
             edge.transform.localPosition = new Vector3(0f, MarkerWorldHeight / AthleteScale, 0f);
             edge.transform.localRotation = Quaternion.Euler(0f, 0f, 45f);
             edge.transform.localScale = new Vector3(.43f, .43f, 1f) / AthleteScale;
-            edge.color = Ink;
+            edge.color = MinigameUiTheme.Surface;
             SpriteRenderer centre = Renderer(name + "Marker", pixel, Vector3.zero, 291);
             centre.transform.SetParent(athlete, false);
             centre.transform.localPosition = edge.transform.localPosition;
@@ -299,8 +295,6 @@ namespace KMA.EditorTools
             // not represent volleyball, so hide only its prefab children in this scene.
             foreach (Transform child in parent)
                 child.gameObject.SetActive(false);
-            var font = AssetDatabase.LoadAssetAtPath<TMP_FontAsset>(FontPath);
-            Sprite knobSprite = AssetDatabase.GetBuiltinExtraResource<Sprite>(KnobSpritePath);
             Camera.main.orthographicSize = 5.45f;
 
             RectTransform controls = UiRect("VolleyballControls", parent, Vector2.zero, Vector2.one);
@@ -308,60 +302,48 @@ namespace KMA.EditorTools
 
             RectTransform area = UiRect("JoystickArea", controls, Vector2.zero, new Vector2(.38f, .52f));
             area.gameObject.AddComponent<Image>().color = Color.clear;
-            RectTransform stickBase = Circle("JoystickBase", area, knobSprite, 224f, new Color(.05f, .57f, .7f, .35f));
-            Circle("JoystickRim", stickBase, knobSprite, 195f, new Color(.5f, .96f, 1f, .25f));
-            RectTransform knob = Circle("JoystickKnob", area, knobSprite, 112f, new Color(.72f, 1f, 1f, .75f));
-            Circle("JoystickCore", knob, knobSprite, 61f, new Color(.98f, 1f, 1f, .7f));
+            JoystickHandle stick = UiKit.Joystick(area);
             var joystick = area.gameObject.AddComponent<VirtualJoystick>();
-            joystick.Configure(area, stickBase, knob, 88f, new Vector2(-135f, -140f));
+            joystick.Configure(area, stick.Base.rectTransform, stick.Knob.rectTransform, 88f, new Vector2(-135f, -140f));
 
             RectTransform buttonRect = UiRect("ActionButton", controls, Vector2.one, Vector2.one);
             buttonRect.anchorMin = buttonRect.anchorMax = buttonRect.pivot = new Vector2(1f, 0f);
             buttonRect.sizeDelta = new Vector2(310f, 310f);
             buttonRect.anchoredPosition = new Vector2(-18f, 18f);
-            buttonRect.gameObject.AddComponent<Image>().color = new Color(1f, 1f, 1f, .001f);
-            RectTransform buttonShadow = Circle("ButtonShadow", buttonRect, knobSprite, 231f, new Color(Ink.r, Ink.g, Ink.b, .25f));
-            buttonShadow.anchoredPosition = new Vector2(0f, -8f);
-            Circle("ButtonRim", buttonRect, knobSprite, 238f, new Color32(255, 227, 137, 255));
-            RectTransform buttonFace = Circle("ButtonFace", buttonRect, knobSprite, 218f, ButtonColor);
+            buttonRect.gameObject.AddComponent<Image>().color = Color.clear;
             var button = buttonRect.gameObject.AddComponent<ActionButton>();
-            button.Configure(buttonFace.GetComponent<Image>(), buttonFace);
-            TMP_Text actionLabel = Label("Label", buttonFace, font, "ĐÁNH", 53f,
-                Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
-            actionLabel.color = Ink;
+            UiKit.RoundButton(buttonRect, "ĐÁNH");
 
-            RectTransform scoreboard = Panel("VolleyballScoreboard", controls, knobSprite,
-                new Vector2(.5f, 1f), new Vector2(650f, 84f), new Vector2(0f, -12f),
-                new Color(Ink.r, Ink.g, Ink.b, .83f));
-            Label("PlayerTitle", scoreboard, font, "PLAYER", 35f,
-                new Vector2(0f, .5f), new Vector2(0f, .5f), new Vector2(136f, 0f), new Vector2(225f, 65f)).color = Cyan;
-            TMP_Text score = Label("Score", scoreboard, font, VolleyballHud.ScoreText(0, 0), 53f,
-                new Vector2(.5f, .5f), new Vector2(.5f, .5f), Vector2.zero, new Vector2(215f, 74f));
-            Label("EnemyTitle", scoreboard, font, "ENEMY", 35f,
-                new Vector2(1f, .5f), new Vector2(1f, .5f), new Vector2(-136f, 0f), new Vector2(225f, 65f)).color = Coral;
-            TMP_Text feedback = Label("Feedback", controls, font, string.Empty, 66f,
-                new Vector2(.5f, .75f), new Vector2(.5f, .75f), Vector2.zero, new Vector2(680f, 100f));
-            feedback.color = new Color32(255, 242, 151, 255);
-            RectTransform hintBanner = Panel("HintBanner", controls, knobSprite,
-                new Vector2(.5f, .045f), new Vector2(860f, 66f), Vector2.zero,
-                new Color(Ink.r, Ink.g, Ink.b, .72f));
-            TMP_Text hint = Label("Hint", hintBanner, font, VolleyballHud.HintText, 31f,
-                Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
+            Vector2 centre = new Vector2(.5f, .5f);
+            Image scoreboard = UiKit.Panel(controls, "VolleyballScoreboard");
+            UiKit.Place(scoreboard.rectTransform, new Vector2(.5f, 1f), new Vector2(.5f, 1f), new Vector2(0f, -12f),
+                new Vector2(650f, 84f));
+            TMP_Text playerTitle = UiKit.Label(scoreboard.transform, "PlayerTitle", "PLAYER", MinigameUiTheme.Body,
+                MinigameUiTheme.Player);
+            UiKit.Place(playerTitle.rectTransform, new Vector2(0f, .5f), centre, new Vector2(136f, 0f), new Vector2(225f, 65f));
+            TMP_Text score = UiKit.Label(scoreboard.transform, "Score", VolleyballHud.ScoreText(0, 0),
+                MinigameUiTheme.Title, MinigameUiTheme.TextPrimary);
+            UiKit.Place(score.rectTransform, centre, centre, Vector2.zero, new Vector2(215f, 74f));
+            TMP_Text enemyTitle = UiKit.Label(scoreboard.transform, "EnemyTitle", "ENEMY", MinigameUiTheme.Body,
+                MinigameUiTheme.Energy);
+            UiKit.Place(enemyTitle.rectTransform, new Vector2(1f, .5f), centre, new Vector2(-136f, 0f), new Vector2(225f, 65f));
+
+            TMP_Text feedback = UiKit.Label(controls, "Feedback", string.Empty, MinigameUiTheme.Headline,
+                MinigameUiTheme.Accent, TextAlignmentOptions.Center, outline: true);
+            UiKit.Place(feedback.rectTransform, new Vector2(.5f, .75f), centre, Vector2.zero, new Vector2(680f, 100f));
+            ChipHandle hint = UiKit.Chip(controls, "HintBanner", VolleyballHud.HintText);
+            hint.Label.name = "Hint";
+            UiKit.Place(hint.Background.rectTransform, new Vector2(.5f, .045f), centre, Vector2.zero, new Vector2(860f, 66f));
             var hud = controls.gameObject.AddComponent<VolleyballHud>();
-            hud.Configure(score, feedback, hint);
-            hud.ConfigureHintBackdrop(hintBanner.gameObject);
+            hud.Configure(score, feedback, hint.Label);
+            hud.ConfigureHintBackdrop(hint.Background.gameObject);
 
             var pause = Object.FindFirstObjectByType<PausePanel>();
             if (pause)
             {
                 pause.transform.SetParent(parent, false);
-                var pauseRect = (RectTransform)pause.transform;
-                pauseRect.anchorMin = pauseRect.anchorMax = pauseRect.pivot = Vector2.one;
-                pauseRect.sizeDelta = new Vector2(136f, 72f);
-                pauseRect.anchoredPosition = new Vector2(-22f, -18f);
-                pause.GetComponent<Image>().color = new Color(Ink.r, Ink.g, Ink.b, .83f);
-                pause.GetComponentInChildren<Text>().text = "II  PAUSE";
-                pause.GetComponentInChildren<Text>().fontSize = 23;
+                UiKit.Place((RectTransform)pause.transform, Vector2.one, Vector2.one, new Vector2(-22f, -18f),
+                    Vector2.one * MinigameUiTheme.ButtonHeight);
             }
 
             var controller = Object.FindFirstObjectByType<VolleyballController>();
@@ -385,50 +367,6 @@ namespace KMA.EditorTools
             rect.offsetMin = Vector2.zero;
             rect.offsetMax = Vector2.zero;
             return rect;
-        }
-
-        static RectTransform Circle(string name, Transform parent, Sprite sprite, float size, Color color)
-        {
-            RectTransform rect = UiRect(name, parent, new Vector2(.5f, .5f), new Vector2(.5f, .5f));
-            rect.sizeDelta = new Vector2(size, size);
-            var image = rect.gameObject.AddComponent<Image>();
-            image.sprite = sprite;
-            image.color = color;
-            image.raycastTarget = false;
-            return rect;
-        }
-
-        static RectTransform Panel(string name, Transform parent, Sprite sprite, Vector2 anchor,
-            Vector2 dimensions, Vector2 position, Color color)
-        {
-            RectTransform rect = UiRect(name, parent, anchor, anchor);
-            rect.pivot = new Vector2(.5f, anchor.y >= .99f ? 1f : .5f);
-            rect.sizeDelta = dimensions;
-            rect.anchoredPosition = position;
-            Image image = rect.gameObject.AddComponent<Image>();
-            image.sprite = sprite;
-            image.color = color;
-            image.raycastTarget = false;
-            return rect;
-        }
-
-        static TMP_Text Label(string name, Transform parent, TMP_FontAsset font, string text, float size,
-            Vector2 anchorMin, Vector2 anchorMax, Vector2 position, Vector2 dimensions)
-        {
-            RectTransform rect = UiRect(name, parent, anchorMin, anchorMax);
-            rect.pivot = new Vector2(.5f, anchorMin.y >= 1f ? 1f : anchorMin.y <= 0f && anchorMax.y <= 0f ? 0f : .5f);
-            rect.anchoredPosition = position;
-            if (dimensions != Vector2.zero)
-                rect.sizeDelta = dimensions;
-            var label = rect.gameObject.AddComponent<TextMeshProUGUI>();
-            if (font)
-                label.font = font;
-            label.text = text;
-            label.fontSize = size;
-            label.alignment = TextAlignmentOptions.Center;
-            label.color = Color.white;
-            label.raycastTarget = false;
-            return label;
         }
 
         static void EnsureInBuildSettings()
