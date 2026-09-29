@@ -120,6 +120,14 @@ namespace KMA.Tests.Presentation
 
             var problems = MinigameStyleAudit.Audit(hud);
             Assert.That(problems, Is.Empty, string.Join("\n", problems));
+
+            foreach (string tapName in new[] { "LeftTap", "RightTap" })
+            {
+                GameObject tap = GameObject.Find(tapName);
+                Assert.That(tap, Is.Not.Null, tapName + " must exist to be audited.");
+                var tapProblems = MinigameStyleAudit.Audit(tap);
+                Assert.That(tapProblems, Is.Empty, tapName + ":\n" + string.Join("\n", tapProblems));
+            }
         }
 
         [UnityTest]
@@ -655,7 +663,7 @@ namespace KMA.Tests.Presentation
             Assert.That(chrome.Find("Scoreboard/Distance").GetComponent<TMP_Text>().text, Is.EqualTo("0 / 100 m"));
             Assert.That(chrome.Find("Scoreboard/RankBadge/RankLabel").GetComponent<TMP_Text>().text, Is.EqualTo("1st"));
             Assert.That(chrome.Find("Scoreboard/Combo").GetComponent<TMP_Text>().text, Is.EqualTo("COMBO ×0"));
-            Assert.That(chrome.Find("ModeLabel").GetComponent<TMP_Text>().text, Is.EqualTo("CHẠY NƯỚC RÚT · 100M"));
+            Assert.That(chrome.Find("ModeLabel/Label").GetComponent<TMP_Text>().text, Is.EqualTo("CHẠY NƯỚC RÚT · 100M"));
 
             KitBar rail = chrome.Find("ProgressRail").GetComponent<KitBar>();
             Assert.That(rail.Value, Is.EqualTo(0f).Within(.001f));

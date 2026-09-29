@@ -79,10 +79,9 @@ namespace KMA.Gameplay
             combo.text = "COMBO ×0";
 
             // Mode chip
-            TMP_Text mode = UiKit.Label(root, "ModeLabel", "CHẠY NƯỚC RÚT · 100M", MinigameUiTheme.Caption,
-                MinigameUiTheme.WithAlpha(MinigameUiTheme.TextPrimary, .6f));
-            ApplyRect(mode.rectTransform, safe, SprintUiLayout.ModeChipRect(safe));
-            chromeLayout.Register(mode.rectTransform, SprintUiLayout.ModeChipRect);
+            ChipHandle mode = UiKit.Chip(root, "ModeLabel", "CHẠY NƯỚC RÚT · 100M");
+            ApplyRect(mode.Background.rectTransform, safe, SprintUiLayout.ModeChipRect(safe));
+            chromeLayout.Register(mode.Background.rectTransform, SprintUiLayout.ModeChipRect);
 
             EnsurePause(root, safe, chromeLayout);
             EnsureStartPresentation(root, safe);
