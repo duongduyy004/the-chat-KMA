@@ -251,6 +251,7 @@ namespace KMA.EditorTools
                 MinigameUiTheme.Body, MinigameUiTheme.TextPrimary);
             UiKit.Anchor(instructions.rectTransform, new Vector2(.08f, .55f), new Vector2(.92f, .77f));
             UiKit.FitLabel(instructions, MinigameUiTheme.Body);
+            instructions.textWrappingMode = TextWrappingModes.Normal;
             TMP_Text difficultyTitle = UiKit.Label(start.transform, "DifficultyTitle", "ĐỘ KHÓ", MinigameUiTheme.Caption,
                 MinigameUiTheme.Accent);
             UiKit.Anchor(difficultyTitle.rectTransform, new Vector2(.1f, .45f), new Vector2(.9f, .55f));
