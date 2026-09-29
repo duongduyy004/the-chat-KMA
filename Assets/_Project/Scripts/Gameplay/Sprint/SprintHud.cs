@@ -1,6 +1,6 @@
+using KMA.UI.Kit;
 using TMPro;
 using UnityEngine;
-using UnityEngine.UI;
 
 namespace KMA.Gameplay
 {
@@ -11,8 +11,7 @@ namespace KMA.Gameplay
         [SerializeField] TMP_Text distanceLabel;
         [SerializeField] TMP_Text rankLabel;
         [SerializeField] TMP_Text cadenceLabel;
-        [SerializeField] Image distanceFill;
-        [SerializeField] RectTransform playerPip;
+        [SerializeField] KitBar distanceBar;
 
         public string DistanceText { get; private set; } = string.Empty;
         public string RankText { get; private set; } = string.Empty;
@@ -46,18 +45,11 @@ namespace KMA.Gameplay
             if (distanceLabel != null) distanceLabel.text = DistanceText;
             if (rankLabel != null) rankLabel.text = RankText;
             if (cadenceLabel != null) cadenceLabel.text = CadenceText;
-            if (distanceFill != null) distanceFill.fillAmount = progress;
-            if (playerPip != null)
-            {
-                Vector2 min = playerPip.anchorMin;
-                Vector2 max = playerPip.anchorMax;
-                playerPip.anchorMin = new Vector2(progress, min.y);
-                playerPip.anchorMax = new Vector2(progress, max.y);
-            }
+            if (distanceBar != null) distanceBar.SetValue(progress);
         }
 
         public bool HasBoundVisuals => metricsRoot != null && distanceLabel != null && rankLabel != null &&
-            cadenceLabel != null && distanceFill != null && playerPip != null;
+            cadenceLabel != null && distanceBar != null;
 
         void CacheVisuals()
         {
@@ -76,8 +68,7 @@ namespace KMA.Gameplay
             distanceLabel = metricsRoot.Find("Distance")?.GetComponent<TMP_Text>();
             rankLabel = metricsRoot.Find("RankBadge/RankLabel")?.GetComponent<TMP_Text>();
             cadenceLabel = metricsRoot.Find("Combo")?.GetComponent<TMP_Text>();
-            distanceFill = chrome.Find("ProgressRail/RailFill")?.GetComponent<Image>();
-            playerPip = chrome.Find("ProgressRail/PlayerPip") as RectTransform;
+            distanceBar = chrome.Find("ProgressRail")?.GetComponent<KitBar>();
         }
     }
 }

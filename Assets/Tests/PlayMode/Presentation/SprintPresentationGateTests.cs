@@ -217,14 +217,14 @@ namespace KMA.Tests.Presentation
             TMP_Text distance = chrome.Find("Scoreboard/Distance")?.GetComponent<TMP_Text>();
             TMP_Text rank = chrome.Find("Scoreboard/RankBadge/RankLabel")?.GetComponent<TMP_Text>();
             TMP_Text cadence = chrome.Find("Scoreboard/Combo")?.GetComponent<TMP_Text>();
-            Image distanceFill = chrome.Find("ProgressRail/RailFill")?.GetComponent<Image>();
+            KitBar distanceBar = chrome.Find("ProgressRail")?.GetComponent<KitBar>();
 
             Assert.That(sprintHud.HasBoundVisuals, Is.True);
             Assert.That(distance, Is.Not.Null);
             Assert.That(rank, Is.Not.Null);
             Assert.That(cadence, Is.Not.Null);
-            Assert.That(distanceFill, Is.Not.Null);
-            Assert.That(distanceFill.type, Is.EqualTo(Image.Type.Filled));
+            Assert.That(distanceBar, Is.Not.Null);
+            Assert.That(distanceBar.Fill.name, Is.EqualTo("RailFill"));
             Assert.That(chrome.GetComponentInParent<SafeAreaFitter>(), Is.Not.Null);
             Assert.That(distance.text, Is.EqualTo("0 / 100 m"));
             Assert.That(rank.text, Is.EqualTo("1st"));
@@ -237,7 +237,8 @@ namespace KMA.Tests.Presentation
             Assert.That(distance.text, Is.EqualTo("42 / 100 m"));
             Assert.That(rank.text, Is.EqualTo("1st"));
             Assert.That(cadence.text, Is.EqualTo("COMBO ×0"));
-            Assert.That(distanceFill.fillAmount, Is.EqualTo(.42f).Within(.001f));
+            Assert.That(distanceBar.Value, Is.EqualTo(.42f).Within(.001f));
+            Assert.That(distanceBar.Fill.rectTransform.anchorMax.x, Is.EqualTo(.42f).Within(.001f));
 
             controller.OnLeftTap();
             controller.OnRightTap();
@@ -579,46 +580,42 @@ namespace KMA.Tests.Presentation
         }
 
         [UnityTest]
-        public IEnumerator SprintResultPresentationStylesOutcomesAndKeepsSingleContinueDuringAnimation()
+        public IEnumerator SprintResultUsesSharedPanelWithSprintTitlesAndASingleContinue()
         {
             yield return LoadSprint();
 
             var scene = SceneManager.GetActiveScene();
             var panel = SceneObjects<ResultPanel>(scene)[0];
-            var presentation = SceneObjects<SprintResultPresentation>(scene)[0];
             Transform content = panel.transform.Find("Content");
             TMP_Text title = content.Find("StatusLabel").GetComponent<TMP_Text>();
             TMP_Text score = content.Find("ScoreLabel").GetComponent<TMP_Text>();
             TMP_Text rank = content.Find("RankLabel").GetComponent<TMP_Text>();
             Button action = content.Find("ActionButton").GetComponent<Button>();
+            Assert.That(panel.GetComponent("SprintResultPresentation"), Is.Null, "the reveal now lives in ResultPanel");
 
             var routes = new List<string>();
             panel.ActionRequested += routes.Add;
 
             panel.Show(new MinigameResult(false, 0f, Rank.F), "Punishment");
-            presentation.ShowForTest(panel.CurrentResult);
-
+            // The shared panel animates its reveal; the settled state is asserted after it ends.
+            yield return new WaitForSecondsRealtime(1.5f);
             Assert.That(title.text, Is.EqualTo("THẤT BẠI"));
-            AssertColor32(title.color, new Color32(255, 89, 94, 255));
+            AssertColor32(title.color, (Color32)MinigameUiTheme.Energy);
             Assert.That(score.text, Is.EqualTo("0"));
-            Assert.That(rank.text, Is.EqualTo("F"));
+            Assert.That(rank.text, Is.EqualTo("XẾP HẠNG F"));
             Assert.That(action.interactable, Is.True);
+            Assert.That(content.Find("RetryButton").gameObject.activeSelf, Is.False);
 
             panel.Continue();
             panel.Continue();
-            Assert.That(routes.Count, Is.EqualTo(1));
-            Assert.That(routes[0], Is.EqualTo("Punishment"));
+            Assert.That(routes, Is.EqualTo(new[] { "Punishment" }));
 
             panel.Show(new MinigameResult(true, 8.4f, Rank.A), "Map");
-            presentation.ShowForTest(panel.CurrentResult);
-
+            yield return new WaitForSecondsRealtime(1.5f);
             Assert.That(title.text, Is.EqualTo("HOÀN THÀNH!"));
-            AssertColor32(title.color, new Color32(94, 222, 140, 255));
-            Assert.That(score.text, Is.EqualTo("8"));
-            Assert.That(rank.text, Is.EqualTo("A"));
-            Assert.That(action.interactable, Is.True);
-
-            yield return null;
+            AssertColor32(title.color, (Color32)MinigameUiTheme.Success);
+            Assert.That(score.text, Is.EqualTo("8"), "the count-up ends on the final score");
+            Assert.That(rank.text, Is.EqualTo("XẾP HẠNG A"));
         }
 
         [UnityTest]
@@ -635,16 +632,16 @@ namespace KMA.Tests.Presentation
             Assert.That(chrome.Find("Scoreboard/Combo").GetComponent<TMP_Text>().text, Is.EqualTo("COMBO ×0"));
             Assert.That(chrome.Find("ModeLabel").GetComponent<TMP_Text>().text, Is.EqualTo("CHẠY NƯỚC RÚT · 100M"));
 
-            Image railFill = chrome.Find("ProgressRail/RailFill").GetComponent<Image>();
-            Assert.That(railFill.type, Is.EqualTo(Image.Type.Filled));
-            Assert.That(railFill.fillAmount, Is.EqualTo(0f).Within(.001f));
-            Assert.That(railFill.color, Is.EqualTo(MinigameUiTheme.Accent));
+            KitBar rail = chrome.Find("ProgressRail").GetComponent<KitBar>();
+            Assert.That(rail.Value, Is.EqualTo(0f).Within(.001f));
+            Assert.That(rail.Fill.color, Is.EqualTo(MinigameUiTheme.Accent));
+            Assert.That(rail.Fill.sprite, Is.SameAs(UiKitAssets.Load().RoundRect24));
 
             Image pip = chrome.Find("ProgressRail/PlayerPip").GetComponent<Image>();
             Assert.That(pip.color, Is.EqualTo(MinigameUiTheme.Player));
 
-            Assert.That(chrome.Find("Scoreboard").GetComponent<Image>().sprite, Is.Not.Null,
-                "The scoreboard must use a generated rounded sprite, not the default square.");
+            Assert.That(chrome.Find("Scoreboard").GetComponent<Image>().sprite, Is.SameAs(UiKitAssets.Load().RoundRect24),
+                "The scoreboard must use the kit's rounded sprite, not the default square.");
             Assert.That(chrome.Find("Scoreboard").GetComponent<Outline>(), Is.Null,
                 "Outline is replaced by Shadow.");
             Assert.That(chrome.Find("Scoreboard").GetComponent<Shadow>(), Is.Not.Null);
@@ -665,8 +662,7 @@ namespace KMA.Tests.Presentation
 
             Transform chrome = GameObject.Find("SprintBroadcastChrome").transform;
             Assert.That(chrome.Find("Scoreboard/Distance").GetComponent<TMP_Text>().text, Is.EqualTo("42 / 100 m"));
-            Assert.That(chrome.Find("ProgressRail/RailFill").GetComponent<Image>().fillAmount,
-                Is.EqualTo(.42f).Within(.001f));
+            Assert.That(chrome.Find("ProgressRail").GetComponent<KitBar>().Value, Is.EqualTo(.42f).Within(.001f));
             // Anchors collapse to 0 under batchmode's zero-sized safe rect (see CONTROLLER RULING #1),
             // so progress is asserted through the dedicated field instead of the anchor position.
             Assert.That(hud.PipProgress, Is.EqualTo(.42f).Within(.001f));

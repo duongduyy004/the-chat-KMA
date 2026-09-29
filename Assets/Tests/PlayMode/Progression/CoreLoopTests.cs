@@ -40,11 +40,10 @@ namespace KMA.Tests.Gameplay.Progression
         }
 
         [Test]
-        public void ResultPanel_ContinueEmitsActionOnlyOnceWithSprintResultPresentationAttached()
+        public void ResultPanel_ContinueEmitsActionOnlyOnceOnBareComponent()
         {
             var root = new GameObject("result-panel");
             var panel = root.AddComponent<ResultPanel>();
-            var presentation = root.AddComponent<SprintResultPresentation>();
             try
             {
                 var calls = 0;
@@ -52,8 +51,6 @@ namespace KMA.Tests.Gameplay.Progression
                 panel.ActionRequested += r => { calls++; route = r; };
 
                 panel.Show(new MinigameResult(false, 0f, Rank.F), "Map");
-                presentation.Bind(panel, null);
-                presentation.ShowForTest(panel.CurrentResult);
 
                 panel.Continue();
                 panel.Continue();

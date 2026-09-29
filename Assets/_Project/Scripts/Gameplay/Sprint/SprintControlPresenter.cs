@@ -12,7 +12,7 @@ namespace KMA.Gameplay
     /// remains the only component that forwards taps to gameplay.
     public sealed class SprintControlPresenter : MonoBehaviour
     {
-        const float PressScale = .94f;
+        const float PressScale = MinigameUiTheme.PressScale;
         const float PressDuration = .09f;
         const float BreatheHz = 1.2f;
         const float BreatheAmount = .03f;
@@ -126,22 +126,11 @@ namespace KMA.Gameplay
             bool expected = HighlightedSide == side;
             bool finished = controller != null && controller.PresentationPhase == MinigamePhase.Resolve;
 
-            if (pressed)
-            {
-                background.color = MinigameUiTheme.WithAlpha(MinigameUiTheme.Energy, .55f);
-                border.color = MinigameUiTheme.WithAlpha(MinigameUiTheme.Accent, .75f);
-                return;
-            }
-
-            if (finished)
-            {
-                background.color = MinigameUiTheme.WithAlpha(MinigameUiTheme.Surface, .30f);
-                border.color = MinigameUiTheme.WithAlpha(MinigameUiTheme.Accent, .15f);
-                return;
-            }
-
-            background.color = MinigameUiTheme.WithAlpha(MinigameUiTheme.Surface, expected ? .55f : .42f);
-            border.color = MinigameUiTheme.WithAlpha(MinigameUiTheme.Accent, expected ? .75f : .25f);
+            ControlState state = pressed ? ControlState.Pressed
+                : finished ? ControlState.Disabled
+                : expected ? ControlState.Hint
+                : ControlState.Rest;
+            KitControlState.Apply(background, border, state);
         }
 
         void ApplyBreathe()
