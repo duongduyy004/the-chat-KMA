@@ -79,7 +79,7 @@ namespace KMA.Tests.Presentation
             var serializedHud = new SerializedObject(hud);
             foreach (var propertyName in new[]
                      {
-                         "theme", "timeLabel", "phaseLabel", "scoreLabel", "statusLabel", "progressFill", "staminaFill"
+                         "timeLabel", "phaseLabel", "scoreLabel", "statusLabel", "progressFill", "staminaFill"
                      })
             {
                 var property = serializedHud.FindProperty(propertyName);

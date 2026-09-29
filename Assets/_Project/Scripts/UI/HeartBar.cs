@@ -1,3 +1,4 @@
+using KMA.UI.Kit;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -8,8 +9,8 @@ namespace KMA.Gameplay.UI
         const int SlotCount = 5;
 
         [SerializeField] Image[] slots = new Image[SlotCount];
-        [SerializeField] Color filledColor = new Color32(0xFF, 0x59, 0x5E, 0xFF);
-        [SerializeField] Color emptyColor = new Color32(0xE2, 0xE8, 0xF0, 0xFF);
+        [SerializeField] Color filledColor = MinigameUiTheme.Energy;
+        [SerializeField] Color emptyColor = MinigameUiTheme.WithAlpha(MinigameUiTheme.TextPrimary, .25f);
 
         public int CurrentHearts { get; private set; }
         public Color FilledColor => filledColor;

@@ -1,3 +1,4 @@
+using KMA.UI.Kit;
 using TMPro;
 using UnityEngine;
 using UnityEngine.Serialization;
@@ -8,7 +9,6 @@ namespace KMA.Gameplay.UI
     public sealed class MinigameHUD : MonoBehaviour
     {
         [SerializeField] MonoBehaviour minigameSource;
-        [SerializeField] UITheme theme;
         [SerializeField] TMP_Text timeLabel;
         [FormerlySerializedAs("primaryLabel")]
         [SerializeField] TMP_Text phaseLabel;
@@ -42,14 +42,12 @@ namespace KMA.Gameplay.UI
             if (progressFill != null)
             {
                 progressFill.fillAmount = Mathf.Clamp01(state.progress01);
-                if (theme != null)
-                    progressFill.color = theme.Accent;
+                progressFill.color = MinigameUiTheme.Accent;
             }
             if (staminaFill != null)
             {
                 staminaFill.fillAmount = Mathf.Clamp01(state.stamina01);
-                if (theme != null)
-                    staminaFill.color = theme.Success;
+                staminaFill.color = MinigameUiTheme.Success;
             }
         }
     }

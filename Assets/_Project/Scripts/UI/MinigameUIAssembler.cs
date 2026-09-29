@@ -2,6 +2,7 @@
 using System;
 using System.IO;
 using KMA.Gameplay;
+using KMA.UI.Kit;
 using UnityEditor;
 using UnityEditor.SceneManagement;
 using UnityEngine;
@@ -17,7 +18,6 @@ namespace KMA.Gameplay.UI
         const string HudPrefabPath = "Assets/_Project/Prefabs/UI/HUD_Minigame.prefab";
         const string PhasePrefabPath = "Assets/_Project/Prefabs/UI/PhaseOverlay.prefab";
         const string ResultPrefabPath = "Assets/_Project/Prefabs/UI/ResultPanel.prefab";
-        const string ThemePath = "Assets/_Project/Settings/UI/UITheme.asset";
 
         static readonly string[] ScenePaths =
         {
@@ -98,11 +98,10 @@ namespace KMA.Gameplay.UI
 
             var camera = cameraObject.GetComponent<Camera>();
             var minigame = FindInScene<MinigameBase>(scene);
-            var theme = AssetDatabase.LoadAssetAtPath<UITheme>(ThemePath);
 
             var hudRoot = EnsurePrefabRoot(scene, HudPrefabPath, "S2_HUD_Minigame", null);
             ConfigureCanvas(hudRoot, camera);
-            ConfigureHud(hudRoot, minigame, theme);
+            ConfigureHud(hudRoot, minigame);
 
             var canvasTransform = hudRoot.transform;
             var phaseRoot = EnsurePrefabRoot(scene, PhasePrefabPath, "S2_PhaseOverlay", canvasTransform);
@@ -112,7 +111,6 @@ namespace KMA.Gameplay.UI
             var resultRoot = EnsurePrefabRoot(scene, ResultPrefabPath, "S2_ResultPanel", canvasTransform);
             StretchToParent(resultRoot);
             resultRoot.SetActive(false);
-            ConfigureResultPanel(resultRoot, theme);
 
             if (scene.name.StartsWith("MG_", StringComparison.Ordinal) || scene.name == "Punishment")
                 EnsurePausePanel(scene, canvasTransform);
@@ -145,30 +143,10 @@ namespace KMA.Gameplay.UI
                 pause = pauseObject.AddComponent<PausePanel>();
             }
 
-            var button = pause.GetComponent<Button>();
-            if (button == null)
-            {
-                button = pause.gameObject.AddComponent<Image>().gameObject.AddComponent<Button>();
-                button.onClick.AddListener(pause.Open);
-                var rect = button.transform as RectTransform;
-                rect.anchorMin = new Vector2(1f, 1f);
-                rect.anchorMax = new Vector2(1f, 1f);
-                rect.pivot = new Vector2(1f, 1f);
-                rect.anchoredPosition = new Vector2(-32f, -32f);
-                rect.sizeDelta = new Vector2(150f, 68f);
-                var labelObject = new GameObject("Label");
-                labelObject.transform.SetParent(button.transform, false);
-                var labelRect = labelObject.AddComponent<RectTransform>();
-                labelRect.anchorMin = Vector2.zero;
-                labelRect.anchorMax = Vector2.one;
-                labelRect.offsetMin = Vector2.zero;
-                labelRect.offsetMax = Vector2.zero;
-                var label = labelObject.AddComponent<Text>();
-                label.text = "PAUSE";
-                label.alignment = TextAnchor.MiddleCenter;
-                label.fontSize = 24;
-                label.color = Color.white;
-            }
+            var rect = (RectTransform)pause.transform;
+            UiKit.StylePauseButton(rect);
+            UiKit.Place(rect, Vector2.one, Vector2.one,
+                new Vector2(-MinigameUiTheme.SpaceMd, -MinigameUiTheme.SpaceMd), Vector2.one * MinigameUiTheme.ButtonHeight);
         }
 
         static GameObject EnsureSceneCamera(Scene scene, GameObject cameraPrefab)
@@ -280,13 +258,12 @@ namespace KMA.Gameplay.UI
             fitter.enabled = true;
         }
 
-        static void ConfigureHud(GameObject root, MinigameBase minigame, UITheme theme)
+        static void ConfigureHud(GameObject root, MinigameBase minigame)
         {
             var hud = root.GetComponentInChildren<MinigameHUD>(true);
             if (hud == null)
                 return;
             SetObjectReference(hud, "minigameSource", minigame);
-            SetObjectReference(hud, "theme", theme);
         }
 
         static void ConfigurePhaseOverlay(GameObject root, MinigameBase minigame)
@@ -294,13 +271,6 @@ namespace KMA.Gameplay.UI
             var overlay = root.GetComponentInChildren<PhaseOverlay>(true);
             if (overlay != null)
                 SetObjectReference(overlay, "minigameSource", minigame);
-        }
-
-        static void ConfigureResultPanel(GameObject root, UITheme theme)
-        {
-            var panel = root.GetComponentInChildren<ResultPanel>(true);
-            if (panel != null)
-                SetObjectReference(panel, "theme", theme);
         }
 
         static void SetObjectReference(UnityEngine.Object target, string propertyName, UnityEngine.Object value)

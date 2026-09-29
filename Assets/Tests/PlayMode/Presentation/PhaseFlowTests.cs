@@ -95,22 +95,14 @@ namespace KMA.Tests.Presentation
                 Assert.That(text.font.fallbackFontAssetTable, Has.Some.Not.Null, text.name);
             }
 
+            // The kit owns the text materials: the plain Baloo2 material, or its outline variant.
+            var kit = KMA.UI.Kit.UiKitAssets.Load();
             var materials = phasePrefab.GetComponentsInChildren<TMP_Text>(true)
                 .Concat(resultPrefab.GetComponentsInChildren<TMP_Text>(true))
                 .Select(text => text.fontSharedMaterial)
                 .Distinct()
                 .ToArray();
-            var shadow = materials.Single(material => material.name == "Nunito-Bold-TextShadow");
-            Assert.That(shadow.IsKeywordEnabled("UNDERLAY_ON"), Is.True);
-            Assert.That(shadow.GetFloat(ShaderUtilities.ID_UnderlayOffsetX), Is.EqualTo(.04f).Within(.001f));
-            Assert.That(shadow.GetFloat(ShaderUtilities.ID_UnderlayOffsetY), Is.EqualTo(-.04f).Within(.001f));
-            Assert.That(shadow.GetFloat(ShaderUtilities.ID_UnderlaySoftness), Is.Zero.Within(.001f));
-            Assert.That(shadow.GetColor(ShaderUtilities.ID_UnderlayColor), Is.EqualTo(Color.black));
-
-            var stroke = materials.Single(material => material.name == "Baloo2-ExtraBold-TextStrokeDark");
-            Assert.That(stroke.IsKeywordEnabled("UNDERLAY_ON"), Is.True);
-            Assert.That(stroke.GetFloat(ShaderUtilities.ID_OutlineWidth), Is.EqualTo(.2f).Within(.001f));
-            Assert.That(stroke.GetColor(ShaderUtilities.ID_OutlineColor), Is.EqualTo(Color.black));
+            Assert.That(materials, Is.SubsetOf(new[] { kit.Font.material, kit.OutlineMaterial }));
 
             var resultObject = Object.Instantiate(resultPrefab);
             try
@@ -121,6 +113,7 @@ namespace KMA.Tests.Presentation
                 yield return new WaitForSecondsRealtime(1.5f); // the score now counts up from 0
 
                 var labels = resultObject.GetComponentsInChildren<TMP_Text>(true)
+                    .Where(label => label.name != "Label") // the action and retry buttons each have one
                     .ToDictionary(label => label.name, label => label.text);
                 Assert.That(labels["StatusLabel"], Is.EqualTo("THẤT BẠI"));
                 Assert.That(labels["ScoreLabel"], Is.EqualTo("988"));
