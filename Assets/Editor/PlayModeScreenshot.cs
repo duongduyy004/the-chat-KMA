@@ -38,6 +38,7 @@ namespace KMA.EditorTools
         const string KeyHoldSprintTutorial = "KMA_PMS_HoldSprintTutorial";
         const string KeyForceSprintDistance = "KMA_PMS_ForceSprintDistance";
         const string KeyForceSprintResult = "KMA_PMS_ForceSprintResult";
+        const string KeyOpenPause = "KMA_PMS_OpenPause";
 
         [Serializable]
         class Request
@@ -52,6 +53,7 @@ namespace KMA.EditorTools
             // real taps. Never touches production state flow otherwise.
             public float forceSprintDistance = -1f;
             public string forceSprintResult = "";
+            public bool openPause;
         }
 
         static PlayModeScreenshot()
@@ -134,6 +136,7 @@ namespace KMA.EditorTools
             SessionState.SetBool(KeyHoldSprintTutorial, req.holdSprintTutorial);
             SessionState.SetFloat(KeyForceSprintDistance, req.forceSprintDistance);
             SessionState.SetString(KeyForceSprintResult, req.forceSprintResult ?? "");
+            SessionState.SetBool(KeyOpenPause, req.openPause);
             SessionState.SetBool(KeyActive, true);
 
             EditorApplication.isPlaying = true;
@@ -170,6 +173,13 @@ namespace KMA.EditorTools
                         pass ? KMA.Gameplay.Rank.A : KMA.Gameplay.Rank.F);
                     panel.Show(result, pass ? "Map" : "Punishment");
                 }
+            }
+
+            if (SessionState.GetBool(KeyOpenPause, false))
+            {
+                var pausePanel = UnityEngine.Object.FindFirstObjectByType<KMA.Gameplay.UI.PausePanel>();
+                if (pausePanel != null)
+                    pausePanel.Open();
             }
         }
 
