@@ -6,8 +6,12 @@ namespace KMA.Gameplay
     public sealed class FootballPresentation : MonoBehaviour
     {
         public const float PixelToWorld = .016f;
+        public const float KeeperDisplayWidth = 108f, KeeperDisplayHeight = 144f;
+        /// <summary>Screen pixels from the keeper's hip (the dive's rotation centre) down to the sprite's feet pivot.</summary>
+        public const float KeeperFeetDrop = 21f;
         [SerializeField] SpriteRenderer field, goal, ball, ballShadow, player, goalkeeper, crosshair;
         [SerializeField] SpriteRenderer goalNet;
+        [SerializeField] FootballPoseSprites poses;
         [SerializeField] Transform leftGoalPoint, rightGoalPoint;
         [SerializeField] SpriteRenderer[] trajectoryDots = Array.Empty<SpriteRenderer>();
         readonly Vector3[] previewPoints = new Vector3[140];
@@ -29,6 +33,15 @@ namespace KMA.Gameplay
         }
         public bool ValidateReferences() => field && goal && ball && ballShadow && player && goalkeeper && crosshair &&
             leftGoalPoint && rightGoalPoint && Vector3.Distance(leftGoalPoint.position, rightGoalPoint.position) > .01f;
+        public FootballPoseSprites Poses => poses;
+        public void ConfigurePoses(FootballPoseSprites sprites) => poses = sprites;
+
+        /// <summary>Where the keeper's feet pivot goes so that the dive still rotates about his hip.</summary>
+        public static Vector3 KeeperWorldPosition(float keeperX, float angleDegrees)
+        {
+            Vector3 hip = ScreenToWorld(600f + keeperX * 300f / FootballShotSolver.GoalHalfWidth, FootballFlightSimulation.KeeperHipY);
+            return hip + Quaternion.Euler(0f, 0f, -angleDegrees) * new Vector3(0f, -KeeperFeetDrop * PixelToWorld, 0f);
+        }
         public static Vector3 ScreenToWorld(float x, float y) => new Vector3((x - 600f) * PixelToWorld, (337.5f - y) * PixelToWorld, 0f);
         public static Vector3 BallToWorld(Vector3 position)
         {
@@ -71,11 +84,20 @@ namespace KMA.Gameplay
             ballShadow.transform.position = ScreenToWorld(ground.x, ground.y);
             ballShadow.transform.localScale = shadowScale * point.z;
             float keeperX = flying ? flight.KeeperX : 0f;
-            goalkeeper.transform.position = ScreenToWorld(600f + keeperX * 300f / FootballShotSolver.GoalHalfWidth, 281f);
-            goalkeeper.transform.rotation = Quaternion.Euler(0f, 0f, flying ? -flight.KeeperAngle : 0f);
+            float keeperAngle = flying ? flight.KeeperAngle : 0f;
+            goalkeeper.transform.position = KeeperWorldPosition(keeperX, keeperAngle);
+            goalkeeper.transform.rotation = Quaternion.Euler(0f, 0f, -keeperAngle);
             float swing = rules.State == FootballState.Kicking ? Mathf.Sin(Mathf.Clamp01(rules.StateElapsed / .18f) * Mathf.PI) : 0f;
             player.transform.position = playerRest + Vector3.right * (swing * .32f);
             player.transform.rotation = Quaternion.Euler(0f, 0f, swing * 7f);
+            if (poses != null)
+            {
+                FootballOutcome? outcome = flight?.Outcome;
+                Sprite kicker = poses.For(FootballPoses.Kicker(rules.State, rules.StateElapsed, outcome));
+                if (kicker) player.sprite = kicker;
+                Sprite keeperSprite = poses.For(FootballPoses.Keeper(outcome));
+                if (keeperSprite) goalkeeper.sprite = keeperSprite;
+            }
             RenderAimArrow(rules);
         }
         void RenderAimArrow(FootballRules rules)

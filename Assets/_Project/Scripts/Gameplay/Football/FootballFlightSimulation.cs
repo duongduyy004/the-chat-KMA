@@ -5,6 +5,9 @@ namespace KMA.Gameplay
     /// <summary>Fixed-step metres/seconds simulation; rendering never decides the outcome.</summary>
     public sealed class FootballFlightSimulation
     {
+        /// <summary>Screen-pixel height of the keeper's hip: the dive rotates about it and KeeperCapsules are measured from it.</summary>
+        public const float KeeperHipY = 281f;
+
         readonly FootballShot shot;
         readonly FootballTuning tuning;
         readonly bool keeperEnabled;
@@ -119,13 +122,13 @@ namespace KMA.Gameplay
             eventTime = Time;
         }
 
-        // Capsule silhouettes match the authored keeper sprite in preview pixel coordinates.
+        // Capsule silhouettes trace the drawn keeper pose in preview pixels around the hip; KeeperSilhouetteTests pins the fit.
         bool TouchesKeeper(Vector3 contact)
         {
             Vector3 screen = FootballShotSolver.Project(contact);
             float angle = -KeeperAngle * Mathf.Deg2Rad;
             float dx = screen.x - (600f + KeeperX * 300f / FootballShotSolver.GoalHalfWidth);
-            float dy = screen.y - 281f;
+            float dy = screen.y - KeeperHipY;
             var point = new Vector2(dx * Mathf.Cos(angle) - dy * Mathf.Sin(angle), dx * Mathf.Sin(angle) + dy * Mathf.Cos(angle));
             float radius = 17f * screen.z;
             foreach (var capsule in KeeperCapsules)
@@ -145,12 +148,24 @@ namespace KMA.Gameplay
             public Capsule(float ax, float ay, float bx, float by, float r)
             { a = new Vector2(ax, ay); b = new Vector2(bx, by); radius = r; }
         }
+        // Kenney Toon `Male person` `fall` pose drawn FootballPresentation.KeeperDisplayWidth x Height,
+        // feet KeeperFeetDrop px below the hip. Head, torso, upper arms, hands, legs.
         static readonly Capsule[] KeeperCapsules = {
-            new Capsule(0,-75,0,-75,16), new Capsule(0,-47,0,-13,18),
-            new Capsule(-18,-50,-36,-32,7), new Capsule(-36,-32,-51,-47,7),
-            new Capsule(18,-50,36,-32,7), new Capsule(36,-32,51,-47,7),
-            new Capsule(-53,-48,-58,-57,6), new Capsule(53,-48,58,-57,6),
-            new Capsule(-12,-5,-24,13,8), new Capsule(12,-5,25,13,8)
+            new Capsule(-8,-74,14,-74,15), new Capsule(-8,-57,14,-57,16),
+            new Capsule(1,-32,1,-12,19),
+            new Capsule(-20,-34,-36,-30,7), new Capsule(20,-37,40,-33,7),
+            new Capsule(-38,-21,-38,-21,10), new Capsule(41,-24,41,-24,10),
+            new Capsule(-11,-6,-12,14,9), new Capsule(15,-6,19,8,9)
         };
+
+        public static int KeeperCapsuleCount => KeeperCapsules.Length;
+
+        public static void GetKeeperCapsule(int index, out Vector2 a, out Vector2 b, out float radius)
+        {
+            Capsule capsule = KeeperCapsules[index];
+            a = capsule.a;
+            b = capsule.b;
+            radius = capsule.radius;
+        }
     }
 }

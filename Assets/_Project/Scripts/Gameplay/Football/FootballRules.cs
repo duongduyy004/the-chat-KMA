@@ -6,7 +6,7 @@ namespace KMA.Gameplay
 {
     public sealed class FootballRules
     {
-        const float KickAnimationSeconds = .18f;
+        public const float KickAnimationSeconds = .18f;
         const float ShotFeedbackSeconds = .9f;
         const int MaxKicks = 5;
         readonly FootballTuning tuning;

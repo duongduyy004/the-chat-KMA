@@ -27,6 +27,11 @@ namespace KMA.EditorTools
         static readonly Color Sky = new Color32(120, 207, 235, 255);
         static readonly Color Grass = new Color32(39, 153, 59, 255);
         static readonly Color Gold = new Color32(255, 202, 40, 255);
+        public const string KeeperCharacter = "MalePerson";
+        public const string KeeperReadyPose = "fall";
+        // The kicker stands nearest the camera: 240x320 preview px, feet on the penalty spot row.
+        const float KickerDisplayWidth = 240f, KickerDisplayHeight = 320f;
+        static readonly Vector2 KickerFeet = new Vector2(490f, 602f);
 
         [MenuItem("KMA/Football/Build Scene")]
         public static void BuildScene()
@@ -34,6 +39,7 @@ namespace KMA.EditorTools
             if (!File.Exists(ScenePath))
                 throw new FileNotFoundException("MG_Football scene is missing; refusing to create a new scene identity.", ScenePath);
             ImportGoalViewArt();
+            ToonCharacterArt.ImportAll();
             EnsureConfiguration();
             AssetDatabase.Refresh(ImportAssetOptions.ForceSynchronousImport);
             var scene = EditorSceneManager.OpenScene(ScenePath, OpenSceneMode.Single);
@@ -83,8 +89,11 @@ namespace KMA.EditorTools
             cameraFit.Configure(field);
             var goal = Layer("Goal", "goal", 600, 230, 620, 170, 10);
             var net = Layer("GoalNet", "net", 600, 230, 620, 170, 11);
-            var keeper = Layer("Goalkeeper", "keeper", 600, 281, 140, 130, 20);
-            var player = Layer("Player", "player", 490, 486, 140, 230, 21);
+            var poses = LoadPoses();
+            var keeper = Renderer(world.transform, "Goalkeeper", poses.keeperReady, FootballPresentation.KeeperWorldPosition(0f, 0f), 20,
+                new Vector2(FootballPresentation.KeeperDisplayWidth, FootballPresentation.KeeperDisplayHeight) * FootballPresentation.PixelToWorld);
+            var player = Renderer(world.transform, "Player", poses.kickerReady, FootballPresentation.ScreenToWorld(KickerFeet.x, KickerFeet.y), 21,
+                new Vector2(KickerDisplayWidth, KickerDisplayHeight) * FootballPresentation.PixelToWorld);
             var ball = Layer("Ball", "ball", 600, 486, 36, 36, 25);
             var shadow = Layer("BallShadow", "shadow", 600, 502, 48, 16, 19);
             var crosshair = Layer("AimCrosshair", "crosshair", 600, 213, 44, 44, 30);
@@ -104,7 +113,20 @@ namespace KMA.EditorTools
             right.SetParent(world.transform, false);
             right.position = FootballPresentation.ScreenToWorld(900, 302);
             presentation.Configure(field, goal, ball, shadow, player, keeper, crosshair, left, right, dots, net);
+            presentation.ConfigurePoses(poses);
         }
+
+        /// <summary>The hero kicks, seen from behind; the keeper faces him.</summary>
+        static FootballPoseSprites LoadPoses() => new FootballPoseSprites
+        {
+            kickerReady = ToonCharacterArt.Load(ToonCharacterArt.Hero, "back"),
+            kickerRunUp = ToonCharacterArt.Load(ToonCharacterArt.Hero, "climb0"),
+            kickerStrike = ToonCharacterArt.Load(ToonCharacterArt.Hero, "climb1"),
+            kickerCelebrate = ToonCharacterArt.Load(ToonCharacterArt.Hero, "hurt"),
+            keeperReady = ToonCharacterArt.Load(KeeperCharacter, KeeperReadyPose),
+            keeperSave = ToonCharacterArt.Load(KeeperCharacter, "hold"),
+            keeperBeaten = ToonCharacterArt.Load(KeeperCharacter, "hit")
+        };
 
         static void ImportGoalViewArt()
         {
@@ -124,12 +146,7 @@ namespace KMA.EditorTools
                 importer.ReadTextureSettings(settings);
                 settings.spriteMeshType = SpriteMeshType.FullRect;
                 settings.spriteAlignment = (int)SpriteAlignment.Custom;
-                settings.spritePivot = Path.GetFileNameWithoutExtension(file) switch
-                {
-                    "keeper" => new Vector2(.5f, 27f / 130f),
-                    "player" => new Vector2(65f / 140f, .5f),
-                    _ => new Vector2(.5f, .5f)
-                };
+                settings.spritePivot = new Vector2(.5f, .5f);
                 settings.spriteBorder = Path.GetFileNameWithoutExtension(file) == "panel" ? new Vector4(12f, 12f, 12f, 12f) : Vector4.zero;
                 importer.SetTextureSettings(settings);
                 importer.SaveAndReimport();
