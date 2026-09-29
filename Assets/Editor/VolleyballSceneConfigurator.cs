@@ -20,7 +20,11 @@ namespace KMA.EditorTools
     public static class VolleyballSceneConfigurator
     {
         public const string ScenePath = "Assets/_Project/Scenes/MG_Volleyball.unity";
-        const string CharacterDir = "Assets/_Project/Art/Characters/BeachVolley";
+        public const string OpponentCharacter = "FemaleAdventurer";
+        // Toon poses are 1.28 units tall; this matches the court scale the BVA2 athletes were tuned for.
+        public const float AthleteScale = 1.8f;
+        // Marker sits just above the athlete's head, in world units above the feet.
+        const float MarkerWorldHeight = 1.95f;
         const string EnvironmentDir = "Assets/_Project/Art/Environments/Volleyball";
         const string PixelPath = EnvironmentDir + "/Pixel.png";
         const string FontPath = "Assets/_Project/Fonts/Baloo2-ExtraBold.asset";
@@ -28,7 +32,6 @@ namespace KMA.EditorTools
         const string KnobSpritePath = "UI/Skin/Knob.psd";
 
         // Tuned by eye in the visual QA task; see the plan's Task 13.
-        const float AthletePixelsPerUnit = 26f;
         const float HorizonWorldY = 4.97f;
         const int HudSortingOrder = 500;
         // net0.png was drawn for an isometric camera angle and reads as a diagonal pole, not a
@@ -38,7 +41,6 @@ namespace KMA.EditorTools
         static readonly Color SkyColor = new Color32(91, 200, 224, 255);
         static readonly Color SandColor = new Color32(236, 194, 150, 255);
         static readonly Color NetColor = new Color(.95f, .95f, .95f, .9f);
-        static readonly Color OpponentTint = new Color(1f, .55f, .55f, 1f);
         static readonly Color ShadowTint = new Color(1f, 1f, 1f, .8f);
         static readonly Color ContactTint = new Color(1f, .9f, .2f, .85f);
         static readonly Color AimTint = new Color(1f, .25f, .2f, .85f);
@@ -70,12 +72,6 @@ namespace KMA.EditorTools
 
         static readonly TextureSpec[] Textures =
         {
-            new TextureSpec(CharacterDir + "/playerIdle.png", 32, AthletePixelsPerUnit, Feet),
-            new TextureSpec(CharacterDir + "/playerRun.png", 32, AthletePixelsPerUnit, Feet),
-            new TextureSpec(CharacterDir + "/playerReception.png", 32, AthletePixelsPerUnit, Feet),
-            new TextureSpec(CharacterDir + "/playerBlock.png", 32, AthletePixelsPerUnit, Feet),
-            new TextureSpec(CharacterDir + "/playerSmash.png", 32, AthletePixelsPerUnit, Feet),
-            new TextureSpec(CharacterDir + "/playerSlide.png", 43, AthletePixelsPerUnit, Feet),
             new TextureSpec(EnvironmentDir + "/ballRoll.png", 15, CourtSpace.BackgroundPixelsPerUnit, Centre),
             new TextureSpec(EnvironmentDir + "/beachbkgO.png", 0, CourtSpace.BackgroundPixelsPerUnit, Centre),
             new TextureSpec(EnvironmentDir + "/shadow1.png", 0, CourtSpace.BackgroundPixelsPerUnit, Centre),
@@ -106,6 +102,7 @@ namespace KMA.EditorTools
 
             foreach (TextureSpec spec in Textures)
                 ConfigureTexture(spec);
+            ToonCharacterArt.ImportAll();
         }
 
         static void EnsurePixelTexture()
@@ -215,8 +212,8 @@ namespace KMA.EditorTools
                     new Vector3(0f, side * courtY, 0f), new Vector2(courtX * 2f, .09f), -9);
             }
 
-            VolleyAthleteView player = Athlete("Player", false, Color.white);
-            VolleyAthleteView opponent = Athlete("Opponent", true, OpponentTint);
+            VolleyAthleteView player = Athlete("Player", false, ToonCharacterArt.Hero);
+            VolleyAthleteView opponent = Athlete("Opponent", true, OpponentCharacter);
             AddAthleteMarker(player.transform, pixel, "Player", Cyan);
             AddAthleteMarker(opponent.transform, pixel, "Enemy", Coral);
 
@@ -249,20 +246,21 @@ namespace KMA.EditorTools
             EditorSceneManager.SaveScene(scene, ScenePath);
         }
 
-        static VolleyAthleteView Athlete(string name, bool mirror, Color tint)
+        static VolleyAthleteView Athlete(string name, bool mirror, string character)
         {
-            Sprite[] idle = Frames(CharacterDir + "/playerIdle.png");
+            Sprite[] Poses(params string[] poses) => ToonCharacterArt.Frames(character, poses);
+            Sprite[] idle = Poses("idle");
             SpriteRenderer body = Renderer(name, idle[0], Vector3.zero, 0);
-            body.color = tint;
+            body.transform.localScale = Vector3.one * AthleteScale;
             var book = body.gameObject.AddComponent<SpriteFlipbook>();
             book.Configure(body, idle, true, 12f);
             var view = body.gameObject.AddComponent<VolleyAthleteView>();
             view.Configure(body, book, mirror, idle,
-                Frames(CharacterDir + "/playerRun.png"),
-                Frames(CharacterDir + "/playerReception.png"),
-                Frames(CharacterDir + "/playerSmash.png"),
-                Frames(CharacterDir + "/playerBlock.png"),
-                Frames(CharacterDir + "/playerSlide.png"));
+                Poses("run0", "run1", "run2", "run1"),
+                Poses("duck", "hold"),
+                Poses("jump", "attack1"),
+                Poses("jump", "cheer1"),
+                Poses("fall", "slide"));
             return view;
         }
 
@@ -270,15 +268,15 @@ namespace KMA.EditorTools
         {
             SpriteRenderer edge = Renderer(name + "MarkerEdge", pixel, Vector3.zero, 290);
             edge.transform.SetParent(athlete, false);
-            edge.transform.localPosition = new Vector3(0f, 1.8f, 0f);
+            edge.transform.localPosition = new Vector3(0f, MarkerWorldHeight / AthleteScale, 0f);
             edge.transform.localRotation = Quaternion.Euler(0f, 0f, 45f);
-            edge.transform.localScale = new Vector3(.43f, .43f, 1f);
+            edge.transform.localScale = new Vector3(.43f, .43f, 1f) / AthleteScale;
             edge.color = Ink;
             SpriteRenderer centre = Renderer(name + "Marker", pixel, Vector3.zero, 291);
             centre.transform.SetParent(athlete, false);
             centre.transform.localPosition = edge.transform.localPosition;
             centre.transform.localRotation = edge.transform.localRotation;
-            centre.transform.localScale = new Vector3(.31f, .31f, 1f);
+            centre.transform.localScale = new Vector3(.31f, .31f, 1f) / AthleteScale;
             centre.color = accent;
         }
 

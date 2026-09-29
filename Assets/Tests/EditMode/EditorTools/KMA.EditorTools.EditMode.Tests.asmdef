@@ -11,7 +11,9 @@
         "KMA.Gameplay.UI",
         "KMA.Gameplay.Progression",
         "Unity.TextMeshPro",
-        "KMA.Gameplay"
+        "KMA.Gameplay",
+        "KMA.Gameplay.Volleyball",
+        "KMA.Gameplay.Sprint"
     ],
     "includePlatforms": [
         "Editor"
