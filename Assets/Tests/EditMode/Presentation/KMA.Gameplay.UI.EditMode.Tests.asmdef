@@ -9,7 +9,8 @@
         "KMA.Gameplay.Sprint",
         "KMA.Gameplay.Core",
         "KMA.Gameplay.Progression",
-        "UnityEngine.UI"
+        "UnityEngine.UI",
+        "Unity.TextMeshPro"
     ],
     "includePlatforms": [
         "Editor"
