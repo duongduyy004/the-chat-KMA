@@ -1,0 +1,21 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 2fe40a856f52a1b4d98311e645fb16ca, type: 3}
+  m_Name: UiKitAssets
+  m_EditorClassIdentifier: KMA.Gameplay.UI::KMA.UI.Kit.UiKitAssets
+  roundRect20: {fileID: 21300000, guid: 0fbda38ce4ab3ee4d84d7eef1b3067dd, type: 3}
+  roundRect24: {fileID: 21300000, guid: 604d027f034db6642a1bf09e8bf73e10, type: 3}
+  roundRect36: {fileID: 21300000, guid: d6c8f2afafeb48b408ef3c54db1fa43e, type: 3}
+  circle: {fileID: 21300000, guid: 4cc468f1ae3ac1d4083a9b9c930c54ce, type: 3}
+  ring: {fileID: 21300000, guid: 256188e7a889dd147ab1a4da8a429042, type: 3}
+  font: {fileID: 11400000, guid: 825d2fd02f90fde40975035766b806d9, type: 2}
+  outlineMaterial: {fileID: 2100000, guid: f3db4900ab89ca666a7d41dd02c66f34, type: 2}
