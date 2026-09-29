@@ -1,5 +1,6 @@
 using System;
 using UnityEngine;
+using KMA.UI.Kit;
 
 namespace KMA.Gameplay
 {
@@ -112,7 +113,7 @@ namespace KMA.Gameplay
                 aimArrow.useWorldSpace = true;
                 aimArrow.sortingLayerID = ball.sortingLayerID;
                 aimArrow.sortingOrder = ball.sortingOrder + 3;
-                aimArrow.startColor = aimArrow.endColor = new Color32(255, 202, 40, 255);
+                aimArrow.startColor = aimArrow.endColor = MinigameUiTheme.Accent;
                 aimArrow.startWidth = aimArrow.endWidth = .10f;
                 aimArrow.numCapVertices = 4;
                 aimArrow.numCornerVertices = 4;

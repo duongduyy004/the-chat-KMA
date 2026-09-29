@@ -114,13 +114,13 @@ namespace KMA.EditorTools
             var ball = Layer("Ball", "ball", 600, 486, 36, 36, 25);
             var shadow = Layer("BallShadow", "shadow", 600, 502, 48, 16, 19);
             var crosshair = Layer("AimCrosshair", "crosshair", 600, 213, 44, 44, 30);
-            crosshair.color = new Color32(224, 255, 150, 255);
+            crosshair.color = MinigameUiTheme.Accent;
             crosshair.enabled = false;
             var dots = new SpriteRenderer[140];
             for (int i = 0; i < dots.Length; i++)
             {
                 dots[i] = Layer("TrajectoryDot" + i, "knob", 600, 486, 5, 5, 29);
-                dots[i].color = new Color(.85f, 1f, .6f, .75f);
+                dots[i].color = MinigameUiTheme.WithAlpha(MinigameUiTheme.Accent, .75f);
                 dots[i].enabled = false;
             }
             var left = new GameObject("GoalLeftInsidePost").transform;

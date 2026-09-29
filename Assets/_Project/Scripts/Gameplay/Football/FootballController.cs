@@ -256,19 +256,6 @@ namespace KMA.Gameplay
             listenersBound = true;
         }
 
-        public void ExitToMap()
-        {
-            if (!ready) return;
-            inputBridge.CancelActivePointer();
-            if (resultSubmitted)
-            {
-                // The result owner commits the loss/win exactly once before routing.
-                if (resultPanel.IsVisible) resultPanel.Continue();
-                return;
-            }
-            SceneRouter.Instance?.ExitActiveSubjectToMap();
-        }
-
         void OnDisable()
         {
             if (inputBridge)
