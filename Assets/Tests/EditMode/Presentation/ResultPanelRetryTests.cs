@@ -135,12 +135,12 @@ namespace KMA.Tests.Presentation
         [Test]
         public void ShowOutsidePlayModeSnapsTheRevealToItsFinalState()
         {
-            panel.Show(new MinigameResult(true, 8.4f, Rank.A), "Map");
             Transform content = root.transform.Find("Content");
+            var group = content.gameObject.AddComponent<CanvasGroup>();
+            group.alpha = 0f;
+            panel.Show(new MinigameResult(true, 8.4f, Rank.A), "Map");
             Assert.That(content.localScale, Is.EqualTo(Vector3.one));
-            var group = content.GetComponent<CanvasGroup>();
-            if (group != null)
-                Assert.That(group.alpha, Is.EqualTo(1f), "the snap path must leave the modal fully opaque");
+            Assert.That(group.alpha, Is.EqualTo(1f), "the snap path must leave the modal fully opaque");
             Assert.That(score.text, Is.EqualTo("8"));
         }
 

@@ -25,10 +25,11 @@ namespace KMA.Gameplay.UI
 
         void Awake()
         {
+            // StylePauseButton adds the Button itself, so style first and resolve the reference after.
+            if (transform is RectTransform rect)
+                UiKit.StylePauseButton(rect);
             if (pauseButton == null)
                 pauseButton = GetComponent<Button>();
-            if (pauseButton != null && transform is RectTransform rect)
-                UiKit.StylePauseButton(rect);
             EnsureMenu();
             WireButtons();
             SetMenuVisible(false);

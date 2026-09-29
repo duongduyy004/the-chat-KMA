@@ -161,6 +161,49 @@ namespace KMA.Tests.Gameplay.Football
             yield return SceneManager.UnloadSceneAsync(scene);
         }
 
+        [UnityTest]
+        public IEnumerator PauseRestartAndExitAreWiredAndResumeTheClock()
+        {
+            yield return SceneManager.LoadSceneAsync(SceneName, LoadSceneMode.Single);
+            yield return null;
+
+            // KMA.Gameplay.Shell is not referenced by this asmdef, so find the runtime-installed
+            // controller by type name instead of adding an assembly reference.
+            int controllers = 0;
+            foreach (var behaviour in Object.FindObjectsByType<MonoBehaviour>(FindObjectsInactive.Include, FindObjectsSortMode.None))
+                if (behaviour != null && behaviour.GetType().Name == "GameplayPauseFlowController")
+                    controllers++;
+            Assert.That(controllers, Is.EqualTo(1), "GameplayPauseFlowController must be installed exactly once.");
+
+            var pause = Object.FindFirstObjectByType<KMA.Gameplay.UI.PausePanel>(FindObjectsInactive.Include);
+            Assert.That(pause, Is.Not.Null, "MG_Football must contain a PausePanel.");
+
+            int restarts = 0, exits = 0;
+            pause.RestartRequested += () => restarts++;
+            pause.ExitToMapRequested += () => exits++;
+
+            pause.Open();
+            Assert.That(pause.IsOpen, Is.True);
+            Assert.That(Time.timeScale, Is.EqualTo(0f));
+            pause.Restart();
+            Assert.That(restarts, Is.EqualTo(1), "Restart must raise RestartRequested once.");
+            Assert.That(exits, Is.EqualTo(0));
+            Assert.That(pause.IsOpen, Is.False);
+            Assert.That(Time.timeScale, Is.EqualTo(1f));
+
+            pause.Open();
+            pause.ExitToMap();
+            Assert.That(exits, Is.EqualTo(1), "Exit must raise ExitToMapRequested once.");
+            Assert.That(restarts, Is.EqualTo(1));
+            Assert.That(pause.IsOpen, Is.False);
+            Assert.That(Time.timeScale, Is.EqualTo(1f));
+
+            yield return null;
+            var scene = SceneManager.GetSceneByName(SceneName);
+            SceneManager.SetActiveScene(SceneManager.CreateScene("FootballPauseWiringCleanup"));
+            yield return SceneManager.UnloadSceneAsync(scene);
+        }
+
         // A failed pause assertion must not leave the clock stopped for the next test.
         [TearDown]
         public void RestoreTimeScale() => Time.timeScale = 1f;
