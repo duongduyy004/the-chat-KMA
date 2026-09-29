@@ -36,6 +36,29 @@ namespace KMA.Tests.EditorTools
         }
 
         [Test]
+        public void EverySpriteIsSmoothFlatArtSoTheHeroDoesNotClashWithTheCourt()
+        {
+            VolleyballSceneConfigurator.BuildScene();
+            EditorSceneManager.OpenScene(VolleyballSceneConfigurator.ScenePath, OpenSceneMode.Single);
+            var allowedEnvironment = new[] { "Ball.png", "Shadow.png", "Pixel.png" };
+            int checkedSprites = 0;
+            foreach (var renderer in Object.FindObjectsByType<SpriteRenderer>(FindObjectsSortMode.None))
+            {
+                Assert.That(renderer.sprite, Is.Not.Null, renderer.name);
+                string path = AssetDatabase.GetAssetPath(renderer.sprite);
+                Assert.That(renderer.sprite.texture.filterMode, Is.EqualTo(FilterMode.Bilinear),
+                    renderer.name + " uses " + path + ": pixel-filtered art next to the smooth Toon athletes");
+                if (path.Contains("/Environments/Volleyball/"))
+                    Assert.That(allowedEnvironment, Does.Contain(System.IO.Path.GetFileName(path)),
+                        renderer.name + " still draws the pixel-art BVA2 sheet " + path);
+                checkedSprites++;
+            }
+            Assert.That(checkedSprites, Is.GreaterThan(10));
+            Assert.That(System.IO.Directory.GetFiles("Assets/_Project/Art/Environments/Volleyball", "*.png"),
+                Has.Length.EqualTo(allowedEnvironment.Length), "Unused BVA2 sheets must be deleted from the project.");
+        }
+
+        [Test]
         public void MarkersSitAboveTheTallestPoseOfEachAthlete()
         {
             VolleyballSceneConfigurator.BuildScene();

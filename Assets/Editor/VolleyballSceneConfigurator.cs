@@ -7,7 +7,6 @@ using KMA.Gameplay.Volleyball;
 using TMPro;
 using UnityEditor;
 using UnityEditor.SceneManagement;
-using UnityEditor.U2D.Sprites;
 using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.InputSystem.UI;
@@ -34,12 +33,11 @@ namespace KMA.EditorTools
         // Tuned by eye in the visual QA task; see the plan's Task 13.
         const float HorizonWorldY = 4.97f;
         const int HudSortingOrder = 500;
-        // net0.png was drawn for an isometric camera angle and reads as a diagonal pole, not a
-        // net, under this scene's flat top-down camera - a flat-color band drawn the same way as
-        // the Sky/Sand quads reads correctly instead. See the plan's Task 13.
+        // The net is a flat-colour band, drawn the same way as the Sky/Sand quads.
         const float NetWidth = .5f;
         static readonly Color SkyColor = new Color32(91, 200, 224, 255);
         static readonly Color SandColor = new Color32(236, 194, 150, 255);
+        static readonly Color CourtColor = new Color32(246, 214, 172, 255);
         static readonly Color NetColor = new Color(.95f, .95f, .95f, .9f);
         static readonly Color ShadowTint = new Color(1f, 1f, 1f, .8f);
         static readonly Color ContactTint = new Color(1f, .9f, .2f, .85f);
@@ -52,30 +50,30 @@ namespace KMA.EditorTools
         readonly struct TextureSpec
         {
             public readonly string Path;
-            public readonly int FrameWidth;
             public readonly float PixelsPerUnit;
-            public readonly Vector2 Pivot;
 
-            public TextureSpec(string path, int frameWidth, float pixelsPerUnit, Vector2 pivot)
+            public TextureSpec(string path, float pixelsPerUnit)
             {
                 Path = path;
-                FrameWidth = frameWidth;
                 PixelsPerUnit = pixelsPerUnit;
-                Pivot = pivot;
             }
-
-            public bool Sliced => FrameWidth > 0;
         }
 
-        static readonly Vector2 Feet = new Vector2(.5f, 0f);
+        // World size 0.6 x 0.6 (ball) and about 0.77 x 0.34 (shadow) - the sizes the court was tuned for.
+        const string BallPath = EnvironmentDir + "/Ball.png";
+        const string ShadowPath = EnvironmentDir + "/Shadow.png";
+        const int BallPixels = 128;
+        const float BallPixelsPerUnit = BallPixels / .6f;
+        const int ShadowWidth = 128, ShadowHeight = 56;
+        const float ShadowPixelsPerUnit = ShadowWidth / .77f;
+        const float AttackLineMetres = 3f;
         static readonly Vector2 Centre = new Vector2(.5f, .5f);
 
         static readonly TextureSpec[] Textures =
         {
-            new TextureSpec(EnvironmentDir + "/ballRoll.png", 15, CourtSpace.BackgroundPixelsPerUnit, Centre),
-            new TextureSpec(EnvironmentDir + "/beachbkgO.png", 0, CourtSpace.BackgroundPixelsPerUnit, Centre),
-            new TextureSpec(EnvironmentDir + "/shadow1.png", 0, CourtSpace.BackgroundPixelsPerUnit, Centre),
-            new TextureSpec(PixelPath, 0, 4f, Centre)
+            new TextureSpec(BallPath, BallPixelsPerUnit),
+            new TextureSpec(ShadowPath, ShadowPixelsPerUnit),
+            new TextureSpec(PixelPath, 4f)
         };
 
         [MenuItem("KMA/Volleyball/Build Scene")]
@@ -92,92 +90,94 @@ namespace KMA.EditorTools
 
         public static void ImportArt()
         {
-            EnsurePixelTexture();
-            foreach (TextureSpec spec in Textures)
-            {
-                if (!File.Exists(spec.Path))
-                    throw new FileNotFoundException(
-                        $"[KMA] Volleyball art is missing: {spec.Path}. Extract it from BVA2.zip.", spec.Path);
-            }
-
+            Directory.CreateDirectory(EnvironmentDir);
+            EnsureGeneratedTexture(PixelPath, 4, 4, (u, v) => Color.white);
+            EnsureGeneratedTexture(BallPath, BallPixels, BallPixels, BallColor);
+            EnsureGeneratedTexture(ShadowPath, ShadowWidth, ShadowHeight, ShadowColor);
             foreach (TextureSpec spec in Textures)
                 ConfigureTexture(spec);
             ToonCharacterArt.ImportAll();
         }
 
-        static void EnsurePixelTexture()
+        static readonly Color BallCream = new Color32(252, 246, 230, 255);
+        static readonly Color BallSeam = new Color32(226, 150, 40, 255);
+
+        // A flat volleyball: cream panels, three curved amber seams and an ink outline. u, v in [-1, 1].
+        static Color BallColor(float u, float v)
         {
-            if (File.Exists(PixelPath))
+            float r = Mathf.Sqrt(u * u + v * v);
+            if (r > 1f)
+                return Color.clear;
+            if (r > .88f)
+                return Ink;
+            for (int k = 0; k < 3; k++)
+            {
+                float angle = (90f + k * 120f) * Mathf.Deg2Rad;
+                float centreU = Mathf.Cos(angle) * 1.25f, centreV = Mathf.Sin(angle) * 1.25f;
+                float distance = Mathf.Sqrt((u - centreU) * (u - centreU) + (v - centreV) * (v - centreV));
+                if (Mathf.Abs(distance - 1f) < .06f)
+                    return BallSeam;
+            }
+
+            return BallCream;
+        }
+
+        // A flat mid-grey ellipse; the scene tints it for the shadow and the two markers.
+        static Color ShadowColor(float u, float v) =>
+            u * u + v * v <= 1f ? new Color32(150, 150, 150, 255) : Color.clear;
+
+        /// <summary>Writes a supersampled flat-colour PNG once; existing files are left alone.</summary>
+        static void EnsureGeneratedTexture(string path, int width, int height, Func<float, float, Color> shade)
+        {
+            if (File.Exists(path))
                 return;
 
-            Directory.CreateDirectory(EnvironmentDir);
-            var texture = new Texture2D(4, 4, TextureFormat.RGBA32, false);
-            texture.SetPixels(Enumerable.Repeat(Color.white, 16).ToArray());
+            const int samples = 3;
+            var pixels = new Color[width * height];
+            for (int y = 0; y < height; y++)
+            for (int x = 0; x < width; x++)
+            {
+                Color sum = Color.clear;
+                for (int sy = 0; sy < samples; sy++)
+                for (int sx = 0; sx < samples; sx++)
+                {
+                    float u = ((x + (sx + .5f) / samples) / width) * 2f - 1f;
+                    float v = ((y + (sy + .5f) / samples) / height) * 2f - 1f;
+                    Color c = shade(u, v);
+                    sum += new Color(c.r * c.a, c.g * c.a, c.b * c.a, c.a);
+                }
+
+                sum /= samples * samples;
+                pixels[y * width + x] = sum.a > 0f ? new Color(sum.r / sum.a, sum.g / sum.a, sum.b / sum.a, sum.a) : Color.clear;
+            }
+
+            var texture = new Texture2D(width, height, TextureFormat.RGBA32, false);
+            texture.SetPixels(pixels);
             texture.Apply();
-            File.WriteAllBytes(PixelPath, texture.EncodeToPNG());
+            File.WriteAllBytes(path, texture.EncodeToPNG());
             Object.DestroyImmediate(texture);
-            AssetDatabase.ImportAsset(PixelPath);
+            AssetDatabase.ImportAsset(path);
         }
 
         static void ConfigureTexture(TextureSpec spec)
         {
             var importer = (TextureImporter)AssetImporter.GetAtPath(spec.Path);
             importer.textureType = TextureImporterType.Sprite;
-            importer.spriteImportMode = spec.Sliced ? SpriteImportMode.Multiple : SpriteImportMode.Single;
+            importer.spriteImportMode = SpriteImportMode.Single;
             importer.spritePixelsPerUnit = spec.PixelsPerUnit;
-            importer.filterMode = FilterMode.Point;
+            importer.filterMode = FilterMode.Bilinear;
             importer.textureCompression = TextureImporterCompression.Uncompressed;
             importer.mipmapEnabled = false;
             importer.alphaIsTransparency = true;
 
             var settings = new TextureImporterSettings();
             importer.ReadTextureSettings(settings);
-            settings.spriteAlignment = (int)SpriteAlignment.Custom;
-            settings.spritePivot = spec.Pivot;
+            settings.spriteAlignment = (int)SpriteAlignment.Center;
+            settings.spritePivot = Centre;
             importer.SetTextureSettings(settings);
             importer.SaveAndReimport();
-            if (!spec.Sliced)
-                return;
-
-            importer.GetSourceTextureWidthAndHeight(out int width, out int height);
-            int count = width / spec.FrameWidth;
-            var factories = new SpriteDataProviderFactories();
-            factories.Init();
-            ISpriteEditorDataProvider provider = factories.GetSpriteEditorDataProviderFromObject(importer);
-            provider.InitSpriteEditorDataProvider();
-            SpriteRect[] existing = provider.GetSpriteRects();
-            if (existing.Length == count && existing.All(r => Mathf.Approximately(r.rect.width, spec.FrameWidth)))
-                return;
-
-            string baseName = Path.GetFileNameWithoutExtension(spec.Path);
-            var rects = new SpriteRect[count];
-            for (int i = 0; i < count; i++)
-            {
-                rects[i] = new SpriteRect
-                {
-                    name = $"{baseName}_{i:00}",
-                    rect = new Rect(i * spec.FrameWidth, 0, spec.FrameWidth, height),
-                    alignment = SpriteAlignment.Custom,
-                    pivot = spec.Pivot,
-                    spriteID = GUID.Generate()
-                };
-            }
-
-            provider.SetSpriteRects(rects);
-            provider.GetDataProvider<ISpriteNameFileIdDataProvider>()?.SetNameFileIdPairs(
-                rects.Select(r => new SpriteNameFileIdPair(r.name, r.spriteID)).ToList());
-            provider.Apply();
-            importer.SaveAndReimport();
         }
 
-        static Sprite[] Frames(string path)
-        {
-            Sprite[] frames = AssetDatabase.LoadAllAssetsAtPath(path).OfType<Sprite>()
-                .OrderBy(s => s.name, StringComparer.Ordinal).ToArray();
-            if (frames.Length == 0)
-                throw new InvalidOperationException($"[KMA] No sprites were sliced from {path}.");
-            return frames;
-        }
 
         static Sprite Single(string path) => AssetDatabase.LoadAssetAtPath<Sprite>(path) ??
             throw new InvalidOperationException($"[KMA] {path} did not import as a sprite.");
@@ -186,26 +186,25 @@ namespace KMA.EditorTools
         {
             Scene scene = EditorSceneManager.NewScene(NewSceneSetup.EmptyScene, NewSceneMode.Single);
             Sprite pixel = Single(PixelPath);
-            Sprite shadowSprite = Single(EnvironmentDir + "/shadow1.png");
+            Sprite shadowSprite = Single(ShadowPath);
 
             Quad("Sky", pixel, SkyColor, new Vector3(0f, HorizonWorldY + 10f, 0f), new Vector2(60f, 20f));
             Quad("Sand", pixel, SandColor, new Vector3(0f, HorizonWorldY - 20f, 0f), new Vector2(60f, 40f));
-            Renderer("Court", Single(EnvironmentDir + "/beachbkgO.png"), CourtSpace.BackgroundWorldPosition, -20);
-            // A flat-color band, not net0.png's sprite: that art was drawn for an isometric
-            // camera angle and reads as a diagonal pole rather than a net under this scene's flat
-            // top-down camera. See the plan's Task 13.
             // CourtSpace.ToWorld scales the y (court-width) axis by PixelsPerMetreY /
             // BackgroundPixelsPerUnit (not 1:1), so the court's on-screen height isn't simply
-            // HalfWidth * 2 world units - measure it via ToWorld so the band reaches both
-            // sidelines. See the spec's amendment on the net0.png-to-flat-band deviation.
+            // HalfWidth * 2 world units - measure it via ToWorld so the band reaches both sidelines.
             float netWorldHeight = CourtSpace.ToWorld(new Vector2(0f, CourtSpace.HalfWidth), 0f).y -
                                     CourtSpace.ToWorld(new Vector2(0f, -CourtSpace.HalfWidth), 0f).y;
             Quad("Net", pixel, NetColor, CourtSpace.ToWorld(Vector2.zero, 0f),
                 new Vector2(NetWidth, netWorldHeight), VolleyAthleteView.NetSortingOrder);
             float courtX = CourtSpace.ToWorld(new Vector2(CourtSpace.HalfLength, 0f), 0f).x;
             float courtY = CourtSpace.ToWorld(new Vector2(0f, CourtSpace.HalfWidth), 0f).y;
+            Quad("Court", pixel, CourtColor, Vector3.zero, new Vector2(courtX * 2f, courtY * 2f), -20);
+            float attackX = CourtSpace.ToWorld(new Vector2(AttackLineMetres, 0f), 0f).x;
             for (int side = -1; side <= 1; side += 2)
             {
+                Quad(side < 0 ? "NearAttackLine" : "FarAttackLine", pixel, Color.white,
+                    new Vector3(side * attackX, 0f, 0f), new Vector2(.09f, courtY * 2f), -9);
                 Quad(side < 0 ? "NearBaseline" : "FarBaseline", pixel, Color.white,
                     new Vector3(side * courtX, 0f, 0f), new Vector2(.09f, courtY * 2f), -9);
                 Quad(side < 0 ? "NearSideline" : "FarSideline", pixel, Color.white,
@@ -217,14 +216,7 @@ namespace KMA.EditorTools
             AddAthleteMarker(player.transform, pixel, "Player", Cyan);
             AddAthleteMarker(opponent.transform, pixel, "Enemy", Coral);
 
-            Sprite[] roll = Frames(EnvironmentDir + "/ballRoll.png");
-            SpriteRenderer ball = Renderer("Ball", roll[0], Vector3.zero, VolleyBallView.BallSortingOrder);
-            SpriteRenderer ballEdge = Renderer("BallContrast", roll[0], Vector3.zero, VolleyBallView.BallSortingOrder - 1);
-            ballEdge.transform.SetParent(ball.transform, false);
-            ballEdge.transform.localScale = Vector3.one * 1.28f;
-            ballEdge.color = Ink;
-            ball.transform.localScale = Vector3.one * 1.2f;
-            ball.gameObject.AddComponent<SpriteFlipbook>().Configure(ball, roll, true, 14f);
+            SpriteRenderer ball = Renderer("Ball", Single(BallPath), Vector3.zero, VolleyBallView.BallSortingOrder);
             SpriteRenderer shadow = Renderer("BallShadow", shadowSprite, Vector3.zero, VolleyBallView.ShadowSortingOrder);
             shadow.color = ShadowTint;
             SpriteRenderer contact = Renderer("ContactMarker", shadowSprite, Vector3.zero, VolleyBallView.MarkerSortingOrder);
