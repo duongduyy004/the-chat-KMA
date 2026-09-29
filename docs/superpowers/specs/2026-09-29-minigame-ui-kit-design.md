@@ -92,15 +92,16 @@ The old per-game colours map onto the tokens:
 | `Ring.png` (128 px, ring width 3/64 of the diameter) | Joystick and round button rims |
 
 - Import settings: Sprite, bilinear, no mipmaps, 100 PPU, border equal to the radius.
-- **`UiKitAssets`** (ScriptableObject, `Assets/_Project/Settings/UI/UiKitAssets.asset`)
-  references the five sprites, the `Baloo2-ExtraBold` font asset and the
-  `Baloo2-ExtraBold-TextStrokeDark` material. Editor code loads it with `AssetDatabase`.
-  At runtime Sprint gets it from a serialized field on `SprintHud` that the scene
-  configurator assigns, so no `Resources` folder is needed.
-- Unused afterwards: Volleyball's `Knob.psd` reference and Football's
-  `Art/Football/GoalView/{panel,fill,knob}.png`. Delete the Football files that nothing
-  references anymore; check first whether `fill.png` is used outside UI (for example by the
-  goal).
+- **`UiKitAssets`** (ScriptableObject,
+  `Assets/_Project/Settings/UI/Resources/UiKitAssets.asset`) references the five sprites, the
+  `Baloo2-ExtraBold` font asset and the `Baloo2-ExtraBold-TextStrokeDark` material. Runtime
+  builders (Sprint, `PausePanel`, `TutorialOverlay`) and editor code both call
+  `UiKitAssets.Load()`, which uses `Resources.Load`, the same way `AudioManager` loads
+  `GameAudioLibrary`. Sprint's HUD is built at runtime and has no scene configurator that
+  could assign a serialized field.
+- Unused afterwards: Volleyball's `Knob.psd` reference, Football's
+  `Art/Football/GoalView/{panel,fill}` (PNG and SVG) and `Art/Football/UI/{button,panel,power-fill}.png`.
+  They are deleted. `GoalView/knob.png` stays because the trajectory dots use it.
 
 ## Part 2: widgets
 
@@ -112,9 +113,9 @@ kit decides look and feedback; each game decides position and size.**
 | Widget | Look | Used by |
 |---|---|---|
 | `Panel(radius, alpha, shadow)` | `RoundRect` tinted `Surface`, alpha .92 by default, shadow (0,-4) | Scoreboards, cards, Football aim panel |
-| `Chip(text)` | Panel at .82 plus `Body` text, sized to its text | Volleyball hint, Sprint instruction plate and mode chip, Football shot feedback |
+| `Chip(text)` | Panel at .82 plus `Body` text that shrinks to fit (never below 24); the caller sizes the chip | Volleyball hint, Sprint instruction plate and mode chip, Football shot feedback |
 | `Label(text, size, color, outline)` | TMP with Baloo2; `outline` uses the dark stroke material | All text |
-| `Button(label, variant)` | `RoundRect36`, height 88. **Primary:** `Accent` fill, `Surface` text. **Secondary:** Surface .42 fill, 3 px `Accent` border, `TextPrimary` text. **Danger:** `Energy` fill, `TextPrimary` text | Football shoot, difficulty and start buttons; pause and result buttons |
+| `Button(label, variant)` | `RoundRect36`, height 88. **Primary:** `Accent` fill, `Surface` text. **Secondary:** opaque `Surface` fill inside a 3 px `Accent` border, `TextPrimary` text. **Danger:** `Energy` fill, `Surface` text (`TextPrimary` on `Energy` is only 2.9:1). A disabled button fades to 45% alpha | Football shoot, difficulty and start buttons; pause and result buttons |
 | `RoundButton(label)` | Circle shadow, `Ring` in `TextPrimary`, `Accent` face, `Surface` text at `Headline` | Volleyball ĐÁNH |
 | `ControlPlate(arrow, label)` | Today's Sprint control: Surface .42, `Accent` border .25, radius 36 | Sprint tap zones |
 | `Bar(showPip, showLabel)` | `Track` background, `Accent` fill, radius half the height (`pixelsPerUnitMultiplier`). The fill is a sliced child sized by `anchorMax.x`, so both ends stay round. Optional `Player` pip | Sprint progress, Football power |
@@ -137,7 +138,9 @@ the canvas, and `PausePanel` stops using legacy `UnityEngine.UI.Text`.
 | Hint (Sprint's expected side; joystick while held) | Surface .55 | `Accent` .75 |
 | Pressed | Face 15% lighter | unchanged |
 
-Pressing scales the control to 0.94 and restores it after 0.1 s. Input logic is unchanged:
+Pressing scales the control to 0.94 while held and eases back over 0.1 s after release. Sprint's
+tap zones keep their own timed press (0.09 s) and breathing pulse; they only take their colours
+from these states through `KitControlState`. Input logic is unchanged:
 `VirtualJoystick`, `ActionButton` (fires on pointer down), `FootballHoldButton` and
 `ScreenTapArea` keep their behaviour and only lose their hard-coded colours.
 
@@ -145,9 +148,15 @@ Pressing scales the control to 0.94 and restores it after 0.1 s. Input logic is 
 
 ### Shared screens
 
-- **`ResultPanel`** is rebuilt with the kit: `Scrim` backdrop; a 900×720 `Panel` card;
-  status at `Title` in `Success` or `Energy`; score at `Display` in `Accent`; rank at
-  `Headline`; **Chơi lại** (Primary) and **Tiếp tục** (Secondary). It now implements
+- **The shared prefabs are restyled in place, not rebuilt.** An editor styler
+  (`KMA/UI/Restyle Shared Minigame Prefabs`) keeps every node name and serialized reference,
+  so the router, the tests and `GameOver`/`Punishment` keep working.
+- **`ResultPanel`**: `Scrim` backdrop; a 900×720 `Panel` card; status at `Title` in
+  `Success` or `Energy`; score at `Display` in `Accent`; rank at `Headline`. **Chơi lại**
+  (Primary) sits beside **Tiếp tục** (Secondary); when Chơi lại is hidden, Tiếp tục is centred
+  and Primary. Tiếp tục still raises the preview route and Chơi lại raises
+  `ResultPanelActions.Retry`, so `SceneRouter` needs no change. Sprint keeps its titles
+  ("HOÀN THÀNH!" / "THẤT BẠI") through `ResultPanel.SetTitles`. It now implements
   `IRetryResultPreviewPanel` and gains:
   - an optional detail line (for example "4/5 BÀN" and the lives left);
   - the Chơi lại button, shown only when `RetryAvailable` (Sprint and Volleyball keep it
@@ -157,14 +166,17 @@ Pressing scales the control to 0.94 and restores it after 0.1 s. Input logic is 
   The scrim, scale and score-count animation of `SprintResultPresentation` moves into
   `ResultPanel`, so all three games get it. `FootballResultPanel` is deleted.
 - **`PhaseOverlay`** stops comparing class names (`"SprintController"`,
-  `"VolleyballController"`). `MinigameBase` gains two virtual properties,
-  `UsesSharedStartPresentation` and `UsesSharedCountdown`, both `true` by default:
+  `"VolleyballController"`). `MinigameBase` gains three virtual properties:
+  `UsesSharedTutorial` and `UsesSharedCountdown` (default `true`), and `OwnsStartGate`
+  (default `false`; when `true`, `PhaseOverlay` never opens the minigame's start gate):
 
-| Game | Shared tutorial | Shared countdown |
-|---|---|---|
-| Sprint | off | off (its own countdown is built with `UiKit.Countdown`, so it looks the same) |
-| Volleyball | off | on |
-| Football | off (it has the difficulty picker) | **on**, replacing the "SẴN SÀNG!" panel; Football's lifecycle already passes through `Countdown` |
+| Game | Shared tutorial | Shared countdown | Owns start gate |
+|---|---|---|---|
+| Sprint | off | off (its own countdown is built with `UiKit.Countdown`, so it looks the same) | yes |
+| Volleyball | off | on | no (the overlay opens it, as today) |
+| Football | off (it has the difficulty picker) | **on**, replacing the "SẴN SÀNG!" panel; Football's lifecycle already passes through `Countdown` | yes (opens it on BẮT ĐẦU) |
+
+  `TutorialOverlay` also styles itself with the kit at runtime.
 
   Its countdown root uses `UiKit.Countdown` and its tutorial root uses `Chip`.
 - **`PausePanel`** and the pause block in **`MinigameUIAssembler`**: the trigger is
@@ -245,12 +257,17 @@ verifies this before building on it.
 - `KitPressFeedbackTests`: rest, hint and pressed states; press scale and restore.
 - `ResultPanelRetryTests`: retry hidden when `RetryAvailable` is false; pending and error
   states; detail line.
-- `PhaseOverlay` tests: follows `UsesSharedStartPresentation` and `UsesSharedCountdown`.
-- **`MinigameStyleConsistencyTests`**, a guard in the style of `HeroConsistencyTests`. It
-  opens `MG_Football`, `MG_Volleyball`, `GameOver` and `Punishment` in EditMode, and
-  `MG_Sprint` in PlayMode (its UI is built at runtime). For every minigame canvas:
-  - every `Image` uses a sprite from `UiKitAssets`, except transparent hit areas (alpha 0)
-    and the scrim; no built-in `Knob` or `UISprite`;
+- `PhaseOverlay` tests: follows `UsesSharedTutorial`, `UsesSharedCountdown` and `OwnsStartGate`.
+- **`MinigameStyleConsistencyTests`**, a guard in the style of `HeroConsistencyTests`. The
+  rules live in `MinigameStyleAudit` (runtime assembly) so EditMode and PlayMode tests share
+  them. It audits the three shared prefab assets (these cover `GameOver` and `Punishment`,
+  whose instances carry no style overrides), the `S2_HUD_Minigame` tree of `MG_Football` and
+  `MG_Volleyball`, `Punishment`'s `PausePanel` in EditMode, and Sprint's HUD in PlayMode (it is
+  built at runtime). `GameOver`'s and `Punishment`'s own screens are out of scope. For every
+  audited tree:
+  - every `Image` uses a sprite from `UiKitAssets`, except transparent hit areas (alpha below
+    0.01), the scrim (no sprite, `Scrim` colour), tutorial `Icon` art and Sprint's
+    black-and-white `FinishLine`; no built-in `Knob` or `UISprite`;
   - every `TMP_Text` uses Baloo2 at size 24 or more;
   - every colour, ignoring alpha, is a `MinigameUiTheme` token;
   - no legacy `UnityEngine.UI.Text`.
