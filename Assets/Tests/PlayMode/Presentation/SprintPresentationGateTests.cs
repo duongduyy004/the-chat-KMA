@@ -98,6 +98,16 @@ namespace KMA.Tests.Presentation
         }
 
         [UnityTest]
+        public IEnumerator SprintHudFollowsTheKit()
+        {
+            yield return LoadSprint();
+            yield return null;
+            GameObject hud = GameObject.Find("S2_HUD_Minigame");
+            var problems = MinigameStyleAudit.Audit(hud);
+            Assert.That(problems, Is.Empty, string.Join("\n", problems));
+        }
+
+        [UnityTest]
         public IEnumerator SprintStart_ShowsOneInstructionAcrossTutorialAndCountdown()
         {
             yield return LoadSprint();
