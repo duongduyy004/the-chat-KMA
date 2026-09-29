@@ -20,7 +20,6 @@ namespace KMA.EditorTools
         const string LogoPath = "Assets/_Project/Art/Brand/GameLogo.png";
         const string IllustrationPath = "Assets/_Project/Art/UI/HomeIllustration.png";
         const string HeadingFontPath = "Assets/_Project/Fonts/Baloo2-ExtraBold.asset";
-        const string BodyFontPath = "Assets/_Project/Fonts/Nunito-Bold.asset";
 
         static readonly Color Navy = new Color32(9, 35, 64, 255);
         static readonly Color Blue = new Color32(25, 130, 196, 255);
@@ -34,17 +33,15 @@ namespace KMA.EditorTools
             Sprite logo = LoadSprite(LogoPath);
             Sprite illustration = LoadSprite(IllustrationPath);
             TMP_FontAsset headingFont = AssetDatabase.LoadAssetAtPath<TMP_FontAsset>(HeadingFontPath);
-            TMP_FontAsset bodyFont = AssetDatabase.LoadAssetAtPath<TMP_FontAsset>(BodyFontPath);
 
-            ConfigureBootstrap(logo, illustration, headingFont, bodyFont);
+            ConfigureBootstrap(logo, illustration, headingFont);
             ConfigureHome(logo, illustration, headingFont);
             AssetDatabase.SaveAssets();
             AssetDatabase.Refresh();
             Debug.Log("Configured Bootstrap splash and Vietnamese demo home.");
         }
 
-        static void ConfigureBootstrap(Sprite logo, Sprite illustration, TMP_FontAsset headingFont,
-            TMP_FontAsset bodyFont)
+        static void ConfigureBootstrap(Sprite logo, Sprite illustration, TMP_FontAsset headingFont)
         {
             Scene scene = EditorSceneManager.OpenScene(BootstrapScenePath, OpenSceneMode.Single);
             GameManager manager = UnityEngine.Object.FindFirstObjectByType<GameManager>(
@@ -93,7 +90,7 @@ namespace KMA.EditorTools
 
             TMP_Text subtitle = CreateText(root.transform, "Subtitle", "HÀNH TRÌNH RÈN LUYỆN THỂ CHẤT",
                 Anchored(new Vector2(0.08f, 0.30f), new Vector2(0.58f, 0.43f), Vector2.zero, Vector2.zero),
-                32f, bodyFont, Color.white);
+                32f, headingFont, Color.white);
             subtitle.characterSpacing = 3f;
 
             TMP_Text status = CreateText(root.transform, "Status", "ĐANG CHUẨN BỊ...",
@@ -177,12 +174,11 @@ namespace KMA.EditorTools
             colors.disabledColor = new Color(0.35f, 0.39f, 0.44f, 0.72f);
             button.colors = colors;
 
-            Text text = buttonObject.GetComponentInChildren<Text>(true);
+            TMP_Text text = buttonObject.GetComponentInChildren<TMP_Text>(true);
             if (text == null)
                 throw new InvalidOperationException($"{objectName} is missing its label.");
             text.text = label;
             text.fontSize = 30;
-            text.fontStyle = FontStyle.Bold;
             text.color = objectName == "NEW GAMEButton" ? Navy : Color.white;
         }
 

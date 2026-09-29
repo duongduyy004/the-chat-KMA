@@ -1,4 +1,5 @@
 using KMA.Gameplay;
+using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -10,10 +11,10 @@ namespace KMA.Gameplay.UI
         [SerializeField] string displayName;
         [SerializeField] bool comingSoon;
         [SerializeField] ScriptableObject subjectConfigAsset;
-        [SerializeField] Text titleLabel;
-        [SerializeField] Text detailLabel;
-        [SerializeField] Text statusLabel;
-        [SerializeField] Text actionLabel;
+        [SerializeField] TMP_Text titleLabel;
+        [SerializeField] TMP_Text detailLabel;
+        [SerializeField] TMP_Text statusLabel;
+        [SerializeField] TMP_Text actionLabel;
         [SerializeField] Button button;
         [SerializeField] Image cardImage;
         [SerializeField] Image iconPlate;
@@ -75,7 +76,7 @@ namespace KMA.Gameplay.UI
             ConfigureState(subjectId, displayName, comingSoon, record, lives, unlocked);
         }
 
-        public void Bind(Button target, Text title, Text detail, GameObject detailRoot = null)
+        public void Bind(Button target, TMP_Text title, TMP_Text detail, GameObject detailRoot = null)
         {
             button = target;
             titleLabel = title;
@@ -83,9 +84,9 @@ namespace KMA.Gameplay.UI
             detailVisibilityRoot = detailRoot != null ? detailRoot : detail == null ? null : detail.gameObject;
         }
 
-        public void BindStatusLabel(Text status) => statusLabel = status;
+        public void BindStatusLabel(TMP_Text status) => statusLabel = status;
 
-        public void BindPresentation(Text status, Text action, Image background, Image sportIcon,
+        public void BindPresentation(TMP_Text status, TMP_Text action, Image background, Image sportIcon,
             Outline outline, Color accent)
         {
             statusLabel = status;

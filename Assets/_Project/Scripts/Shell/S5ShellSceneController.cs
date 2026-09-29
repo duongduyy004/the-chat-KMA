@@ -1,7 +1,9 @@
 using KMA.Gameplay;
 using KMA.Gameplay.Core;
 using KMA.Gameplay.UI;
+using KMA.UI.Kit;
 using System.Linq;
+using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -235,17 +237,15 @@ namespace KMA.Gameplay.Shell
             labelRect.anchorMax = Vector2.one;
             labelRect.offsetMin = Vector2.zero;
             labelRect.offsetMax = Vector2.zero;
-            var text = textObject.AddComponent<Text>();
+            var text = textObject.AddComponent<TextMeshProUGUI>();
             text.text = label;
-            text.alignment = TextAnchor.MiddleCenter;
-            text.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
-            text.fontSize = 22;
-            text.fontStyle = FontStyle.Bold;
-            text.color = Color.white;
+            text.alignment = TextAlignmentOptions.Center;
+            UiKit.StyleLabel(text, 22, Color.white);
+            UiKit.FitLabel(text, 32f);
             return button;
         }
 
-        static Text AddLabel(Transform parent, string name, string value, Vector2 position,
+        static TMP_Text AddLabel(Transform parent, string name, string value, Vector2 position,
             int fontSize, Color color)
         {
             var root = new GameObject(name, typeof(RectTransform));
@@ -253,14 +253,12 @@ namespace KMA.Gameplay.Shell
             RectTransform rect = root.GetComponent<RectTransform>();
             rect.sizeDelta = new Vector2(540f, 90f);
             rect.anchoredPosition = position;
-            Text text = root.AddComponent<Text>();
-            text.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
+            TMP_Text text = root.AddComponent<TextMeshProUGUI>();
             text.text = value;
-            text.fontSize = fontSize;
-            text.fontStyle = FontStyle.Bold;
-            text.color = color;
-            text.alignment = TextAnchor.MiddleCenter;
+            text.alignment = TextAlignmentOptions.Center;
+            UiKit.StyleLabel(text, fontSize, color);
             text.raycastTarget = false;
+            UiKit.FitLabel(text, fontSize + 10f);
             return text;
         }
 

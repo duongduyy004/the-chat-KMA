@@ -1,5 +1,7 @@
 using System.Collections.Generic;
 using KMA.Gameplay;
+using KMA.UI.Kit;
+using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -95,10 +97,10 @@ namespace KMA.Gameplay.UI
             headingLayout.childControlWidth = true;
             headingLayout.childControlHeight = true;
             headingLayout.childForceExpandHeight = false;
-            Text title = LayoutLabel(heading, "Title", "CHỌN MÔN THI", 56,
+            TMP_Text title = LayoutLabel(heading, "Title", "CHỌN MÔN THI", 56,
                 Color.white, TextAnchor.LowerLeft);
             title.transform.parent.gameObject.AddComponent<LayoutElement>().preferredHeight = 62;
-            Text subtitle = LayoutLabel(heading, "Subtitle", "Chọn một môn để bắt đầu", 26,
+            TMP_Text subtitle = LayoutLabel(heading, "Subtitle", "Chọn một môn để bắt đầu", 26,
                 new Color32(201, 226, 245, 255), TextAnchor.UpperLeft);
             subtitle.transform.parent.gameObject.AddComponent<LayoutElement>().preferredHeight = 34;
             RectTransform livesPanel = Rect(header, "LivesPanel");
@@ -138,9 +140,9 @@ namespace KMA.Gameplay.UI
             hearts.SetSlots(slots);
             int currentLives = session == null ? GameSession.MaxLives : session.Lives;
             hearts.SetHearts(currentLives);
-            Text lives = LayoutLabel(livesPanel, "LivesLabel", "LƯỢT: " + currentLives + "/" + GameSession.MaxLives, 24,
+            TMP_Text lives = LayoutLabel(livesPanel, "LivesLabel", "LƯỢT: " + currentLives + "/" + GameSession.MaxLives, 24,
                 Color.white, TextAnchor.MiddleRight);
-            lives.horizontalOverflow = HorizontalWrapMode.Overflow;
+            lives.enableWordWrapping = false;
             LayoutElement livesLabelLayout = lives.transform.parent.gameObject.AddComponent<LayoutElement>();
             livesLabelLayout.preferredWidth = 160;
             livesLabelLayout.preferredHeight = 44;
@@ -171,7 +173,7 @@ namespace KMA.Gameplay.UI
             LayoutElement element = root.gameObject.AddComponent<LayoutElement>();
             element.preferredWidth = 84f;
             element.preferredHeight = 84f;
-            Text(root, "Label", label, 56, new Color32(8, 35, 61, 255), TextAnchor.MiddleCenter);
+            TextTmp(root, "Label", label, 56, new Color32(8, 35, 61, 255), TextAnchor.MiddleCenter);
             return button;
         }
 
@@ -219,11 +221,11 @@ namespace KMA.Gameplay.UI
             glyphImage.color = new Color32(8, 35, 61, 255);
             glyphImage.preserveAspect = true;
             glyphImage.raycastTarget = false;
-            Text title = LayoutLabel(cardHeader, "Title", entry.Label, 36, entry.Available ? new Color32(8, 35, 61, 255) : foreground, TextAnchor.MiddleLeft);
+            TMP_Text title = LayoutLabel(cardHeader, "Title", entry.Label, 36, entry.Available ? new Color32(8, 35, 61, 255) : foreground, TextAnchor.MiddleLeft);
             LayoutElement titleLayout = title.transform.parent.gameObject.AddComponent<LayoutElement>();
             titleLayout.preferredHeight = 70;
             titleLayout.flexibleWidth = 1;
-            Text status = LayoutLabel(root, "Status", string.Empty, 26, entry.Available ? new Color32(12, 105, 94, 255) : foreground,
+            TMP_Text status = LayoutLabel(root, "Status", string.Empty, 26, entry.Available ? new Color32(12, 105, 94, 255) : foreground,
                 TextAnchor.MiddleLeft);
             RectTransform statusContainer = status.transform.parent as RectTransform;
             LayoutElement statusLayout = statusContainer.gameObject.AddComponent<LayoutElement>();
@@ -232,7 +234,7 @@ namespace KMA.Gameplay.UI
             statusContainer.anchorMax = new Vector2(entry.Available ? .70f : 1f, 0f);
             statusContainer.offsetMin = new Vector2(20f, 12f);
             statusContainer.offsetMax = new Vector2(entry.Available ? -4f : -20f, 44f);
-            Text detail = LayoutLabel(root, "Detail", string.Empty, 26, foreground, TextAnchor.MiddleLeft);
+            TMP_Text detail = LayoutLabel(root, "Detail", string.Empty, 26, foreground, TextAnchor.MiddleLeft);
             RectTransform detailContainer = detail.transform.parent as RectTransform;
             LayoutElement detailLayout = detailContainer.gameObject.AddComponent<LayoutElement>();
             detailLayout.ignoreLayout = true;
@@ -240,10 +242,10 @@ namespace KMA.Gameplay.UI
             detailContainer.anchorMax = new Vector2(.74f, 0f);
             detailContainer.offsetMin = new Vector2(20f, 46f);
             detailContainer.offsetMax = new Vector2(-4f, 76f);
-            Text action = null;
+            TMP_Text action = null;
             if (entry.Available)
             {
-                action = Text(root, "ActionHint", "THI →", 26,
+                action = TextTmp(root, "ActionHint", "THI →", 26,
                     new Color32(163, 104, 0, 255), TextAnchor.MiddleRight);
                 LayoutElement actionLayout = action.gameObject.AddComponent<LayoutElement>();
                 actionLayout.ignoreLayout = true;
@@ -280,7 +282,7 @@ namespace KMA.Gameplay.UI
             rowElement.preferredHeight = 38;
             rowElement.flexibleHeight = 0;
 
-            Text upcoming = LayoutLabel(row, "UpcomingLabel", "SẮP RA MẮT", 22,
+            TMP_Text upcoming = LayoutLabel(row, "UpcomingLabel", "SẮP RA MẮT", 22,
                 new Color32(201, 226, 245, 255), TextAnchor.MiddleRight);
             LayoutElement upcomingLayout = upcoming.transform.parent.gameObject.AddComponent<LayoutElement>();
             upcomingLayout.preferredWidth = 150;
@@ -300,7 +302,7 @@ namespace KMA.Gameplay.UI
             LayoutElement element = root.gameObject.AddComponent<LayoutElement>();
             element.preferredWidth = 168;
             element.preferredHeight = 46;
-            Text(root, "Label", label, 22, foreground, TextAnchor.MiddleCenter);
+            TextTmp(root, "Label", label, 22, foreground, TextAnchor.MiddleCenter);
         }
 
         static ColorBlock ButtonColors()
@@ -543,20 +545,34 @@ namespace KMA.Gameplay.UI
             return gameObject.GetComponent<RectTransform>();
         }
 
-        static Text Text(Transform parent, string name, string value, int size, Color color, TextAnchor alignment)
+        static TMP_Text TextTmp(Transform parent, string name, string value, int size, Color color, TextAnchor alignment)
         {
             RectTransform rect = Rect(parent, name); Stretch(rect, Vector2.zero, Vector2.zero);
-            Text text = rect.gameObject.AddComponent<Text>(); text.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
-            text.text = value; text.fontSize = size; text.color = color; text.alignment = alignment;
-            text.fontStyle = FontStyle.Bold;
-            text.raycastTarget = false;
-            text.horizontalOverflow = HorizontalWrapMode.Wrap; text.verticalOverflow = VerticalWrapMode.Truncate;
+            TextAlignmentOptions tmpAlignment = alignment switch
+            {
+                TextAnchor.UpperLeft => TextAlignmentOptions.TopLeft,
+                TextAnchor.UpperCenter => TextAlignmentOptions.Top,
+                TextAnchor.UpperRight => TextAlignmentOptions.TopRight,
+                TextAnchor.MiddleLeft => TextAlignmentOptions.Left,
+                TextAnchor.MiddleCenter => TextAlignmentOptions.Center,
+                TextAnchor.MiddleRight => TextAlignmentOptions.Right,
+                TextAnchor.LowerLeft => TextAlignmentOptions.BottomLeft,
+                TextAnchor.LowerCenter => TextAlignmentOptions.Bottom,
+                TextAnchor.LowerRight => TextAlignmentOptions.BottomRight,
+                _ => TextAlignmentOptions.Center
+            };
+            TMP_Text text = rect.gameObject.AddComponent<TextMeshProUGUI>();
+            UiKit.StyleLabel(text, size, color);
+            text.text = value;
+            text.alignment = tmpAlignment;
+            text.overflowMode = TextOverflowModes.Truncate;
+            UiKit.FitLabel(text, size + 10f);
             return text;
         }
 
-        static Text LayoutLabel(Transform parent, string name, string value, int size, Color color, TextAnchor alignment)
+        static TMP_Text LayoutLabel(Transform parent, string name, string value, int size, Color color, TextAnchor alignment)
         {
-            return Text(Rect(parent, name + "Container"), name, value, size, color, alignment);
+            return TextTmp(Rect(parent, name + "Container"), name, value, size, color, alignment);
         }
 
         static void Stretch(RectTransform rect, Vector2 min, Vector2 max)
@@ -614,7 +630,14 @@ namespace KMA.Gameplay.UI
             {
                 Transform title = node.transform.Find("CardHeader/TitleContainer/Title");
                 if (title != null)
-                    title.GetComponent<Text>().fontSize = titleSize;
+                {
+                    TMP_Text tmp = title.GetComponent<TMP_Text>();
+                    if (tmp != null)
+                    {
+                        tmp.fontSize = titleSize;
+                        UiKit.FitLabel(tmp, titleSize + 10f);
+                    }
+                }
             }
             LayoutElement element = GetComponent<LayoutElement>();
             if (element != null)

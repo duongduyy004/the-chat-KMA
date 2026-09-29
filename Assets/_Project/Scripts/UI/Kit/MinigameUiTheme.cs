@@ -30,8 +30,8 @@ namespace KMA.UI.Kit
         public const float Headline = 48f;
         public const float BodyLarge = 40f;
         public const float Body = 32f;
-        public const float Caption = 24f;
-        public const float MinimumFontSize = 24f;
+        public const float Caption = 28f;
+        public const float MinimumFontSize = 28f;
 
         public const float RadiusPanel = 24f;
         public const float RadiusControl = 36f;

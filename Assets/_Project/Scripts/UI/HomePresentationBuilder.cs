@@ -1,5 +1,7 @@
 using System;
 using System.Linq;
+using KMA.UI.Kit;
+using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -55,10 +57,10 @@ namespace KMA.Gameplay.UI
                 SetLayout(title.gameObject, 64f);
             }
 
-            Text kicker = Label(panel, "FestivalKicker", "NGÀY HỘI THỂ THAO KMA", 24,
+            TMP_Text kicker = Label(panel, "FestivalKicker", "NGÀY HỘI THỂ THAO KMA", 24,
                 Gold, TextAnchor.MiddleCenter);
             kicker.gameObject.AddComponent<LayoutElement>().preferredHeight = 30f;
-            Text subtitle = Label(panel, "FestivalSubtitle",
+            TMP_Text subtitle = Label(panel, "FestivalSubtitle",
                 "Bứt tốc · Vượt thử thách · Chinh phục huy chương", 19,
                 Cream, TextAnchor.MiddleCenter);
             subtitle.gameObject.AddComponent<LayoutElement>().preferredHeight = 36f;
@@ -82,7 +84,7 @@ namespace KMA.Gameplay.UI
             StyleAction(FindButton(screen, "QUITButton"), actionStack, new Color32(13, 57, 92, 255),
                 Color.white, 78f, 27);
 
-            Text footer = Label(panel, "FestivalFooter", "HÀNH TRÌNH RÈN LUYỆN THỂ CHẤT", 15,
+            TMP_Text footer = Label(panel, "FestivalFooter", "HÀNH TRÌNH RÈN LUYỆN THỂ CHẤT", 15,
                 new Color32(190, 219, 239, 255), TextAnchor.MiddleCenter);
             footer.gameObject.AddComponent<LayoutElement>().preferredHeight = 22f;
             FlexibleSpacer(panel, "BottomSpacer");
@@ -128,13 +130,12 @@ namespace KMA.Gameplay.UI
             Outline outline = button.GetComponent<Outline>() ?? button.gameObject.AddComponent<Outline>();
             outline.effectColor = new Color32(3, 18, 33, 255);
             outline.effectDistance = new Vector2(3f, -3f);
-            Text label = button.GetComponentInChildren<Text>(true);
+            TMP_Text label = button.GetComponentInChildren<TMP_Text>(true);
             if (label != null)
             {
-                label.fontSize = fontSize;
-                label.fontStyle = FontStyle.Bold;
-                label.color = foreground;
-                label.alignment = TextAnchor.MiddleCenter;
+                UiKit.StyleLabel(label, fontSize, foreground);
+                label.alignment = TextAlignmentOptions.Center;
+                UiKit.FitLabel(label, fontSize);
             }
         }
 
@@ -153,14 +154,14 @@ namespace KMA.Gameplay.UI
             element.preferredHeight = height;
         }
 
-        static Text Label(Transform parent, string name, string value, int size, Color color,
+        static TMP_Text Label(Transform parent, string name, string value, int size, Color color,
             TextAnchor alignment)
         {
             RectTransform rect = Rect(parent, name);
             return AddText(rect, value, size, color, alignment);
         }
 
-        static Text Text(Transform parent, string name, string value, int size, Color color,
+        static TMP_Text Text(Transform parent, string name, string value, int size, Color color,
             TextAnchor alignment)
         {
             RectTransform rect = Rect(parent, name);
@@ -171,18 +172,27 @@ namespace KMA.Gameplay.UI
             return AddText(rect, value, size, color, alignment);
         }
 
-        static Text AddText(RectTransform rect, string value, int size, Color color, TextAnchor alignment)
+        static TMP_Text AddText(RectTransform rect, string value, int size, Color color, TextAnchor alignment)
         {
-            Text text = rect.gameObject.AddComponent<Text>();
-            text.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
+            TextAlignmentOptions tmpAlignment = alignment switch
+            {
+                TextAnchor.UpperLeft => TextAlignmentOptions.TopLeft,
+                TextAnchor.UpperCenter => TextAlignmentOptions.Top,
+                TextAnchor.UpperRight => TextAlignmentOptions.TopRight,
+                TextAnchor.MiddleLeft => TextAlignmentOptions.Left,
+                TextAnchor.MiddleCenter => TextAlignmentOptions.Center,
+                TextAnchor.MiddleRight => TextAlignmentOptions.Right,
+                TextAnchor.LowerLeft => TextAlignmentOptions.BottomLeft,
+                TextAnchor.LowerCenter => TextAlignmentOptions.Bottom,
+                TextAnchor.LowerRight => TextAlignmentOptions.BottomRight,
+                _ => TextAlignmentOptions.Center
+            };
+            TMP_Text text = rect.gameObject.AddComponent<TextMeshProUGUI>();
+            UiKit.StyleLabel(text, size, color);
             text.text = value;
-            text.fontSize = size;
-            text.fontStyle = FontStyle.Bold;
-            text.color = color;
-            text.alignment = alignment;
-            text.raycastTarget = false;
-            text.horizontalOverflow = HorizontalWrapMode.Wrap;
-            text.verticalOverflow = VerticalWrapMode.Truncate;
+            text.alignment = tmpAlignment;
+            text.overflowMode = TextOverflowModes.Truncate;
+            UiKit.FitLabel(text, size + 10f);
             return text;
         }
 

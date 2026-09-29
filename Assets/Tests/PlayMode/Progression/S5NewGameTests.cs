@@ -7,6 +7,7 @@ using KMA.Gameplay.Core;
 using KMA.Gameplay.Shell;
 using KMA.Gameplay.UI;
 using NUnit.Framework;
+using TMPro;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.TestTools;
@@ -98,18 +99,15 @@ namespace KMA.Tests.Gameplay.Progression
             var node = new GameObject("MapNode").AddComponent<MapNodeView>();
             try
             {
-                Font font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
                 var button = new GameObject("Button", typeof(RectTransform), typeof(Button))
                     .GetComponent<Button>();
-                var title = new GameObject("Title", typeof(RectTransform), typeof(Text))
-                    .GetComponent<Text>();
-                var detail = new GameObject("Detail", typeof(RectTransform), typeof(Text))
-                    .GetComponent<Text>();
+                var title = new GameObject("Title", typeof(RectTransform), typeof(TextMeshProUGUI))
+                    .GetComponent<TextMeshProUGUI>();
+                var detail = new GameObject("Detail", typeof(RectTransform), typeof(TextMeshProUGUI))
+                    .GetComponent<TextMeshProUGUI>();
                 button.transform.SetParent(node.transform);
                 title.transform.SetParent(node.transform);
                 detail.transform.SetParent(node.transform);
-                title.font = font;
-                detail.font = font;
                 node.Bind(button, title, detail);
 
                 node.Configure(SubjectId.Sprint, "Chạy nước rút", false, null, 5);

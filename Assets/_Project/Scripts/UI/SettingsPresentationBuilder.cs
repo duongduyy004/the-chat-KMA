@@ -1,3 +1,5 @@
+using KMA.UI.Kit;
+using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -20,8 +22,8 @@ namespace KMA.Gameplay.UI
             var panel = Rect(root, "SettingsPanel", new Vector2(.22f, .14f), new Vector2(.78f, .86f));
             panel.gameObject.AddComponent<Image>().color = Navy;
             Label(panel, "Title", "CÀI ĐẶT", new Vector2(.08f, .82f), new Vector2(.92f, .96f), 42, Gold);
-            var music = Volume(panel, "MusicSlider", "ÂM LƯỢNG NHẠC", .58f, out Text musicValue);
-            var sfx = Volume(panel, "SfxSlider", "ÂM LƯỢNG HIỆU ỨNG", .36f, out Text sfxValue);
+            var music = Volume(panel, "MusicSlider", "ÂM LƯỢNG NHẠC", .58f, out TMP_Text musicValue);
+            var sfx = Volume(panel, "SfxSlider", "ÂM LƯỢNG HIỆU ỨNG", .36f, out TMP_Text sfxValue);
 
             Label(panel, "VibrationLabel", "RUNG", new Vector2(.09f, .23f), new Vector2(.6f, .33f), 28, Color.white);
             var toggleRect = Rect(panel, "VibrationToggle", new Vector2(.67f, .23f), new Vector2(.91f, .33f));
@@ -32,7 +34,7 @@ namespace KMA.Gameplay.UI
             var check = Rect(toggleRect, "Checkmark", new Vector2(.08f, .3f), new Vector2(.2f, .7f));
             toggle.graphic = check.gameObject.AddComponent<Image>();
             toggle.graphic.color = Gold;
-            var vibrationValue = Label(toggleRect, "Value", "BẬT", new Vector2(.25f, 0f), Vector2.one, 26, Color.white);
+            TMP_Text vibrationValue = Label(toggleRect, "Value", "BẬT", new Vector2(.25f, 0f), Vector2.one, 26, Color.white);
 
             var backRect = Rect(panel, "BackButton", new Vector2(.26f, .075f), new Vector2(.74f, .18f));
             var backImage = backRect.gameObject.AddComponent<Image>();
@@ -46,7 +48,7 @@ namespace KMA.Gameplay.UI
             screen.BindControls(music, sfx, toggle, musicValue, sfxValue, vibrationValue);
         }
 
-        static Slider Volume(Transform parent, string name, string title, float bottom, out Text value)
+        static Slider Volume(Transform parent, string name, string title, float bottom, out TMP_Text value)
         {
             var row = Rect(parent, name + "Row", new Vector2(.09f, bottom), new Vector2(.91f, bottom + .2f));
             Label(row, "Title", title, new Vector2(0f, .55f), new Vector2(.78f, 1f), 26, Color.white);
@@ -72,16 +74,13 @@ namespace KMA.Gameplay.UI
             return slider;
         }
 
-        static Text Label(Transform parent, string name, string text, Vector2 min, Vector2 max, int size, Color color)
+        static TMP_Text Label(Transform parent, string name, string text, Vector2 min, Vector2 max, int size, Color color)
         {
-            var label = Rect(parent, name, min, max).gameObject.AddComponent<Text>();
-            label.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
+            var label = Rect(parent, name, min, max).gameObject.AddComponent<TextMeshProUGUI>();
+            UiKit.StyleLabel(label, size, color);
             label.text = text;
-            label.fontSize = size;
-            label.fontStyle = FontStyle.Bold;
-            label.alignment = TextAnchor.MiddleCenter;
-            label.color = color;
-            label.raycastTarget = false;
+            label.alignment = TextAlignmentOptions.Center;
+            UiKit.FitLabel(label, size + 10f);
             return label;
         }
 

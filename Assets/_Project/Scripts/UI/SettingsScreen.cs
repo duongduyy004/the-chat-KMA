@@ -1,5 +1,6 @@
 using System;
 using KMA.Gameplay;
+using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -10,9 +11,9 @@ namespace KMA.Gameplay.UI
         Slider musicSlider;
         Slider sfxSlider;
         Toggle vibrationToggle;
-        Text musicValue;
-        Text sfxValue;
-        Text vibrationValue;
+        TMP_Text musicValue;
+        TMP_Text sfxValue;
+        TMP_Text vibrationValue;
 
         public event Action<Settings> SettingsChanged;
         public event Action CalibrateRequested;
@@ -48,7 +49,7 @@ namespace KMA.Gameplay.UI
         public void Back() => BackRequested?.Invoke();
 
         internal void BindControls(Slider music, Slider sfx, Toggle vibration,
-            Text musicLabel, Text sfxLabel, Text vibrationLabel)
+            TMP_Text musicLabel, TMP_Text sfxLabel, TMP_Text vibrationLabel)
         {
             musicSlider = music;
             sfxSlider = sfx;
