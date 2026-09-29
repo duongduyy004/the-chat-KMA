@@ -139,6 +139,9 @@ namespace KMA.EditorTools
             backdrop.sprite = null;
             backdrop.type = Image.Type.Simple;
             backdrop.color = MinigameUiTheme.Scrim;
+            // Cover the whole canvas whatever its aspect; a fixed 1920x1080 left bare bands on wide screens.
+            UiKit.Stretch((RectTransform)root.transform);
+            UiKit.Stretch((RectTransform)backdropNode);
 
             Transform content = t.Find("Content");
             var card = UiKit.GetOrAdd<Image>(content);
