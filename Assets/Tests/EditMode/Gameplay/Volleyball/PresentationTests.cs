@@ -101,8 +101,10 @@ namespace KMA.Tests.Gameplay.Volleyball
 
             view.Render(match);
 
-            Assert.That(ball.transform.position,
-                Is.EqualTo(CourtSpace.ToWorld(VolleyballMatch.PlayerServeSpot, VolleyballMatch.TossStartHeight)));
+            // The held ball sits beside the server's hand (towards the net), not on his face.
+            Assert.That(ball.transform.position, Is.EqualTo(
+                CourtSpace.ToWorld(VolleyballMatch.PlayerServeSpot, VolleyballMatch.TossStartHeight)
+                + Vector3.right * VolleyBallView.HeldBallSideOffset));
             Assert.That(shadow.transform.position, Is.EqualTo(CourtSpace.ToWorld(VolleyballMatch.PlayerServeSpot, 0f)));
             Assert.That(shadow.transform.localScale.x,
                 Is.EqualTo(VolleyBallView.ShadowScaleFor(VolleyballMatch.TossStartHeight)).Within(1e-4f));
@@ -113,6 +115,39 @@ namespace KMA.Tests.Gameplay.Volleyball
             match.PressAction();
             view.Render(match);
             Assert.That(contact.enabled, Is.True);
+        }
+
+        [Test]
+        public void HeldBallSitsBesideTheServerTowardsTheNet()
+        {
+            SpriteRenderer ball = Renderer("Ball"), shadow = Renderer("Shadow");
+            var view = root.AddComponent<VolleyBallView>();
+            view.Configure(ball, shadow, null, null);
+            var match = new VolleyballMatch();
+            match.ForceServerForTest(CourtSide.Opponent);
+
+            view.Render(match);
+
+            Vector3 column = CourtSpace.ToWorld(VolleyballMatch.OpponentServeSpot, VolleyballMatch.TossStartHeight);
+            Assert.That(ball.transform.position.x, Is.EqualTo(column.x - VolleyBallView.HeldBallSideOffset).Within(1e-4f),
+                "The opponent serves from the far side, so the net is to his left.");
+            Assert.That(ball.transform.position.y, Is.EqualTo(column.y).Within(1e-4f));
+            Assert.That(shadow.transform.position, Is.EqualTo(CourtSpace.ToWorld(VolleyballMatch.OpponentServeSpot, 0f)),
+                "The ground shadow stays under the server.");
+        }
+
+        [Test]
+        public void TossedBallLeavesTheHandAndRisesOverTheHead()
+        {
+            float start = VolleyballMatch.TossStartHeight, apex = VolleyballMatch.TossApexHeight;
+            Assert.That(VolleyBallView.HandOffsetWeight(BallState.Held, start), Is.EqualTo(1f));
+            Assert.That(VolleyBallView.HandOffsetWeight(BallState.Toss, start), Is.EqualTo(1f));
+            Assert.That(VolleyBallView.HandOffsetWeight(BallState.Toss, (start + apex) * .5f), Is.EqualTo(.5f).Within(1e-4f));
+            Assert.That(VolleyBallView.HandOffsetWeight(BallState.Toss, apex), Is.EqualTo(0f));
+            Assert.That(VolleyBallView.HandOffsetWeight(BallState.Toss, apex + 1f), Is.EqualTo(0f));
+            Assert.That(VolleyBallView.HandOffsetWeight(BallState.InPlay, start), Is.EqualTo(0f),
+                "Once served the ball follows its real flight, so there is no jump.");
+            Assert.That(VolleyBallView.HandOffsetWeight(BallState.Dead, start), Is.EqualTo(0f));
         }
 
         [Test]

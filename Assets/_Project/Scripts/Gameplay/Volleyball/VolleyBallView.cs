@@ -7,6 +7,8 @@ namespace KMA.Gameplay.Volleyball
         public const int BallSortingOrder = 300;
         public const int ShadowSortingOrder = 5;
         public const int MarkerSortingOrder = 6;
+        /// <summary>World units the held ball sits to the side of the server, clear of the 1.2-unit-wide body.</summary>
+        public const float HeldBallSideOffset = .8f;
         public const float MinShadowScale = .6f;
         public const float ShadowFullHeight = 5f;
         const float MarkerLeadSeconds = .6f;
@@ -26,6 +28,17 @@ namespace KMA.Gameplay.Volleyball
             aimMarker = aimRenderer;
         }
 
+        // 1 while the server holds the ball beside his hand, fading to 0 as the toss carries it over
+        // his head, so the ball never covers his face and the served flight starts without a jump.
+        public static float HandOffsetWeight(BallState state, float height)
+        {
+            if (state == BallState.Held)
+                return 1f;
+            if (state != BallState.Toss)
+                return 0f;
+            return 1f - Mathf.InverseLerp(VolleyballMatch.TossStartHeight, VolleyballMatch.TossApexHeight, height);
+        }
+
         public static float ShadowScaleFor(float height) =>
             Mathf.Lerp(1f, MinShadowScale, Mathf.Clamp01(height / ShadowFullHeight));
 
@@ -40,7 +53,10 @@ namespace KMA.Gameplay.Volleyball
 
             Vector2 ground = match.BallGround;
             float height = match.BallHeight;
-            ball.transform.position = CourtSpace.ToWorld(ground, height);
+            // Towards the net: +x when the player serves, -x for the opponent.
+            float towardNet = -CourtSpace.SideSign(match.Server);
+            ball.transform.position = CourtSpace.ToWorld(ground, height)
+                + Vector3.right * (towardNet * HeldBallSideOffset * HandOffsetWeight(match.BallState, height));
             ball.sortingOrder = BallSortingOrder;
             Vector3 shadowPosition = CourtSpace.ToWorld(ground, 0f);
             shadow.transform.position = shadowPosition;
