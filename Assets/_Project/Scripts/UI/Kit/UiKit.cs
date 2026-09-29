@@ -230,7 +230,9 @@ namespace KMA.UI.Kit
             RectTransform root = Rect(hitArea, "RoundButton");
             Place(root, new Vector2(.5f, .5f), new Vector2(.5f, .5f), Vector2.zero, Vector2.one * size);
             float drop = MinigameUiTheme.ShadowOffset.y * 2f;
-            Image shadow = Disc(root, "Shadow", false, MinigameUiTheme.ShadowColor);
+            // The disc is drawn in the navy outline token so it stays on the palette; the uGUI Shadow effect keeps ShadowColor.
+            Image shadow = Disc(root, "Shadow", false,
+                MinigameUiTheme.WithAlpha(MinigameUiTheme.TextOutline, MinigameUiTheme.ShadowColor.a));
             Stretch(shadow.rectTransform, new Vector2(0f, drop), new Vector2(0f, drop));
             Image rim = Disc(root, "Rim", true, MinigameUiTheme.TextPrimary);
             Stretch(rim.rectTransform);

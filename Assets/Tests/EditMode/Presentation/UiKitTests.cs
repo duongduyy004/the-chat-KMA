@@ -145,7 +145,8 @@ namespace KMA.Tests.Presentation
             Assert.That(round.Label.color, Is.EqualTo(MinigameUiTheme.Surface));
             Assert.That(round.Feedback.gameObject, Is.SameAs(hitArea.gameObject));
             Assert.That(round.Root.sizeDelta.x, Is.EqualTo(MinigameUiTheme.RoundButton));
-            Assert.That(round.Shadow.color, Is.EqualTo(MinigameUiTheme.ShadowColor));
+            Assert.That(round.Shadow.color,
+                Is.EqualTo(MinigameUiTheme.WithAlpha(MinigameUiTheme.TextOutline, MinigameUiTheme.ShadowColor.a)));
         }
 
         [Test]
