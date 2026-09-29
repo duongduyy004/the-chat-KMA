@@ -1,3 +1,4 @@
+using KMA.UI.Kit;
 using System.Collections.Generic;
 using KMA.Gameplay.Core;
 using KMA.Input;
@@ -127,20 +128,20 @@ namespace KMA.Gameplay
 
             if (pressed)
             {
-                background.color = SprintUiTheme.WithAlpha(SprintUiTheme.Energy, .55f);
-                border.color = SprintUiTheme.WithAlpha(SprintUiTheme.Accent, .75f);
+                background.color = MinigameUiTheme.WithAlpha(MinigameUiTheme.Energy, .55f);
+                border.color = MinigameUiTheme.WithAlpha(MinigameUiTheme.Accent, .75f);
                 return;
             }
 
             if (finished)
             {
-                background.color = SprintUiTheme.WithAlpha(SprintUiTheme.Surface, .30f);
-                border.color = SprintUiTheme.WithAlpha(SprintUiTheme.Accent, .15f);
+                background.color = MinigameUiTheme.WithAlpha(MinigameUiTheme.Surface, .30f);
+                border.color = MinigameUiTheme.WithAlpha(MinigameUiTheme.Accent, .15f);
                 return;
             }
 
-            background.color = SprintUiTheme.WithAlpha(SprintUiTheme.Surface, expected ? .55f : .42f);
-            border.color = SprintUiTheme.WithAlpha(SprintUiTheme.Accent, expected ? .75f : .25f);
+            background.color = MinigameUiTheme.WithAlpha(MinigameUiTheme.Surface, expected ? .55f : .42f);
+            border.color = MinigameUiTheme.WithAlpha(MinigameUiTheme.Accent, expected ? .75f : .25f);
         }
 
         void ApplyBreathe()

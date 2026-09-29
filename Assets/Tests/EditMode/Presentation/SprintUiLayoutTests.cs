@@ -1,3 +1,4 @@
+using KMA.UI.Kit;
 using System.Collections.Generic;
 using KMA.Gameplay;
 using NUnit.Framework;
@@ -225,10 +226,10 @@ namespace KMA.Tests.Presentation
             // Worst case row 1 is "100 / 100 m" at Title size beside the rank pill.
             // Budget in canvas units, measured against the panel's inner width.
             const float distanceGlyphs = 11f;          // "100 / 100 m"
-            const float titleAdvance = SprintUiTheme.Title * .55f;   // conservative advance per glyph
-            const float rankPill = SprintUiTheme.Headline * 2.4f;
-            const float padding = SprintUiTheme.SpaceLg;
-            const float gap = SprintUiTheme.SpaceMd;
+            const float titleAdvance = MinigameUiTheme.Title * .55f;   // conservative advance per glyph
+            const float rankPill = MinigameUiTheme.Headline * 2.4f;
+            const float padding = MinigameUiTheme.SpaceLg;
+            const float gap = MinigameUiTheme.SpaceMd;
 
             float required = distanceGlyphs * titleAdvance + gap + rankPill + padding;
             Assert.That(SprintUiLayout.ScoreboardRect(safe).width, Is.GreaterThanOrEqualTo(required),

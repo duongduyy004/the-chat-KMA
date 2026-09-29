@@ -1,3 +1,4 @@
+using KMA.UI.Kit;
 using System.Collections;
 using TMPro;
 using UnityEngine;
@@ -9,7 +10,7 @@ namespace KMA.Gameplay
     {
         const string SuccessTitle = "HOÀN THÀNH!";
         const string FailureTitle = "THẤT BẠI";
-        static readonly Color32 FailColor = (Color32)SprintUiTheme.Energy;
+        static readonly Color32 FailColor = (Color32)MinigameUiTheme.Energy;
         static readonly Color32 SuccessColor = new Color32(94, 222, 140, 255);
 
         const float ScrimDuration = .12f;

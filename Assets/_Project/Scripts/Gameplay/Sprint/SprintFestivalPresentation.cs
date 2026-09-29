@@ -1,3 +1,4 @@
+using KMA.UI.Kit;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
@@ -40,18 +41,18 @@ namespace KMA.Gameplay
             chromeLayout.Bind(safeRect);
 
             // Progress rail
-            Image railTrack = Panel(root, "ProgressRail", SprintUiTheme.WithAlpha(Color.white, .22f),
+            Image railTrack = Panel(root, "ProgressRail", MinigameUiTheme.WithAlpha(Color.white, .22f),
                 Mathf.RoundToInt(safe.height * .015f));
             ApplyRect(railTrack.rectTransform, safe, SprintUiLayout.ProgressRailRect(safe));
             chromeLayout.Register(railTrack.rectTransform, SprintUiLayout.ProgressRailRect);
-            Image railFill = Panel(railTrack.transform, "RailFill", SprintUiTheme.Accent,
+            Image railFill = Panel(railTrack.transform, "RailFill", MinigameUiTheme.Accent,
                 Mathf.RoundToInt(safe.height * .015f));
             Stretch(railFill.rectTransform);
             railFill.type = Image.Type.Filled;
             railFill.fillMethod = Image.FillMethod.Horizontal;
             railFill.fillOrigin = (int)Image.OriginHorizontal.Left;
             railFill.fillAmount = 0f;
-            Image pip = Panel(railTrack.transform, "PlayerPip", SprintUiTheme.Player, 4);
+            Image pip = Panel(railTrack.transform, "PlayerPip", MinigameUiTheme.Player, 4);
             pip.rectTransform.anchorMin = new Vector2(0f, -.35f);
             pip.rectTransform.anchorMax = new Vector2(0f, 1.35f);
             pip.rectTransform.pivot = new Vector2(.5f, .5f);
@@ -71,35 +72,35 @@ namespace KMA.Gameplay
             });
 
             // Scoreboard
-            Image scoreboard = Panel(root, "Scoreboard", SprintUiTheme.WithAlpha(SprintUiTheme.Surface, .92f),
-                Mathf.RoundToInt(SprintUiTheme.RadiusPanel));
+            Image scoreboard = Panel(root, "Scoreboard", MinigameUiTheme.WithAlpha(MinigameUiTheme.Surface, .92f),
+                Mathf.RoundToInt(MinigameUiTheme.RadiusPanel));
             ApplyRect(scoreboard.rectTransform, safe, SprintUiLayout.ScoreboardRect(safe));
             chromeLayout.Register(scoreboard.rectTransform, SprintUiLayout.ScoreboardRect);
             AddShadow(scoreboard);
 
-            TMP_Text distance = Metric(scoreboard.transform, "Distance", font, SprintUiTheme.Title,
-                SprintUiTheme.TextPrimary, new Vector2(.05f, .46f), new Vector2(.62f, .92f));
+            TMP_Text distance = Metric(scoreboard.transform, "Distance", font, MinigameUiTheme.Title,
+                MinigameUiTheme.TextPrimary, new Vector2(.05f, .46f), new Vector2(.62f, .92f));
             distance.alignment = TextAlignmentOptions.Left;
             distance.text = "0 / 100 m";
 
             Image rankBadge = Panel(scoreboard.transform, "RankBadge",
-                SprintUiTheme.WithAlpha(SprintUiTheme.Accent, .22f), Mathf.RoundToInt(SprintUiTheme.RadiusPanel));
+                MinigameUiTheme.WithAlpha(MinigameUiTheme.Accent, .22f), Mathf.RoundToInt(MinigameUiTheme.RadiusPanel));
             rankBadge.rectTransform.anchorMin = new Vector2(.66f, .46f);
             rankBadge.rectTransform.anchorMax = new Vector2(.95f, .92f);
             rankBadge.rectTransform.offsetMin = Vector2.zero;
             rankBadge.rectTransform.offsetMax = Vector2.zero;
-            TMP_Text rank = Text(rankBadge.transform, "RankLabel", "1st", font, SprintUiTheme.Headline,
-                SprintUiTheme.Accent, TextAlignmentOptions.Center);
+            TMP_Text rank = Text(rankBadge.transform, "RankLabel", "1st", font, MinigameUiTheme.Headline,
+                MinigameUiTheme.Accent, TextAlignmentOptions.Center);
             Stretch(rank.rectTransform);
 
-            TMP_Text combo = Metric(scoreboard.transform, "Combo", font, SprintUiTheme.Body,
-                SprintUiTheme.Energy, new Vector2(.05f, .10f), new Vector2(.62f, .42f));
+            TMP_Text combo = Metric(scoreboard.transform, "Combo", font, MinigameUiTheme.Body,
+                MinigameUiTheme.Energy, new Vector2(.05f, .10f), new Vector2(.62f, .42f));
             combo.alignment = TextAlignmentOptions.Left;
             combo.text = "COMBO ×0";
 
             // Mode chip
-            TMP_Text mode = Text(root, "ModeLabel", "CHẠY NƯỚC RÚT · 100M", font, SprintUiTheme.Caption,
-                SprintUiTheme.WithAlpha(SprintUiTheme.TextPrimary, .6f), TextAlignmentOptions.Center);
+            TMP_Text mode = Text(root, "ModeLabel", "CHẠY NƯỚC RÚT · 100M", font, MinigameUiTheme.Caption,
+                MinigameUiTheme.WithAlpha(MinigameUiTheme.TextPrimary, .6f), TextAlignmentOptions.Center);
             ApplyRect(mode.rectTransform, safe, SprintUiLayout.ModeChipRect(safe));
             chromeLayout.Register(mode.rectTransform, SprintUiLayout.ModeChipRect);
 
@@ -148,8 +149,8 @@ namespace KMA.Gameplay
         static void AddShadow(Component target)
         {
             var shadow = target.gameObject.AddComponent<Shadow>();
-            shadow.effectColor = SprintUiTheme.ShadowColor;
-            shadow.effectDistance = SprintUiTheme.ShadowOffset;
+            shadow.effectColor = MinigameUiTheme.ShadowColor;
+            shadow.effectDistance = MinigameUiTheme.ShadowOffset;
         }
 
         static void EnsureFinishLine(RectTransform root)
@@ -200,29 +201,29 @@ namespace KMA.Gameplay
             Stretch(root);
             root.SetAsLastSibling();
 
-            TMP_Text countdown = Text(root, "CountdownLabel", string.Empty, font, SprintUiTheme.Display,
-                SprintUiTheme.Accent, TextAlignmentOptions.Center);
+            TMP_Text countdown = Text(root, "CountdownLabel", string.Empty, font, MinigameUiTheme.Display,
+                MinigameUiTheme.Accent, TextAlignmentOptions.Center);
             if (safe.width > 0f && safe.height > 0f)
                 ApplyRect(countdown.rectTransform, safe, SprintUiLayout.CountdownRect(safe));
             countdown.outlineWidth = .2f;
-            countdown.outlineColor = (Color32)SprintUiTheme.TextOutline;
+            countdown.outlineColor = (Color32)MinigameUiTheme.TextOutline;
 
             RectTransform instructionRoot = Rect(root, "InstructionPlate");
             if (safe.width > 0f && safe.height > 0f)
                 ApplyRect(instructionRoot, safe, SprintUiLayout.InstructionRect(safe));
             Image plate = instructionRoot.gameObject.AddComponent<Image>();
-            plate.sprite = SprintUiShapes.RoundedRect(Mathf.RoundToInt(SprintUiTheme.RadiusPanel));
+            plate.sprite = SprintUiShapes.RoundedRect(Mathf.RoundToInt(MinigameUiTheme.RadiusPanel));
             plate.type = Image.Type.Sliced;
             plate.pixelsPerUnitMultiplier = 1f;
-            plate.color = SprintUiTheme.WithAlpha(SprintUiTheme.Surface, .82f);
+            plate.color = MinigameUiTheme.WithAlpha(MinigameUiTheme.Surface, .82f);
             plate.raycastTarget = false;
             AddShadow(plate);
 
             TMP_Text instruction = Text(instructionRoot, "InstructionLabel",
-                SprintStartPresentation.InstructionCopy, font, SprintUiTheme.BodyLarge,
-                SprintUiTheme.TextPrimary, TextAlignmentOptions.Center);
-            Stretch(instruction.rectTransform, new Vector2(SprintUiTheme.SpaceMd, SprintUiTheme.SpaceXs),
-                new Vector2(-SprintUiTheme.SpaceMd, -SprintUiTheme.SpaceXs));
+                SprintStartPresentation.InstructionCopy, font, MinigameUiTheme.BodyLarge,
+                MinigameUiTheme.TextPrimary, TextAlignmentOptions.Center);
+            Stretch(instruction.rectTransform, new Vector2(MinigameUiTheme.SpaceMd, MinigameUiTheme.SpaceXs),
+                new Vector2(-MinigameUiTheme.SpaceMd, -MinigameUiTheme.SpaceXs));
 
             SprintStartPresentation presenter = Object.FindFirstObjectByType<SprintStartPresentation>();
             if (presenter == null)
@@ -315,26 +316,26 @@ namespace KMA.Gameplay
             visual.offsetMin = Vector2.zero;
             visual.offsetMax = Vector2.zero;
 
-            int radius = Mathf.RoundToInt(SprintUiTheme.RadiusControl);
-            Image border = Panel(visual, "Border", SprintUiTheme.WithAlpha(SprintUiTheme.Accent, .25f), radius);
+            int radius = Mathf.RoundToInt(MinigameUiTheme.RadiusControl);
+            Image border = Panel(visual, "Border", MinigameUiTheme.WithAlpha(MinigameUiTheme.Accent, .25f), radius);
             Stretch(border.rectTransform);
             AddShadow(border);
 
             Image background = Panel(visual, "Background",
-                SprintUiTheme.WithAlpha(SprintUiTheme.Surface, .42f), radius);
-            float inset = SprintUiTheme.BorderWidth;
+                MinigameUiTheme.WithAlpha(MinigameUiTheme.Surface, .42f), radius);
+            float inset = MinigameUiTheme.BorderWidth;
             Stretch(background.rectTransform, new Vector2(inset, inset), new Vector2(-inset, -inset));
 
             TMP_FontAsset font = Object.FindFirstObjectByType<TMP_Text>()?.font;
             TMP_Text arrow = Text(visual, "Arrow", left ? "←" : "→", font,
-                SprintUiTheme.BodyLarge * 1.6f, SprintUiTheme.TextPrimary, TextAlignmentOptions.Center);
+                MinigameUiTheme.BodyLarge * 1.6f, MinigameUiTheme.TextPrimary, TextAlignmentOptions.Center);
             arrow.rectTransform.anchorMin = new Vector2(.1f, .44f);
             arrow.rectTransform.anchorMax = new Vector2(.9f, .88f);
             arrow.rectTransform.offsetMin = Vector2.zero;
             arrow.rectTransform.offsetMax = Vector2.zero;
 
             TMP_Text label = Text(visual, "Label", left ? "TRÁI" : "PHẢI", font,
-                SprintUiTheme.BodyLarge, SprintUiTheme.TextPrimary, TextAlignmentOptions.Center);
+                MinigameUiTheme.BodyLarge, MinigameUiTheme.TextPrimary, TextAlignmentOptions.Center);
             label.rectTransform.anchorMin = new Vector2(.1f, .12f);
             label.rectTransform.anchorMax = new Vector2(.9f, .46f);
             label.rectTransform.offsetMin = Vector2.zero;
@@ -416,7 +417,7 @@ namespace KMA.Gameplay
             plate.localScale = new Vector3(7.2f, 1.9f, 1f);
             var plateRenderer = plate.GetComponent<SpriteRenderer>();
             plateRenderer.sprite = SprintUiShapes.RoundedRect(8);
-            plateRenderer.color = SprintUiTheme.WithAlpha(SprintUiTheme.Surface, .92f);
+            plateRenderer.color = MinigameUiTheme.WithAlpha(MinigameUiTheme.Surface, .92f);
             plateRenderer.sortingOrder = 19;
 
             var labelObject = new GameObject("Label");
@@ -426,7 +427,7 @@ namespace KMA.Gameplay
             label.fontSize = 48;
             label.characterSize = .055f;
             label.anchor = TextAnchor.MiddleCenter;
-            label.color = SprintUiTheme.Player;
+            label.color = MinigameUiTheme.Player;
             var labelRenderer = labelObject.GetComponent<MeshRenderer>();
             if (labelRenderer != null)
                 labelRenderer.sortingOrder = 20;
@@ -438,7 +439,7 @@ namespace KMA.Gameplay
             chevron.localRotation = Quaternion.Euler(0f, 0f, 45f);
             var chevronRenderer = chevron.GetComponent<SpriteRenderer>();
             chevronRenderer.sprite = SprintUiShapes.RoundedRect(2);
-            chevronRenderer.color = SprintUiTheme.Player;
+            chevronRenderer.color = MinigameUiTheme.Player;
             chevronRenderer.sortingOrder = 20;
 
             var placement = presentation.GetComponent<SprintPlayerMarkerPlacement>()
@@ -450,7 +451,7 @@ namespace KMA.Gameplay
             {
                 var identity = presentation.GetComponent<SprintPlayerIdentityOutline>()
                     ?? presentation.gameObject.AddComponent<SprintPlayerIdentityOutline>();
-                identity.Bind(playerVisual, SprintUiTheme.Player);
+                identity.Bind(playerVisual, MinigameUiTheme.Player);
             }
         }
 
@@ -460,7 +461,7 @@ namespace KMA.Gameplay
                 return;
 
             Image button = Panel(parent, "PausePanel",
-                SprintUiTheme.WithAlpha(SprintUiTheme.Surface, .92f), Mathf.RoundToInt(SprintUiTheme.RadiusPause));
+                MinigameUiTheme.WithAlpha(MinigameUiTheme.Surface, .92f), Mathf.RoundToInt(MinigameUiTheme.RadiusPause));
             button.raycastTarget = true;
             if (safe.width > 0f && safe.height > 0f)
             {
@@ -488,7 +489,7 @@ namespace KMA.Gameplay
 
         static void PauseBar(Transform parent, string name, float minX, float maxX)
         {
-            Image bar = Panel(parent, name, SprintUiTheme.TextPrimary, 2);
+            Image bar = Panel(parent, name, MinigameUiTheme.TextPrimary, 2);
             bar.rectTransform.anchorMin = new Vector2(minX, .26f);
             bar.rectTransform.anchorMax = new Vector2(maxX, .74f);
             bar.rectTransform.offsetMin = Vector2.zero;

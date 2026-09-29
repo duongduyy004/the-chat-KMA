@@ -1,3 +1,4 @@
+using KMA.UI.Kit;
 using System.Collections;
 using System.Collections.Generic;
 using KMA.Gameplay;
@@ -285,7 +286,7 @@ namespace KMA.Tests.Presentation
 
             MonoBehaviour playerIdentity = FindIdentityOutline(playerPresentation);
             Assert.That(playerIdentity, Is.Not.Null);
-            Assert.That(ReadProperty<Color>(playerIdentity, "OutlineColor"), Is.EqualTo(SprintUiTheme.Player));
+            Assert.That(ReadProperty<Color>(playerIdentity, "OutlineColor"), Is.EqualTo(MinigameUiTheme.Player));
             Assert.That(ReadProperty<SpriteRenderer>(playerIdentity, "Source"), Is.SameAs(
                 runnerRoots[1].GetComponentInChildren<SpriteRenderer>(true)));
             for (int lane = 0; lane < runnerRoots.Length; lane++)
@@ -320,11 +321,11 @@ namespace KMA.Tests.Presentation
             Assert.That(markerRoot.Find("Chevron"), Is.Not.Null, "identity must not rely on colour alone");
 
             Assert.That(label.text, Is.EqualTo("PLAYER"));
-            Assert.That(label.color, Is.EqualTo(SprintUiTheme.Player));
+            Assert.That(label.color, Is.EqualTo(MinigameUiTheme.Player));
 
             var outline = player.GetComponentInChildren<SprintPlayerIdentityOutline>(true);
             Assert.That(outline, Is.Not.Null);
-            Assert.That(outline.OutlineColor, Is.EqualTo(SprintUiTheme.Player));
+            Assert.That(outline.OutlineColor, Is.EqualTo(MinigameUiTheme.Player));
             Assert.That(outline.Outline.transform.localScale.x,
                 Is.EqualTo(SprintPlayerIdentityOutline.OutlineScale).Within(.001f));
         }
@@ -637,10 +638,10 @@ namespace KMA.Tests.Presentation
             Image railFill = chrome.Find("ProgressRail/RailFill").GetComponent<Image>();
             Assert.That(railFill.type, Is.EqualTo(Image.Type.Filled));
             Assert.That(railFill.fillAmount, Is.EqualTo(0f).Within(.001f));
-            Assert.That(railFill.color, Is.EqualTo(SprintUiTheme.Accent));
+            Assert.That(railFill.color, Is.EqualTo(MinigameUiTheme.Accent));
 
             Image pip = chrome.Find("ProgressRail/PlayerPip").GetComponent<Image>();
-            Assert.That(pip.color, Is.EqualTo(SprintUiTheme.Player));
+            Assert.That(pip.color, Is.EqualTo(MinigameUiTheme.Player));
 
             Assert.That(chrome.Find("Scoreboard").GetComponent<Image>().sprite, Is.Not.Null,
                 "The scoreboard must use a generated rounded sprite, not the default square.");
