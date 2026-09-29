@@ -230,7 +230,7 @@ namespace KMA.UI.Kit
             RectTransform root = Rect(hitArea, "RoundButton");
             Place(root, new Vector2(.5f, .5f), new Vector2(.5f, .5f), Vector2.zero, Vector2.one * size);
             float drop = MinigameUiTheme.ShadowOffset.y * 2f;
-            Image shadow = Disc(root, "Shadow", false, MinigameUiTheme.WithAlpha(MinigameUiTheme.Surface, .35f));
+            Image shadow = Disc(root, "Shadow", false, MinigameUiTheme.ShadowColor);
             Stretch(shadow.rectTransform, new Vector2(0f, drop), new Vector2(0f, drop));
             Image rim = Disc(root, "Rim", true, MinigameUiTheme.TextPrimary);
             Stretch(rim.rectTransform);
@@ -310,7 +310,7 @@ namespace KMA.UI.Kit
             area.anchorMax = new Vector2(1f, .5f);
             area.sizeDelta = new Vector2(-MinigameUiTheme.SliderKnob, MinigameUiTheme.SliderKnob);
             Image knob = Disc(area, "Handle", false, MinigameUiTheme.Accent);
-            knob.rectTransform.sizeDelta = new Vector2(MinigameUiTheme.SliderKnob, 0f);
+            knob.rectTransform.sizeDelta = new Vector2(MinigameUiTheme.SliderKnob, MinigameUiTheme.SliderKnob);
             Image ring = Disc(knob.transform, "Ring", true, MinigameUiTheme.Surface);
             Stretch(ring.rectTransform);
 

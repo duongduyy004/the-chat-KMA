@@ -145,6 +145,7 @@ namespace KMA.Tests.Presentation
             Assert.That(round.Label.color, Is.EqualTo(MinigameUiTheme.Surface));
             Assert.That(round.Feedback.gameObject, Is.SameAs(hitArea.gameObject));
             Assert.That(round.Root.sizeDelta.x, Is.EqualTo(MinigameUiTheme.RoundButton));
+            Assert.That(round.Shadow.color, Is.EqualTo(MinigameUiTheme.ShadowColor));
         }
 
         [Test]
@@ -196,6 +197,12 @@ namespace KMA.Tests.Presentation
             Assert.That(slider.Knob.color, Is.EqualTo(MinigameUiTheme.Accent));
             Assert.That(slider.Slider.handleRect, Is.SameAs(slider.Knob.rectTransform));
             Assert.That(slider.Slider.GetComponent<Image>().color.a, Is.LessThan(.01f));
+            Assert.That(slider.Knob.rectTransform.sizeDelta, Is.EqualTo(Vector2.one * MinigameUiTheme.SliderKnob), "the knob is square, not zero-height");
+            var ring = (RectTransform)slider.Knob.transform.Find("Ring");
+            Assert.That(ring.anchorMin, Is.EqualTo(Vector2.zero));
+            Assert.That(ring.anchorMax, Is.EqualTo(Vector2.one));
+            Assert.That(ring.offsetMin, Is.EqualTo(Vector2.zero));
+            Assert.That(ring.offsetMax, Is.EqualTo(Vector2.zero));
         }
 
         [Test]
