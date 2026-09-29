@@ -1,4 +1,5 @@
 using System;
+using KMA.UI.Kit;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
@@ -7,23 +8,22 @@ namespace KMA.Gameplay
 {
     public sealed class FootballHud : MonoBehaviour
     {
+        const float OverPowerThreshold = .85f;
+
         [SerializeField] Slider directionSlider;
         [SerializeField] TMP_Text directionLabel;
         [SerializeField] TMP_Text shotFeedback;
         [SerializeField] FootballHoldButton shootButton;
-        [SerializeField] Image powerFill;
-        [SerializeField] TMP_Text powerPercent;
+        [SerializeField] KitBar powerBar;
         [SerializeField] GameObject overPowerWarning;
         [SerializeField] TMP_Text scoreLabel;
         [SerializeField] TMP_Text remainingLabel;
-        [SerializeField] TMP_Text[] kickMarkers = new TMP_Text[5];
+        [SerializeField] Image[] kickMarkers = new Image[5];
         [SerializeField] GameObject startPanel;
         [SerializeField] Button startButton;
         [SerializeField] Button easyButton;
         [SerializeField] Button normalButton;
         [SerializeField] Button hardButton;
-        [SerializeField] GameObject countdownPanel;
-        [SerializeField] TMP_Text countdownLabel;
 
         FootballDifficulty selectedDifficulty = FootballDifficulty.Normal;
         bool listenersBound;
@@ -32,17 +32,13 @@ namespace KMA.Gameplay
         public Slider DirectionSlider => directionSlider;
         public FootballHoldButton ShootButton => shootButton;
 
-        public void Configure(Slider aim, FootballHoldButton shoot, Image fill, TMP_Text percent,
-            GameObject warning, TMP_Text score, TMP_Text remaining, TMP_Text[] markers, GameObject start,
-            Button startAction = null, Button easy = null, Button normal = null, Button hard = null,
-            GameObject countdown = null, TMP_Text countdownText = null, TMP_Text directionText = null, TMP_Text feedback = null)
+        public void Configure(Slider aim, FootballHoldButton shoot, KitBar power, GameObject warning, TMP_Text score,
+            TMP_Text remaining, Image[] markers, GameObject start, Button startAction = null, Button easy = null,
+            Button normal = null, Button hard = null, TMP_Text directionText = null, TMP_Text feedback = null)
         {
             directionSlider = aim;
-            directionLabel = directionText;
-            shotFeedback = feedback;
             shootButton = shoot;
-            powerFill = fill;
-            powerPercent = percent;
+            powerBar = power;
             overPowerWarning = warning;
             scoreLabel = score;
             remainingLabel = remaining;
@@ -52,13 +48,13 @@ namespace KMA.Gameplay
             easyButton = easy;
             normalButton = normal;
             hardButton = hard;
-            countdownPanel = countdown;
-            countdownLabel = countdownText;
+            directionLabel = directionText;
+            shotFeedback = feedback;
             BindButtons();
             UpdateDifficultyButtons();
         }
 
-        public bool ValidateReferences() => directionSlider && shootButton && powerFill && powerPercent && overPowerWarning &&
+        public bool ValidateReferences() => directionSlider && shootButton && powerBar && overPowerWarning &&
             scoreLabel && remainingLabel && kickMarkers != null && kickMarkers.Length == 5 &&
             Array.TrueForAll(kickMarkers, marker => marker) && startPanel;
 
@@ -67,8 +63,6 @@ namespace KMA.Gameplay
             selectedDifficulty = selected;
             if (startPanel)
                 startPanel.SetActive(true);
-            if (countdownPanel)
-                countdownPanel.SetActive(false);
             if (directionSlider) directionSlider.interactable = false;
             if (shootButton) shootButton.SetInteractable(false);
             UpdateDifficultyButtons();
@@ -77,18 +71,6 @@ namespace KMA.Gameplay
         public void HideStart()
         {
             if (startPanel) startPanel.SetActive(false);
-        }
-
-        public void ShowCountdown(string message)
-        {
-            HideStart();
-            if (countdownLabel) countdownLabel.text = message ?? string.Empty;
-            if (countdownPanel) countdownPanel.SetActive(true);
-        }
-
-        public void HideCountdown()
-        {
-            if (countdownPanel) countdownPanel.SetActive(false);
         }
 
         public void SetDifficulty(FootballDifficulty selected)
@@ -103,15 +85,22 @@ namespace KMA.Gameplay
         {
             if (rules == null)
                 return;
+            bool overPower = rules.Power > OverPowerThreshold;
             if (scoreLabel) scoreLabel.text = "BÀN: " + rules.Goals;
             if (remainingLabel) remainingLabel.text = "CÒN " + Mathf.Max(0, 5 - rules.Kicks) + " LƯỢT";
-            if (powerFill) powerFill.fillAmount = rules.Power;
-            if (powerPercent) powerPercent.text = Mathf.RoundToInt(rules.Power * 100f) + "%";
-            if (overPowerWarning) overPowerWarning.SetActive(rules.Power > .85f);
+            if (powerBar)
+            {
+                powerBar.SetValue(rules.Power);
+                powerBar.SetFillColor(overPower ? MinigameUiTheme.Energy : MinigameUiTheme.Accent);
+                if (powerBar.Label) powerBar.Label.text = Mathf.RoundToInt(rules.Power * 100f) + "%";
+            }
+            if (overPowerWarning) overPowerWarning.SetActive(overPower);
             for (int i = 0; kickMarkers != null && i < kickMarkers.Length; i++)
             {
                 if (!kickMarkers[i]) continue;
-                kickMarkers[i].text = i < rules.Outcomes.Count ? (rules.Outcomes[i] == FootballOutcome.Goal ? "●" : "×") : "•";
+                kickMarkers[i].color = i < rules.Outcomes.Count
+                    ? (rules.Outcomes[i] == FootballOutcome.Goal ? MinigameUiTheme.Accent : MinigameUiTheme.Energy)
+                    : MinigameUiTheme.Track;
             }
             if (startPanel && rules.State != FootballState.Start)
                 startPanel.SetActive(false);
@@ -160,15 +149,15 @@ namespace KMA.Gameplay
 
         void UpdateDifficultyButtons()
         {
-            SetDifficultyTint(easyButton, selectedDifficulty == FootballDifficulty.Easy);
-            SetDifficultyTint(normalButton, selectedDifficulty == FootballDifficulty.Normal);
-            SetDifficultyTint(hardButton, selectedDifficulty == FootballDifficulty.Hard);
+            SetDifficultyVariant(easyButton, selectedDifficulty == FootballDifficulty.Easy);
+            SetDifficultyVariant(normalButton, selectedDifficulty == FootballDifficulty.Normal);
+            SetDifficultyVariant(hardButton, selectedDifficulty == FootballDifficulty.Hard);
         }
 
-        static void SetDifficultyTint(Button button, bool selected)
+        static void SetDifficultyVariant(Button button, bool selected)
         {
-            if (button && button.targetGraphic)
-                button.targetGraphic.color = selected ? new Color32(255, 211, 76, 255) : Color.white;
+            if (button && button.GetComponent<KitPressFeedback>())
+                UiKit.ApplyVariant(UiKit.ButtonParts(button), selected ? ButtonVariant.Primary : ButtonVariant.Secondary);
         }
     }
 }

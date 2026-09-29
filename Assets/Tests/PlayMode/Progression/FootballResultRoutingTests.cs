@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using KMA.Gameplay;
 using KMA.Gameplay.Core;
+using KMA.Gameplay.UI;
 using NUnit.Framework;
 using UnityEngine;
 using UnityEngine.SceneManagement;
@@ -14,7 +15,7 @@ namespace KMA.Tests.Gameplay.Progression
     {
         readonly List<GameObject> roots = new List<GameObject>();
         SceneRouter router;
-        FootballResultPanel panel;
+        ResultPanel panel;
         ControllerStub controller;
         readonly List<SceneRouteTransition> transitions = new List<SceneRouteTransition>();
         int lifeLost, saved;
@@ -26,9 +27,9 @@ namespace KMA.Tests.Gameplay.Progression
                 UnityEngine.Object.DestroyImmediate(existing.gameObject);
             router = SceneRouter.EnsurePersistentInstance();
             roots.Add(router.gameObject);
-            var panelRoot = new GameObject("FootballResultPanel");
+            var panelRoot = new GameObject("ResultPanel");
             roots.Add(panelRoot);
-            panel = panelRoot.AddComponent<FootballResultPanel>();
+            panel = panelRoot.AddComponent<ResultPanel>();
             ButtonRefs buttons = BuildPanel(panelRoot, panel);
             panel.Configure(buttons.root, buttons.status, buttons.goals, buttons.score, buttons.rank,
                 buttons.lives, buttons.continueButton, buttons.retryButton);
@@ -168,7 +169,7 @@ namespace KMA.Tests.Gameplay.Progression
             if (controller) router.BindSubject(controller, SubjectId.Football);
         }
 
-        static ButtonRefs BuildPanel(GameObject root, FootballResultPanel panel)
+        static ButtonRefs BuildPanel(GameObject root, ResultPanel panel)
         {
             var continueButton = Button("Continue");
             var retryButton = Button("Retry");

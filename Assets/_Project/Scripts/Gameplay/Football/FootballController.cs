@@ -12,6 +12,7 @@ namespace KMA.Gameplay
     {
         public override bool UsesSharedTutorial => false;
         public override bool OwnsStartGate => true;
+        public override bool OwnsCameraBackground => true;
 
         static FootballDifficulty preferredDifficulty = FootballDifficulty.Normal;
         static bool retryRequested;
@@ -20,7 +21,7 @@ namespace KMA.Gameplay
         [SerializeField] FootballInputBridge inputBridge;
         [SerializeField] FootballPresentation presentation;
         [SerializeField] FootballHud hud;
-        [SerializeField] FootballResultPanel resultPanel;
+        [SerializeField] ResultPanel resultPanel;
 
         FootballRules rules;
         MinigameResult lastResult;
@@ -38,7 +39,7 @@ namespace KMA.Gameplay
         public MinigameResult LastResult => lastResult;
 
         public void Configure(FootballDifficultyConfig config, FootballInputBridge input,
-            FootballPresentation view, FootballHud gameHud, FootballResultPanel result)
+            FootballPresentation view, FootballHud gameHud, ResultPanel result)
         {
             difficultyConfig = config;
             inputBridge = input;
@@ -61,7 +62,6 @@ namespace KMA.Gameplay
             resultSubmitted = false;
             lastResult = null;
             hud.HideStart();
-            hud.ShowCountdown("SẴN SÀNG!");
             SetTutorialGate(false);
             return true;
         }
@@ -96,7 +96,7 @@ namespace KMA.Gameplay
 
         public bool ValidateReferences() => difficultyConfig && inputBridge && presentation && hud && resultPanel &&
             hud.ValidateReferences() && presentation.ValidateReferences() && resultPanel.ValidateReferences() &&
-            hud.DirectionSlider && hud.ShootButton;
+            resultPanel.SupportsRetry && hud.DirectionSlider && hud.ShootButton;
 
         protected override void Update()
         {
@@ -122,7 +122,6 @@ namespace KMA.Gameplay
             if (!rulesStarted)
             {
                 rulesStarted = rules.Start();
-                hud.HideCountdown();
                 RefreshInputAvailability();
             }
             if (!rulesStarted)
@@ -137,7 +136,7 @@ namespace KMA.Gameplay
                 resultSubmitted = true;
                 inputBridge.SetEnabled(false, false);
                 lastResult = rules.BuildResult();
-                resultPanel.SetGoals(rules.Goals);
+                resultPanel.SetDetail($"{rules.Goals}/5 BÀN");
                 Finish(lastResult);
             }
         }

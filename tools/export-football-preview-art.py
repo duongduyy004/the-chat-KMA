@@ -46,7 +46,5 @@ export("net",[n for n in goal_nodes if n.get("fill") == "url(#net)"],"290 145 62
 export("ball",[ball],"-18 -18 36 36",36,36,True)
 export("shadow",[shadow],"576 494 48 16",48,16)
 export("crosshair",[next(n for n in children if n.get("id")=="target")],"-30 -30 60 60",60,60,True)
-export("panel",[ET.fromstring('<rect x="0" y="0" width="32" height="32" rx="6" fill="white"/>')],"0 0 32 32",32,32)
-export("fill",[ET.fromstring('<rect width="8" height="8" fill="white"/>')],"0 0 8 8",8,8)
 export("knob",[ET.fromstring('<circle cx="16" cy="16" r="15" fill="white"/>')],"0 0 32 32",32,32)
 print("Exported 9 original SVG/PNG Football layers to", art)

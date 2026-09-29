@@ -80,14 +80,8 @@ namespace KMA.Gameplay.UI
 
         static void AssembleScene(Scene scene, GameObject cameraPrefab)
         {
-            var cameraObject = EnsureSceneCamera(scene, cameraPrefab);
-            if (FindInScene<MinigamePresentationOwner>(scene) != null)
-            {
-                RemoveGameplayPresentation(scene);
-                EnsureEventSystem(scene);
-                EditorSceneManager.MarkSceneDirty(scene);
-                return;
-            }
+            var owner = FindInScene<MinigameBase>(scene);
+            var cameraObject = EnsureSceneCamera(scene, cameraPrefab, owner != null && owner.OwnsCameraBackground);
             if (!IsGameplayScene(scene))
             {
                 RemoveGameplayPresentation(scene);
@@ -97,7 +91,7 @@ namespace KMA.Gameplay.UI
             }
 
             var camera = cameraObject.GetComponent<Camera>();
-            var minigame = FindInScene<MinigameBase>(scene);
+            var minigame = owner;
 
             var hudRoot = EnsurePrefabRoot(scene, HudPrefabPath, "S2_HUD_Minigame", null);
             ConfigureCanvas(hudRoot, camera);
@@ -149,7 +143,7 @@ namespace KMA.Gameplay.UI
                 new Vector2(-MinigameUiTheme.SpaceMd, -MinigameUiTheme.SpaceMd), Vector2.one * MinigameUiTheme.ButtonHeight);
         }
 
-        static GameObject EnsureSceneCamera(Scene scene, GameObject cameraPrefab)
+        static GameObject EnsureSceneCamera(Scene scene, GameObject cameraPrefab, bool keepBackground)
         {
             var cameraObject = FindRoot(scene, "GameCamera");
             if (cameraObject == null)
@@ -160,7 +154,7 @@ namespace KMA.Gameplay.UI
                 cameraObject.name = "GameCamera";
             }
 
-            ConfigureCamera(cameraObject);
+            ConfigureCamera(cameraObject, keepBackground);
             foreach (var camera in FindComponentsInScene<Camera>(scene))
             {
                 if (camera.gameObject != cameraObject)
@@ -170,7 +164,7 @@ namespace KMA.Gameplay.UI
             return cameraObject;
         }
 
-        static void ConfigureCamera(GameObject cameraObject)
+        static void ConfigureCamera(GameObject cameraObject, bool keepBackground = false)
         {
             cameraObject.tag = "MainCamera";
             cameraObject.transform.position = new Vector3(0f, 0f, -10f);
@@ -183,7 +177,8 @@ namespace KMA.Gameplay.UI
             camera.orthographic = true;
             camera.orthographicSize = 5.4f;
             camera.clearFlags = CameraClearFlags.SolidColor;
-            camera.backgroundColor = new Color32(0x19, 0x82, 0xC4, 0xFF);
+            if (!keepBackground)
+                camera.backgroundColor = new Color32(0x19, 0x82, 0xC4, 0xFF);
             camera.nearClipPlane = 0.3f;
             camera.farClipPlane = 1000f;
 

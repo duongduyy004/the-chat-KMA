@@ -107,20 +107,18 @@ namespace KMA.Tests.Gameplay.Football
             while (!operation.isDone) yield return null;
             var scene = SceneManager.GetSceneByName(SceneName);
             Assert.That(scene.IsValid(), Is.True);
-            int controllers = 0, placeholders = 0, results = 0, owners = 0;
+            int controllers = 0, placeholders = 0, results = 0;
             FootballPresentation presentation = null;
             foreach (var root in scene.GetRootGameObjects())
             {
                 controllers += root.GetComponentsInChildren<FootballController>(true).Length;
                 placeholders += root.GetComponentsInChildren<PlaceholderMinigameController>(true).Length;
                 results += root.GetComponentsInChildren<MonoBehaviour>(true).OfTypeResultPanels();
-                owners += root.GetComponentsInChildren<MinigamePresentationOwner>(true).Length;
                 presentation ??= root.GetComponentInChildren<FootballPresentation>(true);
             }
             Assert.That(controllers, Is.EqualTo(1));
             Assert.That(placeholders, Is.Zero);
             Assert.That(results, Is.EqualTo(1));
-            Assert.That(owners, Is.EqualTo(1));
             Assert.That(presentation, Is.Not.Null);
             Assert.That(presentation.ValidateReferences(), Is.True);
             Assert.That(presentation.GetComponentsInChildren<SpriteRenderer>(true), Is.Not.Empty);
@@ -134,6 +132,38 @@ namespace KMA.Tests.Gameplay.Football
             Assert.That(text.font, Is.Not.Null);
             yield return SceneManager.UnloadSceneAsync(scene);
         }
+
+        [UnityTest]
+        public IEnumerator SavedScenePausesTheMatchAndResumesWithTheSharedPauseMenu()
+        {
+            var operation = SceneManager.LoadSceneAsync("MG_Football", LoadSceneMode.Single);
+            yield return operation;
+            yield return null;
+
+            var controller = Object.FindFirstObjectByType<FootballController>();
+            var pause = Object.FindFirstObjectByType<KMA.Gameplay.UI.PausePanel>();
+            Assert.That(pause, Is.Not.Null);
+            Assert.That(controller.BeginMatch(FootballDifficulty.Normal), Is.True);
+
+            pause.Open();
+            Assert.That(Time.timeScale, Is.EqualTo(0f));
+            Assert.That(controller.PresentationPhase, Is.EqualTo(MinigamePhase.Countdown));
+            yield return null;
+            Assert.That(controller.PresentationPhase, Is.EqualTo(MinigamePhase.Countdown), "paused: the countdown does not run");
+
+            pause.Resume();
+            Assert.That(Time.timeScale, Is.EqualTo(1f));
+            yield return new WaitForSeconds(3.5f);
+            Assert.That(controller.PresentationPhase, Is.EqualTo(MinigamePhase.Play));
+
+            var scene = SceneManager.GetSceneByName(SceneName);
+            SceneManager.SetActiveScene(SceneManager.CreateScene("FootballPauseCleanup"));
+            yield return SceneManager.UnloadSceneAsync(scene);
+        }
+
+        // A failed pause assertion must not leave the clock stopped for the next test.
+        [TearDown]
+        public void RestoreTimeScale() => Time.timeScale = 1f;
     }
 
     static class FootballSceneTestExtensions

@@ -36,6 +36,9 @@ namespace KMA.Gameplay
         /// The minigame opens its own start gate, so PhaseOverlay must leave the gate alone.
         public virtual bool OwnsStartGate => false;
 
+        /// The scene configurator paints its own camera background, so the shared assembler keeps it.
+        public virtual bool OwnsCameraBackground => false;
+
         public void SetTutorialGate(bool closed) => Lifecycle?.SetTutorialGate(closed);
 
         protected virtual void Awake() => Lifecycle = new MinigameLifecycle(tutorialSeconds, countdownSeconds);

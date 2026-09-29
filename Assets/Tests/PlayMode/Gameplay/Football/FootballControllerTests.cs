@@ -1,5 +1,7 @@
 using System.Reflection;
 using KMA.Gameplay;
+using KMA.Gameplay.UI;
+using KMA.UI.Kit;
 using NUnit.Framework;
 using TMPro;
 using UnityEngine;
@@ -163,7 +165,7 @@ namespace KMA.Tests.Gameplay.Football
             public readonly FootballController controller;
             public readonly Slider aim;
             public readonly FootballHoldButton shoot;
-            public readonly FootballResultPanel resultPanel;
+            public readonly ResultPanel resultPanel;
             public readonly TMP_Text score;
             public readonly TMP_Text remaining;
             readonly FootballDifficultyConfig config;
@@ -183,22 +185,24 @@ namespace KMA.Tests.Gameplay.Football
                 shootObject.transform.SetParent(root.transform);
                 shoot = shootObject.GetComponent<FootballHoldButton>();
                 var hud = root.AddComponent<FootballHud>();
-                var fill = new GameObject("Power", typeof(RectTransform), typeof(CanvasRenderer), typeof(Image)).GetComponent<Image>();
-                fill.transform.SetParent(root.transform);
-                fill.type = Image.Type.Filled;
+                KitBar power = UiKit.Bar(root.transform, "Power", label: true);
                 TMP_Text Text(string name)
                 {
                     var text = new GameObject(name).AddComponent<TextMeshPro>();
                     text.transform.SetParent(root.transform);
                     return text;
                 }
-                var markers = new TMP_Text[5];
-                for (int i = 0; i < markers.Length; i++) markers[i] = Text("Kick" + i);
+                var markers = new Image[5];
+                for (int i = 0; i < markers.Length; i++)
+                {
+                    markers[i] = new GameObject("Kick" + i, typeof(RectTransform), typeof(CanvasRenderer), typeof(Image)).GetComponent<Image>();
+                    markers[i].transform.SetParent(root.transform);
+                }
                 var warning = new GameObject("Warning", typeof(RectTransform)); warning.transform.SetParent(root.transform);
                 var start = new GameObject("Start", typeof(RectTransform)); start.transform.SetParent(root.transform);
                 score = Text("Score");
                 remaining = Text("Remaining");
-                hud.Configure(aim, shoot, fill, Text("Percent"), warning, score, remaining, markers, start);
+                hud.Configure(aim, shoot, power, warning, score, remaining, markers, start);
                 var input = root.AddComponent<FootballInputBridge>();
                 var presentation = root.AddComponent<FootballPresentation>();
                 SpriteRenderer Make(string name)
@@ -211,7 +215,7 @@ namespace KMA.Tests.Gameplay.Football
                 var right = new GameObject("RightPost").transform; right.SetParent(root.transform); right.localPosition = new Vector3(4f, 0f);
                 presentation.Configure(Make("Field"), Make("Goal"), Make("Ball"), Make("Shadow"),
                     Make("Player"), Make("Keeper"), Make("Crosshair"), left, right);
-                resultPanel = root.AddComponent<FootballResultPanel>();
+                resultPanel = root.AddComponent<ResultPanel>();
                 var resultContent = new GameObject("ResultContent", typeof(RectTransform));
                 resultContent.transform.SetParent(root.transform);
                 resultContent.SetActive(false);

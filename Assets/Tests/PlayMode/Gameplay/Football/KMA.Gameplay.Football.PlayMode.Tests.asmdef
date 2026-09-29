@@ -8,7 +8,8 @@
         "Unity.InputSystem",
         "UnityEngine.UI",
         "Unity.TextMeshPro",
-        "KMA.Gameplay.Progression"
+        "KMA.Gameplay.Progression",
+        "KMA.Gameplay.UI"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],

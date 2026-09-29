@@ -1,4 +1,5 @@
 using KMA.Gameplay;
+using KMA.UI.Kit;
 using NUnit.Framework;
 using TMPro;
 using UnityEngine;
@@ -77,17 +78,18 @@ namespace KMA.Tests.Gameplay.Football
         public void HudShowsDirectionPowerAndOutcomeWithoutOverridingInputOwnership()
         {
             var slider=Make<Slider>("Direction");slider.minValue=-1f;slider.maxValue=1f;
-            var shoot=Make<FootballHoldButton>("Shoot");var power=Make<Image>("Power");power.type=Image.Type.Filled;
-            var percent=Make<TextMeshProUGUI>("Percent");var score=Make<TextMeshProUGUI>("Score");var remaining=Make<TextMeshProUGUI>("Remaining");
+            var shoot=Make<FootballHoldButton>("Shoot");
+            KitBar power=UiKit.Bar(root.transform,"Power",label:true);var percent=power.Label;
+            var score=Make<TextMeshProUGUI>("Score");var remaining=Make<TextMeshProUGUI>("Remaining");
             var warning=Make<RectTransform>("Warning").gameObject;var start=Make<RectTransform>("Start").gameObject;
-            var markers=new TMP_Text[5];for(int i=0;i<5;i++)markers[i]=Make<TextMeshProUGUI>("Marker"+i);
-            var hud=root.AddComponent<FootballHud>();hud.Configure(slider,shoot,power,percent,warning,score,remaining,markers,start);
+            var markers=new Image[5];for(int i=0;i<5;i++)markers[i]=Make<Image>("Marker"+i);
+            var hud=root.AddComponent<FootballHud>();hud.Configure(slider,shoot,power,warning,score,remaining,markers,start);
             rules.Start();rules.SetAim(-.4f);rules.BeginCharge();rules.Tick(FootballTuning.For(FootballDifficulty.Normal).PowerRiseSeconds);
             slider.interactable=false;shoot.SetInteractable(false);hud.Render(rules);
-            Assert.That(slider.value,Is.EqualTo(-.4f));Assert.That(percent.text,Is.EqualTo("100%"));Assert.That(warning.activeSelf,Is.True);
+            Assert.That(slider.value,Is.EqualTo(-.4f));Assert.That(percent.text,Is.EqualTo("100%"));Assert.That(power.Fill.color,Is.EqualTo(MinigameUiTheme.Energy));Assert.That(warning.activeSelf,Is.True);
             Assert.That(slider.interactable,Is.False);Assert.That(shoot.IsInteractable,Is.False);
             rules.ReleaseShot();rules.Tick(20f);hud.Render(rules);
-            Assert.That(score.text,Is.EqualTo("BÀN: 0"));Assert.That(remaining.text,Is.EqualTo("CÒN 4 LƯỢT"));Assert.That(markers[0].text,Is.EqualTo("×"));
+            Assert.That(score.text,Is.EqualTo("BÀN: 0"));Assert.That(remaining.text,Is.EqualTo("CÒN 4 LƯỢT"));Assert.That(markers[0].color,Is.EqualTo(MinigameUiTheme.Energy));
         }
     }
 }
