@@ -20,11 +20,10 @@ namespace KMA.EditorTools
         const string BaseController = Animations + "RivalRunner.controller";
 
         static readonly string[] States = { "Idle", "Run", "Burst", "Stumble", "Celebrate", "Fail" };
-        static readonly string[] Poses = { "Idle", "Run0", "Run1", "Run2", "Hit", "Cheer0", "Cheer1", "FallDown" };
 
         /// The player and every rival draw from a different pack character, so a glance at the
         /// track tells four runners apart. PlayerCharacter also owns the authored lane order.
-        const string PlayerCharacter = "MaleAdventurer";
+        const string PlayerCharacter = ToonCharacterArt.Hero;
         static readonly Dictionary<int, string> RivalCharacterByLane = new Dictionary<int, string>
         {
             { 1, "MalePerson" },
@@ -49,10 +48,8 @@ namespace KMA.EditorTools
             AssetDatabase.Refresh();
 
             var characters = RivalCharacterByLane.Values.Concat(new[] { PlayerCharacter }).Distinct().ToArray();
-            // Every pose is imported before any is loaded; see LoadCharacter for why.
-            foreach (string folder in characters)
-                foreach (string pose in Poses)
-                    ImportSprite("Characters/" + folder + "/Runner_" + pose + ".png", true);
+            // Every pose is imported before any is loaded; see ToonCharacterArt.ImportAll for why.
+            ToonCharacterArt.ImportAll();
             var artByCharacter = characters.ToDictionary(folder => folder, LoadCharacter);
 
             // The base controller's own clips belong to lane 1's character; every other character
@@ -108,7 +105,7 @@ namespace KMA.EditorTools
             var names = new[] { "Sky", "Campus", "Track" };
             for (int i = 0; i < names.Length; i++)
             {
-                var sprite = ImportSprite("Environments/Sprint/" + names[i] + ".png", false);
+                var sprite = ImportSprite("Environments/Sprint/" + names[i] + ".png");
                 var layer = layers.GetArrayElementAtIndex(i);
                 foreach (string field in new[] { "first", "second" })
                 {
@@ -164,7 +161,7 @@ namespace KMA.EditorTools
             Debug.Log("[KMA] Sprint sprite clips, player prefab, parallax artwork and app icon configured.");
         }
 
-        static Sprite ImportSprite(string relativePath, bool runner)
+        static Sprite ImportSprite(string relativePath)
         {
             string path = Art + relativePath;
             var importer = (TextureImporter)AssetImporter.GetAtPath(path);
@@ -180,39 +177,23 @@ namespace KMA.EditorTools
             var settings = new TextureImporterSettings();
             importer.ReadTextureSettings(settings);
             settings.spriteMeshType = SpriteMeshType.FullRect;
-            settings.spriteAlignment = runner ? (int)SpriteAlignment.BottomCenter : (int)SpriteAlignment.Center;
-            settings.spritePivot = runner ? new Vector2(.5f, 0f) : new Vector2(.5f, .5f);
+            settings.spriteAlignment = (int)SpriteAlignment.Center;
+            settings.spritePivot = new Vector2(.5f, .5f);
             importer.SetTextureSettings(settings);
             importer.SaveAndReimport();
             return AssetDatabase.LoadAssetAtPath<Sprite>(path);
         }
 
-        /// <summary>
-        /// Loads one character's poses. Every pose must already be imported: reimporting a texture
-        /// invalidates Sprite references handed out earlier, so importing and loading cannot be
-        /// interleaved across characters or the earlier characters end up holding dead references.
-        /// </summary>
-        static CharacterArt LoadCharacter(string folder)
+        /// <summary>One character's Sprint poses; ToonCharacterArt.ImportAll must have run first.</summary>
+        static CharacterArt LoadCharacter(string folder) => new CharacterArt
         {
-            string prefix = "Characters/" + folder + "/Runner_";
-            Sprite Pose(string pose)
-            {
-                string path = Art + prefix + pose + ".png";
-                var sprite = AssetDatabase.LoadAssetAtPath<Sprite>(path);
-                if (sprite == null) throw new InvalidOperationException("Missing runner pose: " + path);
-                return sprite;
-            }
-
-            return new CharacterArt
-            {
-                Folder = folder,
-                Idle = Pose("Idle"),
-                Hit = Pose("Hit"),
-                FallDown = Pose("FallDown"),
-                Run = new[] { "Run0", "Run1", "Run2" }.Select(Pose).ToArray(),
-                Cheer = new[] { "Cheer0", "Cheer1" }.Select(Pose).ToArray()
-            };
-        }
+            Folder = folder,
+            Idle = ToonCharacterArt.Load(folder, "idle"),
+            Hit = ToonCharacterArt.Load(folder, "hit"),
+            FallDown = ToonCharacterArt.Load(folder, "fallDown"),
+            Run = ToonCharacterArt.Frames(folder, "run0", "run1", "run2"),
+            Cheer = ToonCharacterArt.Frames(folder, "cheer0", "cheer1")
+        };
 
         /// <summary>Frames for one state, so Celebrate cheers and Fail drops instead of reusing Idle and Hit.</summary>
         static Sprite[] SelectFrames(string state, CharacterArt art) => state switch

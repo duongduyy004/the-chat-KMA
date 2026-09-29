@@ -91,7 +91,9 @@ namespace KMA.Tests.Presentation
             Assert.That(rivals, Has.Length.EqualTo(3));
             foreach (var rival in rivals)
             {
-                Assert.That(rival.Sprite.sprite.texture.name, Does.StartWith("Runner_"));
+                Assert.That(rival.Sprite.sprite.texture.name,
+                    Does.Match("^(MalePerson|FemalePerson|FemaleAdventurer)_"),
+                    "Rivals draw from the shared Toon character library, never from the hero.");
                 Assert.That(rival.Animator.runtimeAnimatorController.animationClips
                     .Where(c => c.name.Contains("Run")), Is.Not.Empty);
             }
