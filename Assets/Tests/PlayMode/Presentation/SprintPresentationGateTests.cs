@@ -103,6 +103,21 @@ namespace KMA.Tests.Presentation
             yield return LoadSprint();
             yield return null;
             GameObject hud = GameObject.Find("S2_HUD_Minigame");
+            Assert.That(hud, Is.Not.Null, "Sprint must have an S2_HUD_Minigame canvas to audit.");
+
+            // The chrome is built at runtime; wait a bounded number of frames so the audit never
+            // passes vacuously on the shared HUD prefab alone.
+            Transform chrome = null;
+            for (int frame = 0; frame < 10 && chrome == null; frame++)
+            {
+                chrome = hud.transform.Find("SafeAreaRoot/SprintBroadcastChrome");
+                if (chrome == null)
+                    yield return null;
+            }
+            Assert.That(chrome, Is.Not.Null, "SprintFestivalPresentation must build SafeAreaRoot/SprintBroadcastChrome under the HUD.");
+            Assert.That(chrome.Find("Scoreboard"), Is.Not.Null, "The runtime chrome must contain its Scoreboard.");
+            Assert.That(chrome.Find("ProgressRail"), Is.Not.Null, "The runtime chrome must contain its ProgressRail.");
+
             var problems = MinigameStyleAudit.Audit(hud);
             Assert.That(problems, Is.Empty, string.Join("\n", problems));
         }
