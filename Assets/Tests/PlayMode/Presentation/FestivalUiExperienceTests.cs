@@ -105,8 +105,8 @@ namespace KMA.Tests.Presentation
                 Is.GreaterThanOrEqualTo(220f));
             Assert.That(grid.childCount, Is.EqualTo(3));
             Assert.That(grid.GetChild(2).name, Is.EqualTo("FootballNode"));
-            Assert.That(grid.Find("SprintNode/ActionHint").GetComponent<Text>().text,
-                Is.EqualTo("THI →"));
+            Assert.That(grid.Find("SprintNode/ActionHint").GetComponent<TMP_Text>().text,
+                Is.EqualTo("THI"));
         }
 
         [UnityTest]

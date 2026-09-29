@@ -59,11 +59,11 @@ namespace KMA.Gameplay.UI
 
             TMP_Text kicker = Label(panel, "FestivalKicker", "NGÀY HỘI THỂ THAO KMA", 24,
                 Gold, TextAnchor.MiddleCenter);
-            kicker.gameObject.AddComponent<LayoutElement>().preferredHeight = 30f;
+            kicker.gameObject.AddComponent<LayoutElement>().preferredHeight = 44f;
             TMP_Text subtitle = Label(panel, "FestivalSubtitle",
                 "Bứt tốc · Vượt thử thách · Chinh phục huy chương", 19,
                 Cream, TextAnchor.MiddleCenter);
-            subtitle.gameObject.AddComponent<LayoutElement>().preferredHeight = 36f;
+            subtitle.gameObject.AddComponent<LayoutElement>().preferredHeight = 84f;
 
             RectTransform actionStack = Rect(panel, "ActionStack");
             VerticalLayoutGroup actions = actionStack.gameObject.AddComponent<VerticalLayoutGroup>();
@@ -86,7 +86,7 @@ namespace KMA.Gameplay.UI
 
             TMP_Text footer = Label(panel, "FestivalFooter", "HÀNH TRÌNH RÈN LUYỆN THỂ CHẤT", 15,
                 new Color32(190, 219, 239, 255), TextAnchor.MiddleCenter);
-            footer.gameObject.AddComponent<LayoutElement>().preferredHeight = 22f;
+            footer.gameObject.AddComponent<LayoutElement>().preferredHeight = 44f;
             FlexibleSpacer(panel, "BottomSpacer");
         }
 
@@ -130,13 +130,9 @@ namespace KMA.Gameplay.UI
             Outline outline = button.GetComponent<Outline>() ?? button.gameObject.AddComponent<Outline>();
             outline.effectColor = new Color32(3, 18, 33, 255);
             outline.effectDistance = new Vector2(3f, -3f);
-            TMP_Text label = button.GetComponentInChildren<TMP_Text>(true);
-            if (label != null)
-            {
-                UiKit.StyleLabel(label, fontSize, foreground);
-                label.alignment = TextAlignmentOptions.Center;
-                UiKit.FitLabel(label, fontSize);
-            }
+            TMP_Text label = UiKit.EnsureTmpLabel(button.transform, fontSize, foreground);
+            label.alignment = TextAlignmentOptions.Center;
+            UiKit.FitLabel(label, fontSize);
         }
 
         static Button FindButton(MainMenuScreen screen, string name) =>
@@ -191,8 +187,9 @@ namespace KMA.Gameplay.UI
             UiKit.StyleLabel(text, size, color);
             text.text = value;
             text.alignment = tmpAlignment;
-            text.overflowMode = TextOverflowModes.Truncate;
-            UiKit.FitLabel(text, size + 10f);
+            text.enableWordWrapping = true;
+            text.overflowMode = TextOverflowModes.Overflow;
+            UiKit.FitLabel(text, size);
             return text;
         }
 

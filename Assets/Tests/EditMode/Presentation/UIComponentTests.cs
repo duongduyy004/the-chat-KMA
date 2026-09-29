@@ -5,6 +5,7 @@ using UnityEditor;
 using KMA.Gameplay;
 using KMA.Gameplay.UI;
 using NUnit.Framework;
+using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -169,17 +170,17 @@ namespace KMA.Tests.Presentation
                 Assert.That(back.preferredWidth, Is.GreaterThanOrEqualTo(80f));
                 Assert.That(back.preferredHeight, Is.GreaterThanOrEqualTo(80f));
 
-                Text title = header.Find("Heading/TitleContainer/Title").GetComponent<Text>();
+                TMP_Text title = header.Find("Heading/TitleContainer/Title").GetComponent<TMP_Text>();
                 Assert.That(title.fontSize, Is.GreaterThanOrEqualTo(52));
-                Assert.That(title.fontStyle, Is.EqualTo(FontStyle.Bold));
-                Text subtitle = header.Find("Heading/SubtitleContainer/Subtitle").GetComponent<Text>();
+                Assert.That(title.fontStyle, Is.EqualTo(FontStyles.Bold));
+                TMP_Text subtitle = header.Find("Heading/SubtitleContainer/Subtitle").GetComponent<TMP_Text>();
                 Assert.That(subtitle.text, Is.EqualTo("Chọn một môn để bắt đầu"));
                 Assert.That(subtitle.fontSize, Is.GreaterThanOrEqualTo(24));
 
                 Transform livesPanel = header.Find("LivesPanel");
                 Assert.That(livesPanel, Is.Not.Null);
                 Assert.That(livesPanel.GetComponent<Image>(), Is.Not.Null);
-                Text lives = livesPanel.Find("LivesLabelContainer/LivesLabel").GetComponent<Text>();
+                TMP_Text lives = livesPanel.Find("LivesLabelContainer/LivesLabel").GetComponent<TMP_Text>();
                 Assert.That(lives.text, Is.EqualTo("LƯỢT: 5/5"));
                 Assert.That(lives.fontSize, Is.GreaterThanOrEqualTo(24));
                 foreach (Image heart in livesPanel.GetComponentInChildren<HeartBar>(true)
@@ -212,17 +213,17 @@ namespace KMA.Tests.Presentation
                 MapNodeView completed = screen.Nodes.Single(node => node.SubjectId == SubjectId.Sprint);
                 MapNodeView football = screen.Nodes.Single(node => node.SubjectId == SubjectId.Football);
 
-                Assert.That(completed.transform.Find("StatusContainer/Status").GetComponent<Text>().text,
-                    Is.EqualTo("✓  HOÀN THÀNH"));
+                Assert.That(completed.transform.Find("StatusContainer/Status").GetComponent<TMP_Text>().text,
+                    Is.EqualTo("HOÀN THÀNH"));
                 Assert.That(completed.transform.Find("DetailContainer").gameObject.activeSelf, Is.True);
-                Assert.That(completed.transform.Find("ActionHint").GetComponent<Text>().text,
-                    Is.EqualTo("THI →"));
-                Assert.That(football.transform.Find("StatusContainer/Status").GetComponent<Text>().text,
+                Assert.That(completed.transform.Find("ActionHint").GetComponent<TMP_Text>().text,
+                    Is.EqualTo("THI"));
+                Assert.That(football.transform.Find("StatusContainer/Status").GetComponent<TMP_Text>().text,
                     Is.EqualTo("SẴN SÀNG"));
                 Assert.That(football.DetailText, Is.EqualTo("SẴN SÀNG"));
                 Assert.That(football.transform.Find("DetailContainer").gameObject.activeSelf, Is.False);
-                Assert.That(football.transform.Find("ActionHint").GetComponent<Text>().text,
-                    Is.EqualTo("THI →"));
+                Assert.That(football.transform.Find("ActionHint").GetComponent<TMP_Text>().text,
+                    Is.EqualTo("THI"));
 
                 Assert.That(completed.GetComponent<BrutalButton>(), Is.Not.Null);
                 Assert.That(football.GetComponent<BrutalButton>(), Is.Not.Null);
@@ -240,7 +241,7 @@ namespace KMA.Tests.Presentation
 
                 foreach (MapNodeView node in screen.Nodes)
                 {
-                    Text title = node.transform.Find("CardHeader/TitleContainer/Title").GetComponent<Text>();
+                    TMP_Text title = node.transform.Find("CardHeader/TitleContainer/Title").GetComponent<TMP_Text>();
                     Assert.That(title.fontSize, Is.GreaterThanOrEqualTo(30), node.name);
                     Assert.That(node.GetComponent<VerticalLayoutGroup>().padding.left,
                         Is.GreaterThanOrEqualTo(20), node.name);
@@ -263,7 +264,7 @@ namespace KMA.Tests.Presentation
 
                 Transform future = root.transform.Find("S5MapPresentation/Content/FutureRow");
                 Assert.That(future.GetComponentsInChildren<Button>(true), Is.Empty);
-                Assert.That(future.GetComponentsInChildren<Text>(true).Select(text => text.text),
+                Assert.That(future.GetComponentsInChildren<TMP_Text>(true).Select(text => text.text),
                     Is.EquivalentTo(new[] { "SẮP RA MẮT", "Hít đất" }));
 
             }
@@ -325,8 +326,7 @@ namespace KMA.Tests.Presentation
                     .GetComponent<LayoutElement>();
                 Assert.That(livesLabel.preferredHeight, Is.GreaterThanOrEqualTo(36f));
                 Assert.That(livesLabel.preferredWidth, Is.GreaterThanOrEqualTo(150f));
-                Assert.That(livesLabel.GetComponentInChildren<Text>().horizontalOverflow,
-                    Is.EqualTo(HorizontalWrapMode.Overflow));
+                Assert.That(livesLabel.GetComponentInChildren<TMP_Text>().enableWordWrapping, Is.False);
 
                 LayoutElement upcoming = root.transform.Find(
                         "S5MapPresentation/Content/FutureRow/UpcomingLabelContainer")
@@ -372,15 +372,15 @@ namespace KMA.Tests.Presentation
 
                 Transform sprint = root.transform.Find(
                     "S5MapPresentation/Content/SelectionGrid/SprintNode");
-                Assert.That(sprint.Find("StatusContainer/Status").GetComponent<Text>().fontSize,
+                Assert.That(sprint.Find("StatusContainer/Status").GetComponent<TMP_Text>().fontSize,
                     Is.GreaterThanOrEqualTo(26));
-                Assert.That(sprint.Find("DetailContainer/Detail").GetComponent<Text>().fontSize,
+                Assert.That(sprint.Find("DetailContainer/Detail").GetComponent<TMP_Text>().fontSize,
                     Is.GreaterThanOrEqualTo(26));
-                Assert.That(sprint.Find("ActionHint").GetComponent<Text>().fontSize,
+                Assert.That(sprint.Find("ActionHint").GetComponent<TMP_Text>().fontSize,
                     Is.GreaterThanOrEqualTo(26));
 
-                foreach (Text tag in root.transform.Find("S5MapPresentation/Content/FutureRow")
-                             .GetComponentsInChildren<Text>(true))
+                foreach (TMP_Text tag in root.transform.Find("S5MapPresentation/Content/FutureRow")
+                             .GetComponentsInChildren<TMP_Text>(true))
                     Assert.That(tag.fontSize, Is.GreaterThanOrEqualTo(22), tag.name);
             }
             finally
@@ -401,14 +401,14 @@ namespace KMA.Tests.Presentation
                     candidate.SubjectId == SubjectId.Sprint);
                 Button button = node.GetComponent<Button>();
                 BrutalButton feedback = node.GetComponent<BrutalButton>();
-                Text status = node.transform.Find("StatusContainer/Status").GetComponent<Text>();
-                Text action = node.transform.Find("ActionHint").GetComponent<Text>();
+                TMP_Text status = node.transform.Find("StatusContainer/Status").GetComponent<TMP_Text>();
+                TMP_Text action = node.transform.Find("ActionHint").GetComponent<TMP_Text>();
 
                 node.SetAvailability(false, "TẠM KHÓA");
 
                 Assert.That(button.interactable, Is.False);
                 Assert.That(feedback.enabled, Is.False);
-                Assert.That(status.text, Is.EqualTo("🔒  TẠM KHÓA"));
+                Assert.That(status.text, Is.EqualTo("TẠM KHÓA"));
                 Assert.That(node.DetailText, Is.EqualTo("TẠM KHÓA"));
                 Assert.That(node.transform.Find("DetailContainer").gameObject.activeSelf, Is.False);
                 Assert.That(action.text, Is.Empty);
@@ -420,7 +420,7 @@ namespace KMA.Tests.Presentation
                 Assert.That(status.text, Is.EqualTo("SẴN SÀNG"));
                 Assert.That(node.DetailText, Is.EqualTo("SẴN SÀNG"));
                 Assert.That(node.transform.Find("DetailContainer").gameObject.activeSelf, Is.False);
-                Assert.That(action.text, Is.EqualTo("THI →"));
+                Assert.That(action.text, Is.EqualTo("THI"));
             }
             finally
             {

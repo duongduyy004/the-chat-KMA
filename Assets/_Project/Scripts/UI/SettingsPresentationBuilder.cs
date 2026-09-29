@@ -79,6 +79,7 @@ namespace KMA.Gameplay.UI
             var label = Rect(parent, name, min, max).gameObject.AddComponent<TextMeshProUGUI>();
             UiKit.StyleLabel(label, size, color);
             label.text = text;
+            label.enableWordWrapping = true;
             label.alignment = TextAlignmentOptions.Center;
             UiKit.FitLabel(label, size + 10f);
             return label;

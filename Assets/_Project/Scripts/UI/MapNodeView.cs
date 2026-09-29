@@ -112,17 +112,17 @@ namespace KMA.Gameplay.UI
             if (detailLabel != null)
             {
                 detailLabel.text = selectable
-                    ? completed ? $"HẠNG {BestRank}  ★ {Stars}" : "SẴN SÀNG"
+                    ? completed ? $"HẠNG {BestRank}  {Stars} SAO" : "SẴN SÀNG"
                     : unavailableLabel;
                 if (detailVisibilityRoot != null)
                     detailVisibilityRoot.SetActive(selectable && completed);
             }
             if (statusLabel != null)
                 statusLabel.text = selectable
-                    ? completed ? "✓  HOÀN THÀNH" : "SẴN SÀNG"
-                    : $"🔒  {unavailableLabel}";
+                    ? completed ? "HOÀN THÀNH" : "SẴN SÀNG"
+                    : unavailableLabel;
             if (actionLabel != null)
-                actionLabel.text = selectable ? "THI →" : string.Empty;
+                actionLabel.text = selectable ? "THI" : string.Empty;
             ApplyVisualState(completed, !selectable);
         }
 

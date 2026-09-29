@@ -232,28 +232,28 @@ namespace KMA.Gameplay.UI
             statusLayout.ignoreLayout = true;
             statusContainer.anchorMin = Vector2.zero;
             statusContainer.anchorMax = new Vector2(entry.Available ? .70f : 1f, 0f);
-            statusContainer.offsetMin = new Vector2(20f, 12f);
-            statusContainer.offsetMax = new Vector2(entry.Available ? -4f : -20f, 44f);
+            statusContainer.offsetMin = new Vector2(20f, 10f);
+            statusContainer.offsetMax = new Vector2(entry.Available ? -4f : -20f, 56f);
             TMP_Text detail = LayoutLabel(root, "Detail", string.Empty, 26, foreground, TextAnchor.MiddleLeft);
             RectTransform detailContainer = detail.transform.parent as RectTransform;
             LayoutElement detailLayout = detailContainer.gameObject.AddComponent<LayoutElement>();
             detailLayout.ignoreLayout = true;
             detailContainer.anchorMin = Vector2.zero;
             detailContainer.anchorMax = new Vector2(.74f, 0f);
-            detailContainer.offsetMin = new Vector2(20f, 46f);
-            detailContainer.offsetMax = new Vector2(-4f, 76f);
+            detailContainer.offsetMin = new Vector2(20f, 58f);
+            detailContainer.offsetMax = new Vector2(-4f, 104f);
             TMP_Text action = null;
             if (entry.Available)
             {
-                action = TextTmp(root, "ActionHint", "THI →", 26,
+                action = TextTmp(root, "ActionHint", "THI", 26,
                     new Color32(163, 104, 0, 255), TextAnchor.MiddleRight);
                 LayoutElement actionLayout = action.gameObject.AddComponent<LayoutElement>();
                 actionLayout.ignoreLayout = true;
                 RectTransform actionRect = action.rectTransform;
                 actionRect.anchorMin = new Vector2(.68f, 0f);
                 actionRect.anchorMax = new Vector2(1f, 0f);
-                actionRect.offsetMin = new Vector2(4f, 12f);
-                actionRect.offsetMax = new Vector2(-20f, 44f);
+                actionRect.offsetMin = new Vector2(4f, 10f);
+                actionRect.offsetMax = new Vector2(-20f, 56f);
             }
             MapNodeView node = root.gameObject.AddComponent<MapNodeView>();
             node.Bind(button, title, detail, detailContainer.gameObject);
@@ -285,7 +285,7 @@ namespace KMA.Gameplay.UI
             TMP_Text upcoming = LayoutLabel(row, "UpcomingLabel", "SẮP RA MẮT", 22,
                 new Color32(201, 226, 245, 255), TextAnchor.MiddleRight);
             LayoutElement upcomingLayout = upcoming.transform.parent.gameObject.AddComponent<LayoutElement>();
-            upcomingLayout.preferredWidth = 150;
+            upcomingLayout.preferredWidth = 240;
             upcomingLayout.preferredHeight = 46;
             FutureChip(row, "PushUpsChip", "Hít đất", muted, foreground, border);
         }
@@ -565,8 +565,9 @@ namespace KMA.Gameplay.UI
             UiKit.StyleLabel(text, size, color);
             text.text = value;
             text.alignment = tmpAlignment;
-            text.overflowMode = TextOverflowModes.Truncate;
-            UiKit.FitLabel(text, size + 10f);
+            text.enableWordWrapping = true;
+            text.overflowMode = TextOverflowModes.Overflow;
+            UiKit.FitLabel(text, size);
             return text;
         }
 
@@ -635,7 +636,7 @@ namespace KMA.Gameplay.UI
                     if (tmp != null)
                     {
                         tmp.fontSize = titleSize;
-                        UiKit.FitLabel(tmp, titleSize + 10f);
+                        UiKit.FitLabel(tmp, titleSize);
                     }
                 }
             }

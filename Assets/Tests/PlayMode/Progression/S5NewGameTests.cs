@@ -118,7 +118,7 @@ namespace KMA.Tests.Gameplay.Progression
                 var passed = new SubjectRecord();
                 passed.Accept(new MinigameResult(true, 0f, Rank.A));
                 node.Configure(SubjectId.Sprint, "Chạy nước rút", false, passed, 5);
-                Assert.That(node.DetailText, Is.EqualTo("HẠNG A  ★ 3"));
+                Assert.That(node.DetailText, Is.EqualTo("HẠNG A  3 SAO"));
                 Assert.That(node.Stars, Is.EqualTo(3));
 
                 node.Configure(SubjectId.Football, "Bóng đá", true, null, 5);
@@ -167,10 +167,9 @@ namespace KMA.Tests.Gameplay.Progression
                     Assert.That(glyph.preserveAspect, Is.True, node.name);
                 }
 
-                Font legacyFont = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
-                foreach (var label in screen.GetComponentsInChildren<Text>())
+                foreach (var label in screen.GetComponentsInChildren<TMP_Text>())
                 {
-                    Assert.That(label.font, Is.SameAs(legacyFont), label.name);
+                    Assert.That(label.font.name, Is.EqualTo("Baloo2-ExtraBold"), label.name);
                     if (label.name == "ActionHint")
                     {
                         Assert.That(label.rectTransform.anchorMin.y, Is.EqualTo(0f));
@@ -200,7 +199,7 @@ namespace KMA.Tests.Gameplay.Progression
 
                 Transform futureRow = screen.transform.Find("S5MapPresentation/Content/FutureRow");
                 Assert.That(futureRow, Is.Not.Null);
-                Assert.That(futureRow.GetComponentsInChildren<Text>(true).Select(text => text.text),
+                Assert.That(futureRow.GetComponentsInChildren<TMP_Text>(true).Select(text => text.text),
                     Is.EquivalentTo(new[] { "SẮP RA MẮT", "Hít đất" }));
                 Assert.That(futureRow.GetComponentsInChildren<Button>(true), Is.Empty);
                 Assert.That(futureRow.GetComponentsInChildren<MapNodeView>(true), Is.Empty);
@@ -228,9 +227,9 @@ namespace KMA.Tests.Gameplay.Progression
                 MapPresentationBuilder.Build(screen, session);
                 MapPresentationBuilder.Build(screen, session);
 
-                Text livesLabel = screen.transform
+                TMP_Text livesLabel = screen.transform
                     .Find("S5MapPresentation/Content/Header/LivesPanel/LivesLabelContainer/LivesLabel")
-                    .GetComponent<Text>();
+                    .GetComponent<TMP_Text>();
                 Assert.That(livesLabel.text, Is.EqualTo($"LƯỢT: {expectedLives}/5"));
                 Assert.That(screen.Hearts.CurrentHearts, Is.EqualTo(expectedLives));
                 Assert.That(screen.Hearts.GetComponentsInChildren<Image>(true), Has.Length.EqualTo(5));
@@ -306,7 +305,7 @@ namespace KMA.Tests.Gameplay.Progression
                 {
                     Assert.That(Contains(grid, node.transform as RectTransform), Is.True,
                         $"{node.SubjectId} must remain inside SelectionGrid at {resolution.x}x{resolution.y}.");
-                    foreach (Text label in node.GetComponentsInChildren<Text>(true))
+                    foreach (TMP_Text label in node.GetComponentsInChildren<TMP_Text>(true))
                     {
                         if (!label.gameObject.activeInHierarchy)
                             continue;
@@ -320,7 +319,7 @@ namespace KMA.Tests.Gameplay.Progression
                     }
                 }
 
-                foreach (Text tag in futureRow.GetComponentsInChildren<Text>(true))
+                foreach (TMP_Text tag in futureRow.GetComponentsInChildren<TMP_Text>(true))
                     Assert.That(Contains(futureRow, tag.rectTransform), Is.True,
                         $"{tag.name} must remain inside FutureRow at {resolution.x}x{resolution.y}.");
             }

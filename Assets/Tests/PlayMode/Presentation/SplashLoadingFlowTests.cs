@@ -421,7 +421,7 @@ namespace KMA.Tests.Presentation
         {
             GameObject button = GameObject.Find(buttonName);
             Assert.That(button, Is.Not.Null, $"Missing preserved menu object {buttonName}.");
-            Text label = button.GetComponentInChildren<Text>(true);
+            TMP_Text label = button.GetComponentInChildren<TMP_Text>(true);
             Assert.That(label, Is.Not.Null);
             Assert.That(label.text, Is.EqualTo(expected));
         }

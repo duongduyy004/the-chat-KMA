@@ -136,6 +136,24 @@ namespace KMA.UI.Kit
             label.raycastTarget = false;
         }
 
+        /// Returns the TMP label under root. A scene-authored legacy Text is replaced by a stretched
+        /// kit label that keeps its caption, so buttons never keep the Arial fallback.
+        public static TMP_Text EnsureTmpLabel(Transform root, float size, Color color)
+        {
+            TMP_Text label = root.GetComponentInChildren<TMP_Text>(true);
+            if (label == null)
+            {
+                Text legacy = root.GetComponentInChildren<Text>(true);
+                string caption = legacy != null ? legacy.text : string.Empty;
+                if (legacy != null)
+                    DestroyObject(legacy.gameObject);
+                label = Label(root, "Label", caption, size, color);
+                Stretch(label.rectTransform);
+            }
+            StyleLabel(label, size, color);
+            return label;
+        }
+
         /// Lets a label shrink to fit its rect, never below the minimum font size.
         public static void FitLabel(TMP_Text label, float maxSize)
         {

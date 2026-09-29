@@ -174,12 +174,9 @@ namespace KMA.EditorTools
             colors.disabledColor = new Color(0.35f, 0.39f, 0.44f, 0.72f);
             button.colors = colors;
 
-            TMP_Text text = buttonObject.GetComponentInChildren<TMP_Text>(true);
-            if (text == null)
-                throw new InvalidOperationException($"{objectName} is missing its label.");
+            TMP_Text text = KMA.UI.Kit.UiKit.EnsureTmpLabel(buttonObject.transform, 30f,
+                objectName == "NEW GAMEButton" ? Navy : Color.white);
             text.text = label;
-            text.fontSize = 30;
-            text.color = objectName == "NEW GAMEButton" ? Navy : Color.white;
         }
 
         static Slider CreateLoadingBar(Transform parent)
