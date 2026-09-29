@@ -23,8 +23,8 @@ namespace KMA.EditorTools
         public const string OpponentCharacter = "FemaleAdventurer";
         // Toon poses are 1.28 units tall; this matches the court scale the BVA2 athletes were tuned for.
         public const float AthleteScale = 1.8f;
-        // Marker sits just above the athlete's head, in world units above the feet.
-        const float MarkerWorldHeight = 1.95f;
+        // Marker centre, in world units above the feet; its lowest point clears the tallest (jump) pose.
+        const float MarkerWorldHeight = 2.4f;
         const string EnvironmentDir = "Assets/_Project/Art/Environments/Volleyball";
         const string PixelPath = EnvironmentDir + "/Pixel.png";
         const string FontPath = "Assets/_Project/Fonts/Baloo2-ExtraBold.asset";

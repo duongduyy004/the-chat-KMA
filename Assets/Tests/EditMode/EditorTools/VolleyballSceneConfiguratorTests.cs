@@ -35,6 +35,45 @@ namespace KMA.Tests.EditorTools
             }
         }
 
+        [Test]
+        public void MarkersSitAboveTheTallestPoseOfEachAthlete()
+        {
+            VolleyballSceneConfigurator.BuildScene();
+            EditorSceneManager.OpenScene(VolleyballSceneConfigurator.ScenePath, OpenSceneMode.Single);
+            var controller = Object.FindFirstObjectByType<VolleyballController>();
+            AssertMarkerClearsHead(controller.PlayerView, "PlayerMarkerEdge");
+            AssertMarkerClearsHead(controller.OpponentView, "EnemyMarkerEdge");
+        }
+
+        static void AssertMarkerClearsHead(VolleyAthleteView view, string markerName)
+        {
+            float markerBottom = view.transform.Find(markerName).GetComponent<SpriteRenderer>().bounds.min.y
+                                 - view.transform.position.y;
+            float headTop = 0f;
+            foreach (AthleteAction action in Enum.GetValues(typeof(AthleteAction)))
+                foreach (Sprite sprite in view.FramesFor(action))
+                    headTop = Mathf.Max(headTop, OpaqueTop(sprite) * VolleyballSceneConfigurator.AthleteScale);
+            Assert.That(markerBottom, Is.GreaterThanOrEqualTo(headTop),
+                $"{markerName} must not cover the head of {view.name} (tallest pose reaches {headTop:0.00}).");
+        }
+
+        // World height, above the feet pivot, of the highest opaque pixel of an imported Toon pose.
+        static float OpaqueTop(Sprite sprite)
+        {
+            var texture = new Texture2D(2, 2);
+            texture.LoadImage(System.IO.File.ReadAllBytes(AssetDatabase.GetAssetPath(sprite)));
+            for (int y = texture.height - 1; y >= 0; y--)
+                for (int x = 0; x < texture.width; x++)
+                    if (texture.GetPixel(x, y).a > .5f)
+                    {
+                        float top = (y + 1) / sprite.pixelsPerUnit;
+                        Object.DestroyImmediate(texture);
+                        return top;
+                    }
+            Object.DestroyImmediate(texture);
+            return 0f;
+        }
+
         static bool Mirrored(VolleyAthleteView view) => new SerializedObject(view).FindProperty("mirror").boolValue;
 
         static void AssertDrawnFrom(VolleyAthleteView view, string character)
