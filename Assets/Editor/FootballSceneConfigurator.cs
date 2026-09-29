@@ -29,9 +29,9 @@ namespace KMA.EditorTools
         static readonly Color Gold = new Color32(255, 202, 40, 255);
         public const string KeeperCharacter = "MalePerson";
         public const string KeeperReadyPose = "fall";
-        // The kicker stands nearest the camera: 240x320 preview px, feet on the penalty spot row.
-        const float KickerDisplayWidth = 240f, KickerDisplayHeight = 320f;
-        static readonly Vector2 KickerFeet = new Vector2(490f, 602f);
+        // The kicker stands nearest the camera: 186x248 preview px, feet just below the penalty spot row.
+        const float KickerDisplayWidth = 186f, KickerDisplayHeight = 248f;
+        static readonly Vector2 KickerFeet = new Vector2(510f, 600f);
 
         [MenuItem("KMA/Football/Build Scene")]
         public static void BuildScene()
