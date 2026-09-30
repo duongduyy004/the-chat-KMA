@@ -15,6 +15,8 @@ namespace KMA.Gameplay.UI
         RectTransform layout;
         RectTransform fill;
         RectTransform kma;
+        TMP_Text titleTop;
+        TMP_Text titleKma;
         CanvasGroup brand;
         UITheme.SplashStyle style;
         float introElapsed;
@@ -71,6 +73,10 @@ namespace KMA.Gameplay.UI
             var badge = HomePresentationBuilder.CreateBadge(panel, "SportBadge");
             Place(badge, new Vector2(0f, style.badgeY), Vector2.one * HomeMenuStyle.BadgeSize);
             badge.localScale = Vector3.one * (style.badgeSize / HomeMenuStyle.BadgeSize);
+            // The menu positions its badge parts from the left edge of its panel.
+            // Center those same parts here so the artwork and shine share one axis.
+            foreach (RectTransform part in badge)
+                part.anchorMin = part.anchorMax = Vector2.one * .5f;
             var top = Label(panel, "TitleTop", "THỂ CHẤT", HomeMenuStyle.TitleTopSize * style.titleScale,
                 VietFontRole.Title, new Vector2(0f, style.titleTopY), style.titleTopSize);
             var title = Label(panel, "TitleKMA", "KMA", HomeMenuStyle.TitleKmaSize * style.titleScale,
@@ -81,6 +87,8 @@ namespace KMA.Gameplay.UI
                 text.rectTransform.localRotation = Quaternion.Euler(0f, 0f, UITheme.Shared.Menu.titleAngle);
             }
             view.kma = title.rectTransform;
+            view.titleTop = top;
+            view.titleKma = title;
             for (int i = 0; i < 3; i++)
             {
                 var line = Rect(panel, "TrackLine" + i);
@@ -163,7 +171,8 @@ namespace KMA.Gameplay.UI
         {
             if (style == null) return;
             Resize();
-            introElapsed += Time.unscaledDeltaTime;
+            if (!Application.isEditor && !UnityEngine.Rendering.SplashScreen.isFinished) return;
+            introElapsed += Mathf.Min(Time.unscaledDeltaTime, style.maxAnimationDelta);
             float t = Mathf.Clamp01(introElapsed / style.introDuration);
             float eased = 1f - Mathf.Pow(1f - t, 3f);
             brand.alpha = eased;
@@ -187,6 +196,9 @@ namespace KMA.Gameplay.UI
             float scale = Mathf.Clamp(Mathf.Min(available.x / style.contentSize.x,
                 available.y / style.contentSize.y), 0f, 1f);
             layout.localScale = Vector3.one * scale;
+            float titleScale = style.titleScale * HomeMenuResponsive.ScaleFor(safeArea.rect.size);
+            titleTop.fontSize = HomeMenuStyle.TitleTopSize * titleScale;
+            titleKma.fontSize = HomeMenuStyle.TitleKmaSize * titleScale;
             float footerWidth = Mathf.Max(0f, Mathf.Min(style.footerSize.x, safeArea.rect.width * .5f - style.footerInset.x * 2f));
             if (academyFooter != null) academyFooter.sizeDelta = new Vector2(footerWidth, style.footerSize.y);
             if (versionFooter != null) versionFooter.sizeDelta = new Vector2(footerWidth, style.footerSize.y);

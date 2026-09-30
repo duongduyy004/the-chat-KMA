@@ -57,28 +57,28 @@ MonoBehaviour:
     buttonSlantAngle: 12.094757
     pressScale: 0.96
   splash:
-    contentSize: {x: 620, y: 640}
+    contentSize: {x: 720, y: 840}
     contentPadding: {x: 32, y: 96}
     referenceResolution: {x: 1920, y: 1080}
     badgeSize: 160
-    badgeY: 220
+    badgeY: 320
     titleScale: 1.3
-    titleTopSize: {x: 540, y: 94}
-    titleKmaSize: {x: 540, y: 156}
-    titleTopY: 91
-    titleKmaY: -22
-    stripesY: -121
+    titleTopSize: {x: 640, y: 140}
+    titleKmaSize: {x: 640, y: 230}
+    titleTopY: 160
+    titleKmaY: 10
+    stripesY: -155
     stripeSize: {x: 210, y: 3}
     stripeStep: {x: 18, y: -8}
     stripeShorten: 28
-    sloganY: -175
+    sloganY: -215
     sloganSize: 26
     sloganBox: {x: 600, y: 52}
     sloganShadow: {x: 1, y: -2}
-    statusY: -237
+    statusY: -285
     statusSize: 22
     statusHeight: 38
-    trackY: -275
+    trackY: -323
     trackSize: {x: 460, y: 20}
     trackBorder: 2
     trackOpacity: 0.65
@@ -88,6 +88,7 @@ MonoBehaviour:
     footerSize: {x: 520, y: 40}
     footerFontSize: 20
     footerOpacity: 0.55
+    maxAnimationDelta: 0.05
     introDuration: 0.5
     introSlide: 24
     kmaStartScale: 0.9

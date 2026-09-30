@@ -21,18 +21,28 @@ namespace KMA.Tests.Presentation
 
             Transform splash = GameObject.Find("SplashCanvas")?.transform;
             Assert.That(splash, Is.Not.Null);
-            TMP_Text progress = splash.Find("ProgressPercent")?.GetComponent<TMP_Text>();
+            TMP_Text progress = splash.Find("SplashSafeArea/SplashLayout/ProgressPercent")?.GetComponent<TMP_Text>();
             Assert.That(progress, Is.Not.Null,
                 "The loading state needs a numeric progress value, not only a fill bar.");
             Assert.That(progress.font, Is.Not.Null);
-            TMP_Text hint = splash.Find("LoadingHint")?.GetComponent<TMP_Text>();
+            TMP_Text hint = splash.Find("SplashSafeArea/SplashLayout/Slogan")?.GetComponent<TMP_Text>();
             Assert.That(hint, Is.Not.Null);
-            Assert.That(hint.text, Is.EqualTo("ĐANG KHỞI ĐỘNG NGÀY HỘI THỂ THAO"));
+            Assert.That(hint.text, Is.EqualTo("Hành trình rèn luyện thể chất"));
             Assert.That(hint.font, Is.Not.Null);
-            Image hintPlate = splash.Find("LoadingHintPlate")?.GetComponent<Image>();
-            Assert.That(hintPlate, Is.Not.Null,
-                "The loading hint needs a stable high-contrast surface over the stadium art.");
-            Assert.That(hintPlate.color.a, Is.GreaterThanOrEqualTo(.7f));
+            Image overlay = splash.Find("SplashNavyGradient")?.GetComponent<Image>();
+            Assert.That(overlay, Is.Not.Null,
+                "The slogan needs the shared navy gradient over the stadium art.");
+            Assert.That(overlay.sprite.texture.GetPixel(0, 0).a, Is.GreaterThanOrEqualTo(.7f));
+        }
+
+        [UnityTearDown]
+        public IEnumerator RemoveStartupPresentation()
+        {
+            // Bootstrap's presentation is persistent: each fixture owns its cleanup
+            // even when another test already created the singleton game runtime.
+            foreach (var splash in Object.FindObjectsByType<SplashScreenPresenter>(FindObjectsSortMode.None))
+                Object.Destroy(splash.gameObject);
+            yield return null;
         }
 
         [UnityTest]

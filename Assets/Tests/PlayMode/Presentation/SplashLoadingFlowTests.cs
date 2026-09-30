@@ -107,13 +107,44 @@ namespace KMA.Tests.Presentation
             Assert.That(presenter.Progress, Is.EqualTo(1f),
                 "The startup splash must detach after its first successful load.");
 
-            yield return new WaitForSecondsRealtime(0.15f);
+            float deadline = Time.realtimeSinceStartup + 3f;
+            while (canvasGroup.alpha >= 1f && Time.realtimeSinceStartup < deadline)
+                yield return null;
+            Assert.That(canvasGroup.alpha, Is.GreaterThan(0f).And.LessThan(1f),
+                "The loaded menu must be revealed through a fade, not an abrupt hide.");
+            Assert.That(presenter.IsBlockingInput, Is.True, "Input stays blocked during the fade.");
+            while (presenter != null && presenter.IsVisible && Time.realtimeSinceStartup < deadline)
+                yield return null;
 
             Assert.That(presenter.IsVisible, Is.False);
             Assert.That(presenter.IsBlockingInput, Is.False);
             yield return null;
             Assert.That(presenter == null, Is.True,
                 "The completed startup presentation must not persist into later routes.");
+        }
+
+        [UnityTest]
+        public IEnumerator Splash_InterpolatesDisplayedProgressAtZeroTimeScale()
+        {
+            SceneRouter router = Track(new GameObject("SplashLoadingFlowTests.Router"))
+                .AddComponent<SceneRouter>();
+            var root = Track(new GameObject("SplashLoadingFlowTests.Splash"));
+            root.SetActive(false);
+            root.AddComponent<CanvasGroup>();
+            Slider bar = Track(new GameObject("LoadingBar")).AddComponent<Slider>();
+            bar.transform.SetParent(root.transform, false);
+            SplashScreenPresenter presenter = root.AddComponent<SplashScreenPresenter>();
+            SetField(presenter, "loadingBar", bar);
+            root.SetActive(true);
+            Time.timeScale = 0f;
+
+            Raise(router, "SceneLoadStarted");
+            Raise(router, "SceneLoadProgressChanged", .8f);
+            Assert.That(bar.value, Is.LessThan(.8f), "The displayed fill must not jump to a router event.");
+            yield return new WaitForSecondsRealtime(.08f);
+            Assert.That(bar.value, Is.GreaterThan(0f).And.LessThan(.8f));
+            yield return new WaitForSecondsRealtime(1.5f);
+            Assert.That(bar.value, Is.EqualTo(.8f).Within(.002f));
         }
 
         [UnityTest]
@@ -136,15 +167,66 @@ namespace KMA.Tests.Presentation
             Raise(router, "SceneLoadCompleted");
             int completedFrame = Time.frameCount;
 
+            float deadline = Time.realtimeSinceStartup + 3f;
             while (presenter != null && presenter.IsVisible)
             {
-                Assert.That(Time.frameCount - completedFrame, Is.LessThanOrEqualTo(60),
+                Assert.That(Time.realtimeSinceStartup, Is.LessThan(deadline),
                     "The presented-frame hold must still end.");
                 yield return null;
             }
 
             Assert.That(Time.frameCount - completedFrame, Is.GreaterThanOrEqualTo(20),
                 "A zero-second hold must still present the intro for its minimum frame count.");
+        }
+
+        [UnityTest]
+        public IEnumerator SplashPresentation_FitsLandscapeRatiosAndRendersVietnameseGlyphs()
+        {
+            var root = Track(new GameObject("SplashLoadingFlowTests.Layout", typeof(RectTransform), typeof(Canvas)));
+            root.GetComponent<Canvas>().renderMode = RenderMode.WorldSpace;
+            RectTransform canvasRect = (RectTransform)root.transform;
+            var art = Track(new GameObject("Illustration", typeof(RectTransform), typeof(Image)));
+            art.transform.SetParent(root.transform, false);
+            SplashPresentationView.Build(root.transform);
+            var safe = (RectTransform)root.transform.Find("SplashSafeArea");
+            var corners = new Vector3[4];
+            var elementCorners = new Vector3[4];
+            foreach (Vector2 size in new[] { new Vector2(1920, 1080), new Vector2(1920, 1200),
+                new Vector2(2160, 1080), new Vector2(1440, 1080) })
+            {
+                canvasRect.sizeDelta = size;
+                yield return null;
+                Canvas.ForceUpdateCanvases();
+                safe.GetWorldCorners(corners);
+                Transform badge = safe.Find("SplashLayout/SportBadge");
+                Assert.That(badge.Find("NavyFace").position.x, Is.EqualTo(badge.position.x).Within(.01f),
+                    "The reused badge artwork must share the centered title axis.");
+                foreach (var name in new[] { "SportBadge", "TitleTop", "TitleKMA", "Slogan", "LoadingBar" })
+                {
+                    var element = (RectTransform)safe.Find("SplashLayout/" + name);
+                    element.GetWorldCorners(elementCorners);
+                    foreach (Vector3 point in elementCorners)
+                    {
+                        Assert.That(point.x, Is.InRange(corners[0].x, corners[2].x), name + " at " + size);
+                        Assert.That(point.y, Is.InRange(corners[0].y, corners[2].y), name + " at " + size);
+                    }
+                }
+                var imageRect = (RectTransform)art.transform;
+                Assert.That(imageRect.rect.width, Is.GreaterThanOrEqualTo(size.x - .1f));
+                Assert.That(imageRect.rect.height, Is.GreaterThanOrEqualTo(size.y - .1f));
+            }
+            foreach (var name in new[] { "Slogan", "LoadingStatus" })
+            {
+                var text = safe.Find("SplashLayout/" + name).GetComponent<TMP_Text>();
+                text.ForceMeshUpdate();
+                Assert.That(text.textInfo.characterCount, Is.GreaterThan(0));
+                foreach (var character in text.textInfo.characterInfo)
+                {
+                    if (!character.isVisible) continue;
+                    Assert.That(character.textElement.unicode, Is.EqualTo((uint)character.character),
+                        "Missing Vietnamese glyph in " + text.text);
+                }
+            }
         }
 
         [Test]
@@ -262,8 +344,16 @@ namespace KMA.Tests.Presentation
                 Assert.That(splash.GetComponent<BaseInputModule>(), Is.Not.Null);
                 Assert.That(splash.transform.Find("Logo"), Is.Not.Null);
                 Assert.That(splash.transform.Find("Illustration"), Is.Not.Null);
-                Assert.That(splash.transform.Find("Title").GetComponent<TMP_Text>().text,
-                    Is.EqualTo("THỂ CHẤT KMA"));
+                Transform content = splash.transform.Find("SplashSafeArea/SplashLayout");
+                Assert.That(content, Is.Not.Null, "Splash must build its presentation inside the safe area.");
+                Assert.That(content.Find("TitleTop").GetComponent<TMP_Text>().text, Is.EqualTo("THỂ CHẤT"));
+                Assert.That(content.Find("TitleKMA").GetComponent<TMP_Text>().text, Is.EqualTo("KMA"));
+                Assert.That(content.Find("Slogan").GetComponent<TMP_Text>().text,
+                    Is.EqualTo("Hành trình rèn luyện thể chất"));
+                Assert.That(content.Find("TitleKMA").GetComponent<TMP_Text>().fontSharedMaterial,
+                    Is.SameAs(VietTypography.Library.titleMaterial));
+                Assert.That(splash.transform.Find("Illustration").GetComponent<UnityEngine.UI.AspectRatioFitter>().aspectMode,
+                    Is.EqualTo(AspectRatioFitter.AspectMode.EnvelopeParent));
                 while (splash != null && splash.IsVisible)
                     yield return null;
                 Assert.That(Time.realtimeSinceStartup - introStartedAt, Is.GreaterThanOrEqualTo(1.45f));

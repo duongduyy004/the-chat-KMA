@@ -18,12 +18,14 @@ namespace KMA.Gameplay.UI
         // Canvas dimensions can settle after Awake, especially in the Game view.
         void LateUpdate() => Resize();
 
+        public static float ScaleFor(Vector2 viewport) => Mathf.Min(HomeMenuStyle.MenuScale,
+            viewport.y / 650f, viewport.x * .45f / HomeMenuStyle.PanelWidth);
+
         void Resize()
         {
             if (rect == null || parent == null) return;
             if (parent.rect.width <= 0f || parent.rect.height <= 0f) return;
-            float scale = Mathf.Min(HomeMenuStyle.MenuScale, parent.rect.height / 650f,
-                parent.rect.width * .45f / HomeMenuStyle.PanelWidth);
+            float scale = ScaleFor(parent.rect.size);
             Vector3 desiredScale = Vector3.one * scale;
             if (rect.localScale != desiredScale) rect.localScale = desiredScale;
             rect.anchorMin = rect.anchorMax = new Vector2(.045f, .46f);

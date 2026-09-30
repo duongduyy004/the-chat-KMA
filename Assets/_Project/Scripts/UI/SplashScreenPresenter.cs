@@ -19,6 +19,8 @@ namespace KMA.Gameplay.UI
 
         SplashPresentationView presentation;
         SceneRouter router;
+        float targetProgress;
+        float displayedProgress;
         float introStartedAt;
         int introStartedFrame;
         bool loadCompleted;
@@ -27,7 +29,9 @@ namespace KMA.Gameplay.UI
 
         public bool IsVisible { get; private set; }
         public bool IsBlockingInput => canvasGroup != null && canvasGroup.blocksRaycasts;
-        public float Progress => loadingBar != null ? loadingBar.value : 0f;
+        // Keep the reported router progress available while only the presentation is smoothed.
+        public float Progress => targetProgress;
+        public float DisplayedProgress => displayedProgress;
 
         void Awake()
         {
@@ -96,7 +100,10 @@ namespace KMA.Gameplay.UI
             loadFailed = false;
             finishScheduled = false;
             Show();
-            OnProgressChanged(0f);
+            targetProgress = displayedProgress = 0f;
+            if (loadingBar != null) loadingBar.value = 0f;
+            presentation?.SetDisplayedProgress(0f);
+            if (progressText != null) progressText.text = VietText.Fix("0%");
             SetStatus("Đang chuẩn bị...");
             // Bootstrap input is no longer needed once the automatic route starts.
             // Disable it before Menu activates so there is only one active EventSystem.
@@ -105,16 +112,27 @@ namespace KMA.Gameplay.UI
 
         void OnProgressChanged(float value)
         {
-            value = Mathf.Clamp01(value);
-            if (loadingBar != null)
-            {
-                loadingBar.value = value;
-                presentation?.SetDisplayedProgress(value);
-            }
-            if (progressText != null)
-                progressText.text = VietText.Fix($"{Mathf.RoundToInt(value * 100f)}%");
-            if (value >= 0.99f)
+            targetProgress = Mathf.Clamp01(value);
+            if (targetProgress >= 0.99f)
                 DisableBootstrapEventSystem();
+        }
+
+        void Update()
+        {
+            // Avoid consuming the whole animation in a single scene-activation stall.
+            float delta = Mathf.Min(Time.unscaledDeltaTime, UITheme.Shared.Splash.maxAnimationDelta);
+            float factor = 1f - Mathf.Exp(-delta / UITheme.Shared.Splash.progressSmoothSeconds);
+            displayedProgress = Mathf.Lerp(displayedProgress, targetProgress, factor);
+            if (Mathf.Abs(displayedProgress - targetProgress) < .001f)
+                displayedProgress = targetProgress;
+            if (loadingBar != null) loadingBar.value = displayedProgress;
+            presentation?.SetDisplayedProgress(displayedProgress);
+            if (progressText != null)
+            {
+                // Do not round to 100% until the displayed fill has actually completed.
+                int percent = displayedProgress >= 1f ? 100 : Mathf.FloorToInt(displayedProgress * 100f);
+                progressText.text = VietText.Fix($"{percent}%");
+            }
         }
 
         void OnLoadCompleted()
@@ -154,11 +172,23 @@ namespace KMA.Gameplay.UI
             // presented frames as well: the intro is a presentation, not a timer.
             while (loadCompleted &&
                    (Time.realtimeSinceStartup - introStartedAt < minimumIntroSeconds ||
-                    Time.frameCount - introStartedFrame < minimumIntroFrames))
+                    Time.frameCount - introStartedFrame < minimumIntroFrames ||
+                    displayedProgress < 1f))
                 yield return null;
 
             if (loadCompleted && !loadFailed)
-                Hide();
+            {
+                float elapsed = 0f;
+                float duration = UITheme.Shared.Splash.exitDuration;
+                while (elapsed < duration && loadCompleted && !loadFailed)
+                {
+                    elapsed += Mathf.Min(Time.unscaledDeltaTime, UITheme.Shared.Splash.maxAnimationDelta);
+                    if (canvasGroup != null)
+                        canvasGroup.alpha = 1f - Mathf.SmoothStep(0f, 1f, elapsed / duration);
+                    yield return null;
+                }
+                if (loadCompleted && !loadFailed) Hide();
+            }
             finishScheduled = false;
         }
 
