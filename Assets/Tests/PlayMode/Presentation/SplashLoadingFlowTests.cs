@@ -289,10 +289,11 @@ namespace KMA.Tests.Presentation
             AssertLabel("NEW GAMEButton", "CHƠI MỚI");
             AssertLabel("SETTINGSButton", "CÀI ĐẶT");
             AssertLabel("QUITButton", "THOÁT");
-            Assert.That(GameObject.Find("HomeLogo"), Is.Not.Null);
+            var menu = UnityEngine.Object.FindFirstObjectByType<MainMenuScreen>();
+            Assert.That(menu.transform.Find("HomeLogo"), Is.Not.Null);
             Assert.That(GameObject.Find("HomeIllustration"), Is.Not.Null);
-            Assert.That(GameObject.Find("HomeTitle").GetComponent<TMP_Text>().text,
-                Is.EqualTo("THỂ CHẤT KMA"));
+            Assert.That(GameObject.Find("TitleTop").GetComponent<TMP_Text>().text, Is.EqualTo("THỂ CHẤT"));
+            Assert.That(GameObject.Find("TitleKMA").GetComponent<TMP_Text>().text, Is.EqualTo("KMA"));
         }
 
         [UnityTest]

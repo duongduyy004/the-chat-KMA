@@ -92,17 +92,22 @@ namespace KMA.Tests.Presentation
                          .Concat(resultPrefab.GetComponentsInChildren<TMP_Text>(true)))
             {
                 Assert.That(text.font, Is.Not.Null, text.name);
-                Assert.That(text.font.fallbackFontAssetTable, Has.Some.Not.Null, text.name);
+                if (text.font.atlasPopulationMode == AtlasPopulationMode.Static)
+                    Assert.That(text.font.fallbackFontAssetTable, Does.Contain(VietTypography.Library.regular), text.name);
+                else
+                    Assert.That(text.font.sourceFontFile, Is.Not.Null, text.name);
             }
 
-            // The kit owns the text materials: the plain Baloo2 material, or its outline variant.
-            var kit = KMA.UI.Kit.UiKitAssets.Load();
+            // Every preset must use the atlas of its assigned Vietnamese font.
+            var fonts = VietTypography.Library;
             var materials = phasePrefab.GetComponentsInChildren<TMP_Text>(true)
                 .Concat(resultPrefab.GetComponentsInChildren<TMP_Text>(true))
                 .Select(text => text.fontSharedMaterial)
                 .Distinct()
                 .ToArray();
-            Assert.That(materials, Is.SubsetOf(new[] { kit.Font.material, kit.OutlineMaterial }));
+            Assert.That(materials, Is.SubsetOf(new[] { fonts.title.material, fonts.buttonHud.material,
+                fonts.regular.material, fonts.bold.material, fonts.titleMaterial, fonts.primaryMaterial,
+                fonts.secondaryMaterial, fonts.bodyMaterial, fonts.bodyBoldMaterial }));
 
             var resultObject = Object.Instantiate(resultPrefab);
             try

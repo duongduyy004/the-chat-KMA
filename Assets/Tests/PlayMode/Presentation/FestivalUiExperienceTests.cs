@@ -41,12 +41,12 @@ namespace KMA.Tests.Presentation
             yield return SceneManager.LoadSceneAsync("Menu", LoadSceneMode.Single);
             yield return null;
 
-            Transform panel = GameObject.Find("FestivalMenuPanel")?.transform;
+            Transform panel = GameObject.Find("HomeMenuLayout")?.transform;
             Assert.That(panel, Is.Not.Null);
             var buttons = panel.GetComponentsInChildren<Button>();
             Assert.That(buttons.Select(button => button.name), Is.EqualTo(new[]
             {
-                "CONTINUEButton", "NEW GAMEButton", "SETTINGSButton", "QUITButton"
+                "NEW GAMEButton", "CONTINUEButton", "SETTINGSButton", "QUITButton"
             }));
 
         }

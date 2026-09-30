@@ -235,7 +235,9 @@ namespace KMA.Tests.Gameplay.Progression
 
             var transitions = new List<SceneRouteTransition>();
             relaunched.TransitionStarted += transitions.Add;
-            MainMenuScreen menu = CreateGameObject("Relaunched shell").AddComponent<MainMenuScreen>();
+            GameObject shell = CreateGameObject("Relaunched shell");
+            shell.AddComponent<RectTransform>();
+            MainMenuScreen menu = shell.AddComponent<MainMenuScreen>();
             menu.gameObject.AddComponent<S5ShellSceneController>();
 
             Assert.That(menu.CanContinue, Is.True);

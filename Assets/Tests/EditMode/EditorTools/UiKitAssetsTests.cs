@@ -21,9 +21,9 @@ namespace KMA.Tests.EditorTools
             Assert.That(assets.AllSprites(), Has.Length.EqualTo(5));
             Assert.That(assets.AllSprites(), Has.All.Not.Null);
             Assert.That(assets.Font, Is.Not.Null);
-            Assert.That(assets.Font.name, Is.EqualTo("Baloo2-ExtraBold"));
+            Assert.That(assets.Font.name, Is.EqualTo("BarlowSemiCondensed-Bold"));
             Assert.That(assets.OutlineMaterial, Is.Not.Null);
-            Assert.That(assets.OutlineMaterial.name, Is.EqualTo("Baloo2-ExtraBold-TextStrokeDark"));
+            Assert.That(assets.OutlineMaterial.name, Is.EqualTo("Button_Primary"));
         }
 
         [TestCase(20)]

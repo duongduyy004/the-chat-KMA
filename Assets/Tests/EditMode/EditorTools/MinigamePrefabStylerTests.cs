@@ -71,7 +71,9 @@ namespace KMA.Tests.EditorTools
                 }
                 foreach (TMP_Text text in root.GetComponentsInChildren<TMP_Text>(true))
                 {
-                    Assert.That(text.font, Is.SameAs(assets.Font), text.name);
+                    var fonts = VietTypography.Library;
+                    Assert.That(new[] { fonts.title, fonts.buttonHud, fonts.regular, fonts.bold }, Does.Contain(text.font), text.name);
+                    Assert.That(text.extraPadding, Is.True, text.name);
                     float smallest = text.enableAutoSizing ? text.fontSizeMin : text.fontSize;
                     Assert.That(smallest, Is.GreaterThanOrEqualTo(MinigameUiTheme.MinimumFontSize), text.name);
                 }

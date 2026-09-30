@@ -169,7 +169,7 @@ namespace KMA.Tests.Gameplay.Progression
 
                 foreach (var label in screen.GetComponentsInChildren<TMP_Text>())
                 {
-                    Assert.That(label.font.name, Is.EqualTo("Baloo2-ExtraBold"), label.name);
+                    Assert.That(new[] { "SairaCondensed-Black", "BarlowSemiCondensed-Bold", "BeVietnamPro-Regular", "BeVietnamPro-Bold" }, Does.Contain(label.font.name), label.name);
                     if (label.name == "ActionHint")
                     {
                         Assert.That(label.rectTransform.anchorMin.y, Is.EqualTo(0f));
@@ -587,7 +587,7 @@ namespace KMA.Tests.Gameplay.Progression
 
         MainMenuScreen CreateShellMenu()
         {
-            GameObject gameObject = Track(new GameObject("S5NewGameTests.Shell"));
+            GameObject gameObject = Track(new GameObject("S5NewGameTests.Shell", typeof(RectTransform)));
             var menu = gameObject.AddComponent<MainMenuScreen>();
             gameObject.AddComponent<S5ShellSceneController>();
             return menu;

@@ -314,7 +314,7 @@ namespace KMA.Tests.Presentation
             Transform marker = playerPresentation.Find("PlayerMarker");
             Assert.That(marker, Is.Not.Null);
             Assert.That(marker.IsChildOf(runnerRoots[1]), Is.True);
-            TextMesh markerLabel = marker.GetComponentInChildren<TextMesh>(true);
+            TMPro.TextMeshPro markerLabel = marker.GetComponentInChildren<TMPro.TextMeshPro>(true);
             Assert.That(markerLabel, Is.Not.Null);
             Assert.That(markerLabel.text, Is.EqualTo("PLAYER"));
 
@@ -338,7 +338,7 @@ namespace KMA.Tests.Presentation
             var scene = SceneManager.GetActiveScene();
 
             GameObject player = GameObject.Find("Player");
-            var label = player.GetComponentInChildren<TextMesh>(true);
+            var label = player.GetComponentInChildren<TMPro.TextMeshPro>(true);
             Assert.That(label, Is.Not.Null, "player must carry a marker");
             Assert.That(label.name, Is.EqualTo("Label"));
 
@@ -374,7 +374,7 @@ namespace KMA.Tests.Presentation
             {
                 Assert.That(rival.GetComponentInChildren<SprintPlayerIdentityOutline>(true), Is.Null,
                     "cyan is reserved for the player");
-                Assert.That(rival.GetComponentInChildren<TextMesh>(true), Is.Null,
+                Assert.That(rival.GetComponentInChildren<TMPro.TextMeshPro>(true), Is.Null,
                     "rivals carry no PLAYER marker");
             }
         }

@@ -172,7 +172,8 @@ namespace KMA.Tests.Presentation
 
                 TMP_Text title = header.Find("Heading/TitleContainer/Title").GetComponent<TMP_Text>();
                 Assert.That(title.fontSize, Is.GreaterThanOrEqualTo(52));
-                Assert.That(title.fontStyle, Is.EqualTo(FontStyles.Bold));
+                Assert.That(title.font, Is.SameAs(VietTypography.Library.bold));
+                Assert.That(title.extraPadding, Is.True);
                 TMP_Text subtitle = header.Find("Heading/SubtitleContainer/Subtitle").GetComponent<TMP_Text>();
                 Assert.That(subtitle.text, Is.EqualTo("Chọn một môn để bắt đầu"));
                 Assert.That(subtitle.fontSize, Is.GreaterThanOrEqualTo(24));

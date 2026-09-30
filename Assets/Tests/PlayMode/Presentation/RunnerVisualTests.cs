@@ -157,7 +157,7 @@ namespace KMA.Tests.Presentation
             controller.enabled = false;
             yield return null;
 
-            var marker = GameObject.Find("Player").GetComponentInChildren<TextMesh>(true).transform.parent;
+            var marker = GameObject.Find("Player").GetComponentInChildren<TMPro.TextMeshPro>(true).transform.parent;
             Assert.That(marker.name, Is.EqualTo("PlayerMarker"));
 
             // The track spans the full viewport at 16:9, so a marker pinned to one side would

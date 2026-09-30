@@ -175,7 +175,8 @@ namespace KMA.Tests.Presentation
             TMP_Text countdown = UiKit.Countdown(root.transform, "Countdown");
             Assert.That(countdown.fontSize, Is.EqualTo(MinigameUiTheme.Display));
             Assert.That(countdown.color, Is.EqualTo(MinigameUiTheme.Accent));
-            Assert.That(countdown.fontSharedMaterial, Is.SameAs(assets.OutlineMaterial));
+            Assert.That(countdown.fontSharedMaterial, Is.SameAs(assets.Font.material));
+            Assert.That(countdown.extraPadding, Is.True);
         }
 
         [Test]
