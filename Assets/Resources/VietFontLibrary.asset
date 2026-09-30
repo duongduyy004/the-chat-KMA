@@ -1,0 +1,23 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e6b3ff3de5721f59680cd1d32487cf98, type: 3}
+  m_Name: VietFontLibrary
+  m_EditorClassIdentifier: KMA.Gameplay.UI::KMA.Gameplay.UI.VietFontLibrary
+  title: {fileID: 11400000, guid: 3e65c36a8d957244285db1901ea34ff3, type: 2}
+  buttonHud: {fileID: 11400000, guid: 95213cac9f3ffc914a83cd6ef9d38c49, type: 2}
+  regular: {fileID: 11400000, guid: b35539ffcf6039a27afe5bd2a0ce072a, type: 2}
+  bold: {fileID: 11400000, guid: e2fb29186b981b74191bedd015960b0f, type: 2}
+  titleMaterial: {fileID: 2100000, guid: 4e89de635520eef378cde06c140ada11, type: 2}
+  primaryMaterial: {fileID: 2100000, guid: ca4d9f9d1239df33db51812561e75715, type: 2}
+  secondaryMaterial: {fileID: 2100000, guid: c096f77373dde633c9dc4a43c1a15221, type: 2}
+  bodyMaterial: {fileID: 2100000, guid: b26e7c1b9e3ad6f13a6c61e0803c25f1, type: 2}
+  bodyBoldMaterial: {fileID: 2100000, guid: b15b201b3261465dc84fd26a46195ecb, type: 2}

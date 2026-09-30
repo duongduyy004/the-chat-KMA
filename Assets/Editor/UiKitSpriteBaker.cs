@@ -16,8 +16,8 @@ namespace KMA.EditorTools
         public const string SpriteDir = "Assets/_Project/Art/UI/Kit";
         public const int CircleDiameter = 128;
         public const float RingWidth = CircleDiameter * 3f / 64f;
-        const string FontPath = "Assets/_Project/Fonts/Baloo2-ExtraBold.asset";
-        const string OutlineMaterialPath = "Assets/_Project/Fonts/Baloo2-ExtraBold-TextStrokeDark.mat";
+        const string FontPath = "Assets/Fonts/TMP/BarlowSemiCondensed-Bold.asset";
+        const string OutlineMaterialPath = "Assets/Fonts/TMP/Materials/Button_Primary.mat";
 
         [MenuItem("KMA/UI/Bake UI Kit Sprites")]
         public static void Bake()

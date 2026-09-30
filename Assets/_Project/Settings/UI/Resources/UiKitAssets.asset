@@ -17,5 +17,5 @@ MonoBehaviour:
   roundRect36: {fileID: 21300000, guid: d6c8f2afafeb48b408ef3c54db1fa43e, type: 3}
   circle: {fileID: 21300000, guid: 4cc468f1ae3ac1d4083a9b9c930c54ce, type: 3}
   ring: {fileID: 21300000, guid: 256188e7a889dd147ab1a4da8a429042, type: 3}
-  font: {fileID: 11400000, guid: 825d2fd02f90fde40975035766b806d9, type: 2}
-  outlineMaterial: {fileID: 2100000, guid: f3db4900ab89ca666a7d41dd02c66f34, type: 2}
+  font: {fileID: 11400000, guid: 95213cac9f3ffc914a83cd6ef9d38c49, type: 2}
+  outlineMaterial: {fileID: 2100000, guid: ca4d9f9d1239df33db51812561e75715, type: 2}

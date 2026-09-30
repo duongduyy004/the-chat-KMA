@@ -18,7 +18,8 @@
         "Unity.2D.Sprite.Editor",
         "Unity.TextMeshPro",
         "UnityEngine.UI",
-        "KMA.Gameplay.Football"
+        "KMA.Gameplay.Football",
+        "KMA.Text"
     ],
     "includePlatforms": [
         "Editor"

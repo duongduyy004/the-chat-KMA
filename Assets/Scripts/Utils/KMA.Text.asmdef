@@ -1,0 +1,5 @@
+{
+    "name": "KMA.Text",
+    "references": ["Unity.TextMeshPro"],
+    "autoReferenced": true
+}
