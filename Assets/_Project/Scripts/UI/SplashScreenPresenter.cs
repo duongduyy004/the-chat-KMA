@@ -14,10 +14,10 @@ namespace KMA.Gameplay.UI
         [SerializeField] Slider loadingBar;
         [SerializeField] TMP_Text statusText;
         [SerializeField] TMP_Text progressText;
-        [SerializeField] TMP_Text loadingHintText;
         [SerializeField, Min(0f)] float minimumIntroSeconds = 1.5f;
         [SerializeField, Min(0)] int minimumIntroFrames = 30;
 
+        SplashPresentationView presentation;
         SceneRouter router;
         float introStartedAt;
         int introStartedFrame;
@@ -34,7 +34,13 @@ namespace KMA.Gameplay.UI
             canvasGroup = canvasGroup != null ? canvasGroup : GetComponent<CanvasGroup>();
             loadingBar = loadingBar != null ? loadingBar : GetComponentInChildren<Slider>(true);
             statusText = statusText != null ? statusText : GetComponentInChildren<TMP_Text>(true);
-            EnsureFestivalLoadingDetails();
+            presentation = SplashPresentationView.Build(transform);
+            if (presentation != null)
+            {
+                loadingBar = presentation.LoadingBar;
+                statusText = presentation.Status;
+                progressText = presentation.Percent;
+            }
             introStartedAt = Time.realtimeSinceStartup;
             Show();
 
@@ -91,7 +97,7 @@ namespace KMA.Gameplay.UI
             finishScheduled = false;
             Show();
             OnProgressChanged(0f);
-            SetStatus("ĐANG CHUẨN BỊ...");
+            SetStatus("Đang chuẩn bị...");
             // Bootstrap input is no longer needed once the automatic route starts.
             // Disable it before Menu activates so there is only one active EventSystem.
             DisableBootstrapEventSystem();
@@ -101,7 +107,10 @@ namespace KMA.Gameplay.UI
         {
             value = Mathf.Clamp01(value);
             if (loadingBar != null)
+            {
                 loadingBar.value = value;
+                presentation?.SetDisplayedProgress(value);
+            }
             if (progressText != null)
                 progressText.text = VietText.Fix($"{Mathf.RoundToInt(value * 100f)}%");
             if (value >= 0.99f)
@@ -201,72 +210,5 @@ namespace KMA.Gameplay.UI
                 eventSystem.enabled = false;
         }
 
-        void EnsureFestivalLoadingDetails()
-        {
-            TMP_FontAsset font = statusText != null ? statusText.font : null;
-            if (font == null)
-                return;
-            progressText = ResolveOrCreateText("ProgressPercent", "0%", font,
-                new Vector2(.79f, .16f), new Vector2(.91f, .23f), 25f,
-                new Color32(255, 202, 58, 255), TextAlignmentOptions.Center);
-            ResolveOrCreatePanel("LoadingHintPlate",
-                new Vector2(.20f, .235f), new Vector2(.80f, .31f),
-                new Color32(8, 35, 61, 224));
-            loadingHintText = ResolveOrCreateText("LoadingHint",
-                "ĐANG KHỞI ĐỘNG NGÀY HỘI THỂ THAO", font,
-                new Vector2(.22f, .245f), new Vector2(.78f, .30f), 24f,
-                new Color32(255, 249, 231, 255), TextAlignmentOptions.Center);
-        }
-
-        TMP_Text ResolveOrCreateText(string objectName, string value, TMP_FontAsset font,
-            Vector2 anchorMin, Vector2 anchorMax, float size, Color color,
-            TextAlignmentOptions alignment)
-        {
-            Transform existing = transform.Find(objectName);
-            TextMeshProUGUI text = existing == null ? null : existing.GetComponent<TextMeshProUGUI>();
-            if (text == null)
-            {
-                var root = new GameObject(objectName, typeof(RectTransform));
-                root.SetActive(false);
-                root.transform.SetParent(transform, false);
-                RectTransform rect = root.GetComponent<RectTransform>();
-                rect.anchorMin = anchorMin;
-                rect.anchorMax = anchorMax;
-                rect.offsetMin = Vector2.zero;
-                rect.offsetMax = Vector2.zero;
-                text = root.AddComponent<TextMeshProUGUI>();
-            }
-            text.text = VietText.Fix(value);
-            text.font = font;
-            text.fontSize = size;
-            text.fontStyle = FontStyles.Bold;
-            VietTypography.Apply(text);
-            text.color = color;
-            text.alignment = alignment;
-            text.raycastTarget = false;
-            text.gameObject.SetActive(true);
-            return text;
-        }
-
-        RectTransform ResolveOrCreatePanel(string objectName, Vector2 anchorMin,
-            Vector2 anchorMax, Color color)
-        {
-            Transform existing = transform.Find(objectName);
-            RectTransform rect = existing as RectTransform;
-            if (rect == null)
-            {
-                var root = new GameObject(objectName, typeof(RectTransform), typeof(Image));
-                root.transform.SetParent(transform, false);
-                rect = root.GetComponent<RectTransform>();
-            }
-            rect.anchorMin = anchorMin;
-            rect.anchorMax = anchorMax;
-            rect.offsetMin = Vector2.zero;
-            rect.offsetMax = Vector2.zero;
-            Image image = rect.GetComponent<Image>() ?? rect.gameObject.AddComponent<Image>();
-            image.color = color;
-            image.raycastTarget = false;
-            return rect;
-        }
     }
 }

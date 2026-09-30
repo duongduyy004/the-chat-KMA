@@ -56,6 +56,43 @@ MonoBehaviour:
     titleAngle: -8
     buttonSlantAngle: 12.094757
     pressScale: 0.96
+  splash:
+    contentSize: {x: 620, y: 640}
+    contentPadding: {x: 32, y: 96}
+    referenceResolution: {x: 1920, y: 1080}
+    badgeSize: 160
+    badgeY: 220
+    titleScale: 1.3
+    titleTopSize: {x: 540, y: 94}
+    titleKmaSize: {x: 540, y: 156}
+    titleTopY: 91
+    titleKmaY: -22
+    stripesY: -121
+    stripeSize: {x: 210, y: 3}
+    stripeStep: {x: 18, y: -8}
+    stripeShorten: 28
+    sloganY: -175
+    sloganSize: 26
+    sloganBox: {x: 600, y: 52}
+    sloganShadow: {x: 1, y: -2}
+    statusY: -237
+    statusSize: 22
+    statusHeight: 38
+    trackY: -275
+    trackSize: {x: 460, y: 20}
+    trackBorder: 2
+    trackOpacity: 0.65
+    overlayTopOpacity: 0.7
+    overlayBottomOpacity: 0.85
+    footerInset: {x: 32, y: 24}
+    footerSize: {x: 520, y: 40}
+    footerFontSize: 20
+    footerOpacity: 0.55
+    introDuration: 0.5
+    introSlide: 24
+    kmaStartScale: 0.9
+    exitDuration: 0.35
+    progressSmoothSeconds: 0.18
   motion:
     pressRestore: 0.1
     pressScale: 0.94
