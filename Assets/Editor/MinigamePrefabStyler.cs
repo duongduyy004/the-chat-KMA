@@ -165,7 +165,7 @@ namespace KMA.EditorTools
             TMP_Text error = EnsureLabel(content, "ErrorLabel", MinigameUiTheme.Caption, MinigameUiTheme.Energy, .17f, .23f);
             detail.gameObject.SetActive(false);
             lives.gameObject.SetActive(false);
-            error.text = string.Empty;
+            error.text = VietText.Fix(string.Empty);
 
             var action = content.Find("ActionButton").GetComponent<Button>();
             UiKit.StyleButton(action, ButtonVariant.Primary, "TIẾP TỤC");

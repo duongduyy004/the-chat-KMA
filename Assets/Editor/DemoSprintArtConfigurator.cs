@@ -302,13 +302,14 @@ namespace KMA.EditorTools
             var label = new GameObject("PlayerLabel");
             label.transform.SetParent(root.transform, false);
             label.transform.localPosition = new Vector3(0, 1.65f, 0);
-            var text = label.AddComponent<TextMesh>();
-            text.text = "PLAYER";
-            text.fontSize = 48;
-            text.characterSize = .065f;
-            text.anchor = TextAnchor.MiddleCenter;
+            var text = label.AddComponent<TMPro.TextMeshPro>();
+            text.text = VietText.Fix("PLAYER");
+            text.fontSize = 48 * .065f;
+            text.rectTransform.sizeDelta = new Vector2(2f, .6f);
+            text.alignment = TMPro.TextAlignmentOptions.Center;
             text.color = new Color32(255, 202, 58, 255);
-            label.GetComponent<MeshRenderer>().sortingOrder = 20;
+            KMA.Gameplay.UI.VietTypography.Apply(text, KMA.Gameplay.UI.VietFontRole.Hud);
+            text.sortingOrder = 20;
             PrefabUtility.SaveAsPrefabAsset(root, PlayerPrefab);
             UnityEngine.Object.DestroyImmediate(root);
         }

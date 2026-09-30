@@ -182,6 +182,7 @@ MonoBehaviour:
   musicGroup: {fileID: 24300004, guid: 30c9159be07e4660a9f6b5c67e1361df, type: 2}
   sfxGroup: {fileID: 24300006, guid: 30c9159be07e4660a9f6b5c67e1361df, type: 2}
   sfxSource: {fileID: 100005}
+  library: {fileID: 0}
 --- !u!114 &100004
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -404,8 +405,8 @@ MonoBehaviour:
       m_Calls: []
   m_text: "H\xC0NH TR\xCCNH R\xC8N LUY\u1EC6N TH\u1EC2 CH\u1EA4T"
   m_isRightToLeft: 0
-  m_fontAsset: {fileID: 11400000, guid: 24d8cd5b176c4854c93c574607ca7149, type: 2}
-  m_sharedMaterial: {fileID: -3440409880799864703, guid: 24d8cd5b176c4854c93c574607ca7149, type: 2}
+  m_fontAsset: {fileID: 11400000, guid: b35539ffcf6039a27afe5bd2a0ce072a, type: 2}
+  m_sharedMaterial: {fileID: 2100000, guid: b26e7c1b9e3ad6f13a6c61e0803c25f1, type: 2}
   m_fontSharedMaterials: []
   m_fontMaterial: {fileID: 0}
   m_fontMaterials: []
@@ -442,7 +443,7 @@ MonoBehaviour:
   m_characterSpacing: 3
   m_characterHorizontalScale: 1
   m_wordSpacing: 0
-  m_lineSpacing: 0
+  m_lineSpacing: 15
   m_lineSpacingMax: 0
   m_paragraphSpacing: 0
   m_charWidthMaxAdj: 0
@@ -453,7 +454,7 @@ MonoBehaviour:
   parentLinkedComponent: {fileID: 0}
   m_enableKerning: 0
   m_ActiveFontFeatures: 
-  m_enableExtraPadding: 0
+  m_enableExtraPadding: 1
   checkPaddingRequired: 0
   m_isRichText: 1
   m_EmojiFallbackSupport: 1
@@ -522,8 +523,8 @@ MonoBehaviour:
       m_Calls: []
   m_text: "\u0110ANG CHU\u1EA8N B\u1ECA..."
   m_isRightToLeft: 0
-  m_fontAsset: {fileID: 11400000, guid: 825d2fd02f90fde40975035766b806d9, type: 2}
-  m_sharedMaterial: {fileID: 1526163460992956435, guid: 825d2fd02f90fde40975035766b806d9, type: 2}
+  m_fontAsset: {fileID: 11400000, guid: b35539ffcf6039a27afe5bd2a0ce072a, type: 2}
+  m_sharedMaterial: {fileID: 2100000, guid: b26e7c1b9e3ad6f13a6c61e0803c25f1, type: 2}
   m_fontSharedMaterials: []
   m_fontMaterial: {fileID: 0}
   m_fontMaterials: []
@@ -560,7 +561,7 @@ MonoBehaviour:
   m_characterSpacing: 0
   m_characterHorizontalScale: 1
   m_wordSpacing: 0
-  m_lineSpacing: 0
+  m_lineSpacing: 15
   m_lineSpacingMax: 0
   m_paragraphSpacing: 0
   m_charWidthMaxAdj: 0
@@ -571,7 +572,7 @@ MonoBehaviour:
   parentLinkedComponent: {fileID: 0}
   m_enableKerning: 0
   m_ActiveFontFeatures: 
-  m_enableExtraPadding: 0
+  m_enableExtraPadding: 1
   checkPaddingRequired: 0
   m_isRichText: 1
   m_EmojiFallbackSupport: 1
@@ -785,7 +786,10 @@ MonoBehaviour:
   canvasGroup: {fileID: 764377314}
   loadingBar: {fileID: 558920030}
   statusText: {fileID: 363205282}
+  progressText: {fileID: 0}
+  loadingHintText: {fileID: 0}
   minimumIntroSeconds: 1.5
+  minimumIntroFrames: 30
 --- !u!114 &764377312
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1168,22 +1172,22 @@ MonoBehaviour:
       m_Calls: []
   m_text: "TH\u1EC2 CH\u1EA4T KMA"
   m_isRightToLeft: 0
-  m_fontAsset: {fileID: 11400000, guid: 825d2fd02f90fde40975035766b806d9, type: 2}
-  m_sharedMaterial: {fileID: 1526163460992956435, guid: 825d2fd02f90fde40975035766b806d9, type: 2}
+  m_fontAsset: {fileID: 11400000, guid: 3e65c36a8d957244285db1901ea34ff3, type: 2}
+  m_sharedMaterial: {fileID: 2100000, guid: 4e89de635520eef378cde06c140ada11, type: 2}
   m_fontSharedMaterials: []
   m_fontMaterial: {fileID: 0}
   m_fontMaterials: []
   m_fontColor32:
     serializedVersion: 2
     rgba: 4294967295
-  m_fontColor: {r: 1, g: 0.7921569, b: 0.22745098, a: 1}
-  m_enableVertexGradient: 0
+  m_fontColor: {r: 1, g: 1, b: 1, a: 1}
+  m_enableVertexGradient: 1
   m_colorMode: 3
   m_fontColorGradient:
-    topLeft: {r: 1, g: 1, b: 1, a: 1}
-    topRight: {r: 1, g: 1, b: 1, a: 1}
-    bottomLeft: {r: 1, g: 1, b: 1, a: 1}
-    bottomRight: {r: 1, g: 1, b: 1, a: 1}
+    topLeft: {r: 1, g: 0.8784314, b: 0.4, a: 1}
+    topRight: {r: 1, g: 0.8784314, b: 0.4, a: 1}
+    bottomLeft: {r: 1, g: 0.7058824, b: 0, a: 1}
+    bottomRight: {r: 1, g: 0.7058824, b: 0, a: 1}
   m_fontColorGradientPreset: {fileID: 0}
   m_spriteAsset: {fileID: 0}
   m_tintAllSprites: 0
@@ -1206,7 +1210,7 @@ MonoBehaviour:
   m_characterSpacing: 0
   m_characterHorizontalScale: 1
   m_wordSpacing: 0
-  m_lineSpacing: 0
+  m_lineSpacing: 15
   m_lineSpacingMax: 0
   m_paragraphSpacing: 0
   m_charWidthMaxAdj: 0
@@ -1217,7 +1221,7 @@ MonoBehaviour:
   parentLinkedComponent: {fileID: 0}
   m_enableKerning: 0
   m_ActiveFontFeatures: 
-  m_enableExtraPadding: 0
+  m_enableExtraPadding: 1
   checkPaddingRequired: 0
   m_isRichText: 1
   m_EmojiFallbackSupport: 1

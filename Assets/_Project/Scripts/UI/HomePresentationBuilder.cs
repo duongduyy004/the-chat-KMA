@@ -100,16 +100,9 @@ namespace KMA.Gameplay.UI
 
         static void StyleTitle(TMP_Text text)
         {
-            text.fontStyle = FontStyles.Bold | FontStyles.Italic;
-            text.enableVertexGradient = true;
-            text.colorGradient = new VertexGradient(HomeMenuStyle.GoldLight, HomeMenuStyle.GoldLight,
-                HomeMenuStyle.GoldDark, HomeMenuStyle.GoldDark);
-            text.outlineColor = HomeMenuStyle.Navy;
-            text.outlineWidth = .22f;
+            VietTypography.Apply(text, VietFontRole.Title);
+            text.fontStyle = FontStyles.Italic;
             text.rectTransform.localRotation = Quaternion.Euler(0f, 0f, -8f);
-            var shadow = text.gameObject.AddComponent<Shadow>();
-            shadow.effectColor = HomeMenuStyle.Navy;
-            shadow.effectDistance = new Vector2(0f, -4f);
         }
 
         static void Action(MainMenuScreen screen, RectTransform parent, string name,
@@ -133,10 +126,12 @@ namespace KMA.Gameplay.UI
             fill.sprite = SlantSprite(false);
             fill.raycastTarget = false;
             var label = UiKit.EnsureTmpLabel(rect, 22, HomeMenuStyle.White);
-            label.text = caption;
-            label.fontStyle = FontStyles.Bold;
+            label.text = VietText.Fix(caption);
+            label.fontStyle = FontStyles.Normal;
             label.alignment = TextAlignmentOptions.Left;
-            label.enableAutoSizing = false;
+            label.enableAutoSizing = true;
+            label.fontSizeMin = 18;
+            label.fontSizeMax = label.fontSize;
             Stretch(label.rectTransform, new Vector2(55f, 0f), new Vector2(-30f, 0f));
             label.transform.SetAsLastSibling();
             var iconRect = Rect(rect, "Icon");
@@ -167,7 +162,8 @@ namespace KMA.Gameplay.UI
         {
             var text = Rect(parent, name).gameObject.AddComponent<TextMeshProUGUI>();
             UiKit.StyleLabel(text, size, color);
-            text.text = value;
+            text.text = VietText.Fix(value);
+            VietTypography.Apply(text);
             text.alignment = TextAlignmentOptions.Center;
             text.textWrappingMode = TextWrappingModes.NoWrap;
             text.overflowMode = TextOverflowModes.Overflow;

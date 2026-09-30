@@ -73,9 +73,9 @@ namespace KMA.Gameplay.UI
             musicSlider.SetValueWithoutNotify(CurrentSettings.musicVol);
             sfxSlider.SetValueWithoutNotify(CurrentSettings.sfxVol);
             vibrationToggle.SetIsOnWithoutNotify(CurrentSettings.vibration);
-            musicValue.text = $"{Mathf.RoundToInt(CurrentSettings.musicVol * 100f)}%";
-            sfxValue.text = $"{Mathf.RoundToInt(CurrentSettings.sfxVol * 100f)}%";
-            vibrationValue.text = CurrentSettings.vibration ? "BẬT" : "TẮT";
+            musicValue.text = VietText.Fix($"{Mathf.RoundToInt(CurrentSettings.musicVol * 100f)}%");
+            sfxValue.text = VietText.Fix($"{Mathf.RoundToInt(CurrentSettings.sfxVol * 100f)}%");
+            vibrationValue.text = VietText.Fix(CurrentSettings.vibration ? "BẬT" : "TẮT");
         }
 
         static Settings Copy(Settings value) => new Settings

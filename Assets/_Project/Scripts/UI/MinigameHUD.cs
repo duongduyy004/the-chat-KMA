@@ -32,13 +32,13 @@ namespace KMA.Gameplay.UI
         {
             LastState = state;
             if (timeLabel != null)
-                timeLabel.text = Mathf.CeilToInt(Mathf.Max(0f, state.timeRemaining)).ToString();
+                timeLabel.text = VietText.Fix(Mathf.CeilToInt(Mathf.Max(0f, state.timeRemaining)).ToString());
             if (phaseLabel != null)
-                phaseLabel.text = state.phase ?? string.Empty;
+                phaseLabel.text = VietText.Fix(state.phase ?? string.Empty);
             if (scoreLabel != null)
-                scoreLabel.text = Mathf.RoundToInt(Mathf.Max(0f, state.score)).ToString();
+                scoreLabel.text = VietText.Fix(Mathf.RoundToInt(Mathf.Max(0f, state.score)).ToString());
             if (statusLabel != null)
-                statusLabel.text = state.statusText ?? string.Empty;
+                statusLabel.text = VietText.Fix(state.statusText ?? string.Empty);
             if (progressFill != null)
             {
                 progressFill.fillAmount = Mathf.Clamp01(state.progress01);

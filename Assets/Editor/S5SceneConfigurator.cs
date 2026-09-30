@@ -137,11 +137,12 @@ namespace KMA.EditorTools
             labelRect.anchorMax = Vector2.one;
             labelRect.offsetMin = Vector2.zero;
             labelRect.offsetMax = Vector2.zero;
-            var text = labelObject.AddComponent<Text>();
-            text.text = label;
-            text.alignment = TextAnchor.MiddleCenter;
+            var text = labelObject.AddComponent<TMPro.TextMeshProUGUI>();
+            text.text = VietText.Fix(label);
+            text.alignment = TMPro.TextAlignmentOptions.Center;
             text.fontSize = 28;
             text.color = Color.white;
+            KMA.Gameplay.UI.VietTypography.Apply(text, KMA.Gameplay.UI.VietFontRole.ButtonPrimary);
             return button;
         }
 

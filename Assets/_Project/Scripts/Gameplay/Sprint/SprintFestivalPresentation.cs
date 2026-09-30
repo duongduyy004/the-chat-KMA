@@ -1,5 +1,6 @@
 using KMA.UI.Kit;
 using TMPro;
+using KMA.Gameplay.UI;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -64,7 +65,7 @@ namespace KMA.Gameplay
             TMP_Text distance = Metric(scoreboard.transform, "Distance", MinigameUiTheme.Title,
                 MinigameUiTheme.TextPrimary, new Vector2(.05f, .46f), new Vector2(.62f, .92f));
             distance.alignment = TextAlignmentOptions.Left;
-            distance.text = "0 / 100 m";
+            distance.text = VietText.Fix("0 / 100 m");
 
             Image rankBadge = UiKit.Shape(scoreboard.transform, "RankBadge", MinigameUiTheme.RadiusPanel,
                 MinigameUiTheme.WithAlpha(MinigameUiTheme.Accent, .22f));
@@ -76,7 +77,7 @@ namespace KMA.Gameplay
             TMP_Text combo = Metric(scoreboard.transform, "Combo", MinigameUiTheme.Body,
                 MinigameUiTheme.Energy, new Vector2(.05f, .10f), new Vector2(.62f, .42f));
             combo.alignment = TextAlignmentOptions.Left;
-            combo.text = "COMBO ×0";
+            combo.text = VietText.Fix("COMBO ×0");
 
             // Mode chip
             ChipHandle mode = UiKit.Chip(root, "ModeLabel", "CHẠY NƯỚC RÚT · 100M");
@@ -318,15 +319,16 @@ namespace KMA.Gameplay
 
             var labelObject = new GameObject("Label");
             labelObject.transform.SetParent(marker, false);
-            var label = labelObject.AddComponent<TextMesh>();
-            label.text = "PLAYER";
-            label.fontSize = 48;
-            label.characterSize = .055f;
-            label.anchor = TextAnchor.MiddleCenter;
+            var label = labelObject.AddComponent<TextMeshPro>();
+            label.text = VietText.Fix("PLAYER");
+            label.fontSize = 48 * .055f;
+            label.rectTransform.sizeDelta = new Vector2(1.296f, .342f);
+            label.alignment = TextAlignmentOptions.Center;
             label.color = MinigameUiTheme.Player;
+            VietTypography.Apply(label, VietFontRole.Hud);
             var labelRenderer = labelObject.GetComponent<MeshRenderer>();
             if (labelRenderer != null)
-                labelRenderer.sortingOrder = 20;
+                label.sortingOrder = 20;
 
             var chevron = new GameObject("Chevron", typeof(SpriteRenderer)).transform;
             chevron.SetParent(marker, false);

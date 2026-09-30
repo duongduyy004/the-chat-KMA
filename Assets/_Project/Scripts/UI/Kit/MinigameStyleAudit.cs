@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
+using KMA.Gameplay.UI;
 
 namespace KMA.UI.Kit
 {
@@ -30,10 +31,11 @@ namespace KMA.UI.Kit
             foreach (TMP_Text text in root.GetComponentsInChildren<TMP_Text>(true))
             {
                 string path = PathOf(text.transform);
-                if (text.font != assets.Font)
-                    problems.Add($"{path}: font {(text.font == null ? "none" : text.font.name)} is not the kit font");
+                var fonts = VietTypography.Library;
+                if (fonts == null || !Array.Exists(new[] { fonts.title, fonts.buttonHud, fonts.regular, fonts.bold }, font => font == text.font))
+                    problems.Add($"{path}: font {(text.font == null ? "none" : text.font.name)} is not a KMA Vietnamese font");
                 float smallest = text.enableAutoSizing ? text.fontSizeMin : text.fontSize;
-                if (smallest < MinigameUiTheme.MinimumFontSize)
+                if (text is TextMeshProUGUI && smallest < MinigameUiTheme.MinimumFontSize)
                     problems.Add($"{path}: text size {smallest} is below {MinigameUiTheme.MinimumFontSize}");
                 if (!IsToken(text.color))
                     problems.Add($"{path}: text colour #{ColorUtility.ToHtmlStringRGBA(text.color)} is not a theme token");

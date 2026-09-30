@@ -46,7 +46,14 @@ namespace KMA.Gameplay.UI
             primary = value;
             if (labels != null)
                 foreach (var label in labels)
+                {
                     label.fontSize = primary ? 23f : 22f;
+                    if (label.enableAutoSizing)
+                    {
+                        label.fontSizeMax = label.fontSize;
+                        label.fontSizeMin = Mathf.Min(label.fontSizeMin, 18f);
+                    }
+                }
             Apply();
         }
 

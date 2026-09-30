@@ -42,9 +42,9 @@ namespace KMA.Gameplay
             CadenceText = $"COMBO ×{controller.CadenceCombo}";
             PipProgress = progress;
 
-            if (distanceLabel != null) distanceLabel.text = DistanceText;
-            if (rankLabel != null) rankLabel.text = RankText;
-            if (cadenceLabel != null) cadenceLabel.text = CadenceText;
+            if (distanceLabel != null) distanceLabel.text = VietText.Fix(DistanceText);
+            if (rankLabel != null) rankLabel.text = VietText.Fix(RankText);
+            if (cadenceLabel != null) cadenceLabel.text = VietText.Fix(CadenceText);
             if (distanceBar != null) distanceBar.SetValue(progress);
         }
 

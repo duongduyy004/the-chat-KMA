@@ -24,7 +24,7 @@ namespace KMA.Gameplay.Volleyball
             feedbackLabel = feedback;
             hintLabel = hint;
             if (hintLabel)
-                hintLabel.text = HintText;
+                hintLabel.text = VietText.Fix(HintText);
             if (feedbackLabel)
                 feedbackLabel.enabled = false;
         }
@@ -47,7 +47,7 @@ namespace KMA.Gameplay.Volleyball
             if (!decision.IsTimed || !feedbackLabel)
                 return;
 
-            feedbackLabel.text = FeedbackText(decision.Grade, decision.Offset);
+            feedbackLabel.text = VietText.Fix(FeedbackText(decision.Grade, decision.Offset));
             feedbackLabel.enabled = true;
             feedbackLeft = FeedbackSeconds;
         }
@@ -56,7 +56,7 @@ namespace KMA.Gameplay.Volleyball
         {
             if (!feedbackLabel)
                 return;
-            feedbackLabel.text = winner == CourtSide.Player ? "GHI ĐIỂM!" : "ĐỐI THỦ GHI ĐIỂM";
+            feedbackLabel.text = VietText.Fix(winner == CourtSide.Player ? "GHI ĐIỂM!" : "ĐỐI THỦ GHI ĐIỂM");
             feedbackLabel.enabled = true;
             feedbackLeft = 1.15f;
         }
@@ -64,7 +64,7 @@ namespace KMA.Gameplay.Volleyball
         public void Render(VolleyballMatch match, MinigamePhase phase, float deltaTime)
         {
             if (match != null && scoreLabel)
-                scoreLabel.text = ScoreText(match.PlayerPoints, match.OpponentPoints);
+                scoreLabel.text = VietText.Fix(ScoreText(match.PlayerPoints, match.OpponentPoints));
             if (phase != previousPhase)
             {
                 if (phase == MinigamePhase.Play)
@@ -73,7 +73,7 @@ namespace KMA.Gameplay.Volleyball
             }
             if (hintLabel)
             {
-                hintLabel.text = HintText;
+                hintLabel.text = VietText.Fix(HintText);
                 hintLabel.enabled = phase == MinigamePhase.Play && hintLeft > 0f;
                 if (hintBackdrop)
                     hintBackdrop.SetActive(hintLabel.enabled);

@@ -103,7 +103,7 @@ namespace KMA.Gameplay.UI
             if (loadingBar != null)
                 loadingBar.value = value;
             if (progressText != null)
-                progressText.text = $"{Mathf.RoundToInt(value * 100f)}%";
+                progressText.text = VietText.Fix($"{Mathf.RoundToInt(value * 100f)}%");
             if (value >= 0.99f)
                 DisableBootstrapEventSystem();
         }
@@ -188,7 +188,7 @@ namespace KMA.Gameplay.UI
         void SetStatus(string value)
         {
             if (statusText != null)
-                statusText.text = value;
+                statusText.text = VietText.Fix(value);
         }
 
         void DisableBootstrapEventSystem()
@@ -216,10 +216,6 @@ namespace KMA.Gameplay.UI
                 "ĐANG KHỞI ĐỘNG NGÀY HỘI THỂ THAO", font,
                 new Vector2(.22f, .245f), new Vector2(.78f, .30f), 24f,
                 new Color32(255, 249, 231, 255), TextAlignmentOptions.Center);
-            Shadow hintShadow = loadingHintText.GetComponent<Shadow>() ??
-                loadingHintText.gameObject.AddComponent<Shadow>();
-            hintShadow.effectColor = new Color(0f, 0f, 0f, .8f);
-            hintShadow.effectDistance = new Vector2(2f, -2f);
         }
 
         TMP_Text ResolveOrCreateText(string objectName, string value, TMP_FontAsset font,
@@ -240,10 +236,11 @@ namespace KMA.Gameplay.UI
                 rect.offsetMax = Vector2.zero;
                 text = root.AddComponent<TextMeshProUGUI>();
             }
-            text.text = value;
+            text.text = VietText.Fix(value);
             text.font = font;
             text.fontSize = size;
             text.fontStyle = FontStyles.Bold;
+            VietTypography.Apply(text);
             text.color = color;
             text.alignment = alignment;
             text.raycastTarget = false;

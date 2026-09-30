@@ -19,7 +19,7 @@ namespace KMA.EditorTools
         const string MenuScenePath = "Assets/_Project/Scenes/Menu.unity";
         const string LogoPath = "Assets/_Project/Art/Brand/GameLogo.png";
         const string IllustrationPath = "Assets/_Project/Art/UI/HomeIllustration.png";
-        const string HeadingFontPath = "Assets/_Project/Fonts/Baloo2-ExtraBold.asset";
+        const string HeadingFontPath = "Assets/Fonts/TMP/SairaCondensed-Black.asset";
 
         static readonly Color Navy = new Color32(9, 35, 64, 255);
         static readonly Color Blue = new Color32(25, 130, 196, 255);
@@ -176,7 +176,7 @@ namespace KMA.EditorTools
 
             TMP_Text text = KMA.UI.Kit.UiKit.EnsureTmpLabel(buttonObject.transform, 30f,
                 objectName == "NEW GAMEButton" ? Navy : Color.white);
-            text.text = label;
+            text.text = VietText.Fix(label);
         }
 
         static Slider CreateLoadingBar(Transform parent)
@@ -220,10 +220,11 @@ namespace KMA.EditorTools
             gameObject.transform.SetParent(parent, false);
             Apply(gameObject.GetComponent<RectTransform>(), layout);
             TextMeshProUGUI text = gameObject.GetComponent<TextMeshProUGUI>();
-            text.text = value;
+            text.text = VietText.Fix(value);
             text.fontSize = size;
             text.font = font;
             text.color = color;
+            KMA.Gameplay.UI.VietTypography.Apply(text);
             text.alignment = TextAlignmentOptions.Center;
             text.raycastTarget = false;
             return text;

@@ -30,7 +30,7 @@ namespace KMA.Gameplay.UI
             if (entry == null)
                 return null;
 
-            entry.text = value;
+            entry.text = VietText.Fix(value);
             entry.rectTransform.anchoredPosition = anchoredPosition;
             entry.gameObject.SetActive(true);
             StartCoroutine(ReleaseAfter(entry, duration));

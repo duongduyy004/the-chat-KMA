@@ -81,7 +81,7 @@ namespace KMA.Gameplay
                 instructionRoot.GetComponent<CanvasGroup>() ?? instructionRoot.AddComponent<CanvasGroup>();
 
             if (instructionLabel != null)
-                instructionLabel.text = InstructionCopy;
+                instructionLabel.text = VietText.Fix(InstructionCopy);
             SetActive(countdownRoot, false);
         }
 
@@ -154,7 +154,7 @@ namespace KMA.Gameplay
                 if (goRemaining <= 0f)
                 {
                     if (countdownLabel != null)
-                        countdownLabel.text = string.Empty;
+                        countdownLabel.text = VietText.Fix(string.Empty);
                     SetActive(countdownRoot, false);
                 }
             }
@@ -186,7 +186,7 @@ namespace KMA.Gameplay
             if (phase == MinigamePhase.Play)
             {
                 if (countdownLabel != null)
-                    countdownLabel.text = "GO!";
+                    countdownLabel.text = VietText.Fix("GO!");
                 SetActive(countdownRoot, true);
                 goRemaining = GoDuration;
                 Pop(GoPopScale, GoPopDuration);
@@ -210,7 +210,7 @@ namespace KMA.Gameplay
 
             lastDigit = digit;
             if (countdownLabel != null)
-                countdownLabel.text = digit;
+                countdownLabel.text = VietText.Fix(digit);
             Pop(DigitPopScale, DigitPopDuration);
         }
 

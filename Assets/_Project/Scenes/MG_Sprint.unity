@@ -241,8 +241,7 @@ MonoBehaviour:
   distanceLabel: {fileID: 0}
   rankLabel: {fileID: 0}
   cadenceLabel: {fileID: 0}
-  distanceFill: {fileID: 0}
-  playerPip: {fileID: 0}
+  distanceBar: {fileID: 0}
 --- !u!114 &410001
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1315,7 +1314,7 @@ PrefabInstance:
     - target: {fileID: 25550418821537793, guid: 6a27ebbd3993f2763bf5abf89d2a3a7f, type: 3}
       propertyPath: m_sharedMaterial
       value: 
-      objectReference: {fileID: -3440409880799864703, guid: 24d8cd5b176c4854c93c574607ca7149, type: 2}
+      objectReference: {fileID: 8493382299003494270, guid: 95213cac9f3ffc914a83cd6ef9d38c49, type: 2}
     - target: {fileID: 1826129031935093688, guid: 6a27ebbd3993f2763bf5abf89d2a3a7f, type: 3}
       propertyPath: m_Pivot.x
       value: 0
@@ -1411,15 +1410,15 @@ PrefabInstance:
     - target: {fileID: 4329482365222914647, guid: 6a27ebbd3993f2763bf5abf89d2a3a7f, type: 3}
       propertyPath: m_sharedMaterial
       value: 
-      objectReference: {fileID: -3440409880799864703, guid: 24d8cd5b176c4854c93c574607ca7149, type: 2}
+      objectReference: {fileID: 2100000, guid: b15b201b3261465dc84fd26a46195ecb, type: 2}
     - target: {fileID: 4912840247775062589, guid: 6a27ebbd3993f2763bf5abf89d2a3a7f, type: 3}
       propertyPath: m_sharedMaterial
       value: 
-      objectReference: {fileID: -3440409880799864703, guid: 24d8cd5b176c4854c93c574607ca7149, type: 2}
+      objectReference: {fileID: 2100000, guid: b15b201b3261465dc84fd26a46195ecb, type: 2}
     - target: {fileID: 4976699079501136664, guid: 6a27ebbd3993f2763bf5abf89d2a3a7f, type: 3}
       propertyPath: m_sharedMaterial
       value: 
-      objectReference: {fileID: 8988279213809304970, guid: 825d2fd02f90fde40975035766b806d9, type: 2}
+      objectReference: {fileID: 8493382299003494270, guid: 95213cac9f3ffc914a83cd6ef9d38c49, type: 2}
     - target: {fileID: 6793395409915483302, guid: 6a27ebbd3993f2763bf5abf89d2a3a7f, type: 3}
       propertyPath: m_Camera
       value: 
@@ -2108,7 +2107,10 @@ PrefabInstance:
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
-    m_AddedComponents: []
+    m_AddedComponents:
+    - targetCorrespondingSourceObject: {fileID: 5142124896034343897, guid: 949538dcd5f268daaa59930a442ff0d1, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 0}
   m_SourcePrefab: {fileID: 100100000, guid: 949538dcd5f268daaa59930a442ff0d1, type: 3}
 --- !u!4 &1665811614 stripped
 Transform:

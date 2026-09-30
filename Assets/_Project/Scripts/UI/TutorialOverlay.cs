@@ -128,11 +128,11 @@ namespace KMA.Gameplay.UI
 
             var step = CurrentStep;
             if (titleLabel != null)
-                titleLabel.text = step?.Title ?? string.Empty;
+                titleLabel.text = VietText.Fix(step?.Title ?? string.Empty);
             if (instructionLabel != null)
-                instructionLabel.text = step?.Instruction ?? string.Empty;
+                instructionLabel.text = VietText.Fix(step?.Instruction ?? string.Empty);
             if (stepLabel != null)
-                stepLabel.text = ShouldShow ? $"{CurrentIndex + 1} / {steps.Count}" : string.Empty;
+                stepLabel.text = VietText.Fix(ShouldShow ? $"{CurrentIndex + 1} / {steps.Count}" : string.Empty);
             if (iconImage != null)
             {
                 iconImage.sprite = step?.Icon;

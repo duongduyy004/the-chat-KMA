@@ -78,7 +78,7 @@ namespace KMA.Gameplay.UI
         {
             if (detailLabel == null)
                 return;
-            detailLabel.text = text ?? string.Empty;
+            detailLabel.text = VietText.Fix(text ?? string.Empty);
             detailLabel.gameObject.SetActive(!string.IsNullOrEmpty(text));
         }
 
@@ -102,20 +102,20 @@ namespace KMA.Gameplay.UI
             if (contentRoot != null)
                 contentRoot.SetActive(true);
             if (errorLabel != null)
-                errorLabel.text = string.Empty;
+                errorLabel.text = VietText.Fix(string.Empty);
             if (statusLabel != null)
             {
-                statusLabel.text = result.Pass ? successTitle : failureTitle;
+                statusLabel.text = VietText.Fix(result.Pass ? successTitle : failureTitle);
                 statusLabel.color = result.Pass ? MinigameUiTheme.Success : MinigameUiTheme.Energy;
             }
             finalScoreText = Mathf.RoundToInt(result.Score).ToString();
             if (scoreLabel != null)
-                scoreLabel.text = finalScoreText;
+                scoreLabel.text = VietText.Fix(finalScoreText);
             if (rankLabel != null)
-                rankLabel.text = $"XẾP HẠNG {result.Rank}";
+                rankLabel.text = VietText.Fix($"XẾP HẠNG {result.Rank}");
             if (livesLabel != null)
             {
-                livesLabel.text = $"CÒN {remainingLives} MẠNG";
+                livesLabel.text = VietText.Fix($"CÒN {remainingLives} MẠNG");
                 livesLabel.gameObject.SetActive(retryConfigured);
             }
             SetButtonLabel(actionButton, "TIẾP TỤC");
@@ -146,7 +146,7 @@ namespace KMA.Gameplay.UI
         {
             actionPending = pending;
             if (errorLabel != null)
-                errorLabel.text = error ?? string.Empty;
+                errorLabel.text = VietText.Fix(error ?? string.Empty);
             if (!pending)
                 HasContinued = false;
             RefreshButtons();
@@ -205,7 +205,7 @@ namespace KMA.Gameplay.UI
                 return;
             TMP_Text label = button.GetComponentInChildren<TMP_Text>(true);
             if (label != null)
-                label.text = value;
+                label.text = VietText.Fix(value);
         }
 
         void Reveal(float finalScore)
@@ -236,7 +236,7 @@ namespace KMA.Gameplay.UI
                 Color c = statusLabel.color;
                 statusLabel.color = new Color(c.r, c.g, c.b, 0f);
             }
-            if (scoreLabel != null) scoreLabel.text = "0";
+            if (scoreLabel != null) scoreLabel.text = VietText.Fix("0");
             if (rankLabel != null) rankLabel.rectTransform.localScale = Vector3.one * .6f;
         }
 
@@ -260,7 +260,7 @@ namespace KMA.Gameplay.UI
                 contentRoot.transform.localScale = Vector3.one;
             }
             if (rankLabel != null) rankLabel.rectTransform.localScale = Vector3.one;
-            if (scoreLabel != null) scoreLabel.text = finalScoreText;
+            if (scoreLabel != null) scoreLabel.text = VietText.Fix(finalScoreText);
         }
 
         IEnumerator AnimateReveal(float finalScore)
@@ -332,10 +332,10 @@ namespace KMA.Gameplay.UI
             {
                 elapsed += Time.unscaledDeltaTime;
                 float t = Mathf.Clamp01(elapsed / ScoreDuration);
-                scoreLabel.text = Mathf.RoundToInt(Mathf.Lerp(0f, finalScore, t)).ToString();
+                scoreLabel.text = VietText.Fix(Mathf.RoundToInt(Mathf.Lerp(0f, finalScore, t)).ToString());
                 yield return null;
             }
-            scoreLabel.text = finalScoreText;
+            scoreLabel.text = VietText.Fix(finalScoreText);
         }
 
         IEnumerator PopRank()

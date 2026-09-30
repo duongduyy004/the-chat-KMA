@@ -121,7 +121,8 @@ namespace KMA.UI.Kit
             var label = Rect(parent, name).gameObject.AddComponent<TextMeshProUGUI>();
             StyleLabel(label, size, color, outline);
             label.alignment = alignment;
-            label.text = text;
+            label.text = VietText.Fix(text);
+            VietTypography.Apply(label);
             return label;
         }
 
@@ -134,6 +135,7 @@ namespace KMA.UI.Kit
             label.fontSize = Mathf.Max(size, MinigameUiTheme.MinimumFontSize);
             label.color = color;
             label.raycastTarget = false;
+            VietTypography.Apply(label);
         }
 
         /// Returns the TMP label under root. A scene-authored legacy Text is replaced by a stretched
@@ -210,7 +212,7 @@ namespace KMA.UI.Kit
                 FitLabel(label, MinigameUiTheme.Body);
                 label.alignment = TextAlignmentOptions.Center;
                 if (text != null)
-                    label.text = text;
+                    label.text = VietText.Fix(text);
             }
 
             var feedback = GetOrAdd<KitPressFeedback>(root);
@@ -230,7 +232,11 @@ namespace KMA.UI.Kit
             if (handle.Fill != null)
                 handle.Fill.gameObject.SetActive(variant == ButtonVariant.Secondary);
             if (handle.Label != null)
+            {
                 handle.Label.color = variant == ButtonVariant.Secondary ? MinigameUiTheme.TextPrimary : MinigameUiTheme.Surface;
+                VietTypography.Apply(handle.Label, variant == ButtonVariant.Secondary
+                    ? VietFontRole.ButtonSecondary : VietFontRole.ButtonPrimary);
+            }
         }
 
         /// The parts StyleButton added, for callers that switch a button's variant later.
@@ -258,6 +264,7 @@ namespace KMA.UI.Kit
             Image face = Disc(root, "Face", false, MinigameUiTheme.Accent);
             Stretch(face.rectTransform, Vector2.one * inset, -Vector2.one * inset);
             TMP_Text label = Label(face.transform, "Label", text, MinigameUiTheme.Headline, MinigameUiTheme.Surface);
+            VietTypography.Apply(label, VietFontRole.ButtonPrimary);
             Stretch(label.rectTransform);
             FitLabel(label, MinigameUiTheme.Headline);
 
@@ -277,6 +284,8 @@ namespace KMA.UI.Kit
             TMP_Text arrowLabel = Label(visual, "Arrow", arrow, MinigameUiTheme.BodyLarge * 1.6f, MinigameUiTheme.TextPrimary);
             Anchor(arrowLabel.rectTransform, new Vector2(.1f, .44f), new Vector2(.9f, .88f));
             TMP_Text label = Label(visual, "Label", text, MinigameUiTheme.BodyLarge, MinigameUiTheme.TextPrimary);
+            VietTypography.Apply(label, VietFontRole.ButtonSecondary);
+            FitLabel(label, MinigameUiTheme.BodyLarge);
             Anchor(label.rectTransform, new Vector2(.1f, .12f), new Vector2(.9f, .46f));
             return new ControlPlateHandle(visual, border, background, arrowLabel, label);
         }
@@ -306,6 +315,7 @@ namespace KMA.UI.Kit
             {
                 text = Label(track.transform, "Label", "0%", MinigameUiTheme.Caption, MinigameUiTheme.TextPrimary,
                     TextAlignmentOptions.Center, outline: true);
+                VietTypography.Apply(text, VietFontRole.Hud);
                 Stretch(text.rectTransform);
             }
 

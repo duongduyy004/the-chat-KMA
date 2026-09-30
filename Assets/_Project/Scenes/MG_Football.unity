@@ -493,8 +493,8 @@ MonoBehaviour:
       m_Calls: []
   m_text: "B\xC0N: 0"
   m_isRightToLeft: 0
-  m_fontAsset: {fileID: 11400000, guid: 825d2fd02f90fde40975035766b806d9, type: 2}
-  m_sharedMaterial: {fileID: 1526163460992956435, guid: 825d2fd02f90fde40975035766b806d9, type: 2}
+  m_fontAsset: {fileID: 11400000, guid: 95213cac9f3ffc914a83cd6ef9d38c49, type: 2}
+  m_sharedMaterial: {fileID: 8493382299003494270, guid: 95213cac9f3ffc914a83cd6ef9d38c49, type: 2}
   m_fontSharedMaterials: []
   m_fontMaterial: {fileID: 0}
   m_fontMaterials: []
@@ -524,14 +524,14 @@ MonoBehaviour:
   m_enableAutoSizing: 0
   m_fontSizeMin: 28
   m_fontSizeMax: 32
-  m_fontStyle: 1
+  m_fontStyle: 0
   m_HorizontalAlignment: 2
   m_VerticalAlignment: 512
   m_textAlignment: 65535
   m_characterSpacing: 0
   m_characterHorizontalScale: 1
   m_wordSpacing: 0
-  m_lineSpacing: 0
+  m_lineSpacing: 15
   m_lineSpacingMax: 0
   m_paragraphSpacing: 0
   m_charWidthMaxAdj: 0
@@ -542,7 +542,7 @@ MonoBehaviour:
   parentLinkedComponent: {fileID: 0}
   m_enableKerning: 0
   m_ActiveFontFeatures: 
-  m_enableExtraPadding: 0
+  m_enableExtraPadding: 1
   checkPaddingRequired: 0
   m_isRichText: 1
   m_EmojiFallbackSupport: 1
@@ -903,8 +903,8 @@ MonoBehaviour:
       m_Calls: []
   m_text: "C\xD2N 5 L\u01AF\u1EE2T"
   m_isRightToLeft: 0
-  m_fontAsset: {fileID: 11400000, guid: 825d2fd02f90fde40975035766b806d9, type: 2}
-  m_sharedMaterial: {fileID: 1526163460992956435, guid: 825d2fd02f90fde40975035766b806d9, type: 2}
+  m_fontAsset: {fileID: 11400000, guid: 95213cac9f3ffc914a83cd6ef9d38c49, type: 2}
+  m_sharedMaterial: {fileID: 8493382299003494270, guid: 95213cac9f3ffc914a83cd6ef9d38c49, type: 2}
   m_fontSharedMaterials: []
   m_fontMaterial: {fileID: 0}
   m_fontMaterials: []
@@ -934,14 +934,14 @@ MonoBehaviour:
   m_enableAutoSizing: 1
   m_fontSizeMin: 28
   m_fontSizeMax: 32
-  m_fontStyle: 1
+  m_fontStyle: 0
   m_HorizontalAlignment: 2
   m_VerticalAlignment: 512
   m_textAlignment: 65535
   m_characterSpacing: 0
   m_characterHorizontalScale: 1
   m_wordSpacing: 0
-  m_lineSpacing: 0
+  m_lineSpacing: 15
   m_lineSpacingMax: 0
   m_paragraphSpacing: 0
   m_charWidthMaxAdj: 0
@@ -952,7 +952,7 @@ MonoBehaviour:
   parentLinkedComponent: {fileID: 0}
   m_enableKerning: 0
   m_ActiveFontFeatures: 
-  m_enableExtraPadding: 0
+  m_enableExtraPadding: 1
   checkPaddingRequired: 0
   m_isRichText: 1
   m_EmojiFallbackSupport: 1
@@ -1402,8 +1402,8 @@ MonoBehaviour:
       m_Calls: []
   m_text: "PH\u1EA2I 55%"
   m_isRightToLeft: 0
-  m_fontAsset: {fileID: 11400000, guid: 825d2fd02f90fde40975035766b806d9, type: 2}
-  m_sharedMaterial: {fileID: 1526163460992956435, guid: 825d2fd02f90fde40975035766b806d9, type: 2}
+  m_fontAsset: {fileID: 11400000, guid: e2fb29186b981b74191bedd015960b0f, type: 2}
+  m_sharedMaterial: {fileID: 2100000, guid: b15b201b3261465dc84fd26a46195ecb, type: 2}
   m_fontSharedMaterials: []
   m_fontMaterial: {fileID: 0}
   m_fontMaterials: []
@@ -1433,14 +1433,14 @@ MonoBehaviour:
   m_enableAutoSizing: 0
   m_fontSizeMin: 0
   m_fontSizeMax: 0
-  m_fontStyle: 1
+  m_fontStyle: 0
   m_HorizontalAlignment: 4
   m_VerticalAlignment: 512
   m_textAlignment: 65535
   m_characterSpacing: 0
   m_characterHorizontalScale: 1
   m_wordSpacing: 0
-  m_lineSpacing: 0
+  m_lineSpacing: 15
   m_lineSpacingMax: 0
   m_paragraphSpacing: 0
   m_charWidthMaxAdj: 0
@@ -1451,7 +1451,7 @@ MonoBehaviour:
   parentLinkedComponent: {fileID: 0}
   m_enableKerning: 0
   m_ActiveFontFeatures: 
-  m_enableExtraPadding: 0
+  m_enableExtraPadding: 1
   checkPaddingRequired: 0
   m_isRichText: 1
   m_EmojiFallbackSupport: 1
@@ -2952,8 +2952,8 @@ MonoBehaviour:
       m_Calls: []
   m_text: "\u0110\u1ED8 KH\xD3"
   m_isRightToLeft: 0
-  m_fontAsset: {fileID: 11400000, guid: 825d2fd02f90fde40975035766b806d9, type: 2}
-  m_sharedMaterial: {fileID: 1526163460992956435, guid: 825d2fd02f90fde40975035766b806d9, type: 2}
+  m_fontAsset: {fileID: 11400000, guid: e2fb29186b981b74191bedd015960b0f, type: 2}
+  m_sharedMaterial: {fileID: 2100000, guid: b15b201b3261465dc84fd26a46195ecb, type: 2}
   m_fontSharedMaterials: []
   m_fontMaterial: {fileID: 0}
   m_fontMaterials: []
@@ -2983,14 +2983,14 @@ MonoBehaviour:
   m_enableAutoSizing: 0
   m_fontSizeMin: 0
   m_fontSizeMax: 0
-  m_fontStyle: 1
+  m_fontStyle: 0
   m_HorizontalAlignment: 2
   m_VerticalAlignment: 512
   m_textAlignment: 65535
   m_characterSpacing: 0
   m_characterHorizontalScale: 1
   m_wordSpacing: 0
-  m_lineSpacing: 0
+  m_lineSpacing: 15
   m_lineSpacingMax: 0
   m_paragraphSpacing: 0
   m_charWidthMaxAdj: 0
@@ -3001,7 +3001,7 @@ MonoBehaviour:
   parentLinkedComponent: {fileID: 0}
   m_enableKerning: 0
   m_ActiveFontFeatures: 
-  m_enableExtraPadding: 0
+  m_enableExtraPadding: 1
   checkPaddingRequired: 0
   m_isRichText: 1
   m_EmojiFallbackSupport: 1
@@ -4534,8 +4534,8 @@ MonoBehaviour:
   m_text: "K\xE9o ch\u1ECDn h\u01B0\u1EDBng \xB7 Gi\u1EEF S\xDAT \u0111\u1EC3 xem
     \u0111\u01B0\u1EDDng bay"
   m_isRightToLeft: 0
-  m_fontAsset: {fileID: 11400000, guid: 825d2fd02f90fde40975035766b806d9, type: 2}
-  m_sharedMaterial: {fileID: 1526163460992956435, guid: 825d2fd02f90fde40975035766b806d9, type: 2}
+  m_fontAsset: {fileID: 11400000, guid: e2fb29186b981b74191bedd015960b0f, type: 2}
+  m_sharedMaterial: {fileID: 2100000, guid: b15b201b3261465dc84fd26a46195ecb, type: 2}
   m_fontSharedMaterials: []
   m_fontMaterial: {fileID: 0}
   m_fontMaterials: []
@@ -4565,14 +4565,14 @@ MonoBehaviour:
   m_enableAutoSizing: 1
   m_fontSizeMin: 28
   m_fontSizeMax: 28
-  m_fontStyle: 1
+  m_fontStyle: 0
   m_HorizontalAlignment: 2
   m_VerticalAlignment: 512
   m_textAlignment: 65535
   m_characterSpacing: 0
   m_characterHorizontalScale: 1
   m_wordSpacing: 0
-  m_lineSpacing: 0
+  m_lineSpacing: 15
   m_lineSpacingMax: 0
   m_paragraphSpacing: 0
   m_charWidthMaxAdj: 0
@@ -4583,7 +4583,7 @@ MonoBehaviour:
   parentLinkedComponent: {fileID: 0}
   m_enableKerning: 0
   m_ActiveFontFeatures: 
-  m_enableExtraPadding: 0
+  m_enableExtraPadding: 1
   checkPaddingRequired: 0
   m_isRichText: 1
   m_EmojiFallbackSupport: 1
@@ -5157,8 +5157,8 @@ MonoBehaviour:
       m_Calls: []
   m_text: "LO\u1EA0T S\xDAT LU\xC2N L\u01AFU"
   m_isRightToLeft: 0
-  m_fontAsset: {fileID: 11400000, guid: 825d2fd02f90fde40975035766b806d9, type: 2}
-  m_sharedMaterial: {fileID: 1526163460992956435, guid: 825d2fd02f90fde40975035766b806d9, type: 2}
+  m_fontAsset: {fileID: 11400000, guid: e2fb29186b981b74191bedd015960b0f, type: 2}
+  m_sharedMaterial: {fileID: 2100000, guid: b15b201b3261465dc84fd26a46195ecb, type: 2}
   m_fontSharedMaterials: []
   m_fontMaterial: {fileID: 0}
   m_fontMaterials: []
@@ -5188,14 +5188,14 @@ MonoBehaviour:
   m_enableAutoSizing: 0
   m_fontSizeMin: 0
   m_fontSizeMax: 0
-  m_fontStyle: 1
+  m_fontStyle: 0
   m_HorizontalAlignment: 2
   m_VerticalAlignment: 512
   m_textAlignment: 65535
   m_characterSpacing: 0
   m_characterHorizontalScale: 1
   m_wordSpacing: 0
-  m_lineSpacing: 0
+  m_lineSpacing: 15
   m_lineSpacingMax: 0
   m_paragraphSpacing: 0
   m_charWidthMaxAdj: 0
@@ -5206,7 +5206,7 @@ MonoBehaviour:
   parentLinkedComponent: {fileID: 0}
   m_enableKerning: 0
   m_ActiveFontFeatures: 
-  m_enableExtraPadding: 0
+  m_enableExtraPadding: 1
   checkPaddingRequired: 0
   m_isRichText: 1
   m_EmojiFallbackSupport: 1
@@ -7833,8 +7833,8 @@ MonoBehaviour:
       m_Calls: []
   m_text: "B\u1EAET \u0110\u1EA6U"
   m_isRightToLeft: 0
-  m_fontAsset: {fileID: 11400000, guid: 825d2fd02f90fde40975035766b806d9, type: 2}
-  m_sharedMaterial: {fileID: 1526163460992956435, guid: 825d2fd02f90fde40975035766b806d9, type: 2}
+  m_fontAsset: {fileID: 11400000, guid: 95213cac9f3ffc914a83cd6ef9d38c49, type: 2}
+  m_sharedMaterial: {fileID: 2100000, guid: ca4d9f9d1239df33db51812561e75715, type: 2}
   m_fontSharedMaterials: []
   m_fontMaterial: {fileID: 0}
   m_fontMaterials: []
@@ -7864,14 +7864,14 @@ MonoBehaviour:
   m_enableAutoSizing: 1
   m_fontSizeMin: 28
   m_fontSizeMax: 32
-  m_fontStyle: 1
+  m_fontStyle: 0
   m_HorizontalAlignment: 2
   m_VerticalAlignment: 512
   m_textAlignment: 65535
   m_characterSpacing: 0
   m_characterHorizontalScale: 1
   m_wordSpacing: 0
-  m_lineSpacing: 0
+  m_lineSpacing: 15
   m_lineSpacingMax: 0
   m_paragraphSpacing: 0
   m_charWidthMaxAdj: 0
@@ -7882,7 +7882,7 @@ MonoBehaviour:
   parentLinkedComponent: {fileID: 0}
   m_enableKerning: 0
   m_ActiveFontFeatures: 
-  m_enableExtraPadding: 0
+  m_enableExtraPadding: 1
   checkPaddingRequired: 0
   m_isRichText: 1
   m_EmojiFallbackSupport: 1
@@ -7978,8 +7978,8 @@ MonoBehaviour:
       m_Calls: []
   m_text: 
   m_isRightToLeft: 0
-  m_fontAsset: {fileID: 11400000, guid: 825d2fd02f90fde40975035766b806d9, type: 2}
-  m_sharedMaterial: {fileID: 2100000, guid: f3db4900ab89ca666a7d41dd02c66f34, type: 2}
+  m_fontAsset: {fileID: 11400000, guid: e2fb29186b981b74191bedd015960b0f, type: 2}
+  m_sharedMaterial: {fileID: 2100000, guid: b15b201b3261465dc84fd26a46195ecb, type: 2}
   m_fontSharedMaterials: []
   m_fontMaterial: {fileID: 0}
   m_fontMaterials: []
@@ -8009,14 +8009,14 @@ MonoBehaviour:
   m_enableAutoSizing: 0
   m_fontSizeMin: 0
   m_fontSizeMax: 0
-  m_fontStyle: 1
+  m_fontStyle: 0
   m_HorizontalAlignment: 2
   m_VerticalAlignment: 512
   m_textAlignment: 65535
   m_characterSpacing: 0
   m_characterHorizontalScale: 1
   m_wordSpacing: 0
-  m_lineSpacing: 0
+  m_lineSpacing: 15
   m_lineSpacingMax: 0
   m_paragraphSpacing: 0
   m_charWidthMaxAdj: 0
@@ -8027,7 +8027,7 @@ MonoBehaviour:
   parentLinkedComponent: {fileID: 0}
   m_enableKerning: 0
   m_ActiveFontFeatures: 
-  m_enableExtraPadding: 0
+  m_enableExtraPadding: 1
   checkPaddingRequired: 0
   m_isRichText: 1
   m_EmojiFallbackSupport: 1
@@ -8109,8 +8109,8 @@ MonoBehaviour:
     \u0111\u01B0\u1EDDng bay, th\u1EA3 \u0111\u1EC3 \u0111\xE1.\nGhi \xEDt nh\u1EA5t
     3 b\xE0n sau 5 l\u01B0\u1EE3t."
   m_isRightToLeft: 0
-  m_fontAsset: {fileID: 11400000, guid: 825d2fd02f90fde40975035766b806d9, type: 2}
-  m_sharedMaterial: {fileID: 1526163460992956435, guid: 825d2fd02f90fde40975035766b806d9, type: 2}
+  m_fontAsset: {fileID: 11400000, guid: e2fb29186b981b74191bedd015960b0f, type: 2}
+  m_sharedMaterial: {fileID: 2100000, guid: b15b201b3261465dc84fd26a46195ecb, type: 2}
   m_fontSharedMaterials: []
   m_fontMaterial: {fileID: 0}
   m_fontMaterials: []
@@ -8140,14 +8140,14 @@ MonoBehaviour:
   m_enableAutoSizing: 1
   m_fontSizeMin: 28
   m_fontSizeMax: 32
-  m_fontStyle: 1
+  m_fontStyle: 0
   m_HorizontalAlignment: 2
   m_VerticalAlignment: 512
   m_textAlignment: 65535
   m_characterSpacing: 0
   m_characterHorizontalScale: 1
   m_wordSpacing: 0
-  m_lineSpacing: 0
+  m_lineSpacing: 15
   m_lineSpacingMax: 0
   m_paragraphSpacing: 0
   m_charWidthMaxAdj: 0
@@ -8158,7 +8158,7 @@ MonoBehaviour:
   parentLinkedComponent: {fileID: 0}
   m_enableKerning: 0
   m_ActiveFontFeatures: 
-  m_enableExtraPadding: 0
+  m_enableExtraPadding: 1
   checkPaddingRequired: 0
   m_isRichText: 1
   m_EmojiFallbackSupport: 1
@@ -8246,8 +8246,8 @@ MonoBehaviour:
       m_Calls: []
   m_text: 0%
   m_isRightToLeft: 0
-  m_fontAsset: {fileID: 11400000, guid: 825d2fd02f90fde40975035766b806d9, type: 2}
-  m_sharedMaterial: {fileID: 2100000, guid: f3db4900ab89ca666a7d41dd02c66f34, type: 2}
+  m_fontAsset: {fileID: 11400000, guid: 95213cac9f3ffc914a83cd6ef9d38c49, type: 2}
+  m_sharedMaterial: {fileID: 8493382299003494270, guid: 95213cac9f3ffc914a83cd6ef9d38c49, type: 2}
   m_fontSharedMaterials: []
   m_fontMaterial: {fileID: 0}
   m_fontMaterials: []
@@ -8277,14 +8277,14 @@ MonoBehaviour:
   m_enableAutoSizing: 0
   m_fontSizeMin: 0
   m_fontSizeMax: 0
-  m_fontStyle: 1
+  m_fontStyle: 0
   m_HorizontalAlignment: 2
   m_VerticalAlignment: 512
   m_textAlignment: 65535
   m_characterSpacing: 0
   m_characterHorizontalScale: 1
   m_wordSpacing: 0
-  m_lineSpacing: 0
+  m_lineSpacing: 15
   m_lineSpacingMax: 0
   m_paragraphSpacing: 0
   m_charWidthMaxAdj: 0
@@ -8295,7 +8295,7 @@ MonoBehaviour:
   parentLinkedComponent: {fileID: 0}
   m_enableKerning: 0
   m_ActiveFontFeatures: 
-  m_enableExtraPadding: 0
+  m_enableExtraPadding: 1
   checkPaddingRequired: 0
   m_isRichText: 1
   m_EmojiFallbackSupport: 1
@@ -9184,8 +9184,8 @@ MonoBehaviour:
       m_Calls: []
   m_text: "TH\u01AF\u1EDCNG"
   m_isRightToLeft: 0
-  m_fontAsset: {fileID: 11400000, guid: 825d2fd02f90fde40975035766b806d9, type: 2}
-  m_sharedMaterial: {fileID: 1526163460992956435, guid: 825d2fd02f90fde40975035766b806d9, type: 2}
+  m_fontAsset: {fileID: 11400000, guid: 95213cac9f3ffc914a83cd6ef9d38c49, type: 2}
+  m_sharedMaterial: {fileID: 2100000, guid: ca4d9f9d1239df33db51812561e75715, type: 2}
   m_fontSharedMaterials: []
   m_fontMaterial: {fileID: 0}
   m_fontMaterials: []
@@ -9215,14 +9215,14 @@ MonoBehaviour:
   m_enableAutoSizing: 1
   m_fontSizeMin: 28
   m_fontSizeMax: 32
-  m_fontStyle: 1
+  m_fontStyle: 0
   m_HorizontalAlignment: 2
   m_VerticalAlignment: 512
   m_textAlignment: 65535
   m_characterSpacing: 0
   m_characterHorizontalScale: 1
   m_wordSpacing: 0
-  m_lineSpacing: 0
+  m_lineSpacing: 15
   m_lineSpacingMax: 0
   m_paragraphSpacing: 0
   m_charWidthMaxAdj: 0
@@ -9233,7 +9233,7 @@ MonoBehaviour:
   parentLinkedComponent: {fileID: 0}
   m_enableKerning: 0
   m_ActiveFontFeatures: 
-  m_enableExtraPadding: 0
+  m_enableExtraPadding: 1
   checkPaddingRequired: 0
   m_isRichText: 1
   m_EmojiFallbackSupport: 1
@@ -11087,8 +11087,8 @@ MonoBehaviour:
       m_Calls: []
   m_text: "KH\xD3"
   m_isRightToLeft: 0
-  m_fontAsset: {fileID: 11400000, guid: 825d2fd02f90fde40975035766b806d9, type: 2}
-  m_sharedMaterial: {fileID: 1526163460992956435, guid: 825d2fd02f90fde40975035766b806d9, type: 2}
+  m_fontAsset: {fileID: 11400000, guid: 95213cac9f3ffc914a83cd6ef9d38c49, type: 2}
+  m_sharedMaterial: {fileID: 2100000, guid: ca4d9f9d1239df33db51812561e75715, type: 2}
   m_fontSharedMaterials: []
   m_fontMaterial: {fileID: 0}
   m_fontMaterials: []
@@ -11118,14 +11118,14 @@ MonoBehaviour:
   m_enableAutoSizing: 1
   m_fontSizeMin: 28
   m_fontSizeMax: 32
-  m_fontStyle: 1
+  m_fontStyle: 0
   m_HorizontalAlignment: 2
   m_VerticalAlignment: 512
   m_textAlignment: 65535
   m_characterSpacing: 0
   m_characterHorizontalScale: 1
   m_wordSpacing: 0
-  m_lineSpacing: 0
+  m_lineSpacing: 15
   m_lineSpacingMax: 0
   m_paragraphSpacing: 0
   m_charWidthMaxAdj: 0
@@ -11136,7 +11136,7 @@ MonoBehaviour:
   parentLinkedComponent: {fileID: 0}
   m_enableKerning: 0
   m_ActiveFontFeatures: 
-  m_enableExtraPadding: 0
+  m_enableExtraPadding: 1
   checkPaddingRequired: 0
   m_isRichText: 1
   m_EmojiFallbackSupport: 1
@@ -15249,8 +15249,8 @@ MonoBehaviour:
       m_Calls: []
   m_text: "H\u01AF\u1EDANG B\xD3NG"
   m_isRightToLeft: 0
-  m_fontAsset: {fileID: 11400000, guid: 825d2fd02f90fde40975035766b806d9, type: 2}
-  m_sharedMaterial: {fileID: 1526163460992956435, guid: 825d2fd02f90fde40975035766b806d9, type: 2}
+  m_fontAsset: {fileID: 11400000, guid: e2fb29186b981b74191bedd015960b0f, type: 2}
+  m_sharedMaterial: {fileID: 2100000, guid: b15b201b3261465dc84fd26a46195ecb, type: 2}
   m_fontSharedMaterials: []
   m_fontMaterial: {fileID: 0}
   m_fontMaterials: []
@@ -15280,14 +15280,14 @@ MonoBehaviour:
   m_enableAutoSizing: 0
   m_fontSizeMin: 0
   m_fontSizeMax: 0
-  m_fontStyle: 1
+  m_fontStyle: 0
   m_HorizontalAlignment: 1
   m_VerticalAlignment: 512
   m_textAlignment: 65535
   m_characterSpacing: 0
   m_characterHorizontalScale: 1
   m_wordSpacing: 0
-  m_lineSpacing: 0
+  m_lineSpacing: 15
   m_lineSpacingMax: 0
   m_paragraphSpacing: 0
   m_charWidthMaxAdj: 0
@@ -15298,7 +15298,7 @@ MonoBehaviour:
   parentLinkedComponent: {fileID: 0}
   m_enableKerning: 0
   m_ActiveFontFeatures: 
-  m_enableExtraPadding: 0
+  m_enableExtraPadding: 1
   checkPaddingRequired: 0
   m_isRichText: 1
   m_EmojiFallbackSupport: 1
@@ -15842,8 +15842,8 @@ MonoBehaviour:
       m_Calls: []
   m_text: "D\u1EC4 V\u01AF\u1EE2T X\xC0"
   m_isRightToLeft: 0
-  m_fontAsset: {fileID: 11400000, guid: 825d2fd02f90fde40975035766b806d9, type: 2}
-  m_sharedMaterial: {fileID: 2100000, guid: f3db4900ab89ca666a7d41dd02c66f34, type: 2}
+  m_fontAsset: {fileID: 11400000, guid: 95213cac9f3ffc914a83cd6ef9d38c49, type: 2}
+  m_sharedMaterial: {fileID: 8493382299003494270, guid: 95213cac9f3ffc914a83cd6ef9d38c49, type: 2}
   m_fontSharedMaterials: []
   m_fontMaterial: {fileID: 0}
   m_fontMaterials: []
@@ -15873,14 +15873,14 @@ MonoBehaviour:
   m_enableAutoSizing: 0
   m_fontSizeMin: 0
   m_fontSizeMax: 0
-  m_fontStyle: 1
+  m_fontStyle: 0
   m_HorizontalAlignment: 2
   m_VerticalAlignment: 512
   m_textAlignment: 65535
   m_characterSpacing: 0
   m_characterHorizontalScale: 1
   m_wordSpacing: 0
-  m_lineSpacing: 0
+  m_lineSpacing: 15
   m_lineSpacingMax: 0
   m_paragraphSpacing: 0
   m_charWidthMaxAdj: 0
@@ -15891,7 +15891,7 @@ MonoBehaviour:
   parentLinkedComponent: {fileID: 0}
   m_enableKerning: 0
   m_ActiveFontFeatures: 
-  m_enableExtraPadding: 0
+  m_enableExtraPadding: 1
   checkPaddingRequired: 0
   m_isRichText: 1
   m_EmojiFallbackSupport: 1
@@ -19255,8 +19255,8 @@ MonoBehaviour:
       m_Calls: []
   m_text: "D\u1EC4"
   m_isRightToLeft: 0
-  m_fontAsset: {fileID: 11400000, guid: 825d2fd02f90fde40975035766b806d9, type: 2}
-  m_sharedMaterial: {fileID: 1526163460992956435, guid: 825d2fd02f90fde40975035766b806d9, type: 2}
+  m_fontAsset: {fileID: 11400000, guid: 95213cac9f3ffc914a83cd6ef9d38c49, type: 2}
+  m_sharedMaterial: {fileID: 2100000, guid: ca4d9f9d1239df33db51812561e75715, type: 2}
   m_fontSharedMaterials: []
   m_fontMaterial: {fileID: 0}
   m_fontMaterials: []
@@ -19286,14 +19286,14 @@ MonoBehaviour:
   m_enableAutoSizing: 1
   m_fontSizeMin: 28
   m_fontSizeMax: 32
-  m_fontStyle: 1
+  m_fontStyle: 0
   m_HorizontalAlignment: 2
   m_VerticalAlignment: 512
   m_textAlignment: 65535
   m_characterSpacing: 0
   m_characterHorizontalScale: 1
   m_wordSpacing: 0
-  m_lineSpacing: 0
+  m_lineSpacing: 15
   m_lineSpacingMax: 0
   m_paragraphSpacing: 0
   m_charWidthMaxAdj: 0
@@ -19304,7 +19304,7 @@ MonoBehaviour:
   parentLinkedComponent: {fileID: 0}
   m_enableKerning: 0
   m_ActiveFontFeatures: 
-  m_enableExtraPadding: 0
+  m_enableExtraPadding: 1
   checkPaddingRequired: 0
   m_isRichText: 1
   m_EmojiFallbackSupport: 1
@@ -19756,8 +19756,8 @@ MonoBehaviour:
       m_Calls: []
   m_text: "GI\u1EEE \u0110\u1EC2 S\xDAT"
   m_isRightToLeft: 0
-  m_fontAsset: {fileID: 11400000, guid: 825d2fd02f90fde40975035766b806d9, type: 2}
-  m_sharedMaterial: {fileID: 1526163460992956435, guid: 825d2fd02f90fde40975035766b806d9, type: 2}
+  m_fontAsset: {fileID: 11400000, guid: 95213cac9f3ffc914a83cd6ef9d38c49, type: 2}
+  m_sharedMaterial: {fileID: 2100000, guid: ca4d9f9d1239df33db51812561e75715, type: 2}
   m_fontSharedMaterials: []
   m_fontMaterial: {fileID: 0}
   m_fontMaterials: []
@@ -19787,14 +19787,14 @@ MonoBehaviour:
   m_enableAutoSizing: 1
   m_fontSizeMin: 28
   m_fontSizeMax: 32
-  m_fontStyle: 1
+  m_fontStyle: 0
   m_HorizontalAlignment: 2
   m_VerticalAlignment: 512
   m_textAlignment: 65535
   m_characterSpacing: 0
   m_characterHorizontalScale: 1
   m_wordSpacing: 0
-  m_lineSpacing: 0
+  m_lineSpacing: 15
   m_lineSpacingMax: 0
   m_paragraphSpacing: 0
   m_charWidthMaxAdj: 0
@@ -19805,7 +19805,7 @@ MonoBehaviour:
   parentLinkedComponent: {fileID: 0}
   m_enableKerning: 0
   m_ActiveFontFeatures: 
-  m_enableExtraPadding: 0
+  m_enableExtraPadding: 1
   checkPaddingRequired: 0
   m_isRichText: 1
   m_EmojiFallbackSupport: 1

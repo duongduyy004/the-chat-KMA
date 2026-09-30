@@ -86,13 +86,13 @@ namespace KMA.Gameplay
             if (rules == null)
                 return;
             bool overPower = rules.Power > OverPowerThreshold;
-            if (scoreLabel) scoreLabel.text = "BÀN: " + rules.Goals;
-            if (remainingLabel) remainingLabel.text = "CÒN " + Mathf.Max(0, 5 - rules.Kicks) + " LƯỢT";
+            if (scoreLabel) scoreLabel.text = VietText.Fix("BÀN: " + rules.Goals);
+            if (remainingLabel) remainingLabel.text = VietText.Fix("CÒN " + Mathf.Max(0, 5 - rules.Kicks) + " LƯỢT");
             if (powerBar)
             {
                 powerBar.SetValue(rules.Power);
                 powerBar.SetFillColor(overPower ? MinigameUiTheme.Energy : MinigameUiTheme.Accent);
-                if (powerBar.Label) powerBar.Label.text = Mathf.RoundToInt(rules.Power * 100f) + "%";
+                if (powerBar.Label) powerBar.Label.text = VietText.Fix(Mathf.RoundToInt(rules.Power * 100f) + "%");
             }
             if (overPowerWarning) overPowerWarning.SetActive(overPower);
             for (int i = 0; kickMarkers != null && i < kickMarkers.Length; i++)
@@ -105,9 +105,9 @@ namespace KMA.Gameplay
             if (startPanel && rules.State != FootballState.Start)
                 startPanel.SetActive(false);
             if (directionSlider) directionSlider.SetValueWithoutNotify(rules.AimX);
-            if (directionLabel) directionLabel.text = Mathf.Abs(rules.AimX) < .02f ? "GIỮA" :
-                (rules.AimX < 0f ? "TRÁI " : "PHẢI ") + Mathf.RoundToInt(Mathf.Abs(rules.AimX) * 100f) + "%";
-            if (shotFeedback) shotFeedback.text = OutcomeText(rules.Flight?.Outcome);
+            if (directionLabel) directionLabel.text = VietText.Fix(Mathf.Abs(rules.AimX) < .02f ? "GIỮA" :
+                (rules.AimX < 0f ? "TRÁI " : "PHẢI ") + Mathf.RoundToInt(Mathf.Abs(rules.AimX) * 100f) + "%");
+            if (shotFeedback) shotFeedback.text = VietText.Fix(OutcomeText(rules.Flight?.Outcome));
         }
 
         static string OutcomeText(FootballOutcome? outcome) => outcome switch

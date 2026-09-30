@@ -6,7 +6,8 @@
         "KMA.Gameplay.UI",
         "Unity.InputSystem",
         "UnityEngine.UI",
-        "Unity.TextMeshPro"
+        "Unity.TextMeshPro",
+        "KMA.Text"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],

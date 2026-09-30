@@ -4,7 +4,10 @@
     "references": [
         "KMA.Gameplay",
         "KMA.Gameplay.Progression",
-        "Unity.InputSystem"
+        "Unity.InputSystem",
+        "KMA.Text",
+        "Unity.TextMeshPro",
+        "UnityEngine.UI"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],

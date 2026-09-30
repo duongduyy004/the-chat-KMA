@@ -238,7 +238,7 @@ namespace KMA.Gameplay.Shell
             labelRect.offsetMin = Vector2.zero;
             labelRect.offsetMax = Vector2.zero;
             var text = textObject.AddComponent<TextMeshProUGUI>();
-            text.text = label;
+            text.text = VietText.Fix(label);
             text.alignment = TextAlignmentOptions.Center;
             UiKit.StyleLabel(text, 22, Color.white);
             UiKit.FitLabel(text, 32f);
@@ -254,7 +254,7 @@ namespace KMA.Gameplay.Shell
             rect.sizeDelta = new Vector2(540f, 90f);
             rect.anchoredPosition = position;
             TMP_Text text = root.AddComponent<TextMeshProUGUI>();
-            text.text = value;
+            text.text = VietText.Fix(value);
             text.alignment = TextAlignmentOptions.Center;
             UiKit.StyleLabel(text, fontSize, color);
             text.raycastTarget = false;

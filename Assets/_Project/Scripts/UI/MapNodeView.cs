@@ -58,7 +58,7 @@ namespace KMA.Gameplay.UI
             Stars = completed ? ScoreUtil.ToStars(BestRank) : 0;
             Lives = lives;
             if (titleLabel != null)
-                titleLabel.text = displayName;
+                titleLabel.text = VietText.Fix(displayName);
             RenderAvailability(unlocked && !isComingSoon,
                 isComingSoon ? "ĐANG PHÁT TRIỂN" : "CHƯA MỞ KHÓA");
         }
@@ -111,18 +111,18 @@ namespace KMA.Gameplay.UI
                 feedback.enabled = selectable;
             if (detailLabel != null)
             {
-                detailLabel.text = selectable
+                detailLabel.text = VietText.Fix(selectable
                     ? completed ? $"HẠNG {BestRank}  {Stars} SAO" : "SẴN SÀNG"
-                    : unavailableLabel;
+                    : unavailableLabel);
                 if (detailVisibilityRoot != null)
                     detailVisibilityRoot.SetActive(selectable && completed);
             }
             if (statusLabel != null)
-                statusLabel.text = selectable
+                statusLabel.text = VietText.Fix(selectable
                     ? completed ? "HOÀN THÀNH" : "SẴN SÀNG"
-                    : unavailableLabel;
+                    : unavailableLabel);
             if (actionLabel != null)
-                actionLabel.text = selectable ? "THI" : string.Empty;
+                actionLabel.text = VietText.Fix(selectable ? "THI" : string.Empty);
             ApplyVisualState(completed, !selectable);
         }
 

@@ -5,7 +5,8 @@
         "KMA.Gameplay.Core",
         "KMA.Gameplay.UI",
         "KMA.Gameplay.Progression",
-        "Unity.TextMeshPro"
+        "Unity.TextMeshPro",
+        "KMA.Text"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],

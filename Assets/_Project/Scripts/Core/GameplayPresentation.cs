@@ -1,5 +1,7 @@
 using UnityEngine;
 using UnityEngine.SceneManagement;
+using TMPro;
+using UnityEngine.UI;
 
 namespace KMA.Gameplay.Core
 {
@@ -8,9 +10,8 @@ namespace KMA.Gameplay.Core
         string statusText;
         string titleText;
         string controlsText;
-        GUIStyle titleStyle;
-        GUIStyle statusStyle;
-        GUIStyle controlsStyle;
+        TMP_Text statusLabel;
+        Canvas fallbackCanvas;
 
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
         static void InstallSceneBootstrap()
@@ -45,32 +46,36 @@ namespace KMA.Gameplay.Core
                 ? "Session: waiting for route"
                 : $"Lives: {router.Session.Lives}";
             statusText = $"Phase: {phase}\n{session}";
+            if (statusLabel != null) statusLabel.text = VietText.Fix(statusText);
         }
 
-        void OnGUI()
+        void LateUpdate()
         {
-            if (FindFirstObjectByType<Canvas>() != null)
-                return;
-
-            if (titleStyle == null)
+            foreach (var canvas in FindObjectsByType<Canvas>(FindObjectsSortMode.None))
+                if (canvas != fallbackCanvas && canvas.isActiveAndEnabled)
+                {
+                    if (fallbackCanvas != null) fallbackCanvas.gameObject.SetActive(false);
+                    return;
+                }
+            if (fallbackCanvas != null)
             {
-                titleStyle = CreateStyle(46, FontStyle.Bold);
-                statusStyle = CreateStyle(28, FontStyle.Normal);
-                controlsStyle = CreateStyle(24, FontStyle.Normal);
+                fallbackCanvas.gameObject.SetActive(true);
+                return;
             }
 
-            var previousColor = GUI.color;
-            GUI.color = new Color(.025f, .04f, .08f, .96f);
-            GUI.Box(new Rect(0f, 0f, Screen.width, Screen.height), GUIContent.none);
-            GUI.color = Color.white;
-
-            GUI.Label(new Rect(0f, Screen.height * .08f, Screen.width, Screen.height * .16f),
-                titleText, titleStyle);
-            GUI.Label(new Rect(0f, Screen.height * .38f, Screen.width, Screen.height * .24f),
-                statusText ?? "Phase: Tutorial", statusStyle);
-            GUI.Label(new Rect(0f, Screen.height * .76f, Screen.width, Screen.height * .16f),
-                controlsText, controlsStyle);
-            GUI.color = previousColor;
+            var root = new GameObject("FallbackPresentation", typeof(RectTransform), typeof(Canvas));
+            root.transform.SetParent(transform, false);
+            fallbackCanvas = root.GetComponent<Canvas>();
+            fallbackCanvas.renderMode = RenderMode.ScreenSpaceOverlay;
+            var panel = new GameObject("Background", typeof(RectTransform), typeof(Image));
+            panel.transform.SetParent(root.transform, false);
+            var panelRect = (RectTransform)panel.transform;
+            panelRect.anchorMin = Vector2.zero; panelRect.anchorMax = Vector2.one;
+            panelRect.offsetMin = panelRect.offsetMax = Vector2.zero;
+            panel.GetComponent<Image>().color = new Color(.025f, .04f, .08f, .96f);
+            Label(root.transform, "Title", titleText, .76f, .92f, 46);
+            statusLabel = Label(root.transform, "Status", statusText ?? "Phase: Tutorial", .38f, .62f, 28);
+            Label(root.transform, "Controls", controlsText, .08f, .24f, 24);
         }
 
         static Camera EnsureCamera()
@@ -90,16 +95,22 @@ namespace KMA.Gameplay.Core
             return camera;
         }
 
-        static GUIStyle CreateStyle(int fontSize, FontStyle fontStyle)
+        static TMP_Text Label(Transform parent, string name, string value, float bottom, float top, float fontSize)
         {
-            return new GUIStyle(GUI.skin.label)
-            {
-                fontSize = fontSize,
-                fontStyle = fontStyle,
-                alignment = TextAnchor.MiddleCenter,
-                wordWrap = true,
-                normal = { textColor = Color.white }
-            };
+            var root = new GameObject(name, typeof(RectTransform), typeof(TextMeshProUGUI));
+            root.transform.SetParent(parent, false);
+            var text = root.GetComponent<TextMeshProUGUI>();
+            text.rectTransform.anchorMin = new Vector2(0, bottom);
+            text.rectTransform.anchorMax = new Vector2(1, top);
+            text.rectTransform.offsetMin = text.rectTransform.offsetMax = Vector2.zero;
+            text.font = TMP_Settings.defaultFontAsset;
+            text.fontSharedMaterial = text.font.material;
+            text.fontSize = fontSize; text.text = VietText.Fix(value);
+            text.alignment = TextAlignmentOptions.Center; text.color = Color.white;
+            text.extraPadding = true; text.lineSpacing = 15;
+            text.overflowMode = TextOverflowModes.Overflow;
+            text.raycastTarget = false;
+            return text;
         }
 
         static string SceneTitle(string sceneName) => sceneName switch

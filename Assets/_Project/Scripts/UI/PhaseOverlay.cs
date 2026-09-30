@@ -95,7 +95,7 @@ namespace KMA.Gameplay.UI
             SetActive(resolveRoot, phase == MinigamePhase.Resolve);
 
             if (phaseLabel != null)
-                phaseLabel.text = !sharedTutorial && phase != MinigamePhase.Resolve ? string.Empty : PhaseName(phase);
+                phaseLabel.text = VietText.Fix(!sharedTutorial && phase != MinigamePhase.Resolve ? string.Empty : PhaseName(phase));
             if (sharedCountdown)
                 RefreshCountdown();
         }
@@ -156,9 +156,9 @@ namespace KMA.Gameplay.UI
             if (countdownLabel == null)
                 return;
             var remaining = Mathf.Clamp(Mathf.CeilToInt(CountdownDuration - countdownElapsed), 1, 3);
-            countdownLabel.text = DisplayedPhase == MinigamePhase.Countdown
+            countdownLabel.text = VietText.Fix(DisplayedPhase == MinigamePhase.Countdown
                 ? remaining.ToString()
-                : string.Empty;
+                : string.Empty);
         }
 
         static void SetActive(GameObject target, bool active)

@@ -563,7 +563,8 @@ namespace KMA.Gameplay.UI
             };
             TMP_Text text = rect.gameObject.AddComponent<TextMeshProUGUI>();
             UiKit.StyleLabel(text, size, color);
-            text.text = value;
+            text.text = VietText.Fix(value);
+            VietTypography.Apply(text);
             text.alignment = tmpAlignment;
             text.enableWordWrapping = true;
             text.overflowMode = TextOverflowModes.Overflow;

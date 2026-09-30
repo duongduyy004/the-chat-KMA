@@ -218,8 +218,8 @@ MonoBehaviour:
       m_Calls: []
   m_text: TAP LEFT / RIGHT
   m_isRightToLeft: 0
-  m_fontAsset: {fileID: 11400000, guid: 825d2fd02f90fde40975035766b806d9, type: 2}
-  m_sharedMaterial: {fileID: 1526163460992956435, guid: 825d2fd02f90fde40975035766b806d9, type: 2}
+  m_fontAsset: {fileID: 11400000, guid: e2fb29186b981b74191bedd015960b0f, type: 2}
+  m_sharedMaterial: {fileID: 2100000, guid: b15b201b3261465dc84fd26a46195ecb, type: 2}
   m_fontSharedMaterials: []
   m_fontMaterial: {fileID: 0}
   m_fontMaterials: []
@@ -249,14 +249,14 @@ MonoBehaviour:
   m_enableAutoSizing: 0
   m_fontSizeMin: 0
   m_fontSizeMax: 0
-  m_fontStyle: 1
+  m_fontStyle: 0
   m_HorizontalAlignment: 4
   m_VerticalAlignment: 256
   m_textAlignment: 65535
   m_characterSpacing: 0
   m_characterHorizontalScale: 1
   m_wordSpacing: 0
-  m_lineSpacing: 0
+  m_lineSpacing: 15
   m_lineSpacingMax: 0
   m_paragraphSpacing: 0
   m_charWidthMaxAdj: 0
@@ -267,7 +267,7 @@ MonoBehaviour:
   parentLinkedComponent: {fileID: 0}
   m_enableKerning: 0
   m_ActiveFontFeatures: 
-  m_enableExtraPadding: 0
+  m_enableExtraPadding: 1
   checkPaddingRequired: 0
   m_isRichText: 1
   m_EmojiFallbackSupport: 1
@@ -506,8 +506,8 @@ MonoBehaviour:
       m_Calls: []
   m_text: 14
   m_isRightToLeft: 0
-  m_fontAsset: {fileID: 11400000, guid: 825d2fd02f90fde40975035766b806d9, type: 2}
-  m_sharedMaterial: {fileID: 2100000, guid: f3db4900ab89ca666a7d41dd02c66f34, type: 2}
+  m_fontAsset: {fileID: 11400000, guid: 95213cac9f3ffc914a83cd6ef9d38c49, type: 2}
+  m_sharedMaterial: {fileID: 8493382299003494270, guid: 95213cac9f3ffc914a83cd6ef9d38c49, type: 2}
   m_fontSharedMaterials: []
   m_fontMaterial: {fileID: 0}
   m_fontMaterials: []
@@ -537,14 +537,14 @@ MonoBehaviour:
   m_enableAutoSizing: 0
   m_fontSizeMin: 0
   m_fontSizeMax: 0
-  m_fontStyle: 1
+  m_fontStyle: 0
   m_HorizontalAlignment: 4
   m_VerticalAlignment: 256
   m_textAlignment: 65535
   m_characterSpacing: 0
   m_characterHorizontalScale: 1
   m_wordSpacing: 0
-  m_lineSpacing: 0
+  m_lineSpacing: 15
   m_lineSpacingMax: 0
   m_paragraphSpacing: 0
   m_charWidthMaxAdj: 0
@@ -555,7 +555,7 @@ MonoBehaviour:
   parentLinkedComponent: {fileID: 0}
   m_enableKerning: 0
   m_ActiveFontFeatures: 
-  m_enableExtraPadding: 0
+  m_enableExtraPadding: 1
   checkPaddingRequired: 0
   m_isRichText: 1
   m_EmojiFallbackSupport: 1
@@ -643,8 +643,8 @@ MonoBehaviour:
       m_Calls: []
   m_text: PLAY
   m_isRightToLeft: 0
-  m_fontAsset: {fileID: 11400000, guid: 825d2fd02f90fde40975035766b806d9, type: 2}
-  m_sharedMaterial: {fileID: 1526163460992956435, guid: 825d2fd02f90fde40975035766b806d9, type: 2}
+  m_fontAsset: {fileID: 11400000, guid: e2fb29186b981b74191bedd015960b0f, type: 2}
+  m_sharedMaterial: {fileID: 2100000, guid: b15b201b3261465dc84fd26a46195ecb, type: 2}
   m_fontSharedMaterials: []
   m_fontMaterial: {fileID: 0}
   m_fontMaterials: []
@@ -674,14 +674,14 @@ MonoBehaviour:
   m_enableAutoSizing: 0
   m_fontSizeMin: 0
   m_fontSizeMax: 0
-  m_fontStyle: 1
+  m_fontStyle: 0
   m_HorizontalAlignment: 4
   m_VerticalAlignment: 256
   m_textAlignment: 65535
   m_characterSpacing: 0
   m_characterHorizontalScale: 1
   m_wordSpacing: 0
-  m_lineSpacing: 0
+  m_lineSpacing: 15
   m_lineSpacingMax: 0
   m_paragraphSpacing: 0
   m_charWidthMaxAdj: 0
@@ -692,7 +692,7 @@ MonoBehaviour:
   parentLinkedComponent: {fileID: 0}
   m_enableKerning: 0
   m_ActiveFontFeatures: 
-  m_enableExtraPadding: 0
+  m_enableExtraPadding: 1
   checkPaddingRequired: 0
   m_isRichText: 1
   m_EmojiFallbackSupport: 1
@@ -930,8 +930,8 @@ MonoBehaviour:
       m_Calls: []
   m_text: 0
   m_isRightToLeft: 0
-  m_fontAsset: {fileID: 11400000, guid: 825d2fd02f90fde40975035766b806d9, type: 2}
-  m_sharedMaterial: {fileID: 2100000, guid: f3db4900ab89ca666a7d41dd02c66f34, type: 2}
+  m_fontAsset: {fileID: 11400000, guid: 95213cac9f3ffc914a83cd6ef9d38c49, type: 2}
+  m_sharedMaterial: {fileID: 8493382299003494270, guid: 95213cac9f3ffc914a83cd6ef9d38c49, type: 2}
   m_fontSharedMaterials: []
   m_fontMaterial: {fileID: 0}
   m_fontMaterials: []
@@ -961,14 +961,14 @@ MonoBehaviour:
   m_enableAutoSizing: 0
   m_fontSizeMin: 0
   m_fontSizeMax: 0
-  m_fontStyle: 1
+  m_fontStyle: 0
   m_HorizontalAlignment: 4
   m_VerticalAlignment: 256
   m_textAlignment: 65535
   m_characterSpacing: 0
   m_characterHorizontalScale: 1
   m_wordSpacing: 0
-  m_lineSpacing: 0
+  m_lineSpacing: 15
   m_lineSpacingMax: 0
   m_paragraphSpacing: 0
   m_charWidthMaxAdj: 0
@@ -979,7 +979,7 @@ MonoBehaviour:
   parentLinkedComponent: {fileID: 0}
   m_enableKerning: 0
   m_ActiveFontFeatures: 
-  m_enableExtraPadding: 0
+  m_enableExtraPadding: 1
   checkPaddingRequired: 0
   m_isRichText: 1
   m_EmojiFallbackSupport: 1

@@ -8,7 +8,8 @@
         "Unity.TextMeshPro",
         "KMA.Gameplay.Progression",
         "KMA.Gameplay.Core",
-        "KMA.Gameplay.UI"
+        "KMA.Gameplay.UI",
+        "KMA.Text"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],
