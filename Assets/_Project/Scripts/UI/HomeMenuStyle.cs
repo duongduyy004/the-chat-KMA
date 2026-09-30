@@ -13,6 +13,9 @@ namespace KMA.Gameplay.UI
         public static Color Grass => UITheme.Shared.Menu.grass;
         public static Color White => UITheme.Shared.Card;
         public static Color Glass => KMA.UI.Kit.MinigameUiTheme.WithAlpha(Navy, 190f / 255f);
+        public const float BadgeSize = 132f;
+        public const float TitleTopSize = 48f;
+        public const float TitleKmaSize = 94f;
         public const float PanelWidth = 560f;
         public const float PanelHeight = 700f;
         public const float MenuScale = 1.7f;

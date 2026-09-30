@@ -11,7 +11,7 @@ namespace KMA.Gameplay.UI
     public static class HomePresentationBuilder
     {
         static Sprite disc;
-        static readonly Dictionary<Vector3, Sprite> SlantSprites = new Dictionary<Vector3, Sprite>();
+        static readonly Dictionary<(float, float, int, int, bool), Sprite> SlantSprites = new Dictionary<(float, float, int, int, bool), Sprite>();
 
         public static void Build(MainMenuScreen screen)
         {
@@ -44,8 +44,15 @@ namespace KMA.Gameplay.UI
 
         static void Badge(RectTransform parent)
         {
-            var root = Rect(parent, "SportBadge");
+            var root = CreateBadge(parent, "SportBadge");
             Place(root, new Vector2(85f, 226f), new Vector2(132f, 132f));
+        }
+
+        // Splash and menu share the same badge sprites, rim and shine component.
+        public static RectTransform CreateBadge(RectTransform parent, string name)
+        {
+            var root = Rect(parent, name);
+            root.sizeDelta = Vector2.one * HomeMenuStyle.BadgeSize;
             Disc(root, "BadgeShadow", new Vector2(3f, -4f), 132f, new Color(0f, .04f, .1f, .35f));
             Disc(root, "WhiteRim", Vector2.zero, 132f, HomeMenuStyle.White);
             Disc(root, "NavyFace", Vector2.zero, 124f, HomeMenuStyle.Navy);
@@ -77,14 +84,15 @@ namespace KMA.Gameplay.UI
                     leafImage.raycastTarget = false;
                 }
             root.gameObject.AddComponent<HomeBadgeShine>();
+            return root;
         }
 
         static void Title(RectTransform parent)
         {
-            var top = Label(parent, "TitleTop", "THỂ CHẤT", 48, HomeMenuStyle.Gold);
+            var top = Label(parent, "TitleTop", "THỂ CHẤT", HomeMenuStyle.TitleTopSize, HomeMenuStyle.Gold);
             Place(top.rectTransform, new Vector2(336f, 292f), new Vector2(340f, 66f));
             StyleTitle(top);
-            var kma = Label(parent, "TitleKMA", "KMA", 94, HomeMenuStyle.Gold);
+            var kma = Label(parent, "TitleKMA", "KMA", HomeMenuStyle.TitleKmaSize, HomeMenuStyle.Gold);
             Place(kma.rectTransform, new Vector2(320f, 207f), new Vector2(380f, 115f));
             StyleTitle(kma);
             for (int i = 0; i < 3; i++)
@@ -159,7 +167,7 @@ namespace KMA.Gameplay.UI
             button.gameObject.AddComponent<HomeMenuButton>().Initialize(kind, border, fill, arrow);
         }
 
-        static TMP_Text Label(Transform parent, string name, string value, int size, Color color)
+        static TMP_Text Label(Transform parent, string name, string value, float size, Color color)
         {
             var text = Rect(parent, name).gameObject.AddComponent<TextMeshProUGUI>();
             UiKit.StyleLabel(text, size, color);
@@ -227,25 +235,28 @@ namespace KMA.Gameplay.UI
             return Sprite.Create(texture, new Rect(0, 0, 128, 128), new Vector2(.5f, .5f));
         }
 
-        static Sprite SlantSprite(bool outline)
+        // Rasterize at the actual target dimensions so short loading tracks keep the
+        // same slant angle and a uniform stroke instead of stretching a button texture.
+        public static Sprite SlantSprite(bool outline, int width = 320, int height = 56, float? borderWidth = null)
         {
             float angle = UITheme.Shared.Menu.buttonSlantAngle;
-            float stroke = Mathf.Clamp(UITheme.Shared.BorderWidth * .5f, 0f, 27f);
-            var key = new Vector3(angle, stroke, outline ? 1f : 0f);
+            float stroke = Mathf.Clamp(borderWidth ?? UITheme.Shared.BorderWidth * .5f, 0f, height * .5f - 1f);
+            var key = (angle, stroke, width, height, outline);
             if (SlantSprites.TryGetValue(key, out Sprite cached) && cached != null) return cached;
-            float lean = Mathf.Tan(angle * Mathf.Deg2Rad) * 56f;
-            var texture = new Texture2D(320, 56, TextureFormat.RGBA32, false);
-            for (int y = 0; y < 56; y++)
-                for (int x = 0; x < 320; x++)
+            float lean = Mathf.Tan(angle * Mathf.Deg2Rad) * height;
+            var texture = new Texture2D(width, height, TextureFormat.RGBA32, false);
+            texture.wrapMode = TextureWrapMode.Clamp;
+            for (int y = 0; y < height; y++)
+                for (int x = 0; x < width; x++)
                 {
-                    float left = lean - y * lean / 56f;
-                    float right = 320f - y * lean / 56f;
+                    float left = lean - y * lean / height;
+                    float right = width - y * lean / height;
                     float outer = Mathf.Clamp01(x - left + 1f) * Mathf.Clamp01(right - x);
-                    float inner = y >= stroke && y <= 55f - stroke && x >= left + stroke && x <= right - stroke ? 1f : 0f;
+                    float inner = y >= stroke && y <= height - 1f - stroke && x >= left + stroke && x <= right - stroke ? 1f : 0f;
                     texture.SetPixel(x, y, new Color(1f, 1f, 1f, outer * (outline ? 1f - inner : 1f)));
                 }
             texture.Apply();
-            var sprite = Sprite.Create(texture, new Rect(0, 0, 320, 56), new Vector2(.5f, .5f));
+            var sprite = Sprite.Create(texture, new Rect(0, 0, width, height), new Vector2(.5f, .5f));
             SlantSprites[key] = sprite;
             return sprite;
         }

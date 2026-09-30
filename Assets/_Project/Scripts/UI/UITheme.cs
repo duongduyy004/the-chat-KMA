@@ -72,6 +72,9 @@ namespace KMA.Gameplay.UI
         public Color MapLockedText => mapLockedText;
         [Header("Menu palette and geometry")]
         [SerializeField] private MenuStyle menu = new MenuStyle();
+        [Header("Splash presentation")]
+        [SerializeField] private SplashStyle splash = new SplashStyle();
+        public SplashStyle Splash => splash;
         [Header("Animation (unscaled seconds)")]
         [SerializeField] private MotionStyle motion = new MotionStyle();
 
@@ -97,6 +100,47 @@ namespace KMA.Gameplay.UI
             [Range(-45f, 45f)] public float titleAngle = -8f;
             [Range(0f, 40f)] public float buttonSlantAngle = 12.094757f;
             [Range(.5f, 1f)] public float pressScale = .96f;
+        }
+
+        [Serializable]
+        public sealed class SplashStyle
+        {
+            public Vector2 contentSize = new Vector2(620f, 640f);
+            public Vector2 contentPadding = new Vector2(32f, 96f);
+            public Vector2 referenceResolution = new Vector2(1920f, 1080f);
+            public float badgeSize = 160f;
+            public float badgeY = 220f;
+            public float titleScale = 1.3f;
+            public Vector2 titleTopSize = new Vector2(540f, 94f);
+            public Vector2 titleKmaSize = new Vector2(540f, 156f);
+            public float titleTopY = 91f;
+            public float titleKmaY = -22f;
+            public float stripesY = -121f;
+            public Vector2 stripeSize = new Vector2(210f, 3f);
+            public Vector2 stripeStep = new Vector2(18f, -8f);
+            public float stripeShorten = 28f;
+            public float sloganY = -175f;
+            public float sloganSize = 26f;
+            public Vector2 sloganBox = new Vector2(600f, 52f);
+            public Vector2 sloganShadow = new Vector2(1f, -2f);
+            public float statusY = -237f;
+            public float statusSize = 22f;
+            public float statusHeight = 38f;
+            public float trackY = -275f;
+            public Vector2 trackSize = new Vector2(460f, 20f);
+            public float trackBorder = 2f;
+            [Range(0f, 1f)] public float trackOpacity = .65f;
+            [Range(0f, 1f)] public float overlayTopOpacity = .70f;
+            [Range(0f, 1f)] public float overlayBottomOpacity = .85f;
+            public Vector2 footerInset = new Vector2(32f, 24f);
+            public Vector2 footerSize = new Vector2(520f, 40f);
+            public float footerFontSize = 20f;
+            [Range(0f, 1f)] public float footerOpacity = .55f;
+            [Min(.01f)] public float introDuration = .5f;
+            public float introSlide = 24f;
+            [Range(0f, 1f)] public float kmaStartScale = .9f;
+            [Min(.01f)] public float exitDuration = .35f;
+            [Min(.01f)] public float progressSmoothSeconds = .18f;
         }
 
         [Serializable]
