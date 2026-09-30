@@ -12,7 +12,7 @@ namespace KMA.Gameplay
     /// remains the only component that forwards taps to gameplay.
     public sealed class SprintControlPresenter : MonoBehaviour
     {
-        const float PressScale = MinigameUiTheme.PressScale;
+        static float PressScale => MinigameUiTheme.PressScale;
         const float PressDuration = .09f;
         const float BreatheHz = 1.2f;
         const float BreatheAmount = .03f;

@@ -12,6 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 2fe40a856f52a1b4d98311e645fb16ca, type: 3}
   m_Name: UiKitAssets
   m_EditorClassIdentifier: KMA.Gameplay.UI::KMA.UI.Kit.UiKitAssets
+  theme: {fileID: 11400000, guid: 99f9508b420b47942a1b96aece73a37b, type: 2}
   roundRect20: {fileID: 21300000, guid: 0fbda38ce4ab3ee4d84d7eef1b3067dd, type: 3}
   roundRect24: {fileID: 21300000, guid: 604d027f034db6642a1bf09e8bf73e10, type: 3}
   roundRect36: {fileID: 21300000, guid: d6c8f2afafeb48b408ef3c54db1fa43e, type: 3}

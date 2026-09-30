@@ -23,11 +23,11 @@ namespace KMA.Gameplay.UI
 
         Color subjectColor = Color.white;
 
-        static readonly Color ReadyBorder = new Color32(255, 202, 58, 255);
-        static readonly Color CompleteBorder = new Color32(65, 170, 104, 255);
-        static readonly Color LockedBorder = new Color32(117, 138, 156, 255);
-        static readonly Color LockedCard = new Color32(184, 199, 211, 255);
-        static readonly Color LockedIcon = new Color32(124, 144, 160, 255);
+        static Color ReadyBorder => UITheme.Shared.Accent;
+        static Color CompleteBorder => UITheme.Shared.MapCompleteBorder;
+        static Color LockedBorder => UITheme.Shared.MapLockedBorder;
+        static Color LockedCard => UITheme.Shared.MapLockedCard;
+        static Color LockedIcon => UITheme.Shared.MapLockedIcon;
 
         public SubjectId SubjectId => subjectId;
         public string DisplayName => displayName;
@@ -129,15 +129,15 @@ namespace KMA.Gameplay.UI
         void ApplyVisualState(bool completed, bool locked)
         {
             if (cardImage != null)
-                cardImage.color = locked ? LockedCard : Color.white;
+                cardImage.color = locked ? LockedCard : UITheme.Shared.Card;
             if (iconPlate != null)
                 iconPlate.color = locked ? LockedIcon : subjectColor;
             if (cardOutline != null)
                 cardOutline.effectColor = locked ? LockedBorder : completed ? CompleteBorder : ReadyBorder;
             if (statusLabel != null)
                 statusLabel.color = locked
-                    ? new Color32(56, 75, 90, 255)
-                    : completed ? CompleteBorder : new Color32(12, 105, 94, 255);
+                    ? UITheme.Shared.MapLockedText
+                    : completed ? CompleteBorder : UITheme.Shared.MapReadyText;
         }
     }
 }

@@ -13,11 +13,11 @@ namespace KMA.Gameplay.UI
     /// (only when a retry is configured) raises ResultPanelActions.Retry.
     public sealed class ResultPanel : MonoBehaviour, IRetryResultPreviewPanel
     {
-        const float ScrimDuration = .12f;
-        const float ModalDuration = .18f;
-        const float TitleDuration = .14f;
-        const float ScoreDuration = .35f;
-        const float RankDuration = .16f;
+        static float ScrimDuration => Mathf.Max(0f, UITheme.Shared.Motion.resultScrim);
+        static float ModalDuration => Mathf.Max(0f, UITheme.Shared.Motion.resultModal);
+        static float TitleDuration => Mathf.Max(0f, UITheme.Shared.Motion.resultTitle);
+        static float ScoreDuration => Mathf.Max(0f, UITheme.Shared.Motion.resultScore);
+        static float RankDuration => Mathf.Max(0f, UITheme.Shared.Motion.resultRank);
 
         [SerializeField] GameObject contentRoot;
         [SerializeField] TMP_Text statusLabel;
@@ -101,6 +101,7 @@ namespace KMA.Gameplay.UI
             transform.SetAsLastSibling();
             if (contentRoot != null)
                 contentRoot.SetActive(true);
+            ApplyTheme();
             if (errorLabel != null)
                 errorLabel.text = VietText.Fix(string.Empty);
             if (statusLabel != null)
@@ -178,6 +179,24 @@ namespace KMA.Gameplay.UI
             if (actionButton != null) actionButton.onClick.AddListener(Continue);
             if (retryButton != null) retryButton.onClick.AddListener(Retry);
             listenersBound = actionButton != null || retryButton != null;
+        }
+
+        void ApplyTheme()
+        {
+            Image backdrop = transform.Find("Backdrop")?.GetComponent<Image>();
+            if (backdrop != null) backdrop.color = MinigameUiTheme.Scrim;
+            Image card = contentRoot != null ? contentRoot.GetComponent<Image>() : null;
+            if (card != null) UiKit.StylePanel(card);
+            if (scoreLabel != null) scoreLabel.color = MinigameUiTheme.Accent;
+            if (rankLabel != null) rankLabel.color = MinigameUiTheme.TextPrimary;
+            if (detailLabel != null) detailLabel.color = MinigameUiTheme.TextPrimary;
+            if (livesLabel != null) livesLabel.color = MinigameUiTheme.TextPrimary;
+            if (errorLabel != null) errorLabel.color = MinigameUiTheme.Energy;
+            TMP_Text caption = contentRoot != null
+                ? contentRoot.transform.Find("ScoreCaption")?.GetComponent<TMP_Text>() : null;
+            if (caption != null) caption.color = MinigameUiTheme.WithAlpha(MinigameUiTheme.TextPrimary, .7f);
+            if (actionButton != null) UiKit.StyleButton(actionButton, ButtonVariant.Primary);
+            if (retryButton != null) UiKit.StyleButton(retryButton, ButtonVariant.Primary);
         }
 
         void RefreshButtons()

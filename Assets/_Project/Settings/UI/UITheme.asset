@@ -6,9 +6,12 @@ MonoBehaviour:
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 8ec003bed006fea6285856503fd24ee3, type: 3}
   m_Name: UITheme
   m_EditorClassIdentifier:
-  m_Script: {fileID: 11500000, guid: 8ec003bed006fea6285856503fd24ee3, type: 3}
   primary: {r: 1, g: 0.34901962, b: 0.36862746, a: 1}
   accent: {r: 1, g: 0.7921569, b: 0.22745098, a: 1}
   background: {r: 0.09803922, g: 0.50980395, b: 0.76862746, a: 1}
@@ -21,3 +24,47 @@ MonoBehaviour:
   cornerRadius: 24
   borderWidth: 4
   shadowOffset: {x: 6, y: -6}
+  surface: {r: 0.031372547, g: 0.1372549, b: 0.23921569, a: 1}
+  textPrimary: {r: 1, g: 0.9764706, b: 0.90588236, a: 1}
+  textOutline: {r: 0.011764706, g: 0.07058824, b: 0.12941176, a: 1}
+  player: {r: 0.22745098, g: 0.9019608, b: 1, a: 1}
+  resultSuccess: {r: 0.36862746, g: 0.87058824, b: 0.54901963, a: 1}
+  scrim: {r: 0.011764706, g: 0.07058824, b: 0.12941176, a: 0.7}
+  shadowColor: {r: 0, g: 0, b: 0, a: 0.35}
+  settingsBackdrop: {r: 0.02, g: 0.06, b: 0.1, a: 0.85}
+  settingsHint: {r: 0.74509805, g: 0.85882354, b: 0.9372549, a: 1}
+  settingsTrack: {r: 0.18823528, g: 0.2901961, b: 0.3882353, a: 1}
+  mapBackgroundTint: {r: 0.039215688, g: 0.18823528, b: 0.32156864, a: 1}
+  mapHint: {r: 0.7882353, g: 0.8862745, b: 0.9607843, a: 1}
+  mapLivesSurface: {r: 0.050980393, g: 0.22352941, b: 0.36078432, a: 0.93333334}
+  mapLockedBorder: {r: 0.45882353, g: 0.5411765, b: 0.6117647, a: 1}
+  mapReadyText: {r: 0.047058824, g: 0.4117647, b: 0.36862746, a: 1}
+  mapActionText: {r: 0.6392157, g: 0.40784314, b: 0, a: 1}
+  mapLockIcon: {r: 0.14901961, g: 0.23529412, b: 0.30196077, a: 1}
+  mapButtonHighlight: {r: 1, g: 0.9254902, b: 0.6666667, a: 1}
+  mapCompleteBorder: {r: 0.25490195, g: 0.6666667, b: 0.40784314, a: 1}
+  mapLockedCard: {r: 0.72156864, g: 0.78039217, b: 0.827451, a: 1}
+  mapLockedIcon: {r: 0.4862745, g: 0.5647059, b: 0.627451, a: 1}
+  mapLockedText: {r: 0.21960784, g: 0.29411766, b: 0.3529412, a: 1}
+  menu:
+    navy: {r: 0.043137256, g: 0.16470589, b: 0.2901961, a: 1}
+    gold: {r: 1, g: 0.7882353, b: 0.15686275, a: 1}
+    goldLight: {r: 1, g: 0.8784314, b: 0.4, a: 1}
+    goldDark: {r: 1, g: 0.7058824, b: 0, a: 1}
+    red: {r: 0.8862745, g: 0.33333334, b: 0.23921569, a: 1}
+    grass: {r: 0.41960785, g: 0.6431373, b: 0.22745098, a: 1}
+    titleAngle: -8
+    buttonSlantAngle: 12.094757
+    pressScale: 0.96
+  motion:
+    pressRestore: 0.1
+    pressScale: 0.94
+    pressLighten: 0.15
+    buttonFade: 0.08
+    resultScrim: 0.12
+    resultModal: 0.18
+    resultTitle: 0.14
+    resultScore: 0.35
+    resultRank: 0.16
+    badgeShineDuration: 0.8
+    badgeShineCycle: 4.5

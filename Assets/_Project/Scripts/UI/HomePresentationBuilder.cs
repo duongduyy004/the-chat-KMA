@@ -1,5 +1,6 @@
 using System;
 using System.Linq;
+using System.Collections.Generic;
 using KMA.UI.Kit;
 using TMPro;
 using UnityEngine;
@@ -10,8 +11,7 @@ namespace KMA.Gameplay.UI
     public static class HomePresentationBuilder
     {
         static Sprite disc;
-        static Sprite slant;
-        static Sprite slantOutline;
+        static readonly Dictionary<Vector3, Sprite> SlantSprites = new Dictionary<Vector3, Sprite>();
 
         public static void Build(MainMenuScreen screen)
         {
@@ -91,7 +91,7 @@ namespace KMA.Gameplay.UI
             {
                 var line = Rect(parent, "TrackLine" + i);
                 Place(line, new Vector2(222f + i * 20f, 132f - i * 7f), new Vector2(195f - i * 26f, 3f));
-                line.localRotation = Quaternion.Euler(0f, 0f, -8f);
+                line.localRotation = Quaternion.Euler(0f, 0f, UITheme.Shared.Menu.titleAngle);
                 line.gameObject.AddComponent<Image>().color = HomeMenuStyle.Gold;
             }
             var subtitle = Label(parent, "AcademySubtitle", "Học viện Kỹ thuật Mật mã", 20, HomeMenuStyle.White);
@@ -102,7 +102,7 @@ namespace KMA.Gameplay.UI
         {
             VietTypography.Apply(text, VietFontRole.Title);
             text.fontStyle = FontStyles.Italic;
-            text.rectTransform.localRotation = Quaternion.Euler(0f, 0f, -8f);
+            text.rectTransform.localRotation = Quaternion.Euler(0f, 0f, UITheme.Shared.Menu.titleAngle);
         }
 
         static void Action(MainMenuScreen screen, RectTransform parent, string name,
@@ -122,7 +122,8 @@ namespace KMA.Gameplay.UI
             var oldOutline = button.GetComponent<Outline>();
             if (oldOutline != null) oldOutline.enabled = false;
             var fill = Rect(rect, "Fill").gameObject.AddComponent<Image>();
-            Stretch(fill.rectTransform, new Vector2(2f, 2f), new Vector2(-2f, -2f));
+            float stroke = UITheme.Shared.BorderWidth * .5f;
+            Stretch(fill.rectTransform, Vector2.one * stroke, -Vector2.one * stroke);
             fill.sprite = SlantSprite(false);
             fill.raycastTarget = false;
             var label = UiKit.EnsureTmpLabel(rect, 22, HomeMenuStyle.White);
@@ -228,22 +229,24 @@ namespace KMA.Gameplay.UI
 
         static Sprite SlantSprite(bool outline)
         {
-            if (outline && slantOutline != null) return slantOutline;
-            if (!outline && slant != null) return slant;
+            float angle = UITheme.Shared.Menu.buttonSlantAngle;
+            float stroke = Mathf.Clamp(UITheme.Shared.BorderWidth * .5f, 0f, 27f);
+            var key = new Vector3(angle, stroke, outline ? 1f : 0f);
+            if (SlantSprites.TryGetValue(key, out Sprite cached) && cached != null) return cached;
+            float lean = Mathf.Tan(angle * Mathf.Deg2Rad) * 56f;
             var texture = new Texture2D(320, 56, TextureFormat.RGBA32, false);
             for (int y = 0; y < 56; y++)
                 for (int x = 0; x < 320; x++)
                 {
-                    float left = 12f - y * 12f / 56f;
-                    float right = 320f - y * 12f / 56f;
+                    float left = lean - y * lean / 56f;
+                    float right = 320f - y * lean / 56f;
                     float outer = Mathf.Clamp01(x - left + 1f) * Mathf.Clamp01(right - x);
-                    float inner = y >= 2 && y <= 53 && x >= left + 2f && x <= right - 2f ? 1f : 0f;
+                    float inner = y >= stroke && y <= 55f - stroke && x >= left + stroke && x <= right - stroke ? 1f : 0f;
                     texture.SetPixel(x, y, new Color(1f, 1f, 1f, outer * (outline ? 1f - inner : 1f)));
                 }
             texture.Apply();
             var sprite = Sprite.Create(texture, new Rect(0, 0, 320, 56), new Vector2(.5f, .5f));
-            if (outline) slantOutline = sprite;
-            else slant = sprite;
+            SlantSprites[key] = sprite;
             return sprite;
         }
     }

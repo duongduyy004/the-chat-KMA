@@ -87,10 +87,11 @@ namespace KMA.Gameplay.UI
         {
             var startingOffset = CurrentVisualOffset;
             var elapsed = 0f;
-            while (elapsed < .1f)
+            float duration = Mathf.Max(.001f, UITheme.Shared.Motion.pressRestore);
+            while (elapsed < duration)
             {
                 elapsed += Time.unscaledDeltaTime;
-                SetVisualOffset(Vector2.Lerp(startingOffset, Vector2.zero, Mathf.Clamp01(elapsed / .1f)));
+                SetVisualOffset(Vector2.Lerp(startingOffset, Vector2.zero, Mathf.Clamp01(elapsed / duration)));
                 yield return null;
             }
             RestoreImmediately();

@@ -9,12 +9,10 @@ namespace KMA.Gameplay.UI
         const int SlotCount = 5;
 
         [SerializeField] Image[] slots = new Image[SlotCount];
-        [SerializeField] Color filledColor = MinigameUiTheme.Energy;
-        [SerializeField] Color emptyColor = MinigameUiTheme.WithAlpha(MinigameUiTheme.TextPrimary, .25f);
 
         public int CurrentHearts { get; private set; }
-        public Color FilledColor => filledColor;
-        public Color EmptyColor => emptyColor;
+        public Color FilledColor => MinigameUiTheme.Energy;
+        public Color EmptyColor => MinigameUiTheme.WithAlpha(MinigameUiTheme.TextPrimary, .25f);
 
         public void SetSlots(Image[] value) => slots = value ?? new Image[SlotCount];
 
@@ -24,7 +22,7 @@ namespace KMA.Gameplay.UI
             for (var index = 0; index < slots.Length && index < SlotCount; index++)
             {
                 if (slots[index] != null)
-                    slots[index].color = index < CurrentHearts ? filledColor : emptyColor;
+                    slots[index].color = index < CurrentHearts ? FilledColor : EmptyColor;
             }
         }
     }

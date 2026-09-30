@@ -1,4 +1,5 @@
 using System;
+using KMA.Gameplay.UI;
 using TMPro;
 using UnityEngine;
 
@@ -11,6 +12,10 @@ namespace KMA.UI.Kit
     {
         public const string ResourcePath = "UiKitAssets";
         public const string AssetPath = "Assets/_Project/Settings/UI/Resources/UiKitAssets.asset";
+
+        [SerializeField] UITheme theme;
+        public UITheme Theme => theme;
+        public void SetTheme(UITheme value) => theme = value;
 
         [SerializeField] Sprite roundRect20;
         [SerializeField] Sprite roundRect24;

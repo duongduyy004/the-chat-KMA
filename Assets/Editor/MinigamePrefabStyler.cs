@@ -64,10 +64,6 @@ namespace KMA.EditorTools
                 image.preserveAspect = true;
                 image.color = MinigameUiTheme.Energy;
             }
-            var heartBar = new SerializedObject(hearts.GetComponent<HeartBar>());
-            heartBar.FindProperty("filledColor").colorValue = MinigameUiTheme.Energy;
-            heartBar.FindProperty("emptyColor").colorValue = MinigameUiTheme.WithAlpha(MinigameUiTheme.TextPrimary, .25f);
-            heartBar.ApplyModifiedPropertiesWithoutUndo();
         }
 
         static void StyleFilledBar(Transform bar, Color fillColor)

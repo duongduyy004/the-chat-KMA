@@ -1160,7 +1160,7 @@ MonoBehaviour:
   m_Name:
   m_EditorClassIdentifier: KMA.Gameplay.UI::KMA.Gameplay.UI.GameOverScreen
   canvasGroup: {fileID: 0}
-  theme: {fileID: 0}
+  theme: {fileID: 11400000, guid: 99f9508b420b47942a1b96aece73a37b, type: 2}
 --- !u!114 &1509943504
 MonoBehaviour:
   m_ObjectHideFlags: 0

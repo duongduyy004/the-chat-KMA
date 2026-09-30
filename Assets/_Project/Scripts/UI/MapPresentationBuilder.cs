@@ -39,12 +39,12 @@ namespace KMA.Gameplay.UI
             if (screen == null || screen.transform.Find("S5MapPresentation") != null) return;
             foreach (Button button in screen.GetComponentsInChildren<Button>(true)) button.gameObject.SetActive(false);
             UITheme theme = screen.Theme;
-            Color card = theme == null ? Color.white : theme.Card;
-            Color muted = theme == null ? new Color32(226, 232, 240, 255) : theme.Muted;
-            Color mutedForeground = theme == null ? new Color32(71, 85, 105, 255) : theme.MutedForeground;
-            Color border = theme == null ? Color.black : theme.Border;
-            Color background = Color.Lerp(theme == null ? new Color32(25, 130, 196, 255) : theme.Background,
-                new Color32(10, 48, 82, 255), .46f);
+            Color card = theme.Card;
+            Color muted = theme.Muted;
+            Color mutedForeground = theme.MutedForeground;
+            Color border = theme.Border;
+            Color background = Color.Lerp(theme.Background,
+                UITheme.Shared.MapBackgroundTint, .46f);
 
             RectTransform root = Rect(screen.transform, "S5MapPresentation");
             Stretch(root, Vector2.zero, Vector2.zero);
@@ -78,7 +78,7 @@ namespace KMA.Gameplay.UI
         {
             RectTransform header = Rect(parent, "Header");
             Image headerSurface = header.gameObject.AddComponent<Image>();
-            headerSurface.color = new Color32(8, 35, 61, 178);
+            headerSurface.color = MinigameUiTheme.WithAlpha(UITheme.Shared.Surface, 178f / 255f);
             headerSurface.raycastTarget = false;
             HorizontalLayoutGroup layout = header.gameObject.AddComponent<HorizontalLayoutGroup>();
             layout.padding = new RectOffset(14, 16, 10, 12);
@@ -101,15 +101,15 @@ namespace KMA.Gameplay.UI
                 Color.white, TextAnchor.LowerLeft);
             title.transform.parent.gameObject.AddComponent<LayoutElement>().preferredHeight = 62;
             TMP_Text subtitle = LayoutLabel(heading, "Subtitle", "Chọn một môn để bắt đầu", 26,
-                new Color32(201, 226, 245, 255), TextAnchor.UpperLeft);
+                UITheme.Shared.MapHint, TextAnchor.UpperLeft);
             subtitle.transform.parent.gameObject.AddComponent<LayoutElement>().preferredHeight = 34;
             RectTransform livesPanel = Rect(header, "LivesPanel");
             Image livesSurface = livesPanel.gameObject.AddComponent<Image>();
-            livesSurface.color = new Color32(13, 57, 92, 238);
+            livesSurface.color = UITheme.Shared.MapLivesSurface;
             UseRoundedSurface(livesSurface);
             Outline livesOutline = livesPanel.gameObject.AddComponent<Outline>();
-            livesOutline.effectColor = new Color32(255, 202, 58, 210);
-            livesOutline.effectDistance = new Vector2(2f, -2f);
+            livesOutline.effectColor = MinigameUiTheme.WithAlpha(UITheme.Shared.Accent, 210f / 255f);
+            livesOutline.effectDistance = new Vector2(UITheme.Shared.BorderWidth * .5f, -UITheme.Shared.BorderWidth * .5f);
             HorizontalLayoutGroup livesLayout = livesPanel.gameObject.AddComponent<HorizontalLayoutGroup>();
             livesLayout.padding = new RectOffset(16, 16, 10, 10);
             livesLayout.spacing = 12;
@@ -162,18 +162,18 @@ namespace KMA.Gameplay.UI
         {
             RectTransform root = Rect(parent, name);
             Image image = root.gameObject.AddComponent<Image>();
-            image.color = new Color32(255, 249, 231, 255);
+            image.color = UITheme.Shared.TextPrimary;
             UseRoundedSurface(image);
             Outline outline = root.gameObject.AddComponent<Outline>();
             outline.effectColor = border;
-            outline.effectDistance = new Vector2(2f, -2f);
+            outline.effectDistance = new Vector2(UITheme.Shared.BorderWidth * .5f, -UITheme.Shared.BorderWidth * .5f);
             Button button = root.gameObject.AddComponent<Button>();
             button.targetGraphic = image;
             button.colors = ButtonColors();
             LayoutElement element = root.gameObject.AddComponent<LayoutElement>();
             element.preferredWidth = 84f;
             element.preferredHeight = 84f;
-            TextTmp(root, "Label", label, 56, new Color32(8, 35, 61, 255), TextAnchor.MiddleCenter);
+            TextTmp(root, "Label", label, 56, UITheme.Shared.Surface, TextAnchor.MiddleCenter);
             return button;
         }
 
@@ -183,8 +183,8 @@ namespace KMA.Gameplay.UI
             Image image = root.gameObject.AddComponent<Image>(); image.color = entry.Available ? card : muted;
             UseRoundedSurface(image);
             Outline outline = root.gameObject.AddComponent<Outline>();
-            outline.effectColor = entry.Available ? new Color32(255, 202, 58, 255) : new Color32(117, 138, 156, 255);
-            outline.effectDistance = new Vector2(3, -3);
+            outline.effectColor = entry.Available ? UITheme.Shared.Accent : UITheme.Shared.MapLockedBorder;
+            outline.effectDistance = new Vector2(UITheme.Shared.BorderWidth * .75f, -UITheme.Shared.BorderWidth * .75f);
             Shadow shadow = root.gameObject.AddComponent<Shadow>(); shadow.effectColor = new Color(0f, 0f, 0f, .4f); shadow.effectDistance = new Vector2(7, -7);
             Button button = null;
             if (entry.Available)
@@ -218,14 +218,14 @@ namespace KMA.Gameplay.UI
             Stretch(glyph, new Vector2(12, 12), new Vector2(-12, -12));
             Image glyphImage = glyph.gameObject.AddComponent<Image>();
             glyphImage.sprite = SportIconSprite(entry.Subject);
-            glyphImage.color = new Color32(8, 35, 61, 255);
+            glyphImage.color = UITheme.Shared.Surface;
             glyphImage.preserveAspect = true;
             glyphImage.raycastTarget = false;
-            TMP_Text title = LayoutLabel(cardHeader, "Title", entry.Label, 36, entry.Available ? new Color32(8, 35, 61, 255) : foreground, TextAnchor.MiddleLeft);
+            TMP_Text title = LayoutLabel(cardHeader, "Title", entry.Label, 36, entry.Available ? UITheme.Shared.Surface : foreground, TextAnchor.MiddleLeft);
             LayoutElement titleLayout = title.transform.parent.gameObject.AddComponent<LayoutElement>();
             titleLayout.preferredHeight = 70;
             titleLayout.flexibleWidth = 1;
-            TMP_Text status = LayoutLabel(root, "Status", string.Empty, 26, entry.Available ? new Color32(12, 105, 94, 255) : foreground,
+            TMP_Text status = LayoutLabel(root, "Status", string.Empty, 26, entry.Available ? UITheme.Shared.MapReadyText : foreground,
                 TextAnchor.MiddleLeft);
             RectTransform statusContainer = status.transform.parent as RectTransform;
             LayoutElement statusLayout = statusContainer.gameObject.AddComponent<LayoutElement>();
@@ -246,7 +246,7 @@ namespace KMA.Gameplay.UI
             if (entry.Available)
             {
                 action = TextTmp(root, "ActionHint", "THI", 26,
-                    new Color32(163, 104, 0, 255), TextAnchor.MiddleRight);
+                    UITheme.Shared.MapActionText, TextAnchor.MiddleRight);
                 LayoutElement actionLayout = action.gameObject.AddComponent<LayoutElement>();
                 actionLayout.ignoreLayout = true;
                 RectTransform actionRect = action.rectTransform;
@@ -263,7 +263,7 @@ namespace KMA.Gameplay.UI
             else
             {
                 node.SetAvailability(false, "ĐANG PHÁT TRIỂN");
-                AddCornerLockIcon(root, new Color32(38, 60, 77, 255));
+                AddCornerLockIcon(root, UITheme.Shared.MapLockIcon);
             }
             return node;
         }
@@ -283,7 +283,7 @@ namespace KMA.Gameplay.UI
             rowElement.flexibleHeight = 0;
 
             TMP_Text upcoming = LayoutLabel(row, "UpcomingLabel", "SẮP RA MẮT", 22,
-                new Color32(201, 226, 245, 255), TextAnchor.MiddleRight);
+                UITheme.Shared.MapHint, TextAnchor.MiddleRight);
             LayoutElement upcomingLayout = upcoming.transform.parent.gameObject.AddComponent<LayoutElement>();
             upcomingLayout.preferredWidth = 240;
             upcomingLayout.preferredHeight = 46;
@@ -309,12 +309,12 @@ namespace KMA.Gameplay.UI
         {
             ColorBlock colors = ColorBlock.defaultColorBlock;
             colors.normalColor = Color.white;
-            colors.highlightedColor = new Color32(255, 236, 170, 255);
-            colors.pressedColor = new Color32(255, 202, 58, 255);
+            colors.highlightedColor = UITheme.Shared.MapButtonHighlight;
+            colors.pressedColor = UITheme.Shared.Accent;
             colors.selectedColor = colors.highlightedColor;
             colors.disabledColor = new Color(1f, 1f, 1f, .58f);
             colors.colorMultiplier = 1f;
-            colors.fadeDuration = .08f;
+            colors.fadeDuration = UITheme.Shared.Motion.buttonFade;
             return colors;
         }
 
@@ -368,8 +368,10 @@ namespace KMA.Gameplay.UI
 
         static void UseRoundedSurface(Image image)
         {
-            image.sprite = RoundedRectSprite();
+            float radius = UITheme.Shared.CornerRadius * (2f / 3f);
+            image.sprite = radius > 0f ? RoundedRectSprite() : null;
             image.type = Image.Type.Sliced;
+            image.pixelsPerUnitMultiplier = radius > 0f ? 16f / radius : 1f;
         }
 
         static Sprite RoundedRectSprite()

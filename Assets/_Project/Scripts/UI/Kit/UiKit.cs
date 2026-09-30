@@ -66,7 +66,7 @@ namespace KMA.UI.Kit
         public static Image Shape(Transform parent, string name, float radius, Color color)
         {
             var image = Rect(parent, name).gameObject.AddComponent<Image>();
-            SetRadius(image, radius);
+            SetRadius(image, radius < 0f ? MinigameUiTheme.RadiusPanel : radius);
             image.color = color;
             image.raycastTarget = false;
             return image;
@@ -97,20 +97,20 @@ namespace KMA.UI.Kit
             shadow.effectDistance = MinigameUiTheme.ShadowOffset;
         }
 
-        public static Image Panel(Transform parent, string name, float radius = MinigameUiTheme.RadiusPanel,
+        public static Image Panel(Transform parent, string name, float radius = -1f,
             float alpha = MinigameUiTheme.SurfaceOpaque, bool shadow = true)
         {
-            Image image = Shape(parent, name, radius, MinigameUiTheme.WithAlpha(MinigameUiTheme.Surface, alpha));
+            Image image = Shape(parent, name, radius < 0f ? MinigameUiTheme.RadiusPanel : radius, MinigameUiTheme.WithAlpha(MinigameUiTheme.Surface, alpha));
             if (shadow)
                 AddShadow(image);
             return image;
         }
 
         /// Restyles an existing Image as a kit panel (prefab styler, tutorial card).
-        public static void StylePanel(Image image, float radius = MinigameUiTheme.RadiusPanel,
+        public static void StylePanel(Image image, float radius = -1f,
             float alpha = MinigameUiTheme.SurfaceOpaque)
         {
-            SetRadius(image, radius);
+            SetRadius(image, radius < 0f ? MinigameUiTheme.RadiusPanel : radius);
             image.color = MinigameUiTheme.WithAlpha(MinigameUiTheme.Surface, alpha);
             AddShadow(image);
         }
@@ -202,6 +202,7 @@ namespace KMA.UI.Kit
             Image fill = existingFill != null
                 ? existingFill.GetComponent<Image>()
                 : Shape(root.transform, "Fill", MinigameUiTheme.RadiusControl - MinigameUiTheme.BorderWidth, MinigameUiTheme.Surface);
+            SetRadius(fill, Mathf.Max(0f, MinigameUiTheme.RadiusControl - MinigameUiTheme.BorderWidth));
             fill.rectTransform.SetAsFirstSibling();
             Stretch(fill.rectTransform, Vector2.one * MinigameUiTheme.BorderWidth, -Vector2.one * MinigameUiTheme.BorderWidth);
 

@@ -7,7 +7,7 @@ namespace KMA.Gameplay.UI
         [SerializeField] CanvasGroup canvasGroup;
         [SerializeField] UITheme theme;
 
-        public UITheme Theme => theme;
+        public UITheme Theme => theme != null ? theme : UITheme.Shared;
         public bool IsVisible { get; private set; }
 
         protected virtual void Awake()

@@ -31,10 +31,10 @@ namespace KMA.Gameplay.UI
 
         void Update()
         {
-            float cycle = Time.unscaledTime % 4.5f;
-            image.enabled = cycle < .8f;
+            float cycle = Time.unscaledTime % Mathf.Max(.001f, UITheme.Shared.Motion.badgeShineCycle);
+            image.enabled = cycle < UITheme.Shared.Motion.badgeShineDuration;
             if (image.enabled)
-                streak.anchoredPosition = new Vector2(Mathf.Lerp(-82f, 82f, cycle / .8f), 0f);
+                streak.anchoredPosition = new Vector2(Mathf.Lerp(-82f, 82f, cycle / Mathf.Max(.001f, UITheme.Shared.Motion.badgeShineDuration)), 0f);
         }
     }
 }

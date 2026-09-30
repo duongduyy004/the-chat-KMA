@@ -7,8 +7,8 @@ namespace KMA.Gameplay.UI
 {
     public static class SettingsPresentationBuilder
     {
-        static readonly Color Navy = new Color32(8, 35, 61, 255);
-        static readonly Color Gold = new Color32(255, 202, 58, 255);
+        static Color Navy => UITheme.Shared.Surface;
+        static Color Gold => UITheme.Shared.Accent;
 
         public static void Build(SettingsScreen screen)
         {
@@ -17,7 +17,7 @@ namespace KMA.Gameplay.UI
             var root = screen.GetComponent<RectTransform>() ?? screen.gameObject.AddComponent<RectTransform>();
             Stretch(root, Vector2.zero, Vector2.one);
             var backdrop = screen.gameObject.AddComponent<Image>();
-            backdrop.color = new Color(0.02f, .06f, .1f, .85f);
+            backdrop.color = UITheme.Shared.SettingsBackdrop;
 
             var panel = Rect(root, "SettingsPanel", new Vector2(.22f, .14f), new Vector2(.78f, .86f));
             panel.gameObject.AddComponent<Image>().color = Navy;
@@ -28,7 +28,7 @@ namespace KMA.Gameplay.UI
             Label(panel, "VibrationLabel", "RUNG", new Vector2(.09f, .23f), new Vector2(.6f, .33f), 28, Color.white);
             var toggleRect = Rect(panel, "VibrationToggle", new Vector2(.67f, .23f), new Vector2(.91f, .33f));
             var toggleImage = toggleRect.gameObject.AddComponent<Image>();
-            toggleImage.color = new Color32(25, 130, 196, 255);
+            toggleImage.color = screen.Theme.Background;
             var toggle = toggleRect.gameObject.AddComponent<Toggle>();
             toggle.targetGraphic = toggleImage;
             var check = Rect(toggleRect, "Checkmark", new Vector2(.08f, .3f), new Vector2(.2f, .7f));
@@ -38,13 +38,16 @@ namespace KMA.Gameplay.UI
 
             var backRect = Rect(panel, "BackButton", new Vector2(.26f, .075f), new Vector2(.74f, .18f));
             var backImage = backRect.gameObject.AddComponent<Image>();
-            backImage.color = new Color32(25, 130, 196, 255);
+            backImage.color = screen.Theme.Background;
             var back = backRect.gameObject.AddComponent<Button>();
             back.targetGraphic = backImage;
+            var colors = back.colors;
+            colors.fadeDuration = UITheme.Shared.Motion.buttonFade;
+            back.colors = colors;
             back.onClick.AddListener(screen.Back);
             Label(backRect, "Label", "QUAY LẠI", Vector2.zero, Vector2.one, 28, Color.white);
             Label(panel, "Hint", "Thay đổi được lưu tự động", new Vector2(.08f, .015f), new Vector2(.92f, .065f), 19,
-                new Color32(190, 219, 239, 255));
+                UITheme.Shared.SettingsHint);
             screen.BindControls(music, sfx, toggle, musicValue, sfxValue, vibrationValue);
         }
 
@@ -58,7 +61,7 @@ namespace KMA.Gameplay.UI
             hitArea.color = Color.clear;
             var slider = rect.gameObject.AddComponent<Slider>();
             var track = Rect(rect, "Track", new Vector2(0f, .36f), new Vector2(1f, .64f));
-            track.gameObject.AddComponent<Image>().color = new Color32(48, 74, 99, 255);
+            track.gameObject.AddComponent<Image>().color = UITheme.Shared.SettingsTrack;
             var fill = Rect(track, "Fill", Vector2.zero, Vector2.one);
             fill.gameObject.AddComponent<Image>().color = Gold;
             var handleArea = Rect(rect, "HandleArea", Vector2.zero, Vector2.one);

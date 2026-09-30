@@ -75,7 +75,7 @@ namespace KMA.Gameplay.UI
                 kind == Kind.Exit ? new Color(0f, 0f, 0f, 0f) :
                 primary ? HomeMenuStyle.Red : HomeMenuStyle.Glass;
             rect.anchoredPosition = restingPosition + (active ? new Vector2(8f, 0f) : Vector2.zero);
-            rect.localScale = Vector3.one * (pressed && enabled ? .96f : 1f);
+            rect.localScale = Vector3.one * (pressed && enabled ? UITheme.Shared.Menu.pressScale : 1f);
             if (arrow != null) arrow.gameObject.SetActive(active);
             if (icon != null) icon.color = enabled ? HomeMenuStyle.White :
                 new Color(1f, 1f, 1f, .42f);

@@ -10,6 +10,88 @@ namespace KMA.Tests.Presentation
     public sealed class UIThemeTests
     {
         [Test]
+        public void ResultPrefabUsesThemeOnShowInsteadOfBakedPalette()
+        {
+            var theme = AssetDatabase.LoadAssetAtPath<KMA.Gameplay.UI.UITheme>("Assets/_Project/Settings/UI/UITheme.asset");
+            var serialized = new SerializedObject(theme);
+            var surface = serialized.FindProperty("surface");
+            Color original = surface.colorValue;
+            var prefab = AssetDatabase.LoadAssetAtPath<GameObject>("Assets/_Project/Prefabs/UI/ResultPanel.prefab");
+            GameObject instance = Object.Instantiate(prefab);
+            try
+            {
+                surface.colorValue = Color.magenta;
+                serialized.ApplyModifiedPropertiesWithoutUndo();
+                instance.GetComponent<KMA.Gameplay.UI.ResultPanel>().Show(
+                    new KMA.Gameplay.MinigameResult(true, 8f, KMA.Gameplay.Rank.A), "Map");
+                Assert.That(instance.transform.Find("Content").GetComponent<UnityEngine.UI.Image>().color,
+                    Is.EqualTo(KMA.UI.Kit.MinigameUiTheme.WithAlpha(Color.magenta, KMA.UI.Kit.MinigameUiTheme.SurfaceOpaque)));
+            }
+            finally
+            {
+                Object.DestroyImmediate(instance);
+                surface.colorValue = original;
+                serialized.ApplyModifiedPropertiesWithoutUndo();
+            }
+        }
+
+        [Test]
+        public void DefaultPanelRadiusUsesCurrentThemeValue()
+        {
+            var theme = AssetDatabase.LoadAssetAtPath<KMA.Gameplay.UI.UITheme>("Assets/_Project/Settings/UI/UITheme.asset");
+            var serialized = new SerializedObject(theme);
+            var radius = serialized.FindProperty("cornerRadius");
+            float original = radius.floatValue;
+            var root = new GameObject("ThemePanel", typeof(RectTransform));
+            try
+            {
+                radius.floatValue = 12f;
+                serialized.ApplyModifiedPropertiesWithoutUndo();
+                var panel = KMA.UI.Kit.UiKit.Panel(root.transform, "Panel");
+                Assert.That(panel.pixelsPerUnitMultiplier, Is.EqualTo(panel.sprite.border.x / 12f).Within(.001f));
+            }
+            finally
+            {
+                Object.DestroyImmediate(root);
+                radius.floatValue = original;
+                serialized.ApplyModifiedPropertiesWithoutUndo();
+            }
+        }
+
+        [Test]
+        public void ScreenWithoutOverrideUsesSharedThemeAsset()
+        {
+            var root = new GameObject("ThemeScreen", typeof(RectTransform));
+            try
+            {
+                var screen = root.AddComponent<KMA.Gameplay.UI.MainMenuScreen>();
+                Assert.That(screen.Theme, Is.SameAs(AssetDatabase.LoadAssetAtPath<KMA.Gameplay.UI.UITheme>(
+                    "Assets/_Project/Settings/UI/UITheme.asset")));
+            }
+            finally { Object.DestroyImmediate(root); }
+        }
+
+        [Test]
+        public void SharedAccentChangeReachesWidgetPalette()
+        {
+            var theme = AssetDatabase.LoadAssetAtPath<KMA.Gameplay.UI.UITheme>("Assets/_Project/Settings/UI/UITheme.asset");
+            var serialized = new SerializedObject(theme);
+            var accent = serialized.FindProperty("accent");
+            Color original = accent.colorValue;
+            try
+            {
+                accent.colorValue = Color.magenta;
+                serialized.ApplyModifiedPropertiesWithoutUndo();
+                Assert.That(KMA.UI.Kit.MinigameUiTheme.Accent, Is.EqualTo(Color.magenta));
+            }
+            finally
+            {
+                accent.colorValue = original;
+                serialized.ApplyModifiedPropertiesWithoutUndo();
+            }
+        }
+
+        [Test]
         public void ThemeAssetUsesApprovedPalette()
         {
             var theme = AssetDatabase.LoadAssetAtPath<KMA.Gameplay.UI.UITheme>("Assets/_Project/Settings/UI/UITheme.asset");

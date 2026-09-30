@@ -1,19 +1,20 @@
+using KMA.Gameplay.UI;
 using UnityEngine;
 
 namespace KMA.UI.Kit
 {
-    /// Design tokens shared by every minigame's UI. Pure data: no scene access.
+    /// Design tokens shared by every minigame's UI. Reads the shared ScriptableObject; owns no scene state.
     public static class MinigameUiTheme
     {
-        public static readonly Color Surface = new Color32(8, 35, 61, 255);
-        public static readonly Color TextPrimary = new Color32(255, 249, 231, 255);
-        public static readonly Color Accent = new Color32(255, 202, 58, 255);
-        public static readonly Color Player = new Color32(58, 230, 255, 255);
-        public static readonly Color Energy = new Color32(255, 89, 94, 255);
-        public static readonly Color TextOutline = new Color32(3, 18, 33, 255);
-        public static readonly Color Success = new Color32(94, 222, 140, 255);
-        public static readonly Color Track = new Color(1f, 1f, 1f, .22f);
-        public static readonly Color Scrim = new Color(3f / 255f, 18f / 255f, 33f / 255f, .7f);
+        public static Color Surface => UITheme.Shared.Surface;
+        public static Color TextPrimary => UITheme.Shared.TextPrimary;
+        public static Color Accent => UITheme.Shared.Accent;
+        public static Color Player => UITheme.Shared.Player;
+        public static Color Energy => UITheme.Shared.Primary;
+        public static Color TextOutline => UITheme.Shared.TextOutline;
+        public static Color Success => UITheme.Shared.ResultSuccess;
+        public static Color Track => WithAlpha(UITheme.Shared.Card, .22f);
+        public static Color Scrim => UITheme.Shared.Scrim;
 
         public const float SurfaceOpaque = .92f;
         public const float SurfaceSoft = .82f;
@@ -33,22 +34,22 @@ namespace KMA.UI.Kit
         public const float Caption = 28f;
         public const float MinimumFontSize = 28f;
 
-        public const float RadiusPanel = 24f;
-        public const float RadiusControl = 36f;
-        public const float RadiusPause = 20f;
-        public const float BorderWidth = 3f;
+        public static float RadiusPanel => UITheme.Shared.CornerRadius;
+        public static float RadiusControl => UITheme.Shared.CornerRadius * 1.5f;
+        public static float RadiusPause => UITheme.Shared.CornerRadius * (5f / 6f);
+        public static float BorderWidth => UITheme.Shared.BorderWidth * .75f;
 
         public const float SpaceXs = 8f;
         public const float SpaceSm = 16f;
         public const float SpaceMd = 24f;
         public const float SpaceLg = 32f;
 
-        public static readonly Color ShadowColor = new Color(0f, 0f, 0f, .35f);
+        public static Color ShadowColor => UITheme.Shared.ShadowColor;
         public static readonly Vector2 ShadowOffset = new Vector2(0f, -4f);
 
-        public const float PressScale = .94f;
-        public const float PressLighten = .15f;
-        public const float PressRestoreSeconds = .1f;
+        public static float PressScale => UITheme.Shared.Motion.pressScale;
+        public static float PressLighten => UITheme.Shared.Motion.pressLighten;
+        public static float PressRestoreSeconds => Mathf.Max(.001f, UITheme.Shared.Motion.pressRestore);
 
         public const float ButtonHeight = 88f;
         public const float RoundButton = 220f;

@@ -334,7 +334,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: KMA.Gameplay.UI::KMA.Gameplay.UI.SettingsScreen
   canvasGroup: {fileID: 0}
-  theme: {fileID: 0}
+  theme: {fileID: 11400000, guid: 99f9508b420b47942a1b96aece73a37b, type: 2}
 --- !u!1 &52185694
 GameObject:
   m_ObjectHideFlags: 0
@@ -585,7 +585,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: KMA.Gameplay.UI::KMA.Gameplay.UI.CalibrateScreen
   canvasGroup: {fileID: 0}
-  theme: {fileID: 0}
+  theme: {fileID: 11400000, guid: 99f9508b420b47942a1b96aece73a37b, type: 2}
 --- !u!1 &362821019
 GameObject:
   m_ObjectHideFlags: 0
@@ -645,7 +645,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: KMA.Gameplay.UI::KMA.Gameplay.UI.MainMenuScreen
   canvasGroup: {fileID: 0}
-  theme: {fileID: 0}
+  theme: {fileID: 11400000, guid: 99f9508b420b47942a1b96aece73a37b, type: 2}
   continueButton: {fileID: 0}
 --- !u!114 &362821022
 MonoBehaviour:

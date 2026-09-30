@@ -2,6 +2,7 @@
 using System;
 using System.IO;
 using KMA.UI.Kit;
+using KMA.Gameplay.UI;
 using TMPro;
 using UnityEditor;
 using UnityEngine;
@@ -38,6 +39,7 @@ namespace KMA.EditorTools
                 AssetDatabase.CreateAsset(assets, UiKitAssets.AssetPath);
             }
 
+            assets.SetTheme(Load<UITheme>("Assets/_Project/Settings/UI/UITheme.asset"));
             assets.Configure(roundRect20, roundRect24, roundRect36, circle, ring,
                 Load<TMP_FontAsset>(FontPath), Load<Material>(OutlineMaterialPath));
             EditorUtility.SetDirty(assets);
