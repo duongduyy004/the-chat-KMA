@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="256" height="256" viewBox="0 0 256 256" role="img" aria-label="Huy hiệu thể thao KMA">
+  <defs>
+    <clipPath id="circle"><circle cx="128" cy="128" r="119"/></clipPath>
+    <filter id="shadow" x="-20%" y="-20%" width="140%" height="150%">
+      <feDropShadow dx="3" dy="6" stdDeviation="5" flood-color="#061b30" flood-opacity=".42"/>
+    </filter>
+  </defs>
+  <circle cx="128" cy="128" r="119" fill="#0B2A4A" stroke="#FFFFFF" stroke-width="8" filter="url(#shadow)"/>
+  <g clip-path="url(#circle)">
+    <circle cx="128" cy="165" r="76" fill="#E2553D"/>
+    <path d="M93 183l27-43m-2 57l27-43m-2 57l27-43" fill="none" stroke="#FFFFFF" stroke-width="8" stroke-linecap="round"/>
+  </g>
+  <path d="M128 32l9 19 21 3-15 15 4 21-19-10-19 10 4-21-15-15 21-3z" fill="#FFC928"/>
+  <path d="M61 91c-20 27-24 64-8 95m-3-73l-18-4m17 27l-20 2m26 19l-18 9m159-75c20 27 24 64 8 95m3-73l18-4m-17 27l20 2m-26 19l18 9" fill="none" stroke="#6BA43A" stroke-width="9" stroke-linecap="round"/>
+</svg>
