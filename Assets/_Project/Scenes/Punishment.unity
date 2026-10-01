@@ -751,7 +751,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.Image
   m_Material: {fileID: 0}
-  m_Color: {r: 0.03137255, g: 0.13725491, b: 0.23921569, a: 0.92}
+  m_Color: {r: 0.031372547, g: 0.1372549, b: 0.23921569, a: 0.92}
   m_RaycastTarget: 1
   m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
   m_Maskable: 1
@@ -807,7 +807,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: KMA.Gameplay.UI::KMA.UI.Kit.KitPressFeedback
   face: {fileID: 1640173410}
   target: {fileID: 1640173408}
-  restColor: {r: 0.03137255, g: 0.13725491, b: 0.23921569, a: 0.92}
+  restColor: {r: 0.031372547, g: 0.1372549, b: 0.23921569, a: 0.92}
   selectable: {fileID: 1640173409}
 --- !u!114 &1640173414
 MonoBehaviour:

@@ -440,7 +440,7 @@ GameObject:
   - component: {fileID: 5637337679076831705}
   - component: {fileID: 4441460370377386041}
   - component: {fileID: 6682379413185311900}
-  - component: {fileID: 8434265332167357522}
+  - component: {fileID: 700794805389213145}
   m_Layer: 0
   m_Name: Content
   m_TagString: Untagged
@@ -497,7 +497,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.Image
   m_Material: {fileID: 0}
-  m_Color: {r: 0.03137255, g: 0.13725491, b: 0.23921569, a: 0.92}
+  m_Color: {r: 0.031372547, g: 0.1372549, b: 0.23921569, a: 0.92}
   m_RaycastTarget: 1
   m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
   m_Maskable: 1
@@ -514,7 +514,7 @@ MonoBehaviour:
   m_FillOrigin: 0
   m_UseSpriteMesh: 0
   m_PixelsPerUnitMultiplier: 1
---- !u!114 &8434265332167357522
+--- !u!114 &700794805389213145
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -724,7 +724,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.Image
   m_Material: {fileID: 0}
-  m_Color: {r: 0.011764706, g: 0.07058824, b: 0.12941177, a: 0.7}
+  m_Color: {r: 0.011764706, g: 0.07058824, b: 0.12941176, a: 0.7}
   m_RaycastTarget: 1
   m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
   m_Maskable: 1
@@ -1030,7 +1030,7 @@ MonoBehaviour:
   m_fontColor32:
     serializedVersion: 2
     rgba: 4294967295
-  m_fontColor: {r: 0.03137255, g: 0.13725491, b: 0.23921569, a: 1}
+  m_fontColor: {r: 0.031372547, g: 0.1372549, b: 0.23921569, a: 1}
   m_enableVertexGradient: 0
   m_colorMode: 3
   m_fontColorGradient:
@@ -1773,7 +1773,7 @@ MonoBehaviour:
   m_fontColor32:
     serializedVersion: 2
     rgba: 4294967295
-  m_fontColor: {r: 0.03137255, g: 0.13725491, b: 0.23921569, a: 1}
+  m_fontColor: {r: 0.031372547, g: 0.1372549, b: 0.23921569, a: 1}
   m_enableVertexGradient: 0
   m_colorMode: 3
   m_fontColorGradient:

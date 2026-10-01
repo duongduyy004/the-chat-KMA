@@ -1236,8 +1236,6 @@ MonoBehaviour:
   - {fileID: 6536289200507109718}
   - {fileID: 3504085510111135101}
   - {fileID: 1878479644958412237}
-  filledColor: {r: 1, g: 0.34901962, b: 0.36862746, a: 1}
-  emptyColor: {r: 1, g: 0.9764706, b: 0.90588236, a: 0.25}
 --- !u!1 &8863690910283851387
 GameObject:
   m_ObjectHideFlags: 0
