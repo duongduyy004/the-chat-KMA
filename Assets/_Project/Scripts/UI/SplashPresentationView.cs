@@ -28,6 +28,26 @@ namespace KMA.Gameplay.UI
         {
             if (root.GetComponent<Canvas>() == null) return null;
             var style = UITheme.Shared.Splash;
+            var existing = root.Find("SplashSafeArea/SplashLayout")?.GetComponent<SplashPresentationView>();
+            if (existing != null)
+            {
+                existing.style = style;
+                existing.safeArea = (RectTransform)existing.transform.parent;
+                existing.layout = (RectTransform)existing.transform;
+                existing.brand = existing.GetComponent<CanvasGroup>();
+                if (Application.isPlaying) existing.brand.alpha = 0f;
+                existing.kma = existing.transform.Find("TitleKMA") as RectTransform;
+                existing.titleTop = existing.transform.Find("TitleTop")?.GetComponent<TMP_Text>();
+                existing.titleKma = existing.kma?.GetComponent<TMP_Text>();
+                existing.Status = existing.transform.Find("LoadingStatus")?.GetComponent<TMP_Text>();
+                existing.Percent = existing.transform.Find("ProgressPercent")?.GetComponent<TMP_Text>();
+                existing.LoadingBar = existing.GetComponentInChildren<Slider>(true);
+                existing.fill = existing.transform.Find("LoadingBar/FillMask/Fill") as RectTransform;
+                existing.academyFooter = existing.safeArea.Find("AcademyFooter") as RectTransform;
+                existing.versionFooter = existing.safeArea.Find("VersionFooter") as RectTransform;
+                existing.SetDisplayedProgress(0f);
+                return existing;
+            }
             var scaler = root.GetComponent<CanvasScaler>();
             if (scaler != null)
             {

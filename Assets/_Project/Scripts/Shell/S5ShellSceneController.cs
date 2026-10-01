@@ -64,6 +64,7 @@ namespace KMA.Gameplay.Shell
                 gameOver.RetryRequested += StartNewGame;
                 gameOver.NewGameRequested += StartNewGame;
                 gameOver.MenuRequested += OpenMenu;
+                BindGameOverButtons();
             }
             if (settings != null)
             {
@@ -98,6 +99,7 @@ namespace KMA.Gameplay.Shell
                 gameOver.RetryRequested -= StartNewGame;
                 gameOver.NewGameRequested -= StartNewGame;
                 gameOver.MenuRequested -= OpenMenu;
+                UnbindGameOverButtons();
             }
             if (settings != null)
             {
@@ -125,30 +127,44 @@ namespace KMA.Gameplay.Shell
 
         void BindMainMenuButtons()
         {
-            BindButton("CONTINUEButton", mainMenu.Continue);
-            BindButton("NEW GAMEButton", mainMenu.NewGame);
-            BindButton("SETTINGSButton", mainMenu.OpenSettings);
-            BindButton("QUITButton", mainMenu.Quit);
+            BindButton(mainMenu.transform, "CONTINUEButton", mainMenu.Continue);
+            BindButton(mainMenu.transform, "NEW GAMEButton", mainMenu.NewGame);
+            BindButton(mainMenu.transform, "SETTINGSButton", mainMenu.OpenSettings);
+            BindButton(mainMenu.transform, "QUITButton", mainMenu.Quit);
         }
 
         void UnbindMainMenuButtons()
         {
-            UnbindButton("CONTINUEButton", mainMenu.Continue);
-            UnbindButton("NEW GAMEButton", mainMenu.NewGame);
-            UnbindButton("SETTINGSButton", mainMenu.OpenSettings);
-            UnbindButton("QUITButton", mainMenu.Quit);
+            UnbindButton(mainMenu.transform, "CONTINUEButton", mainMenu.Continue);
+            UnbindButton(mainMenu.transform, "NEW GAMEButton", mainMenu.NewGame);
+            UnbindButton(mainMenu.transform, "SETTINGSButton", mainMenu.OpenSettings);
+            UnbindButton(mainMenu.transform, "QUITButton", mainMenu.Quit);
         }
 
-        void BindButton(string name, UnityEngine.Events.UnityAction action)
+        void BindGameOverButtons()
         {
-            var target = mainMenu.GetComponentsInChildren<Button>(true)
+            BindButton(gameOver.transform, "RETRYButton", gameOver.Retry);
+            BindButton(gameOver.transform, "NEW GAMEButton", gameOver.NewGame);
+            BindButton(gameOver.transform, "MAIN MENUButton", gameOver.ReturnToMenu);
+        }
+
+        void UnbindGameOverButtons()
+        {
+            UnbindButton(gameOver.transform, "RETRYButton", gameOver.Retry);
+            UnbindButton(gameOver.transform, "NEW GAMEButton", gameOver.NewGame);
+            UnbindButton(gameOver.transform, "MAIN MENUButton", gameOver.ReturnToMenu);
+        }
+
+        static void BindButton(Transform root, string name, UnityEngine.Events.UnityAction action)
+        {
+            var target = root.GetComponentsInChildren<Button>(true)
                 .FirstOrDefault(button => button.name == name);
             target?.onClick.AddListener(action);
         }
 
-        void UnbindButton(string name, UnityEngine.Events.UnityAction action)
+        static void UnbindButton(Transform root, string name, UnityEngine.Events.UnityAction action)
         {
-            var target = mainMenu.GetComponentsInChildren<Button>(true)
+            var target = root.GetComponentsInChildren<Button>(true)
                 .FirstOrDefault(button => button.name == name);
             target?.onClick.RemoveListener(action);
         }

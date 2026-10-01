@@ -19,9 +19,9 @@ namespace KMA.Gameplay.UI
         [SerializeField] Image cardImage;
         [SerializeField] Image iconPlate;
         [SerializeField] Outline cardOutline;
-        GameObject detailVisibilityRoot;
+        [SerializeField] GameObject detailVisibilityRoot;
 
-        Color subjectColor = Color.white;
+        [SerializeField] Color subjectColor = Color.white;
 
         static Color ReadyBorder => UITheme.Shared.Accent;
         static Color CompleteBorder => UITheme.Shared.MapCompleteBorder;

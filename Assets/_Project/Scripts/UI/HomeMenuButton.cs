@@ -11,21 +11,27 @@ namespace KMA.Gameplay.UI
     {
         public enum Kind { NewGame, Continue, Secondary, Exit }
 
-        Kind kind;
+        [SerializeField] Kind kind;
         Button button;
-        Image border;
-        Image fill;
-        Image arrow;
+        [SerializeField] Image border;
+        [SerializeField] Image fill;
+        [SerializeField] Image arrow;
         Image icon;
         RectTransform rect;
         Vector2 restingPosition;
         bool hovered;
         bool focused;
         bool pressed;
-        bool primary;
+        [SerializeField] bool primary;
         TMP_Text[] labels;
 
         public Kind ButtonKind => kind;
+
+        void Awake()
+        {
+            if (border != null && fill != null)
+                Initialize(kind, border, fill, arrow);
+        }
 
         public void Initialize(Kind buttonKind, Image borderImage, Image fillImage, Image arrowImage)
         {

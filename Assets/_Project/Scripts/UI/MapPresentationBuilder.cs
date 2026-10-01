@@ -36,7 +36,30 @@ namespace KMA.Gameplay.UI
 
         public static void Build(MapScreen screen, GameSession session)
         {
-            if (screen == null || screen.transform.Find("S5MapPresentation") != null) return;
+            if (screen == null) return;
+            var existing = screen.transform.Find("S5MapPresentation");
+            if (existing != null)
+            {
+                var existingNodes = existing.GetComponentsInChildren<MapNodeView>(true);
+                var existingHearts = existing.GetComponentInChildren<HeartBar>(true);
+                screen.BindPresentation(existingNodes, existingHearts, session);
+                var back = existing.Find("Content/Header/BackButton")?.GetComponent<Button>();
+                if (back != null)
+                {
+                    back.onClick.RemoveAllListeners();
+                    back.onClick.AddListener(() => KMA.Gameplay.Core.SceneRouter.Instance?.RouteToMenu());
+                }
+                foreach (var node in existingNodes)
+                {
+                    if (node.IsComingSoon) continue;
+                    var button = node.GetComponent<Button>();
+                    if (button == null) continue;
+                    button.onClick.RemoveAllListeners();
+                    var subject = node.SubjectId;
+                    button.onClick.AddListener(() => screen.SelectSubject(subject));
+                }
+                return;
+            }
             foreach (Button button in screen.GetComponentsInChildren<Button>(true)) button.gameObject.SetActive(false);
             UITheme theme = screen.Theme;
             Color card = theme.Card;
@@ -56,7 +79,7 @@ namespace KMA.Gameplay.UI
             PinToTop((RectTransform)hearts.transform.parent.parent, 116f);
             RectTransform grid = Rect(content, "SelectionGrid");
             Anchor(grid, new Vector2(0f, .33f), new Vector2(1f, .84f));
-            GridLayoutGroup gridLayout = grid.gameObject.AddComponent<CenteredLastRowGridLayout>();
+            GridLayoutGroup gridLayout = grid.gameObject.AddComponent<GridLayoutGroup>();
             gridLayout.constraint = GridLayoutGroup.Constraint.FixedColumnCount;
             gridLayout.constraintCount = 3;
             gridLayout.spacing = new Vector2(16, 16); gridLayout.childAlignment = TextAnchor.UpperCenter;
@@ -358,7 +381,7 @@ namespace KMA.Gameplay.UI
                     break;
             }
             texture.SetPixels32(pixels);
-            texture.Apply(false, true);
+            texture.Apply(false, false);
             Sprite sprite = Sprite.Create(texture, new Rect(0, 0, size, size), new Vector2(.5f, .5f), size);
             sprite.name = "SportIcon_" + subject;
             sprite.hideFlags = HideFlags.HideAndDontSave;
@@ -402,7 +425,7 @@ namespace KMA.Gameplay.UI
                     : new Color32(255, 255, 255, 0);
             }
             texture.SetPixels32(pixels);
-            texture.Apply(false, true);
+            texture.Apply(false, false);
             roundedRectSprite = Sprite.Create(texture, new Rect(0, 0, size, size),
                 new Vector2(.5f, .5f), 100f, 0, SpriteMeshType.FullRect,
                 new Vector4(radius, radius, radius, radius));
@@ -452,7 +475,7 @@ namespace KMA.Gameplay.UI
             DrawCircle(pixels, size, 48, 37, 6);
             DrawLine(pixels, size, 48, 35, 48, 24, 5);
             texture.SetPixels32(pixels);
-            texture.Apply(false, true);
+            texture.Apply(false, false);
             lockSprite = Sprite.Create(texture, new Rect(0, 0, size, size), new Vector2(.5f, .5f), size);
             lockSprite.name = "RuntimeLockIcon";
             lockSprite.hideFlags = HideFlags.HideAndDontSave;
@@ -534,7 +557,7 @@ namespace KMA.Gameplay.UI
                     : new Color32(255, 255, 255, 0);
             }
             texture.SetPixels32(pixels);
-            texture.Apply(false, true);
+            texture.Apply(false, false);
             heartSprite = Sprite.Create(texture, new Rect(0, 0, size, size), new Vector2(.5f, .5f), size);
             heartSprite.name = "RuntimeHeartIcon";
             heartSprite.hideFlags = HideFlags.HideAndDontSave;
@@ -602,74 +625,4 @@ namespace KMA.Gameplay.UI
         }
     }
 
-    public sealed class ResponsiveGridLayout : MonoBehaviour
-    {
-        GridLayoutGroup grid;
-        RectTransform rect;
-
-        void Awake()
-        {
-            grid = GetComponent<GridLayoutGroup>();
-            rect = GetComponent<RectTransform>();
-        }
-
-        void OnEnable() => Refresh();
-        void OnRectTransformDimensionsChange() => Refresh();
-
-        public void Refresh()
-        {
-            if (grid == null) grid = GetComponent<GridLayoutGroup>();
-            if (rect == null) rect = GetComponent<RectTransform>();
-            if (grid == null || rect == null) return;
-            int columns = Mathf.Max(1, grid.constraintCount);
-            float width = rect.rect.width;
-            if (width <= 0f) width = Mathf.Max(1f, Screen.width - 144f);
-            float cellWidth = Mathf.Max(1f, (width - grid.padding.left - grid.padding.right - grid.spacing.x * (columns - 1)) / columns);
-            float cellHeight = Mathf.Clamp(cellWidth * 0.56f, 220f, 264f);
-            if (rect.rect.height > 0f)
-                cellHeight = Mathf.Min(cellHeight, Mathf.Max(1f, (rect.rect.height - grid.spacing.y) / 2f));
-            grid.cellSize = new Vector2(cellWidth, cellHeight);
-            int titleSize = cellWidth < 350f ? 30 : cellWidth < 420f ? 32 : 36;
-            foreach (MapNodeView node in GetComponentsInChildren<MapNodeView>(true))
-            {
-                Transform title = node.transform.Find("CardHeader/TitleContainer/Title");
-                if (title != null)
-                {
-                    TMP_Text tmp = title.GetComponent<TMP_Text>();
-                    if (tmp != null)
-                    {
-                        tmp.fontSize = titleSize;
-                        UiKit.FitLabel(tmp, titleSize);
-                    }
-                }
-            }
-            LayoutElement element = GetComponent<LayoutElement>();
-            if (element != null)
-            {
-                element.preferredHeight = cellHeight * 2f + grid.spacing.y;
-                element.flexibleHeight = 0f;
-            }
-        }
-    }
-
-    public sealed class CenteredLastRowGridLayout : GridLayoutGroup
-    {
-        public override void SetLayoutVertical()
-        {
-            base.SetLayoutVertical();
-            if (constraint != Constraint.FixedColumnCount || constraintCount < 1)
-                return;
-
-            int finalRowCount = rectChildren.Count % constraintCount;
-            if (finalRowCount == 0)
-                return;
-
-            float rowWidth = finalRowCount * cellSize.x + (finalRowCount - 1) * spacing.x;
-            float startX = GetStartOffset(0, rowWidth);
-            int firstChild = rectChildren.Count - finalRowCount;
-            for (int index = 0; index < finalRowCount; index++)
-                SetChildAlongAxis(rectChildren[firstChild + index], 0,
-                    startX + index * (cellSize.x + spacing.x), cellSize.x);
-        }
-    }
 }

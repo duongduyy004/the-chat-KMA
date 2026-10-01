@@ -1,0 +1,224 @@
+#if UNITY_EDITOR
+using System;
+using System.IO;
+using System.Linq;
+using System.Reflection;
+using System.Security.Cryptography;
+using KMA.Gameplay.Shell;
+using KMA.Gameplay.UI;
+using TMPro;
+using UnityEditor;
+using UnityEditor.SceneManagement;
+using UnityEngine;
+using UnityEngine.SceneManagement;
+using UnityEngine.UI;
+
+namespace KMA.EditorTools
+{
+    public static class ShellSceneAuthoring
+    {
+        const string Scenes = "Assets/_Project/Scenes/";
+        const string Sprites = "Assets/_Project/Art/UI/GeneratedSceneSprites";
+
+        [MenuItem("KMA/Presentation/Author Shell Scenes")]
+        public static void Apply()
+        {
+            if (!Application.isBatchMode && !EditorSceneManager.SaveCurrentModifiedScenesIfUserWantsTo())
+                return;
+
+            Author("Bootstrap", scene =>
+            {
+                var presenter = Require<SplashScreenPresenter>(scene);
+                var view = SplashPresentationView.Build(presenter.transform);
+                if (view == null) throw new InvalidOperationException("Bootstrap has no splash Canvas.");
+                KeepOnly(presenter.transform, "Illustration", "SplashNavyGradient", "SplashSafeArea");
+                var properties = new SerializedObject(presenter);
+                properties.FindProperty("loadingBar").objectReferenceValue = view.LoadingBar;
+                properties.FindProperty("statusText").objectReferenceValue = view.Status;
+                properties.FindProperty("progressText").objectReferenceValue = view.Percent;
+                properties.ApplyModifiedPropertiesWithoutUndo();
+                view.GetComponent<CanvasGroup>().alpha = 1f;
+            });
+            Author("Menu", scene =>
+            {
+                var screen = Require<MainMenuScreen>(scene);
+                HomePresentationBuilder.Build(screen);
+                RemoveChild(screen.transform, "HomeLogo");
+                RemoveChild(screen.transform, "HomeTitle");
+            });
+            Author("Map", scene =>
+            {
+                var screen = Require<MapScreen>(scene);
+                RemoveChild(screen.transform, "S5MapPresentation");
+                MapPresentationBuilder.Build(screen, null);
+                KeepOnly(screen.transform, "S5MapPresentation");
+            });
+            Author("GameOver", scene =>
+            {
+                var screen = Require<GameOverScreen>(scene);
+                GameOverPresentationBuilder.Build(screen, null);
+                KeepOnly(screen.transform, "GameOverVeil", "GameOverLayout");
+            });
+            AssetDatabase.SaveAssets();
+            Debug.Log("[KMA] Authored Bootstrap, Menu, Map, and GameOver scene UI.");
+        }
+
+        public static void Validate()
+        {
+            ValidateScene("Bootstrap", scene =>
+            {
+                var presenter = Require<SplashScreenPresenter>(scene);
+                Check(presenter.transform.Find("Backdrop") == null, "Legacy Bootstrap backdrop remains");
+                var view = SplashPresentationView.Build(presenter.transform);
+                Check(view != null && view.LoadingBar != null && view.Status != null && view.Percent != null,
+                    "Splash view is missing its runtime controls");
+            });
+            ValidateScene("Menu", scene =>
+            {
+                var screen = Require<MainMenuScreen>(scene);
+                Check(screen.transform.Find("HomeLogo") == null, "Legacy Home logo remains");
+                HomePresentationBuilder.Build(screen);
+                var buttons = screen.transform.Find("HomeMenuLayout")?.GetComponentsInChildren<Button>(true);
+                Check(buttons != null && buttons.Length == 4, "Menu needs four authored buttons");
+            });
+            ValidateScene("Map", scene =>
+            {
+                var screen = Require<MapScreen>(scene);
+                Check(screen.transform.Find("SprintButton") == null, "Legacy Map buttons remain");
+                var grid = screen.transform.Find("S5MapPresentation/Content/SelectionGrid");
+                Check(grid != null && grid.GetComponent<GridLayoutGroup>() != null
+                    && grid.GetComponent<ResponsiveGridLayout>() != null,
+                    "Authored Map grid is missing layout components");
+                MapPresentationBuilder.Build(screen, null);
+                Check(screen.Nodes.Length == 3, "Map needs three authored subject nodes");
+                int selected = 0;
+                screen.SubjectRequested += _ => selected++;
+                foreach (var node in screen.Nodes)
+                    node.GetComponent<Button>()?.onClick.Invoke();
+                Check(selected == 3, "Authored Map buttons were not rebound");
+            });
+            ValidateScene("GameOver", scene =>
+            {
+                var screen = Require<GameOverScreen>(scene);
+                GameOverPresentationBuilder.Build(screen, null);
+                var buttons = screen.transform.Find("GameOverLayout")?.GetComponentsInChildren<Button>(true);
+                Check(buttons != null && buttons.Length == 3, "GameOver needs three authored buttons");
+                int actions = 0;
+                screen.RetryRequested += () => actions++;
+                screen.NewGameRequested += () => actions++;
+                screen.MenuRequested += () => actions++;
+                var controller = Require<S5ShellSceneController>(scene);
+                typeof(S5ShellSceneController).GetMethod("Awake", BindingFlags.Instance | BindingFlags.NonPublic)
+                    ?.Invoke(controller, null);
+                foreach (var button in buttons) button.onClick.Invoke();
+                Check(actions == 3, "Authored GameOver buttons were not rebound");
+            });
+            Debug.Log("[KMA] Shell scene assets validated after reopen.");
+        }
+
+        static void ValidateScene(string name, Action<Scene> check)
+        {
+            var scene = EditorSceneManager.OpenScene(Scenes + name + ".unity", OpenSceneMode.Single);
+            int before = scene.GetRootGameObjects().Sum(root => root.GetComponentsInChildren<Transform>(true).Length);
+            check(scene);
+            int after = scene.GetRootGameObjects().Sum(root => root.GetComponentsInChildren<Transform>(true).Length);
+            Check(before == after, name + " builder duplicated UI after reopen");
+            foreach (var root in scene.GetRootGameObjects())
+            foreach (var image in root.GetComponentsInChildren<Image>(true))
+                Check(image.sprite == null || AssetDatabase.Contains(image.sprite),
+                    name + "/" + image.name + " has a transient sprite");
+            Debug.Log($"[KMA] Validated {name}: {after} objects, no transient sprites.");
+        }
+
+        static void Check(bool condition, string message)
+        {
+            if (!condition) throw new InvalidOperationException(message);
+        }
+
+        static void Author(string name, Action<Scene> build)
+        {
+            var scene = EditorSceneManager.OpenScene(Scenes + name + ".unity", OpenSceneMode.Single);
+            build(scene);
+            int baked = BakeSprites(scene);
+            EditorSceneManager.MarkSceneDirty(scene);
+            if (!EditorSceneManager.SaveScene(scene))
+                throw new InvalidOperationException("Could not save " + scene.path);
+            Debug.Log($"[KMA] Saved {name}; baked {baked} generated sprite references.");
+        }
+
+        static T Require<T>(Scene scene) where T : Component
+        {
+            foreach (var root in scene.GetRootGameObjects())
+            {
+                var result = root.GetComponentInChildren<T>(true);
+                if (result != null) return result;
+            }
+            throw new InvalidOperationException($"{scene.path} is missing {typeof(T).Name}.");
+        }
+
+        static void RemoveChild(Transform parent, string name)
+        {
+            var child = parent.Find(name);
+            if (child != null) UnityEngine.Object.DestroyImmediate(child.gameObject);
+        }
+
+        static void KeepOnly(Transform parent, params string[] names)
+        {
+            for (int i = parent.childCount - 1; i >= 0; i--)
+            {
+                var child = parent.GetChild(i);
+                if (!names.Contains(child.name)) UnityEngine.Object.DestroyImmediate(child.gameObject);
+            }
+            foreach (var name in names)
+                if (parent.Find(name) == null)
+                    throw new InvalidOperationException($"Missing authored UI {name} under {parent.name}.");
+        }
+
+        static int BakeSprites(Scene scene)
+        {
+            Directory.CreateDirectory(Sprites);
+            int count = 0;
+            foreach (var root in scene.GetRootGameObjects())
+            foreach (var image in root.GetComponentsInChildren<Image>(true))
+            {
+                var sprite = image.sprite;
+                if (sprite == null || AssetDatabase.Contains(sprite)) continue;
+                var rect = sprite.rect;
+                var source = sprite.texture;
+                var texture = new Texture2D(Mathf.RoundToInt(rect.width), Mathf.RoundToInt(rect.height),
+                    TextureFormat.RGBA32, false);
+                texture.SetPixels(source.GetPixels(Mathf.RoundToInt(rect.x), Mathf.RoundToInt(rect.y),
+                    texture.width, texture.height));
+                texture.Apply();
+                byte[] png = texture.EncodeToPNG();
+                UnityEngine.Object.DestroyImmediate(texture);
+                string key;
+                using (var sha = SHA256.Create())
+                {
+                    var geometry = System.Text.Encoding.UTF8.GetBytes(
+                        $"{sprite.pixelsPerUnit}:{sprite.pivot}:{sprite.border}");
+                    var payload = new byte[png.Length + geometry.Length];
+                    Buffer.BlockCopy(png, 0, payload, 0, png.Length);
+                    Buffer.BlockCopy(geometry, 0, payload, png.Length, geometry.Length);
+                    key = BitConverter.ToString(sha.ComputeHash(payload)).Replace("-", "").Substring(0, 20);
+                }
+                var path = Sprites + "/" + key + ".png";
+                if (!File.Exists(path)) File.WriteAllBytes(path, png);
+                AssetDatabase.ImportAsset(path, ImportAssetOptions.ForceSynchronousImport);
+                var importer = (TextureImporter)AssetImporter.GetAtPath(path);
+                importer.textureType = TextureImporterType.Sprite;
+                importer.spriteImportMode = SpriteImportMode.Single;
+                importer.spritePixelsPerUnit = sprite.pixelsPerUnit;
+                importer.spritePivot = new Vector2(sprite.pivot.x / rect.width, sprite.pivot.y / rect.height);
+                importer.spriteBorder = sprite.border;
+                importer.alphaIsTransparency = true;
+                importer.SaveAndReimport();
+                image.sprite = AssetDatabase.LoadAssetAtPath<Sprite>(path)
+                    ?? throw new InvalidOperationException("Could not import generated sprite " + path);
+                count++;
+            }
+            return count;
+        }
+    }
+}
+#endif

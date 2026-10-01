@@ -85,7 +85,7 @@ rtk adb -s 127.0.0.1:6555 shell am start \
 
 For an ARM64 Android phone, use `KMA.EditorTools.BuildScript.BuildAndroid` with `-buildOutput Builds/Android/kma-report.apk`. The emulator method restores the project architecture afterward. If installation reports a signature mismatch, use the matching signing key; preserve the existing save before considering an uninstall.
 
-Rebuild authored demo layouts through **KMA → Demo → Configure Splash and Home** and **Configure Sprint Artwork**. Run these before manual layout adjustments. Sources/licenses are in [CREDITS](Assets/_Project/CREDITS.md); verified tests, device checks and remaining limits are in [Android Report Demo QA](docs/qa/android-report-demo.md).
+The Bootstrap, Menu, Map, and GameOver scenes contain their current UI and can be inspected outside Play Mode. After changing a shell presentation builder, run **KMA → Presentation → Author Shell Scenes** to update the saved layouts and generated sprite assets. Rebuild Sprint artwork through **Configure Sprint Artwork** before manual layout adjustments. Sources/licenses are in [CREDITS](Assets/_Project/CREDITS.md); verified tests, device checks and remaining limits are in [Android Report Demo QA](docs/qa/android-report-demo.md).
 
 ## Build APK
 

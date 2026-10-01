@@ -15,7 +15,15 @@ namespace KMA.Gameplay.UI
 
         public static void Build(GameOverScreen screen, GameSession session)
         {
-            if (screen == null || screen.transform.Find(LayoutName) != null) return;
+            if (screen == null) return;
+            if (screen.transform.Find(LayoutName) != null)
+            {
+                var current = GameOverStats.From(session);
+                SetStat(screen, "StatPassed", $"{current.SubjectsPassed}/{current.SubjectsTotal}");
+                SetStat(screen, "StatFailed", current.FailedVisits.ToString());
+                SetStat(screen, "StatScore", current.TotalScore.ToString());
+                return;
+            }
             var stats = GameOverStats.From(session);
 
             var veil = Rect(screen.transform, "GameOverVeil");
@@ -49,6 +57,12 @@ namespace KMA.Gameplay.UI
             Action(screen, layout, "RETRYButton", "CHƠI LẠI", -215f, HomeMenuButton.Kind.Continue, true);
             Action(screen, layout, "NEW GAMEButton", "CHƠI MỚI", -295f, HomeMenuButton.Kind.NewGame, false);
             Action(screen, layout, "MAIN MENUButton", "MENU CHÍNH", -375f, HomeMenuButton.Kind.Secondary, false);
+        }
+
+        static void SetStat(GameOverScreen screen, string name, string value)
+        {
+            var label = screen.transform.Find(LayoutName + "/" + name + "/Value")?.GetComponent<TMP_Text>();
+            if (label != null) label.text = VietText.Fix(value);
         }
 
         static TMP_Text Title(RectTransform parent, string name, string text, float size, Color color, Vector2 position, Vector2 box)
