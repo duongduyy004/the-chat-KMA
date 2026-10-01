@@ -30,7 +30,7 @@ namespace KMA.EditorTools
                 // Only change the component payload; keep its fileID, GameObject and RectTransform.
                 var files = Directory.GetFiles("Assets", "*.unity", SearchOption.AllDirectories)
                     .Concat(Directory.GetFiles("Assets", "*.prefab", SearchOption.AllDirectories))
-                    .Where(p => p.Replace('\\', '/') != "Assets/Scenes/Dev/FontTest.unity").OrderBy(p => p).ToArray();
+                    .OrderBy(p => p).ToArray();
                 foreach (string rawPath in files)
                 {
                     string path = rawPath.Replace('\\', '/');

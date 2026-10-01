@@ -1,5 +1,7 @@
 # Font tiếng Việt — Thể Chất KMA
 
+> Cập nhật 2026-10-01: scene FontTest, 16 material chỉ dùng cho scene này và công cụ tạo scene đã được gỡ. Các số liệu và ảnh FontTest bên dưới là bằng chứng lịch sử của đợt QA 2026-09-30.
+
 ## Khảo sát và phạm vi
 
 Unity 6000.3.23f1; URP 17.3.0 / Renderer2D; cấu hình build Android ARM64, công cụ QA Android x86_64. TMP thuộc com.unity.ugui 2.0.0 (TMP Settings version 1.4.0). Khảo sát trước sửa: 8 scene, 9 prefab, 9 UI.Text, 51 TextMeshProUGUI trực tiếp, 0 TextMeshPro 3D; phát hiện thêm 1 TextMesh PLAYER. Có 22 script gán text (18 runtime, 4 Editor); không có hệ thống localization/CSV hiện hữu. MapNodeView đọc tên môn từ ScriptableObject; JSON phục vụ save.
@@ -41,7 +43,7 @@ EditMode cuối: 556 tổng, 553 đạt, 0 lỗi, 3 bỏ qua có chủ đích do
 
 ## Cách sử dụng và việc thủ công
 
-Menu Tools/KMA: Setup Vietnamese Fonts; Apply Vietnamese Fonts to Project; Create Vietnamese Font Test Scene; Check Vietnamese Font Coverage. Chạy coverage sau khi thêm nội dung localization mới. Script setup chạy lại không nhân bản asset.
+Menu Tools/KMA: Setup Vietnamese Fonts; Apply Vietnamese Fonts to Project; Check Vietnamese Font Coverage. Chạy coverage sau khi thêm nội dung localization mới. Script setup chạy lại không nhân bản asset.
 
 Cần build và thử trên Android thật: Telex/VNI của bàn phím hệ điều hành, ký tự nhập mới, màn hình/safe area, GPU và multi atlas trong player build. Chưa thực hiện build thiết bị trong lượt này. Cần theo dõi hai lỗi full PlayMode kể trên trước khi coi toàn bộ suite xanh.
 
