@@ -113,16 +113,25 @@ namespace KMA.Gameplay.UI
             text.rectTransform.localRotation = Quaternion.Euler(0f, 0f, UITheme.Shared.Menu.titleAngle);
         }
 
-        static void Action(MainMenuScreen screen, RectTransform parent, string name,
+        static void Action(Component screen, RectTransform parent, string name,
             string caption, int index, HomeMenuButton.Kind kind)
         {
             var button = screen.GetComponentsInChildren<Button>(true)
                 .FirstOrDefault(candidate => string.Equals(candidate.name, name, StringComparison.Ordinal));
             if (button == null) return;
+            StyleButton(button, parent, caption, kind, new Vector2(0f, .5f),
+                new Vector2(235f, 13f - index * HomeMenuStyle.ButtonStep),
+                new Vector2(HomeMenuStyle.ButtonWidth, HomeMenuStyle.ButtonHeight));
+        }
+
+        // Restyles a scene-authored Button as a slanted menu button; shared by Home and Game Over.
+        public static HomeMenuButton StyleButton(Button button, RectTransform parent, string caption,
+            HomeMenuButton.Kind kind, Vector2 anchor, Vector2 position, Vector2 size)
+        {
             var rect = (RectTransform)button.transform;
             rect.SetParent(parent, false);
-            Place(rect, new Vector2(235f, 13f - index * HomeMenuStyle.ButtonStep),
-                new Vector2(HomeMenuStyle.ButtonWidth, HomeMenuStyle.ButtonHeight));
+            Place(rect, position, size);
+            rect.anchorMin = rect.anchorMax = anchor;
             var border = button.GetComponent<Image>() ?? button.gameObject.AddComponent<Image>();
             border.sprite = SlantSprite(true);
             border.type = Image.Type.Simple;
@@ -164,7 +173,9 @@ namespace KMA.Gameplay.UI
             arrow.raycastTarget = false;
             arrow.gameObject.SetActive(false);
             button.transition = Selectable.Transition.None;
-            button.gameObject.AddComponent<HomeMenuButton>().Initialize(kind, border, fill, arrow);
+            var visual = button.gameObject.AddComponent<HomeMenuButton>();
+            visual.Initialize(kind, border, fill, arrow);
+            return visual;
         }
 
         static TMP_Text Label(Transform parent, string name, string value, float size, Color color)

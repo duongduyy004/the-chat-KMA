@@ -59,6 +59,8 @@ namespace KMA.Gameplay.Shell
             }
             if (gameOver != null)
             {
+                var router = SceneRouter.Instance;
+                GameOverPresentationBuilder.Build(gameOver, router == null ? null : router.Session);
                 gameOver.RetryRequested += StartNewGame;
                 gameOver.NewGameRequested += StartNewGame;
                 gameOver.MenuRequested += OpenMenu;
