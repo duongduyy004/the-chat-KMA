@@ -17,6 +17,8 @@ namespace KMA.Gameplay.Volleyball
         float feedbackLeft;
         float hintLeft = HintSeconds;
         MinigamePhase previousPhase = MinigamePhase.Tutorial;
+        ChallengeDefinition challenge;
+        VolleyballChallengeRules challengeRules;
 
         public void Configure(TMP_Text score, TMP_Text feedback, TMP_Text hint)
         {
@@ -33,6 +35,12 @@ namespace KMA.Gameplay.Volleyball
             $"{playerPoints}  :  {opponentPoints}";
 
         public void ConfigureHintBackdrop(GameObject backdrop) => hintBackdrop = backdrop;
+
+        public void ConfigureChallenge(ChallengeDefinition definition, VolleyballChallengeRules rules)
+        {
+            challenge = definition;
+            challengeRules = rules;
+        }
 
         public static string FeedbackText(TimingGrade grade, float offset) => grade switch
         {
@@ -73,7 +81,11 @@ namespace KMA.Gameplay.Volleyball
             }
             if (hintLabel)
             {
-                hintLabel.text = VietText.Fix(HintText);
+                string hint = challenge == null ? HintText
+                    : challenge.Kind == ChallengeKind.Learn ? $"ĐỠ BÓNG {challengeRules.CompletedTargets}/{challenge.TargetCount}"
+                    : challenge.Kind == ChallengeKind.Practice ? $"ĐỠ → CHUYỀN → ĐẬP · {challengeRules.CompletedTargets}/{challenge.TargetCount} ĐIỂM"
+                    : HintText;
+                hintLabel.text = VietText.Fix(hint);
                 hintLabel.enabled = phase == MinigamePhase.Play && hintLeft > 0f;
                 if (hintBackdrop)
                     hintBackdrop.SetActive(hintLabel.enabled);

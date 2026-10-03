@@ -53,23 +53,27 @@ namespace KMA.Gameplay.Volleyball
         static readonly Vector2 FreeBallTarget = new Vector2(5f, 0f);
 
         readonly OpponentTuning tuning;
+        readonly VolleyballMatchOptions options;
         Vector2 move;
         float serveTimer;
         float pauseLeft;
         bool lastHitWasPlayerSmash;
 
-        public VolleyballMatch(OpponentPlan plan = null, OpponentTuning? tuning = null)
+        public VolleyballMatch(OpponentPlan plan = null, OpponentTuning? tuning = null,
+            VolleyballMatchOptions options = null)
         {
             this.tuning = tuning ?? OpponentTuning.Default;
+            this.options = options ?? new VolleyballMatchOptions(PointsToWin, TimeLimit);
             Plan = plan ?? OpponentPlan.Authored();
             Player = new VolleyAthlete(CourtSide.Player, PlayerSpeed);
             Opponent = new VolleyAthlete(CourtSide.Opponent, PlayerSpeed * this.tuning.SpeedFactor);
-            Server = CourtSide.Player;
+            Server = this.options.OpponentAlwaysServes ? CourtSide.Opponent : CourtSide.Player;
             BeginPoint();
         }
 
         public event Action<CourtSide> PointScored;
         public event Action<ActionDecision> PlayerActed;
+        public event Action<CourtSide, ActionDecision, int> TouchRegistered;
         public event Action Completed;
 
         public VolleyAthlete Player { get; }
@@ -90,7 +94,9 @@ namespace KMA.Gameplay.Volleyball
         public ActionDecision LastDecision { get; private set; }
         public bool OpponentSmashTell { get; private set; }
         public Vector2 OpponentAim { get; private set; }
-        public float TimeRemaining => Mathf.Max(0f, TimeLimit - Elapsed);
+        public float TimeRemaining => options.TimeLimit <= 0f ? 0f : Mathf.Max(0f, options.TimeLimit - Elapsed);
+        public int WinningPoints => options.PointsToWin;
+        public float ClockLimit => options.TimeLimit;
 
         public Vector2 BallGround => BallState == BallState.Held || Flight == null
             ? ServerAthlete.Position
@@ -151,6 +157,14 @@ namespace KMA.Gameplay.Volleyball
             if (IsOver || deltaTime <= 0f)
                 return;
 
+            if (options.TimeLimit > 0f)
+                deltaTime = Mathf.Min(deltaTime, Mathf.Max(0f, options.TimeLimit - Elapsed));
+            if (deltaTime <= 0f)
+            {
+                Complete();
+                return;
+            }
+
             Elapsed += deltaTime;
             Player.Tick(deltaTime);
             Opponent.Tick(deltaTime);
@@ -199,7 +213,7 @@ namespace KMA.Gameplay.Volleyball
                     break;
             }
 
-            if (!IsOver && Elapsed >= TimeLimit)
+            if (!IsOver && options.TimeLimit > 0f && Elapsed >= options.TimeLimit)
                 Complete();
         }
 
@@ -234,7 +248,9 @@ namespace KMA.Gameplay.Volleyball
 
         public MinigameResult BuildResult()
         {
-            bool pass = IsOver && PlayerPoints > OpponentPoints;
+            bool pass = IsOver && (options.RequirePointsToWin
+                ? PlayerPoints >= options.PointsToWin
+                : PlayerPoints > OpponentPoints);
             float accuracy = TimedPresses == 0 ? 0f : 2f * QualitySum / TimedPresses;
             float efficiency = 1f - OpponentPoints / (float)PointsToWin;
             float mastery = Mathf.Min(Winners, PointsToWin) / (float)PointsToWin;
@@ -249,6 +265,13 @@ namespace KMA.Gameplay.Volleyball
 
         public void ForceServerForTest(CourtSide server)
         {
+            Server = server;
+            BeginPoint();
+        }
+
+        public void ResetRally(CourtSide server)
+        {
+            if (IsOver) return;
             Server = server;
             BeginPoint();
         }
@@ -297,6 +320,7 @@ namespace KMA.Gameplay.Volleyball
 
         void PlayerHit(ActionDecision decision)
         {
+            int touchesBefore = Rally.Touches;
             float startHeight = BallHeight;
             Vector2 target;
             float apex;
@@ -360,6 +384,7 @@ namespace KMA.Gameplay.Volleyball
 
             bool sendsOver = CourtSpace.SideOf(target) == CourtSide.Opponent;
             Player.BeginAction(animation, lockSeconds);
+            TouchRegistered?.Invoke(CourtSide.Player, decision, touchesBefore);
             if (Rally.RegisterTouch(CourtSide.Player, sendsOver) == TouchOutcome.FourthTouchFault)
             {
                 AwardPoint(CourtSide.Opponent, false);
@@ -424,7 +449,9 @@ namespace KMA.Gameplay.Volleyball
             OpponentSmashTell = false;
             lastHitWasPlayerSmash = false;
             PointScored?.Invoke(winner);
-            if (PlayerPoints >= PointsToWin || OpponentPoints >= PointsToWin)
+            if (options.OpponentAlwaysServes)
+                Server = CourtSide.Opponent;
+            if (options.PointsToWin > 0 && (PlayerPoints >= options.PointsToWin || OpponentPoints >= options.PointsToWin))
                 Complete();
         }
 

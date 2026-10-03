@@ -1,9 +1,10 @@
+using System;
 using KMA.Gameplay.UI;
 using UnityEngine;
 
 namespace KMA.Gameplay.Volleyball
 {
-    public sealed class VolleyballController : MinigameBase
+    public sealed class VolleyballController : MinigameBase, IChallengeController
     {
         public override bool UsesSharedTutorial => false;
 
@@ -15,6 +16,9 @@ namespace KMA.Gameplay.Volleyball
         [SerializeField] VolleyballInputBridge input;
         [SerializeField] VolleyballHud hud;
         float stepDistance;
+        VolleyballChallengeRules challengeRules;
+        ChallengeDefinition challengeDefinition;
+        ChallengeAttemptContext challengeContext;
 
         public VolleyballMatch Match { get; private set; }
         public MinigameResult LastResult { get; private set; }
@@ -24,6 +28,8 @@ namespace KMA.Gameplay.Volleyball
         public VolleyballInputBridge Input => input;
         public VolleyballHud Hud => hud;
         public bool HasAllReferences => playerView && opponentView && ballView && input && hud;
+        public SubjectId Subject => SubjectId.Volleyball;
+        public event Action<ChallengeAttemptResult> ChallengeCompleted;
 
         public void Configure(VolleyAthleteView player, VolleyAthleteView opponent, VolleyBallView ball,
             VolleyballInputBridge inputBridge, VolleyballHud volleyballHud)
@@ -39,10 +45,41 @@ namespace KMA.Gameplay.Volleyball
         {
             base.Awake();
             Match = new VolleyballMatch();
-            Match.Completed += OnMatchCompleted;
-            Match.PlayerActed += OnPlayerActed;
-            Match.PointScored += OnPointScored;
+            SubscribeMatch(Match);
             PhaseChanged += OnPhaseChanged;
+        }
+
+        public void ConfigureChallenge(ChallengeDefinition definition, ChallengeAttemptContext context)
+        {
+            if (definition == null) throw new ArgumentNullException(nameof(definition));
+            if (context == null) throw new ArgumentNullException(nameof(context));
+            if (definition.Subject != SubjectId.Volleyball || definition.Id != context.ChallengeId)
+                throw new ArgumentException("Volleyball controller received a mismatched challenge context.");
+            if (Lifecycle != null && Lifecycle.Phase != MinigamePhase.Tutorial)
+                throw new InvalidOperationException("Volleyball challenge must be configured before play starts.");
+            UnsubscribeMatch(Match);
+            challengeDefinition = definition;
+            challengeContext = context;
+            challengeRules = new VolleyballChallengeRules(definition);
+            Match = challengeRules.Match;
+            LastResult = null;
+            SubscribeMatch(Match);
+            if (hud) hud.ConfigureChallenge(definition, challengeRules);
+        }
+
+        void SubscribeMatch(VolleyballMatch match)
+        {
+            match.Completed += OnMatchCompleted;
+            match.PlayerActed += OnPlayerActed;
+            match.PointScored += OnPointScored;
+        }
+
+        void UnsubscribeMatch(VolleyballMatch match)
+        {
+            if (match == null) return;
+            match.Completed -= OnMatchCompleted;
+            match.PlayerActed -= OnPlayerActed;
+            match.PointScored -= OnPointScored;
         }
 
         void Start()
@@ -60,9 +97,7 @@ namespace KMA.Gameplay.Volleyball
             if (Match == null)
                 return;
 
-            Match.Completed -= OnMatchCompleted;
-            Match.PlayerActed -= OnPlayerActed;
-            Match.PointScored -= OnPointScored;
+            UnsubscribeMatch(Match);
         }
 
         protected override void TickPlay(float dt)
@@ -77,10 +112,23 @@ namespace KMA.Gameplay.Volleyball
 
             BallFlight previousFlight = Match.Flight;
             Vector2 previousPosition = Match.Player.Position;
-            Match.SetMove(input.Move);
+            if (challengeRules != null) challengeRules.SetMove(input.Move);
+            else Match.SetMove(input.Move);
             for (int presses = input.ConsumePresses(); presses > 0; presses--)
-                Match.PressAction();
-            Match.Tick(step);
+            {
+                if (challengeRules != null) challengeRules.PressAction();
+                else Match.PressAction();
+            }
+            if (challengeRules != null) challengeRules.Tick(step);
+            else Match.Tick(step);
+            if (challengeRules != null && challengeDefinition.Kind != ChallengeKind.Exam &&
+                challengeRules.IsComplete && PresentationPhase == MinigamePhase.Play)
+            {
+                ChallengeAttemptResult completed = challengeRules.BuildResult(challengeContext);
+                LastResult = completed.ExamResult ?? new MinigameResult(completed.Pass, 1f,
+                    completed.Pass ? KMA.Gameplay.Rank.C : KMA.Gameplay.Rank.F);
+                Finish(LastResult);
+            }
             if (Match.Flight != previousFlight && Match.BallState == BallState.InPlay)
                 GameAudio.Play(GameSound.VolleyHit);
             float moved = Vector2.Distance(previousPosition, Match.Player.Position);
@@ -104,8 +152,10 @@ namespace KMA.Gameplay.Volleyball
 
         protected override MinigameHudState BuildHudState() => new MinigameHudState(
             PresentationPhase.ToString(),
-            Match == null ? VolleyballMatch.TimeLimit : Match.TimeRemaining,
-            0f,
+            Match == null ? VolleyballMatch.TimeLimit : challengeDefinition != null && challengeDefinition.Kind != ChallengeKind.Exam
+                ? 0f : Match.TimeRemaining,
+            challengeRules == null || challengeDefinition.Kind == ChallengeKind.Exam ? 0f
+                : Mathf.Clamp01(challengeRules.CompletedTargets / (float)Mathf.Max(1, challengeDefinition.TargetCount)),
             0f,
             Match == null ? 0f : Match.PlayerPoints,
             string.Empty);
@@ -130,7 +180,7 @@ namespace KMA.Gameplay.Volleyball
 
         void OnPointScored(CourtSide winner)
         {
-            if (Match.PlayerPoints < VolleyballMatch.PointsToWin && Match.OpponentPoints < VolleyballMatch.PointsToWin)
+            if (Match.PlayerPoints < Match.WinningPoints && Match.OpponentPoints < Match.WinningPoints)
                 GameAudio.Play(winner == CourtSide.Player ? GameSound.Point : GameSound.Miss);
             if (hud)
                 hud.ShowPoint(winner);
@@ -138,8 +188,24 @@ namespace KMA.Gameplay.Volleyball
 
         void OnMatchCompleted()
         {
-            LastResult = Match.BuildResult();
+            if (challengeRules != null && challengeContext != null)
+            {
+                ChallengeAttemptResult result = challengeRules.BuildResult(challengeContext);
+                LastResult = result.ExamResult ?? new MinigameResult(result.Pass, result.Pass ? 1f : 0f,
+                    result.Pass ? KMA.Gameplay.Rank.C : KMA.Gameplay.Rank.F);
+            }
+            else LastResult = Match.BuildResult();
             Finish(LastResult);
+        }
+
+        protected override void OnResultResolved(MinigameResult result)
+        {
+            if (challengeRules == null || challengeContext == null)
+            {
+                base.OnResultResolved(result);
+                return;
+            }
+            ChallengeCompleted?.Invoke(challengeRules.BuildResult(challengeContext));
         }
     }
 }

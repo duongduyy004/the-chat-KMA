@@ -95,18 +95,23 @@ namespace KMA.Gameplay.Volleyball
 
         void OpponentReceive(OpponentStep step)
         {
+            int touchesBefore = Rally.Touches;
             // The AI just kept a player smash alive with a genuine defensive touch, so it's no
             // longer an unanswered winner even if the point is later lost some other way.
             lastHitWasPlayerSmash = false;
             Opponent.BeginAction(AthleteAction.Receive, ReceiveSeconds);
             if (step.WeakReceive)
             {
+                TouchRegistered?.Invoke(CourtSide.Opponent,
+                    new ActionDecision(ActionKind.FreeBall, TimingGrade.Miss, 0f), touchesBefore);
                 Rally.RegisterTouch(CourtSide.Opponent, true);
                 Launch(WeakReceiveTarget, FreeBallApexHeight, CourtSide.Opponent);
                 Plan.Advance();
                 return;
             }
 
+            TouchRegistered?.Invoke(CourtSide.Opponent,
+                new ActionDecision(ActionKind.Receive, TimingGrade.Miss, 0f), touchesBefore);
             Rally.RegisterTouch(CourtSide.Opponent, false);
             Launch(new Vector2(OpponentSetSpot.x, Mathf.Clamp(Opponent.Position.y, -3f, 3f)), SetApexHeight,
                 CourtSide.Opponent);
@@ -114,6 +119,7 @@ namespace KMA.Gameplay.Volleyball
 
         void OpponentAttack(OpponentStep step, bool smashing)
         {
+            int touchesBefore = Rally.Touches;
             // Same as OpponentReceive: a successful AI touch means any earlier player smash is no
             // longer the reason the point is eventually won or lost.
             lastHitWasPlayerSmash = false;
@@ -132,6 +138,9 @@ namespace KMA.Gameplay.Volleyball
 
             Opponent.BeginAction(smashing ? AthleteAction.Smash : AthleteAction.Receive,
                 smashing ? SmashSeconds : ReceiveSeconds);
+            TouchRegistered?.Invoke(CourtSide.Opponent,
+                new ActionDecision(smashing ? ActionKind.Smash : ActionKind.Receive, TimingGrade.Miss, 0f),
+                touchesBefore);
             Rally.RegisterTouch(CourtSide.Opponent, true);
             float apex = smashing ? BallHeight + SmashRise : step.Attack == AttackKind.Tip ? TipApexHeight : LobApexHeight;
             Launch(target, apex, CourtSide.Opponent);
