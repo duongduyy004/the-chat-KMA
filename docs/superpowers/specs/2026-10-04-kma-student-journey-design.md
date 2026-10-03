@@ -2,7 +2,7 @@
 
 **Ngày:** 2026-10-04
 
-**Trạng thái:** Hướng trải nghiệm đã được thống nhất trong hội thoại; bản đặc tả đang chờ người dùng duyệt trước khi lập kế hoạch triển khai.
+**Trạng thái:** Đặc tả đã được người dùng duyệt trong hội thoại; kế hoạch triển khai đang chờ duyệt và chọn cách thực thi.
 
 ## 1. Mục tiêu và các quyết định đã thống nhất
 
