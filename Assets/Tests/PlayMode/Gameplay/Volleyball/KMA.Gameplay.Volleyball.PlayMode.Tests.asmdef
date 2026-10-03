@@ -5,6 +5,8 @@
         "UnityEngine.TestRunner",
         "KMA.Gameplay",
         "KMA.Gameplay.Volleyball",
+        "KMA.Gameplay.Core",
+        "KMA.Gameplay.Progression",
         "Unity.InputSystem",
         "UnityEngine.UI"
     ],

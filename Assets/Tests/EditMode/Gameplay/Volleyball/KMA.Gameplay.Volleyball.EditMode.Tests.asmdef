@@ -6,6 +6,7 @@
         "UnityEditor.TestRunner",
         "KMA.Gameplay",
         "KMA.Gameplay.Volleyball",
+        "KMA.Gameplay.Progression",
         "UnityEngine.UI",
         "Unity.TextMeshPro"
     ],

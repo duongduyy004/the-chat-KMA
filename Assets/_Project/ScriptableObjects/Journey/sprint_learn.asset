@@ -1,0 +1,25 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 2ee23bd58ad94412ae0a96014fe7dc5d, type: 3}
+  m_Name: sprint_learn
+  m_EditorClassIdentifier: KMA.Gameplay.Progression::KMA.Gameplay.ChallengeDefinition
+  id: sprint_learn
+  subject: 0
+  kind: 0
+  distance: 0
+  timeLimit: 0
+  targetCount: 12
+  keeperEnabled: 0
+  difficulty: 1
+  timingHelp: 1
+  objective: "B\u1EA5m tr\xE1i, ph\u1EA3i lu\xE2n phi\xEAn \u0111\xFAng 12 l\u1EA7n
+    li\xEAn ti\u1EBFp."

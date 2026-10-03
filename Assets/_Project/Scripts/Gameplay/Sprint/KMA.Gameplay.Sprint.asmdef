@@ -5,6 +5,7 @@
         "KMA.Gameplay",
         "KMA.Gameplay.Core",
         "KMA.Gameplay.UI",
+        "KMA.Gameplay.Progression",
         "KMA.Input",
         "Unity.InputSystem",
         "Unity.TextMeshPro",

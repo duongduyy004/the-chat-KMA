@@ -1,0 +1,25 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 2ee23bd58ad94412ae0a96014fe7dc5d, type: 3}
+  m_Name: volleyball_exam
+  m_EditorClassIdentifier: KMA.Gameplay.Progression::KMA.Gameplay.ChallengeDefinition
+  id: volleyball_exam
+  subject: 7
+  kind: 2
+  distance: 0
+  timeLimit: 120
+  targetCount: 5
+  keeperEnabled: 0
+  difficulty: 1
+  timingHelp: 0
+  objective: "\u0110\u1EA1t n\u0103m \u0111i\u1EC3m tr\u01B0\u1EDBc \u0111\u1ED1i
+    th\u1EE7 trong t\u1ED1i \u0111a 120 gi\xE2y."

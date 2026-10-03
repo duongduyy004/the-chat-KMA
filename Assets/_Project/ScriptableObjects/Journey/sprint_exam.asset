@@ -1,0 +1,24 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 2ee23bd58ad94412ae0a96014fe7dc5d, type: 3}
+  m_Name: sprint_exam
+  m_EditorClassIdentifier: KMA.Gameplay.Progression::KMA.Gameplay.ChallengeDefinition
+  id: sprint_exam
+  subject: 0
+  kind: 2
+  distance: 100
+  timeLimit: 14
+  targetCount: 0
+  keeperEnabled: 0
+  difficulty: 1
+  timingHelp: 0
+  objective: "Ch\u1EA1y 100 m trong t\u1ED1i \u0111a 14 gi\xE2y."

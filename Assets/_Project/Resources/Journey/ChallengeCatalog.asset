@@ -1,0 +1,24 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a04380e83ead47e4af05c633165b0f84, type: 3}
+  m_Name: ChallengeCatalog
+  m_EditorClassIdentifier: KMA.Gameplay.Progression::KMA.Gameplay.ChallengeCatalog
+  challenges:
+  - {fileID: 11400000, guid: d228820898c4020dda909ca3c668b17f, type: 2}
+  - {fileID: 11400000, guid: c92939a56c685690185368b3386fd113, type: 2}
+  - {fileID: 11400000, guid: a36b20fe7a5e649c1971c3ef6e41d179, type: 2}
+  - {fileID: 11400000, guid: 62a64e4b4b8aee25ba5d89dbf065a83a, type: 2}
+  - {fileID: 11400000, guid: 23d9a6e8fb1794aadb1471a5d0770b63, type: 2}
+  - {fileID: 11400000, guid: 1af163105885b0a8aafd12838ebaa37c, type: 2}
+  - {fileID: 11400000, guid: 1e9b37e9c3bcede7191813ffe92cbc8c, type: 2}
+  - {fileID: 11400000, guid: 5b0b62df90fc788588ce92e5e3aa437f, type: 2}
+  - {fileID: 11400000, guid: a9ccc107d1974d88b8453f4f29550dde, type: 2}
