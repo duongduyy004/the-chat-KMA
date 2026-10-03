@@ -31,6 +31,14 @@ namespace KMA.Tests.Gameplay.Progression
         {
             var router = SceneRouter.EnsurePersistentInstance();
             int livesBefore = router.Session.Lives;
+            foreach (string id in new[] { "sprint_learn", "sprint_practice" })
+            {
+                ChallengeDefinition definition = router.Session.Journey.Catalog.Get(id);
+                Assert.That(router.Session.TryStartChallenge(id, ChallengeAttemptMode.Journey,
+                    definition.Difficulty, out ChallengeAttemptContext context), Is.True);
+                Assert.That(router.Session.SubmitChallengeResult(new ChallengeAttemptResult(context, true,
+                    new ChallengeMetrics(completedTargets: definition.TargetCount))).Accepted, Is.True);
+            }
             Assert.That(router.StartSubject(SubjectId.Sprint), Is.True);
             yield return WaitForScene("MG_Sprint");
 

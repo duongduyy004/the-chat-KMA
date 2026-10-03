@@ -44,31 +44,31 @@ namespace KMA.Tests.Gameplay.Progression
         public IEnumerator FullFlow_UsesAttemptsLivesAndNormalizedResults()
         {
             var harness = GameplayFlowHarness.Create();
-
-            harness.Start(SubjectId.Sprint);
-            harness.CompleteTransition();
-            harness.Fail();
-            Assert.That(harness.Route, Is.EqualTo(SessionRoute.Map));
-            harness.CompleteTransition();
-
-            harness.Start(SubjectId.Sprint);
-            Assert.That(harness.Route, Is.EqualTo(SessionRoute.Subject));
-            harness.CompleteTransition();
-
-            harness.Fail();
-            Assert.That(harness.Session.Lives, Is.EqualTo(3));
-            Assert.That(harness.Route, Is.EqualTo(SessionRoute.Map));
-            harness.CompleteTransition();
-
-            foreach (SubjectId id in Enum.GetValues(typeof(SubjectId)))
+            foreach (string id in new[] { "sprint_learn", "sprint_practice" })
             {
-                harness.Start(id);
-                harness.CompleteTransition();
-                harness.Pass(6f);
-                harness.CompleteTransition();
+                harness.StartChallenge(id);
+                harness.CompleteChallenge(true, 0f);
+            }
+            harness.StartChallenge("sprint_exam");
+            harness.CompleteChallenge(false, 0f);
+            Assert.That(harness.Session.Lives, Is.EqualTo(4));
+            Assert.That(harness.Session.Journey.CheckpointChallengeId, Is.EqualTo("sprint_exam"));
+            harness.StartChallenge("sprint_exam");
+            harness.CompleteChallenge(false, 0f);
+            Assert.That(harness.Session.Lives, Is.EqualTo(3));
+            harness.StartChallenge("sprint_exam");
+            harness.CompleteChallenge(true, 6f);
+            foreach (string id in new[] { "volleyball_learn", "volleyball_practice", "volleyball_exam",
+                         "soccer_learn", "soccer_practice", "soccer_exam" })
+            {
+                harness.StartChallenge(id);
+                harness.CompleteChallenge(true, 6f);
             }
 
             Assert.That(harness.Session.Records, Has.Count.EqualTo(3));
+            Assert.That(harness.Session.Journey.CourseComplete, Is.True);
+            Assert.That(harness.Session.Journey.CheckpointChallengeId, Is.Null);
+            Assert.That(harness.Session.Lives, Is.EqualTo(3));
             foreach (var record in harness.Session.Records.Values)
             {
                 Assert.That(record.BestResult.Pass, Is.True);
@@ -76,7 +76,7 @@ namespace KMA.Tests.Gameplay.Progression
                 Assert.That(record.BestResult.Rank, Is.EqualTo(ScoreUtil.ToRank(record.BestResult.Score)));
             }
 
-            Assert.That(harness.Transitions, Has.Count.EqualTo(10));
+            Assert.That(harness.Transitions.Count, Is.GreaterThanOrEqualTo(20));
             yield return null;
         }
 
@@ -84,14 +84,14 @@ namespace KMA.Tests.Gameplay.Progression
         public void FailedVisit_DoesNotStoreNonNormalizedFailedScore()
         {
             var harness = GameplayFlowHarness.Create();
-
-            harness.Start(SubjectId.Sprint);
-            harness.CompleteTransition();
-            harness.Fail(new MinigameResult(false, 10f, Rank.S));
-            harness.CompleteTransition();
-            harness.Start(SubjectId.Sprint);
-            harness.CompleteTransition();
-            harness.Fail(new MinigameResult(false, 10f, Rank.S));
+            harness.StartChallenge("sprint_learn");
+            harness.CompleteChallenge(true, 0f);
+            harness.StartChallenge("sprint_practice");
+            harness.CompleteChallenge(true, 0f);
+            harness.StartChallenge("sprint_exam");
+            harness.CompleteChallenge(false, 10f);
+            harness.StartChallenge("sprint_exam");
+            harness.CompleteChallenge(false, 10f);
 
             var record = harness.Session.GetRecord(SubjectId.Sprint);
             Assert.That(record.Passed, Is.False);
@@ -104,15 +104,19 @@ namespace KMA.Tests.Gameplay.Progression
         public void RepeatedCompletionWhileTransitionIsPending_RoutesExactlyOnce()
         {
             var harness = GameplayFlowHarness.Create();
-
-            harness.Start(SubjectId.Football);
-            harness.CompleteTransition();
-            harness.Pass(6f);
-            harness.RepeatLastCompletion();
-
-            Assert.That(harness.Transitions, Has.Count.EqualTo(2));
-            Assert.That(harness.Transitions[0].Route, Is.EqualTo(SessionRoute.Subject));
-            Assert.That(harness.Transitions[1].Route, Is.EqualTo(SessionRoute.Map));
+            foreach (string id in new[] { "sprint_learn", "sprint_practice", "sprint_exam", "volleyball_learn",
+                         "volleyball_practice", "volleyball_exam" })
+            {
+                harness.StartChallenge(id);
+                harness.CompleteChallenge(true, id.EndsWith("exam", StringComparison.Ordinal) ? 6f : 0f);
+            }
+            harness.StartChallenge("soccer_learn");
+            harness.CompleteChallenge(true, 0f);
+            int transitions = harness.Transitions.Count;
+            Assert.That(harness.RepeatLastCompletion(), Is.False);
+            Assert.That(harness.Transitions.Count, Is.EqualTo(transitions));
+            Assert.That(harness.Session.Journey.IsChallengeComplete("soccer_learn"), Is.True);
+            Assert.That(harness.Session.Journey.IsChallengeComplete("soccer_practice"), Is.False);
         }
 
         [Test]
@@ -139,16 +143,25 @@ namespace KMA.Tests.Gameplay.Progression
 
             var sprint = UnityEngine.Object.FindFirstObjectByType<SprintController>();
             Assert.That(sprint, Is.Not.Null);
-            sprint.ConfigureForTest();
-            sprint.AdvanceToDistance(100f);
-            sprint.Simulate(0f);
+            sprint.SetTutorialGate(false);
+            sprint.Simulate(4f);
+            var input = UnityEngine.Object.FindFirstObjectByType<KMA.Input.GameplayInputRouter>();
+            Assert.That(input, Is.Not.Null);
+            for (int tap = 0; tap < 12; tap++)
+            {
+                input.FeedSprintTapForTest(tap % 2 == 0 ? KMA.Input.Side.Left : KMA.Input.Side.Right,
+                    1d + tap * .2d);
+                yield return null;
+            }
             var resultPanel = UnityEngine.Object.FindFirstObjectByType<ResultPanel>(FindObjectsInactive.Include);
             Assert.That(resultPanel, Is.Not.Null);
             Assert.That(resultPanel.CurrentResult.Pass, Is.True);
             resultPanel.Continue();
             yield return WaitForScene("Map");
 
-            Assert.That(router.Session.GetRecord(SubjectId.Sprint).Passed, Is.True);
+            Assert.That(router.Session.Journey.IsChallengeComplete("sprint_learn"), Is.True);
+            Assert.That(router.Session.Journey.CheckpointChallengeId, Is.EqualTo("sprint_practice"));
+            Assert.That(router.Session.GetRecord(SubjectId.Sprint).Passed, Is.False);
             Assert.That(mapRouteCount, Is.EqualTo(1));
 
             yield return null;
@@ -211,6 +224,8 @@ namespace KMA.Tests.Gameplay.Progression
         public IEnumerator Continue_AfterFirstFailure_ResumesAtSubjectSelectAcrossRelaunch()
         {
             SaveData persisted = SaveData.CreateDefault();
+            persisted.journey.completedChallengeIds.Add("sprint_learn");
+            persisted.journey.completedChallengeIds.Add("sprint_practice");
             SceneRouter router = SceneRouter.EnsurePersistentInstance();
             CreateManager(router, () => persisted, data => persisted = data);
 
@@ -347,8 +362,32 @@ namespace KMA.Tests.Gameplay.Progression
             public SessionRouteTransitioner Router { get; }
             public SessionRoute Route { get; private set; }
             public IReadOnlyList<SceneRouteTransition> Transitions => sink.Transitions;
+            ChallengeAttemptContext activeChallenge;
+            ChallengeAttemptResult lastChallenge;
 
             public static GameplayFlowHarness Create() => new GameplayFlowHarness();
+
+            public void StartChallenge(string id)
+            {
+                ChallengeDefinition definition = Session.Journey.Catalog.Get(id);
+                Assert.That(Session.TryStartChallenge(id, ChallengeAttemptMode.Journey,
+                    definition.Difficulty, out activeChallenge), Is.True, id);
+                RouteSession(SessionRoute.Subject, definition.Subject);
+            }
+
+            public void CompleteChallenge(bool pass, float score)
+            {
+                ChallengeDefinition definition = Session.Journey.Catalog.Get(activeChallenge.ChallengeId);
+                MinigameResult examResult = definition.Kind == ChallengeKind.Exam
+                    ? new MinigameResult(pass, pass ? score : 0f,
+                        pass ? ScoreUtil.ToRank(score) : Rank.F)
+                    : null;
+                lastChallenge = new ChallengeAttemptResult(activeChallenge, pass,
+                    new ChallengeMetrics(completedTargets: pass ? definition.TargetCount : 0), examResult);
+                Assert.That(Session.SubmitChallengeResult(lastChallenge).Accepted, Is.True);
+                activeChallenge = null;
+                RouteSession(SessionRoute.Map, null);
+            }
 
             public void Start(SubjectId id)
             {
@@ -370,12 +409,14 @@ namespace KMA.Tests.Gameplay.Progression
                 RouteSession(Session.SubmitResult(active, result), active);
             }
 
-            public void RepeatLastCompletion()
+            public bool RepeatLastCompletion()
             {
+                if (lastChallenge != null)
+                    return Session.SubmitChallengeResult(lastChallenge).Accepted;
                 if (lastCompletion == null)
                     throw new InvalidOperationException("No completion is available to repeat.");
 
-                Router.TryRoute(Route, active);
+                return Router.TryRoute(Route, active);
             }
 
             public void CompleteTransition() => sink.CompleteActiveTransition();
@@ -384,6 +425,7 @@ namespace KMA.Tests.Gameplay.Progression
             {
                 Route = route;
                 Assert.That(Router.TryRoute(route, subject), Is.True);
+                sink.CompleteActiveTransition();
             }
         }
 

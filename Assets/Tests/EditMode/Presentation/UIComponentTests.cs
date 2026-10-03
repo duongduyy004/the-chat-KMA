@@ -182,7 +182,7 @@ namespace KMA.Tests.Presentation
                 Assert.That(livesPanel, Is.Not.Null);
                 Assert.That(livesPanel.GetComponent<Image>(), Is.Not.Null);
                 TMP_Text lives = livesPanel.Find("LivesLabelContainer/LivesLabel").GetComponent<TMP_Text>();
-                Assert.That(lives.text, Is.EqualTo("LƯỢT: 5/5"));
+                Assert.That(lives.text, Is.EqualTo("Lượt thi: 5/5"));
                 Assert.That(lives.fontSize, Is.GreaterThanOrEqualTo(24));
                 foreach (Image heart in livesPanel.GetComponentInChildren<HeartBar>(true)
                              .GetComponentsInChildren<Image>(true))
@@ -205,9 +205,7 @@ namespace KMA.Tests.Presentation
             var root = new GameObject("map", typeof(RectTransform));
             try
             {
-                var session = new GameSession();
-                session.StartSubject(SubjectId.Sprint);
-                session.SubmitResult(SubjectId.Sprint, new MinigameResult(true, 8f, Rank.A));
+                var session = CompleteSprintJourney();
                 var screen = root.AddComponent<MapScreen>();
                 MapPresentationBuilder.Build(screen, session);
 
@@ -220,15 +218,16 @@ namespace KMA.Tests.Presentation
                 Assert.That(completed.transform.Find("ActionHint").GetComponent<TMP_Text>().text,
                     Is.EqualTo("THI"));
                 Assert.That(football.transform.Find("StatusContainer/Status").GetComponent<TMP_Text>().text,
-                    Is.EqualTo("SẴN SÀNG"));
-                Assert.That(football.DetailText, Is.EqualTo("SẴN SÀNG"));
+                    Is.EqualTo("CHƯA MỞ KHÓA"));
+                Assert.That(football.DetailText, Is.EqualTo("CHƯA MỞ KHÓA"));
                 Assert.That(football.transform.Find("DetailContainer").gameObject.activeSelf, Is.False);
                 Assert.That(football.transform.Find("ActionHint").GetComponent<TMP_Text>().text,
-                    Is.EqualTo("THI"));
+                    Is.Empty);
 
                 Assert.That(completed.GetComponent<BrutalButton>(), Is.Not.Null);
                 Assert.That(football.GetComponent<BrutalButton>(), Is.Not.Null);
                 Assert.That(football.GetComponent<Button>(), Is.Not.Null);
+                Assert.That(football.GetComponent<Button>().interactable, Is.False);
 
                 var iconSprites = screen.Nodes.Select(node =>
                 {
@@ -255,7 +254,7 @@ namespace KMA.Tests.Presentation
         }
 
         [Test]
-        public void LockedFooterUsesInformationalSurfacesInsteadOfDisabledButtons()
+        public void FutureSubjectsAreLockedUntilPreviousExamPasses()
         {
             var root = new GameObject("map", typeof(RectTransform));
             try
@@ -263,10 +262,13 @@ namespace KMA.Tests.Presentation
                 var screen = root.AddComponent<MapScreen>();
                 MapPresentationBuilder.Build(screen, new GameSession());
 
-                Transform future = root.transform.Find("S5MapPresentation/Content/FutureRow");
-                Assert.That(future.GetComponentsInChildren<Button>(true), Is.Empty);
-                Assert.That(future.GetComponentsInChildren<TMP_Text>(true).Select(text => text.text),
-                    Is.EquivalentTo(new[] { "SẮP RA MẮT", "Hít đất" }));
+                Assert.That(screen.Nodes[0].IsInteractable, Is.True);
+                foreach (MapNodeView future in screen.Nodes.Where(node => node.SubjectId != SubjectId.Sprint))
+                {
+                    Assert.That(future.IsInteractable, Is.False, future.DisplayName);
+                    Assert.That(future.transform.Find("StatusContainer/Status").GetComponent<TMP_Text>().text,
+                        Is.EqualTo("CHƯA MỞ KHÓA"));
+                }
 
             }
             finally
@@ -329,10 +331,10 @@ namespace KMA.Tests.Presentation
                 Assert.That(livesLabel.preferredWidth, Is.GreaterThanOrEqualTo(150f));
                 Assert.That(livesLabel.GetComponentInChildren<TMP_Text>().enableWordWrapping, Is.False);
 
-                LayoutElement upcoming = root.transform.Find(
-                        "S5MapPresentation/Content/FutureRow/UpcomingLabelContainer")
-                    .GetComponent<LayoutElement>();
-                Assert.That(upcoming.preferredHeight, Is.GreaterThanOrEqualTo(40f));
+                Transform lessons = root.transform.Find("S5MapPresentation/Content/JourneyLessons");
+                Assert.That(lessons, Is.Not.Null);
+                Assert.That(lessons.Find("Lesson1").GetComponent<LayoutElement>().preferredHeight,
+                    Is.GreaterThanOrEqualTo(30f));
             }
             finally
             {
@@ -349,11 +351,11 @@ namespace KMA.Tests.Presentation
                 var screen = root.AddComponent<MapScreen>();
                 MapPresentationBuilder.Build(screen, new GameSession());
 
-                foreach (MapNodeView available in screen.Nodes)
-                {
-                    Assert.That(available.IsInteractable, Is.True, available.DisplayName);
-                    Assert.That(available.transform.Find("LockIcon"), Is.Null, available.DisplayName);
-                }
+                Assert.That(screen.Nodes[0].IsInteractable, Is.True, screen.Nodes[0].DisplayName);
+                Assert.That(screen.Nodes[1].IsInteractable, Is.False, screen.Nodes[1].DisplayName);
+                Assert.That(screen.Nodes[2].IsInteractable, Is.False, screen.Nodes[2].DisplayName);
+                foreach (MapNodeView node in screen.Nodes)
+                    Assert.That(node.transform.Find("LockIcon"), Is.Null, node.DisplayName);
 
             }
             finally
@@ -380,9 +382,9 @@ namespace KMA.Tests.Presentation
                 Assert.That(sprint.Find("ActionHint").GetComponent<TMP_Text>().fontSize,
                     Is.GreaterThanOrEqualTo(26));
 
-                foreach (TMP_Text tag in root.transform.Find("S5MapPresentation/Content/FutureRow")
+                foreach (TMP_Text line in root.transform.Find("S5MapPresentation/Content/JourneyLessons")
                              .GetComponentsInChildren<TMP_Text>(true))
-                    Assert.That(tag.fontSize, Is.GreaterThanOrEqualTo(22), tag.name);
+                    Assert.That(line.fontSize, Is.GreaterThanOrEqualTo(16), line.name);
             }
             finally
             {
@@ -435,9 +437,7 @@ namespace KMA.Tests.Presentation
             var root = new GameObject("map", typeof(RectTransform));
             try
             {
-                var session = new GameSession();
-                session.StartSubject(SubjectId.Sprint);
-                session.SubmitResult(SubjectId.Sprint, new MinigameResult(true, 8f, Rank.A));
+                var session = CompleteSprintJourney();
                 var screen = root.AddComponent<MapScreen>();
                 MapPresentationBuilder.Build(screen, session);
 
@@ -489,6 +489,25 @@ namespace KMA.Tests.Presentation
                     Object.DestroyImmediate(firstRoot);
                 Object.DestroyImmediate(secondRoot);
             }
+        }
+
+        static GameSession CompleteSprintJourney()
+        {
+            var session = new GameSession();
+            Complete(session, "sprint_learn");
+            Complete(session, "sprint_practice");
+            Complete(session, "sprint_exam");
+            return session;
+        }
+
+        static void Complete(GameSession session, string id)
+        {
+            ChallengeDefinition definition = session.Journey.Catalog.Get(id);
+            Assert.That(session.TryStartChallenge(id, ChallengeAttemptMode.Journey, definition.Difficulty,
+                out ChallengeAttemptContext context), Is.True);
+            session.SubmitChallengeResult(new ChallengeAttemptResult(context, true,
+                new ChallengeMetrics(completedTargets: definition.TargetCount),
+                definition.Kind == ChallengeKind.Exam ? new MinigameResult(true, 8f, Rank.A) : null));
         }
 
         private static void SetPrivateField(object target, string fieldName, object value)

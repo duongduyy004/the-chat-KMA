@@ -14,6 +14,7 @@
         "Unity.InputSystem",
         "Unity.InputSystem.TestFramework",
         "KMA.Gameplay.Football",
+        "KMA.Gameplay.Volleyball",
         "UnityEngine.UI",
         "Unity.TextMeshPro"
     ],

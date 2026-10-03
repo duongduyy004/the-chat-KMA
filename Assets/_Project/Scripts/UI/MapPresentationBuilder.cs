@@ -104,8 +104,6 @@ namespace KMA.Gameplay.UI
             screen.BindBudgetLabel(content.Find("Header/LivesPanel/LivesLabelContainer/LivesLabel")
                 ?.GetComponent<TMP_Text>());
             screen.RefreshJourney(session ?? new GameSession());
-            foreach (MapNodeView node in nodes)
-                if (!node.IsComingSoon && !node.IsInteractable) node.SetAvailability(false, "ĐANG PHÁT TRIỂN");
         }
 
         static JourneyCourseSummary EnsureCourseSummary(MapScreen screen, Transform parent)

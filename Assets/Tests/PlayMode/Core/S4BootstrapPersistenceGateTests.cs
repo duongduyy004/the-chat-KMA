@@ -81,6 +81,10 @@ namespace KMA.Tests.Gameplay.Core
             SceneRouter router = SceneRouter.Instance;
             Assert.That(router.Session.Lives, Is.EqualTo(3));
 
+            CompleteThroughSprintPractice(router.Session);
+            Assert.That(GameManager.Instance.TryPersistSession(out string progressSaveError), Is.True,
+                progressSaveError);
+
             Assert.That(router.StartSubject(SubjectId.Sprint), Is.True);
             yield return WaitForSceneAndCompletedTransition(router, SprintSceneName);
             Assert.That(router.SubmitSubjectResult(
@@ -103,6 +107,18 @@ namespace KMA.Tests.Gameplay.Core
             Assert.That(GameManager.Instance.Session.GetRecord(SubjectId.Sprint).BestScore,
                 Is.EqualTo(0.9f));
             Assert.That(GameManager.Instance.Session.GetRecord(SubjectId.Sprint).BestRank, Is.EqualTo(Rank.A));
+        }
+
+        static void CompleteThroughSprintPractice(GameSession session)
+        {
+            foreach (string id in new[] { "sprint_learn", "sprint_practice" })
+            {
+                ChallengeDefinition definition = session.Journey.Catalog.Get(id);
+                Assert.That(session.TryStartChallenge(id, ChallengeAttemptMode.Journey,
+                    definition.Difficulty, out ChallengeAttemptContext context), Is.True);
+                Assert.That(session.SubmitChallengeResult(new ChallengeAttemptResult(context, true,
+                    new ChallengeMetrics(completedTargets: definition.TargetCount))).Accepted, Is.True);
+            }
         }
 
         [UnityTest]
