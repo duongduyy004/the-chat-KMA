@@ -157,3 +157,4 @@ Superseded by the counts above, kept for provenance: Task 1 verified `209/209` E
 - [`docs/superpowers/plans/2026-08-24-ball-minigames.md`](docs/superpowers/plans/2026-08-24-ball-minigames.md) — shared ball gameplay systems
 - [`docs/superpowers/specs/2026-09-26-football-goal-flight-design.md`](docs/superpowers/specs/2026-09-26-football-goal-flight-design.md) — Approved goal-facing Football flight design
 - [`docs/qa/football-goal-flight.md`](docs/qa/football-goal-flight.md) — Football tests, visual QA, and Android build evidence
+- [`docs/qa/kma-student-journey.md`](docs/qa/kma-student-journey.md) — student journey test, visual capture, and Android handoff status
