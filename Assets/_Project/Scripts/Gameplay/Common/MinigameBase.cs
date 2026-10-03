@@ -75,10 +75,12 @@ namespace KMA.Gameplay
             if (TryBeginResolve(result.Pass))
             {
                 GameAudio.Play(result.Pass ? GameSound.Win : GameSound.Lose);
-                Completed?.Invoke(result);
+                OnResultResolved(result);
             }
         }
 
         protected virtual bool TryBeginResolve(bool passed) => Lifecycle.BeginResolve();
+
+        protected virtual void OnResultResolved(MinigameResult result) => Completed?.Invoke(result);
     }
 }

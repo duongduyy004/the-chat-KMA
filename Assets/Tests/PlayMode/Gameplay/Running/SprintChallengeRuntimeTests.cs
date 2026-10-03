@@ -1,0 +1,105 @@
+using System.Collections;
+using KMA.Gameplay;
+using KMA.Input;
+using NUnit.Framework;
+using UnityEngine;
+using UnityEngine.TestTools;
+
+namespace KMA.Tests.Gameplay.Running
+{
+    public sealed class SprintChallengeRuntimeTests
+    {
+        GameObject controllerObject;
+        GameObject routerObject;
+
+        [SetUp]
+        public void SetUp()
+        {
+            controllerObject = new GameObject("JourneySprintController");
+            routerObject = new GameObject("JourneyInputRouter");
+        }
+
+        [TearDown]
+        public void TearDown()
+        {
+            if (controllerObject != null) Object.DestroyImmediate(controllerObject);
+            if (routerObject != null) Object.DestroyImmediate(routerObject);
+        }
+
+        [UnityTest]
+        public IEnumerator LearnChallengeUsesTouchBridgeAndRaisesOneTypedCompletion()
+        {
+            var controller = controllerObject.AddComponent<SprintController>();
+            var router = routerObject.AddComponent<GameplayInputRouter>();
+            router.ConfigureSprintForTest(null);
+            controller.ConfigureInputRouterForTest(router);
+            ChallengeDefinition definition = ChallengeCatalog.LoadDefault().Get("sprint_learn");
+            var session = new GameSession();
+            Assert.That(session.TryStartChallenge(definition.Id, ChallengeAttemptMode.Journey,
+                definition.Difficulty, out ChallengeAttemptContext context), Is.True);
+            controller.ConfigureChallenge(definition, context);
+            int completions = 0;
+            ChallengeAttemptResult received = null;
+            controller.ChallengeCompleted += result => { completions++; received = result; };
+
+            controller.SetTutorialGate(false);
+            controller.Simulate(4f);
+            for (int tap = 0; tap < 12; tap++)
+            {
+                router.FeedSprintTapForTest(tap % 2 == 0 ? KMA.Input.Side.Left : KMA.Input.Side.Right,
+                    1d + tap * .2d);
+                yield return null;
+            }
+
+            Assert.That(completions, Is.EqualTo(1));
+            Assert.That(received.Pass, Is.True);
+            Assert.That(received.ExamResult, Is.Null);
+            Assert.That(session.SubmitChallengeResult(received).Accepted, Is.True);
+            Assert.That(session.Journey.CheckpointChallengeId, Is.EqualTo("sprint_practice"));
+        }
+
+        [UnityTest]
+        public IEnumerator PassingSprintExamRaisesScoreResultAndUnlocksVolleyball()
+        {
+            var session = new GameSession();
+            Complete(session, "sprint_learn");
+            Complete(session, "sprint_practice");
+            var controller = controllerObject.AddComponent<SprintController>();
+            var router = routerObject.AddComponent<GameplayInputRouter>();
+            router.ConfigureSprintForTest(null);
+            controller.ConfigureInputRouterForTest(router);
+            ChallengeDefinition definition = session.Journey.Catalog.Get("sprint_exam");
+            Assert.That(session.TryStartChallenge(definition.Id, ChallengeAttemptMode.Journey,
+                definition.Difficulty, out ChallengeAttemptContext context), Is.True);
+            controller.ConfigureChallenge(definition, context);
+            ChallengeAttemptResult received = null;
+            controller.ChallengeCompleted += result => received = result;
+
+            controller.SetTutorialGate(false);
+            for (int frame = 0; frame < 301; frame++) controller.Simulate(.01f);
+            for (int frame = 0; frame < 14 * 240 && received == null; frame++)
+            {
+                if (frame % 40 == 0)
+                    router.FeedSprintTapForTest((frame / 40) % 2 == 0
+                        ? KMA.Input.Side.Left : KMA.Input.Side.Right, frame / 240d);
+                controller.Simulate(1f / 240f);
+            }
+
+            Assert.That(received, Is.Not.Null);
+            Assert.That(received.Pass, Is.True);
+            Assert.That(received.ExamResult, Is.Not.Null);
+            Assert.That(session.SubmitChallengeResult(received).Accepted, Is.True);
+            Assert.That(session.Journey.CheckpointChallengeId, Is.EqualTo("volleyball_learn"));
+            yield return null;
+        }
+
+        static void Complete(GameSession session, string id)
+        {
+            ChallengeDefinition definition = session.Journey.Catalog.Get(id);
+            Assert.That(session.TryStartChallenge(id, ChallengeAttemptMode.Journey,
+                definition.Difficulty, out ChallengeAttemptContext context), Is.True);
+            session.SubmitChallengeResult(new ChallengeAttemptResult(context, true,
+                new ChallengeMetrics(completedTargets: definition.TargetCount)));
+        }
+    }
+}

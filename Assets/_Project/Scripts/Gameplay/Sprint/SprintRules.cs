@@ -61,18 +61,25 @@ namespace KMA.Gameplay
         readonly Side[] authoredSequence;
         readonly RivalPaceProfile[] rivalProfiles;
         readonly float[] rivalDistances;
+        readonly SprintBalanceParameters? balance;
         int sequenceIndex;
         int valid;
         int total;
+        int correctStreak;
         int currentRank = 1;
+        float lastTapElapsed;
+        bool hasTapped;
         float distance;
         float speed;
-        float stamina = 100f;
+        float stamina;
         float elapsed;
 
-        public SprintRules(float timeLimit = 14f, RivalPaceProfile[] rivalProfiles = null, Side[] authoredSequence = null)
+        public SprintRules(float timeLimit = 14f, RivalPaceProfile[] rivalProfiles = null,
+            Side[] authoredSequence = null, SprintBalanceParameters? balance = null)
         {
             this.timeLimit = timeLimit;
+            this.balance = balance;
+            stamina = balance.HasValue ? Mathf.Clamp(balance.Value.InitialStamina, 0f, balance.Value.MaxStamina) : 100f;
             this.authoredSequence = authoredSequence == null ? new[] { Side.Left, Side.Right } : (Side[])authoredSequence.Clone();
             if (this.authoredSequence.Length == 0)
                 throw new System.ArgumentException("Sprint authored sequence must contain at least one side.", nameof(authoredSequence));
@@ -99,6 +106,8 @@ namespace KMA.Gameplay
         public float Speed => speed;
         public float Stamina => stamina;
         public float Elapsed => elapsed;
+        public float TimeLimit => timeLimit;
+        public int CorrectStreak => correctStreak;
         public float ValidTapRatio => total == 0 ? 0f : (float)valid / total;
         public int Rank => currentRank;
         public Side ExpectedSide => authoredSequence[sequenceIndex];
@@ -121,18 +130,52 @@ namespace KMA.Gameplay
             if (correct)
             {
                 valid++;
+                correctStreak++;
                 sequenceIndex = (sequenceIndex + 1) % authoredSequence.Length;
             }
+            else
+                correctStreak = 0;
 
-            speed = Mathf.Min(SpeedCap, speed + FullImpulse * (correct ? 1f : .4f));
+            if (balance.HasValue)
+            {
+                SprintBalanceParameters tuning = balance.Value;
+                stamina = Mathf.Clamp(stamina - (correct ? tuning.CorrectTapCost : tuning.WrongTapCost),
+                    0f, tuning.MaxStamina);
+                bool burst = hasTapped && elapsed > lastTapElapsed &&
+                    1f / (elapsed - lastTapElapsed) > tuning.BurstRateThreshold;
+                if (burst) stamina = Mathf.Max(0f, stamina - tuning.BurstExtraCost);
+                lastTapElapsed = elapsed;
+                hasTapped = true;
+                float impulse = correct ? tuning.CorrectImpulse : tuning.CorrectImpulse * tuning.WrongImpulseFactor;
+                bool fatigued = stamina <= tuning.FatigueThreshold;
+                if (fatigued) impulse *= tuning.FatigueImpulseFactor;
+                float cap = fatigued ? Mathf.Min(tuning.SpeedCap, tuning.FatigueSpeedCap) : tuning.SpeedCap;
+                speed = Mathf.Min(cap, speed + impulse);
+            }
+            else
+                speed = Mathf.Min(SpeedCap, speed + FullImpulse * (correct ? 1f : .4f));
         }
 
         public void Tick(float dt)
         {
+            if (dt <= 0f || float.IsNaN(dt) || float.IsInfinity(dt)) return;
             elapsed += dt;
-            speed = Mathf.Max(0f, speed - 15f * dt);
-            distance += speed * dt * .08f;
-            stamina = Mathf.Clamp(stamina + (speed > 20f ? -speed * .25f : 6f) * dt, 0f, 100f);
+            float drag = balance.HasValue ? balance.Value.DragPerSecond : 15f;
+            speed = Mathf.Max(0f, speed - drag * dt);
+            float scale = balance.HasValue ? balance.Value.DistanceScale : .08f;
+            distance += speed * dt * scale;
+            if (balance.HasValue)
+            {
+                SprintBalanceParameters tuning = balance.Value;
+                float staminaDelta = speed > tuning.ActiveDrainSpeedThreshold
+                    ? -(speed - tuning.ActiveDrainSpeedThreshold) * tuning.ActiveDrainPerSpeed
+                    : tuning.RestRegenPerSecond;
+                stamina = Mathf.Clamp(stamina + staminaDelta * dt, 0f, tuning.MaxStamina);
+                if (stamina <= tuning.FatigueThreshold)
+                    speed = Mathf.Min(speed, tuning.FatigueSpeedCap);
+            }
+            else
+                stamina = Mathf.Clamp(stamina + (speed > 20f ? -speed * .25f : 6f) * dt, 0f, 100f);
 
             for (int i = 0; i < rivalProfiles.Length; i++)
             {
@@ -143,12 +186,15 @@ namespace KMA.Gameplay
             UpdateRank();
         }
 
-        public MinigameResult BuildResult()
+        public MinigameResult BuildResult() => BuildResult(FinishDistance, timeLimit);
+
+        public MinigameResult BuildResult(float goalDistance, float deadline)
         {
-            bool pass = distance >= FinishDistance && elapsed <= timeLimit;
+            bool pass = distance >= Mathf.Max(0f, goalDistance) && elapsed <= deadline;
             float accuracy = total == 0 ? 0f : 2f * valid / total;
-            float efficiency = Mathf.Clamp01(stamina / 100f);
-            float mastery = Mathf.Clamp01((timeLimit - elapsed) / 3f);
+            float maxStamina = balance.HasValue ? balance.Value.MaxStamina : 100f;
+            float efficiency = Mathf.Clamp01(maxStamina <= 0f ? 0f : stamina / maxStamina);
+            float mastery = deadline <= 0f ? 0f : Mathf.Clamp01((deadline - elapsed) / 3f);
             return ScoreUtil.Build(pass, accuracy, efficiency, mastery);
         }
 

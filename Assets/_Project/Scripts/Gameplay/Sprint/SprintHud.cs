@@ -35,9 +35,13 @@ namespace KMA.Gameplay
                 return;
 
             var snapshot = controller.Snapshot;
-            float progress = Mathf.Clamp01(snapshot.Distance / 100f);
+            float progress = controller.IsLearnChallenge
+                ? Mathf.Clamp01((float)controller.CorrectStreak / Mathf.Max(1, controller.TargetCount))
+                : Mathf.Clamp01(snapshot.Distance / Mathf.Max(1f, controller.TargetDistance));
 
-            DistanceText = $"{Mathf.RoundToInt(snapshot.Distance)} / 100 m";
+            DistanceText = controller.IsLearnChallenge
+                ? $"NHỊP {controller.CorrectStreak} / {controller.TargetCount}"
+                : $"{Mathf.RoundToInt(snapshot.Distance)} / {controller.TargetDistance:0} m";
             RankText = controller.RankText;
             CadenceText = $"COMBO ×{controller.CadenceCombo}";
             PipProgress = progress;

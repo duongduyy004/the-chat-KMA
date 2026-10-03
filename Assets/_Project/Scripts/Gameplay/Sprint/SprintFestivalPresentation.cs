@@ -92,6 +92,31 @@ namespace KMA.Gameplay
             EnsureResultPresentation();
         }
 
+        public static void ConfigureChallenge(ChallengeDefinition definition)
+        {
+            if (definition == null) return;
+            Transform chrome = GameObject.Find("SprintBroadcastChrome")?.transform;
+            if (chrome == null) return;
+            TMP_Text mode = chrome.Find("ModeLabel/Label")?.GetComponent<TMP_Text>();
+            TMP_Text instruction = chrome.Find("StartPresentation/InstructionPlate/InstructionLabel")
+                ?.GetComponent<TMP_Text>();
+            bool learn = definition.Kind == ChallengeKind.Learn;
+            if (mode != null)
+            {
+                string text = learn ? $"SPRINT · HỌC {definition.TargetCount} NHỊP"
+                    : definition.Kind == ChallengeKind.Practice
+                        ? $"SPRINT · LUYỆN {definition.Distance:0}M / {definition.TimeLimit:0}S"
+                        : $"SPRINT · THI {definition.Distance:0}M / {definition.TimeLimit:0}S";
+                mode.text = VietText.Fix(text);
+            }
+            if (instruction != null)
+                instruction.text = VietText.Fix(learn
+                    ? $"BẤM TRÁI, PHẢI LUÂN PHIÊN {definition.TargetCount} LẦN"
+                    : $"CHẠY {definition.Distance:0} M TRONG {definition.TimeLimit:0} GIÂY");
+            Transform finishLine = chrome.Find("FinishLine");
+            if (finishLine != null) finishLine.gameObject.SetActive(!learn);
+        }
+
         /// Positions a RectTransform from an absolute rect expressed in the safe area's own space.
         static void ApplyRect(RectTransform rect, Rect safe, Rect target)
         {

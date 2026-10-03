@@ -85,6 +85,12 @@ namespace KMA.Gameplay
             SetActive(countdownRoot, false);
         }
 
+        public void ConfigureInstruction(string copy)
+        {
+            if (instructionLabel != null)
+                instructionLabel.text = VietText.Fix(copy ?? string.Empty);
+        }
+
         public void Bind(SprintController source)
         {
             Unsubscribe();
