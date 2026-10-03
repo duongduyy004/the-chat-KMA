@@ -85,6 +85,7 @@ namespace KMA.Gameplay
             ballShadow.transform.position = ScreenToWorld(ground.x, ground.y);
             ballShadow.transform.localScale = shadowScale * point.z;
             float keeperX = flying ? flight.KeeperX : 0f;
+            goalkeeper.enabled = rules.KeeperEnabled;
             float keeperAngle = flying ? flight.KeeperAngle : 0f;
             goalkeeper.transform.position = KeeperWorldPosition(keeperX, keeperAngle);
             goalkeeper.transform.rotation = Quaternion.Euler(0f, 0f, -keeperAngle);

@@ -27,6 +27,7 @@ namespace KMA.Gameplay
 
         FootballDifficulty selectedDifficulty = FootballDifficulty.Normal;
         bool listenersBound;
+        ChallengeDefinition challenge;
 
         public event Action<FootballDifficulty> StartRequested;
         public Slider DirectionSlider => directionSlider;
@@ -79,6 +80,16 @@ namespace KMA.Gameplay
             UpdateDifficultyButtons();
         }
 
+        public void ConfigureChallenge(ChallengeDefinition definition, bool difficultySelectionEnabled)
+        {
+            challenge = definition;
+            selectedDifficulty = definition == null ? FootballDifficulty.Normal : ToFootballDifficulty(definition.Difficulty);
+            SetButtonAvailable(easyButton, difficultySelectionEnabled);
+            SetButtonAvailable(normalButton, difficultySelectionEnabled);
+            SetButtonAvailable(hardButton, difficultySelectionEnabled);
+            UpdateDifficultyButtons();
+        }
+
         public void RequestStart() => StartRequested?.Invoke(selectedDifficulty);
 
         public void Render(FootballRules rules)
@@ -86,8 +97,12 @@ namespace KMA.Gameplay
             if (rules == null)
                 return;
             bool overPower = rules.Power > OverPowerThreshold;
-            if (scoreLabel) scoreLabel.text = VietText.Fix("BÀN: " + rules.Goals);
-            if (remainingLabel) remainingLabel.text = VietText.Fix("CÒN " + Mathf.Max(0, 5 - rules.Kicks) + " LƯỢT");
+            int target = challenge != null ? challenge.TargetCount : rules.MaximumKicks ?? rules.RequiredGoals;
+            if (scoreLabel) scoreLabel.text = VietText.Fix(challenge == null
+                ? "BÀN: " + rules.Goals : $"BÀN: {rules.Goals} / {target}");
+            if (remainingLabel) remainingLabel.text = VietText.Fix(rules.MaximumKicks.HasValue
+                ? "CÒN " + Mathf.Max(0, rules.MaximumKicks.Value - rules.Kicks) + " LƯỢT"
+                : "LUYỆN TẬP KHÔNG GIỚI HẠN LƯỢT");
             if (powerBar)
             {
                 powerBar.SetValue(rules.Power);
@@ -159,5 +174,18 @@ namespace KMA.Gameplay
             if (button && button.GetComponent<KitPressFeedback>())
                 UiKit.ApplyVariant(UiKit.ButtonParts(button), selected ? ButtonVariant.Primary : ButtonVariant.Secondary);
         }
+
+        static void SetButtonAvailable(Button button, bool available)
+        {
+            if (button) button.interactable = available;
+        }
+
+        static FootballDifficulty ToFootballDifficulty(ChallengeDifficulty difficulty) => difficulty switch
+        {
+            ChallengeDifficulty.Easy => FootballDifficulty.Easy,
+            ChallengeDifficulty.Normal => FootballDifficulty.Normal,
+            ChallengeDifficulty.Hard => FootballDifficulty.Hard,
+            _ => throw new ArgumentOutOfRangeException(nameof(difficulty), difficulty, null)
+        };
     }
 }

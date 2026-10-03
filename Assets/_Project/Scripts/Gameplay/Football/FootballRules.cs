@@ -8,16 +8,18 @@ namespace KMA.Gameplay
     {
         public const float KickAnimationSeconds = .18f;
         const float ShotFeedbackSeconds = .9f;
-        const int MaxKicks = 5;
+        const int DefaultMaxKicks = 5;
         readonly FootballTuning tuning;
-        readonly List<FootballOutcome> outcomes = new List<FootballOutcome>(MaxKicks);
+        readonly FootballMatchOptions options;
+        readonly List<FootballOutcome> outcomes = new List<FootballOutcome>(DefaultMaxKicks);
         readonly IReadOnlyList<FootballOutcome> readonlyOutcomes;
         double chargeSeconds, flightAccumulator;
 
-        public FootballRules(FootballTuning tuning)
+        public FootballRules(FootballTuning tuning, FootballMatchOptions options = null)
         {
             tuning.EnsureValid();
             this.tuning = tuning;
+            this.options = options ?? new FootballMatchOptions(DefaultMaxKicks, 3, true);
             readonlyOutcomes = outcomes.AsReadOnly();
         }
         public FootballState State { get; private set; } = FootballState.Start;
@@ -33,6 +35,9 @@ namespace KMA.Gameplay
         public int Goals { get; private set; }
         public IReadOnlyList<FootballOutcome> Outcomes => readonlyOutcomes;
         public bool PreviewVisible => State == FootballState.Charging;
+        public int? MaximumKicks => options.MaxKicks;
+        public int RequiredGoals => options.RequiredGoals;
+        public bool KeeperEnabled => options.KeeperEnabled;
 
         public bool Start()
         {
@@ -62,7 +67,7 @@ namespace KMA.Gameplay
         {
             if (State != FootballState.Charging) return false;
             LastShot = FootballShotSolver.Create(AimX, Power);
-            Flight = new FootballFlightSimulation(LastShot.Value, tuning);
+            Flight = new FootballFlightSimulation(LastShot.Value, tuning, options.KeeperEnabled);
             flightAccumulator = 0d;
             ChangeState(FootballState.Kicking);
             return true;
@@ -75,7 +80,8 @@ namespace KMA.Gameplay
             ChangeState(FootballState.Aiming);
         }
         public int GetPreview(Vector3[] points) => PreviewVisible
-            ? FootballShotSolver.Predict(FootballShotSolver.Create(AimX, Power), tuning, points) : 0;
+            ? FootballShotSolver.Predict(FootballShotSolver.Create(AimX, Power), tuning, points,
+                options.KeeperEnabled) : 0;
 
         public void Tick(float deltaTime)
         {
@@ -112,12 +118,18 @@ namespace KMA.Gameplay
                             outcomes.Add(LastOutcome.Value);
                             Kicks++;
                             if (LastOutcome == FootballOutcome.Goal) Goals++;
+                            if (!options.MaxKicks.HasValue && Goals >= options.RequiredGoals)
+                            {
+                                ChangeState(FootballState.MatchResult);
+                                break;
+                            }
                             ChangeState(FootballState.ShotResult);
                         }
                         break;
                     case FootballState.ShotResult:
                         Consume(ref remaining, ShotFeedbackSeconds,
-                            Kicks == MaxKicks ? FootballState.MatchResult : FootballState.Aiming);
+                            options.MaxKicks.HasValue && Kicks >= options.MaxKicks.Value
+                                ? FootballState.MatchResult : FootballState.Aiming);
                         if (State == FootballState.Aiming)
                         {
                             Power = 0f;
@@ -132,11 +144,22 @@ namespace KMA.Gameplay
         }
         public MinigameResult BuildResult()
         {
-            if (State != FootballState.MatchResult || Kicks != MaxKicks)
-                throw new InvalidOperationException("The result is available only after all five kicks.");
-            bool passed = Goals >= 3;
+            if (State != FootballState.MatchResult || !options.MaxKicks.HasValue || Kicks != options.MaxKicks.Value)
+                throw new InvalidOperationException("The score result is available only after all configured kicks.");
+            bool passed = Goals >= options.RequiredGoals;
             float score = passed ? Goals * 2f : 0f;
             return new MinigameResult(passed, score, passed ? ScoreUtil.ToRank(score) : Rank.F);
+        }
+
+        public ChallengeAttemptResult BuildChallengeResult(ChallengeAttemptContext context)
+        {
+            if (context == null) throw new ArgumentNullException(nameof(context));
+            if (State != FootballState.MatchResult)
+                throw new InvalidOperationException("The challenge result is available only after its target is complete.");
+            bool passed = Goals >= options.RequiredGoals;
+            MinigameResult exam = context.ChallengeId == "soccer_exam" ? BuildResult() : null;
+            return new ChallengeAttemptResult(context, passed,
+                new ChallengeMetrics(completedTargets: Goals, kicks: Kicks), exam);
         }
         void Consume(ref double remaining, float duration, FootballState next)
         {

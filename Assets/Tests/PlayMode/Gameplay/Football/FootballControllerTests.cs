@@ -98,6 +98,36 @@ namespace KMA.Tests.Gameplay.Football
         }
 
         [Test]
+        public void JourneyExamForcesAuthoredDifficultyAndEmitsOneTypedResultAfterFiveKicks()
+        {
+            ChallengeDefinition definition = ChallengeCatalog.LoadDefault().Get("soccer_exam");
+            var context = new ChallengeAttemptContext("attempt", definition.Id, ChallengeAttemptMode.Journey,
+                definition.Difficulty);
+            fixture.controller.ConfigureChallenge(definition, context);
+            int completed = 0;
+            ChallengeAttemptResult typed = null;
+            fixture.controller.ChallengeCompleted += result => { completed++; typed = result; };
+            Assert.That(fixture.controller.BeginMatch(FootballDifficulty.Easy), Is.True);
+            AdvanceLifecycle(10f);
+            TickPlay(.01f);
+
+            for (int i = 0; i < 5; i++)
+            {
+                fixture.controller.Rules.SetAim(0f);
+                fixture.controller.Rules.BeginCharge();
+                fixture.controller.Rules.Tick(.7f);
+                fixture.controller.Rules.ReleaseShot();
+                TickPlay(20f);
+            }
+
+            Assert.That(fixture.controller.Rules.Kicks, Is.EqualTo(5));
+            Assert.That(completed, Is.EqualTo(1));
+            Assert.That(typed.Context.ChallengeId, Is.EqualTo("soccer_exam"));
+            Assert.That(typed.ExamResult, Is.Not.Null);
+            Assert.That(fixture.controller.LastResult.Pass, Is.EqualTo(typed.Pass));
+        }
+
+        [Test]
         public void PausingCancelsChargeButFreezesAFlightWithoutConsumingAnotherShot()
         {
             fixture.controller.BeginMatch(FootballDifficulty.Normal);

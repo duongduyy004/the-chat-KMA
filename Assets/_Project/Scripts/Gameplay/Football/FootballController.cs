@@ -8,7 +8,7 @@ using UnityEngine;
 
 namespace KMA.Gameplay
 {
-    public sealed class FootballController : MinigameBase
+    public sealed class FootballController : MinigameBase, IChallengeController
     {
         public override bool UsesSharedTutorial => false;
         public override bool OwnsStartGate => true;
@@ -34,9 +34,13 @@ namespace KMA.Gameplay
         bool appPaused;
         bool hasFocus = true;
         FootballFlightSimulation kickedFlight, soundedOutcomeFlight;
+        ChallengeDefinition challengeDefinition;
+        ChallengeAttemptContext challengeContext;
 
         public FootballRules Rules => rules;
         public MinigameResult LastResult => lastResult;
+        public SubjectId Subject => SubjectId.Football;
+        public event Action<ChallengeAttemptResult> ChallengeCompleted;
 
         public void Configure(FootballDifficultyConfig config, FootballInputBridge input,
             FootballPresentation view, FootballHud gameHud, ResultPanel result)
@@ -54,9 +58,12 @@ namespace KMA.Gameplay
                 PresentationPhase != MinigamePhase.Tutorial)
                 return false;
 
+            if (challengeContext != null && challengeContext.Mode != ChallengeAttemptMode.FreePlay)
+                difficulty = ToFootballDifficulty(challengeDefinition.Difficulty);
             selectedDifficulty = difficulty;
             preferredDifficulty = difficulty;
-            rules = new FootballRules(difficultyConfig.Get(difficulty));
+            rules = new FootballRules(difficultyConfig.Get(difficulty),
+                challengeDefinition == null ? null : OptionsFor(challengeDefinition));
             matchRequested = true;
             rulesStarted = false;
             resultSubmitted = false;
@@ -64,6 +71,30 @@ namespace KMA.Gameplay
             hud.HideStart();
             SetTutorialGate(false);
             return true;
+        }
+
+        public void ConfigureChallenge(ChallengeDefinition definition, ChallengeAttemptContext context)
+        {
+            if (definition == null) throw new ArgumentNullException(nameof(definition));
+            if (context == null) throw new ArgumentNullException(nameof(context));
+            if (definition.Subject != SubjectId.Football || definition.Id != context.ChallengeId)
+                throw new ArgumentException("Football controller received a mismatched challenge context.");
+            if (Lifecycle != null && Lifecycle.Phase != MinigamePhase.Tutorial)
+                throw new InvalidOperationException("Football challenge must be configured before the start gate opens.");
+            challengeDefinition = definition;
+            challengeContext = context;
+            selectedDifficulty = ToFootballDifficulty(definition.Difficulty);
+            rules = new FootballRules(difficultyConfig.Get(selectedDifficulty), OptionsFor(definition));
+            matchRequested = false;
+            rulesStarted = false;
+            resultSubmitted = false;
+            lastResult = null;
+            hud.ConfigureChallenge(definition, context.Mode == ChallengeAttemptMode.FreePlay);
+            hud.ShowStart(selectedDifficulty);
+            inputBridge.SetEnabled(false, false);
+            presentation.HidePreview();
+            hud.Render(rules);
+            presentation.Render(rules);
         }
 
         protected override void Awake()
@@ -135,8 +166,15 @@ namespace KMA.Gameplay
             {
                 resultSubmitted = true;
                 inputBridge.SetEnabled(false, false);
-                lastResult = rules.BuildResult();
-                resultPanel.SetDetail($"{rules.Goals}/5 BÀN");
+                if (challengeDefinition != null && challengeContext != null)
+                {
+                    ChallengeAttemptResult result = rules.BuildChallengeResult(challengeContext);
+                    lastResult = result.ExamResult ?? new MinigameResult(result.Pass,
+                        result.Pass ? result.Metrics.CompletedTargets * 2f : 0f,
+                        result.Pass ? ScoreUtil.ToRank(result.Metrics.CompletedTargets * 2f) : Rank.F);
+                }
+                else lastResult = rules.BuildResult();
+                resultPanel.SetDetail($"{rules.Goals}/{rules.RequiredGoals} BÀN");
                 Finish(lastResult);
             }
         }
@@ -231,11 +269,38 @@ namespace KMA.Gameplay
 
         void OnResultAction(string action)
         {
+            if (challengeContext != null)
+                return;
             if (action == ResultPanelActions.Retry)
                 retryRequested = true;
             else if (action == ResultPanelActions.Continue)
                 retryRequested = false;
         }
+
+        protected override void OnResultResolved(MinigameResult result)
+        {
+            if (challengeDefinition == null || challengeContext == null)
+            {
+                base.OnResultResolved(result);
+                return;
+            }
+            ChallengeCompleted?.Invoke(rules.BuildChallengeResult(challengeContext));
+        }
+
+        static FootballMatchOptions OptionsFor(ChallengeDefinition definition) => definition.Kind switch
+        {
+            ChallengeKind.Learn => new FootballMatchOptions(null, 3, false),
+            ChallengeKind.Practice => new FootballMatchOptions(null, 2, true),
+            _ => new FootballMatchOptions(5, 3, true)
+        };
+
+        static FootballDifficulty ToFootballDifficulty(ChallengeDifficulty difficulty) => difficulty switch
+        {
+            ChallengeDifficulty.Easy => FootballDifficulty.Easy,
+            ChallengeDifficulty.Normal => FootballDifficulty.Normal,
+            ChallengeDifficulty.Hard => FootballDifficulty.Hard,
+            _ => throw new ArgumentOutOfRangeException(nameof(difficulty), difficulty, null)
+        };
 
         void OnEnable()
         {

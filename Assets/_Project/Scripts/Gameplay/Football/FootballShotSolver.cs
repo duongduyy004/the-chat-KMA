@@ -44,10 +44,11 @@ namespace KMA.Gameplay
                 211.090909f + 290.909091f * depth - point.y * vertical, vertical * BallRadius / 17f);
         }
 
-        public static int Predict(FootballShot shot, FootballTuning tuning, Vector3[] points)
+        public static int Predict(FootballShot shot, FootballTuning tuning, Vector3[] points,
+            bool keeperEnabled = true)
         {
             if (points == null || points.Length == 0) return 0;
-            var simulation = new FootballFlightSimulation(shot, tuning, false);
+            var simulation = new FootballFlightSimulation(shot, tuning, keeperEnabled);
             int count = 0;
             for (int i = 0; i < 2200 && count < points.Length - 1; i++)
             {
