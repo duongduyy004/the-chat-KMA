@@ -166,6 +166,12 @@ namespace KMA.Gameplay.Core
         {
             if (IsTransitioning || session.ActiveSubject.HasValue)
                 return false;
+            string checkpoint = session.Journey.CheckpointChallengeId;
+            if (!string.IsNullOrEmpty(checkpoint) &&
+                session.Journey.Catalog.Get(checkpoint).Subject != subject)
+                return false;
+            if (string.IsNullOrEmpty(checkpoint) && !session.Journey.CourseComplete)
+                return false;
 
             EnsureRouteIsConfigured(SessionRoute.Subject, subject);
             SaveData previous = session.ToSaveData();

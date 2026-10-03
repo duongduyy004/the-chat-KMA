@@ -55,7 +55,8 @@ namespace KMA.Gameplay.Shell
             {
                 var router = SceneRouter.Instance;
                 BuildMapPresentation(router == null ? null : router.Session);
-                map.SubjectRequested += StartSubject;
+                map.SubjectRequested += SelectMapSubject;
+                map.ChallengeRequested += StartChallenge;
             }
             if (gameOver != null)
             {
@@ -92,7 +93,8 @@ namespace KMA.Gameplay.Shell
             }
             if (map != null)
             {
-                map.SubjectRequested -= StartSubject;
+                map.SubjectRequested -= SelectMapSubject;
+                map.ChallengeRequested -= StartChallenge;
             }
             if (gameOver != null)
             {
@@ -280,11 +282,17 @@ namespace KMA.Gameplay.Shell
             return text;
         }
 
-        static void StartSubject(SubjectId subject)
+        void SelectMapSubject(SubjectId subject)
         {
-            var router = SceneRouter.Instance;
-            if (router != null)
-                router.StartSubject(subject);
+            map?.LessonList?.ShowSubject(subject);
+        }
+
+        static void StartChallenge(string id, ChallengeAttemptMode mode)
+        {
+            SceneRouter router = SceneRouter.Instance;
+            if (router == null || router.Session == null) return;
+            ChallengeDefinition definition = router.Session.Journey.Catalog.Get(id);
+            router.TryStartChallenge(id, mode, definition.Difficulty);
         }
 
         static void ApplySettings(Settings value) => GameManager.Instance?.UpdateSettings(value);

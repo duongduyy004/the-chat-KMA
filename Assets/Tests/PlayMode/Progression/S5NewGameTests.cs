@@ -186,27 +186,29 @@ namespace KMA.Tests.Gameplay.Progression
         }
 
         [Test]
-        public void MapPresentation_FutureTagsAreInformationalAndRequestNoSubject()
+        public void MapPresentation_ListsLessonsAndRequestsChallengesInsteadOfSubjects()
         {
             var screenObject = new GameObject("MapScreen", typeof(RectTransform));
             var screen = screenObject.AddComponent<MapScreen>();
             try
             {
                 var requested = new List<SubjectId>();
+                var challenges = new List<string>();
                 screen.SubjectRequested += requested.Add;
+                screen.ChallengeRequested += (id, _) => challenges.Add(id);
 
                 MapPresentationBuilder.Build(screen, new GameSession());
 
-                Transform futureRow = screen.transform.Find("S5MapPresentation/Content/FutureRow");
-                Assert.That(futureRow, Is.Not.Null);
-                Assert.That(futureRow.GetComponentsInChildren<TMP_Text>(true).Select(text => text.text),
-                    Is.EquivalentTo(new[] { "SẮP RA MẮT", "Hít đất" }));
-                Assert.That(futureRow.GetComponentsInChildren<Button>(true), Is.Empty);
-                Assert.That(futureRow.GetComponentsInChildren<MapNodeView>(true), Is.Empty);
+                Assert.That(screen.LessonList, Is.Not.Null);
+                Assert.That(screen.LessonList.LessonIds,
+                    Is.EqualTo(new[] { "sprint_learn", "sprint_practice", "sprint_exam" }));
                 Assert.That(screen.Nodes, Has.Length.EqualTo(3));
-
-                Assert.That(requested, Is.Empty,
-                    "Presentation-only future chips must never request a campaign subject route.");
+                screen.SelectSubject(SubjectId.Sprint);
+                screen.LessonList.GetComponentInChildren<Button>(true).onClick.Invoke();
+                Assert.That(requested, Is.EqualTo(new[] { SubjectId.Sprint }),
+                    "Course selection only changes the displayed lesson list.");
+                Assert.That(challenges, Has.Count.EqualTo(1));
+                Assert.That(challenges[0], Is.EqualTo("sprint_learn"));
             }
             finally { UnityEngine.Object.DestroyImmediate(screenObject); }
         }
@@ -230,7 +232,7 @@ namespace KMA.Tests.Gameplay.Progression
                 TMP_Text livesLabel = screen.transform
                     .Find("S5MapPresentation/Content/Header/LivesPanel/LivesLabelContainer/LivesLabel")
                     .GetComponent<TMP_Text>();
-                Assert.That(livesLabel.text, Is.EqualTo($"LƯỢT: {expectedLives}/5"));
+                Assert.That(livesLabel.text, Is.EqualTo($"Lượt thi: {expectedLives}/5"));
                 Assert.That(screen.Hearts.CurrentHearts, Is.EqualTo(expectedLives));
                 Assert.That(screen.Hearts.GetComponentsInChildren<Image>(true), Has.Length.EqualTo(5));
                 Assert.That(screen.transform.Cast<Transform>()
@@ -256,16 +258,15 @@ namespace KMA.Tests.Gameplay.Progression
 
             var screen = Object.FindFirstObjectByType<MapScreen>(FindObjectsInactive.Include);
             Assert.That(screen.transform.Find("S5MapPresentation"), Is.Not.Null);
-            Assert.That(screen.Nodes.Where(node => node.IsInteractable).Select(node => node.SubjectId),
-                Is.EquivalentTo(new[] { SubjectId.Sprint, SubjectId.Volleyball, SubjectId.Football }));
-            Assert.That(screen.Nodes.Where(node => !node.IsInteractable &&
-                    node.DetailText == "ĐANG PHÁT TRIỂN").Select(node => node.SubjectId),
-                Is.Empty);
+            Assert.That(screen.Nodes[0].IsInteractable, Is.True);
+            Assert.That(screen.Nodes[1].IsInteractable, Is.False);
+            Assert.That(screen.Nodes[2].IsInteractable, Is.False);
+            Assert.That(screen.Nodes.Skip(1).All(node => node.DetailText == "CHƯA MỞ KHÓA"), Is.True);
             Assert.That(GameObject.Find("SelectionGrid").GetComponent<GridLayoutGroup>(), Is.Not.Null);
         }
 
         [UnityTest]
-        public IEnumerator MapScene_ResponsiveLayout_KeepsCardsInsideTheGrid()
+        public IEnumerator MapScene_ResponsiveLayout_KeepsCardsAndLessonsInsideTheirPanels()
         {
             SceneManager.LoadScene("Map", LoadSceneMode.Single);
             yield return null;
@@ -276,9 +277,8 @@ namespace KMA.Tests.Gameplay.Progression
                 .GetComponent<RectTransform>();
             RectTransform content = screen.transform.Find("S5MapPresentation/Content")
                 .GetComponent<RectTransform>();
-            Transform futureRowTransform = screen.transform.Find("S5MapPresentation/Content/FutureRow");
-            Assert.That(futureRowTransform, Is.Not.Null);
-            RectTransform futureRow = futureRowTransform.GetComponent<RectTransform>();
+            RectTransform lessonPanel = screen.transform.Find("S5MapPresentation/Content/JourneyLessons")
+                .GetComponent<RectTransform>();
 
             foreach (Vector2Int resolution in new[]
             {
@@ -296,11 +296,11 @@ namespace KMA.Tests.Gameplay.Progression
                 Canvas.ForceUpdateCanvases();
 
                 Rect gridBounds = WorldBounds(grid);
-                Rect futureBounds = WorldBounds(futureRow);
-                Assert.That(gridBounds.Overlaps(futureBounds), Is.False,
-                    $"SelectionGrid must not overlap FutureRow at {resolution.x}x{resolution.y}.");
+                Rect lessonBounds = WorldBounds(lessonPanel);
+                Assert.That(gridBounds.Overlaps(lessonBounds), Is.False,
+                    $"SelectionGrid must not overlap JourneyLessons at {resolution.x}x{resolution.y}.");
                 Assert.That(Contains(content, grid), Is.True);
-                Assert.That(Contains(content, futureRow), Is.True);
+                Assert.That(Contains(content, lessonPanel), Is.True);
                 foreach (MapNodeView node in screen.Nodes)
                 {
                     Assert.That(Contains(grid, node.transform as RectTransform), Is.True,
@@ -319,9 +319,9 @@ namespace KMA.Tests.Gameplay.Progression
                     }
                 }
 
-                foreach (TMP_Text tag in futureRow.GetComponentsInChildren<TMP_Text>(true))
-                    Assert.That(Contains(futureRow, tag.rectTransform), Is.True,
-                        $"{tag.name} must remain inside FutureRow at {resolution.x}x{resolution.y}.");
+                foreach (TMP_Text label in lessonPanel.GetComponentsInChildren<TMP_Text>(true))
+                    Assert.That(Contains(lessonPanel, label.rectTransform), Is.True,
+                        $"{label.name} must remain inside JourneyLessons at {resolution.x}x{resolution.y}.");
             }
         }
 
@@ -390,7 +390,7 @@ namespace KMA.Tests.Gameplay.Progression
         {
             yield return AssertContinueRequests(
                 Arrange(session => session.StartSubject(SubjectId.Sprint)),
-                SessionRoute.Subject, SubjectId.Sprint, "MG_Sprint");
+                SessionRoute.Map, null, "Map");
         }
 
         [UnityTest]
@@ -410,7 +410,13 @@ namespace KMA.Tests.Gameplay.Progression
         {
             SceneRouter router = CreateRouter();
             GameManager manager = CreateManager(router, SaveData.CreateDefault(), hasExistingSave: true);
-            List<SceneRouteTransition> transitions = RecordTransitions(router);
+            var transitions = new List<SceneRouteTransition>();
+            router.ConfigureRouteAcceptanceForTests((transition, complete) =>
+            {
+                transitions.Add(transition);
+                complete();
+                return true;
+            });
             MainMenuScreen menu = CreateShellMenu();
 
             Assert.That(manager.HasSavedCampaign, Is.True);
@@ -420,7 +426,7 @@ namespace KMA.Tests.Gameplay.Progression
 
             Assert.That(transitions, Has.Count.EqualTo(1));
             Assert.That(transitions[0].Route, Is.EqualTo(SessionRoute.Map));
-            yield return WaitForRoutedScene(router, "Map");
+            yield return null;
         }
 
         [Test]
@@ -438,7 +444,7 @@ namespace KMA.Tests.Gameplay.Progression
         }
 
         [Test]
-        public void StartSubject_WhileARestoredAttemptIsStillActive_IsRejectedWithoutThrowing()
+        public void StartSubject_WhileARestoredAttemptIsUnresolved_RejectsLockedSubject()
         {
             SceneRouter router = CreateRouter();
             GameManager manager = CreateManager(
@@ -448,12 +454,12 @@ namespace KMA.Tests.Gameplay.Progression
             Assert.That(router.StartSubject(SubjectId.Football), Is.False);
 
             Assert.That(transitions, Is.Empty);
-            Assert.That(manager.Session.ActiveSubject, Is.EqualTo(SubjectId.Sprint));
+            Assert.That(manager.Session.ActiveSubject, Is.Null);
             Assert.That(manager.Session.VisitAttempt, Is.EqualTo(1));
         }
 
         [UnityTest]
-        public IEnumerator RouteToMap_AfterRestoringAnActiveAttempt_ClearsItSoTheMapStaysUsable()
+        public IEnumerator RouteToMap_AfterReloadKeepsTheChallengeCheckpointUsable()
         {
             SaveData persisted = Arrange(session => session.StartSubject(SubjectId.Sprint));
 
@@ -463,7 +469,9 @@ namespace KMA.Tests.Gameplay.Progression
             List<SceneRouteTransition> transitions = RecordTransitions(router);
             MainMenuScreen menu = CreateShellMenu();
 
-            Assert.That(manager.Session.ActiveSubject, Is.EqualTo(SubjectId.Sprint));
+            Assert.That(manager.Session.ActiveSubject, Is.Null,
+                "An unresolved attempt is restored to its challenge checkpoint after reload.");
+            Assert.That(manager.Session.Journey.CheckpointChallengeId, Is.EqualTo("sprint_learn"));
 
             router.Route(SessionRoute.Map);
 
@@ -471,16 +479,13 @@ namespace KMA.Tests.Gameplay.Progression
             Assert.That(transitions[0].Route, Is.EqualTo(SessionRoute.Map));
             Assert.That(manager.Session.ActiveSubject, Is.Null);
             Assert.That(manager.Session.AwaitingPunishment, Is.False);
-            Assert.That(saved, Is.Not.Null, "Abandoning the stale attempt must be persisted.");
-            Assert.That(saved.hasActiveSubject, Is.False);
-            Assert.That(saved.awaitingPunishment, Is.False);
-            Assert.That(saved.lives, Is.EqualTo(5));
+            Assert.That(saved, Is.Null, "Routing an already-normalized checkpoint does not rewrite the save.");
 
             yield return WaitForRoutedScene(router, "Map");
 
-            Assert.That(router.StartSubject(SubjectId.Football), Is.True);
-            Assert.That(manager.Session.ActiveSubject, Is.EqualTo(SubjectId.Football));
-            yield return WaitForRoutedScene(router, "MG_Football");
+            Assert.That(router.StartSubject(SubjectId.Sprint), Is.True);
+            Assert.That(manager.Session.ActiveSubject, Is.EqualTo(SubjectId.Sprint));
+            yield return WaitForRoutedScene(router, "MG_Sprint");
         }
 
         [UnityTest]

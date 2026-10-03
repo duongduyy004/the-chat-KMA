@@ -42,7 +42,14 @@ namespace KMA.Gameplay.UI
             {
                 var existingNodes = existing.GetComponentsInChildren<MapNodeView>(true);
                 var existingHearts = existing.GetComponentInChildren<HeartBar>(true);
-                screen.BindPresentation(existingNodes, existingHearts, session);
+                Transform oldFutureRow = existing.Find("Content/FutureRow");
+                if (oldFutureRow != null) oldFutureRow.gameObject.SetActive(false);
+                var lessonList = existing.GetComponentInChildren<JourneyLessonList>(true) ??
+                    JourneyLessonList.Create(existing.Find("Content"));
+                screen.BindPresentation(existingNodes, existingHearts, session ?? new GameSession(), lessonList);
+                screen.BindBudgetLabel(existing.Find("Content/Header/LivesPanel/LivesLabelContainer/LivesLabel")
+                    ?.GetComponent<TMP_Text>());
+                screen.RefreshJourney(session ?? new GameSession());
                 var back = existing.Find("Content/Header/BackButton")?.GetComponent<Button>();
                 if (back != null)
                 {
@@ -90,9 +97,11 @@ namespace KMA.Gameplay.UI
             var nodes = new List<MapNodeView>();
             foreach (Entry entry in Entries) nodes.Add(Card(grid, screen, entry, card, muted, mutedForeground, border));
             grid.GetComponent<ResponsiveGridLayout>().Refresh();
-            FutureRow(content, muted, mutedForeground, border);
-            Anchor((RectTransform)content.Find("FutureRow"), new Vector2(.16f, .23f), new Vector2(.84f, .29f));
-            screen.BindPresentation(nodes.ToArray(), hearts, session);
+            JourneyLessonList lessons = JourneyLessonList.Create(content);
+            screen.BindPresentation(nodes.ToArray(), hearts, session ?? new GameSession(), lessons);
+            screen.BindBudgetLabel(content.Find("Header/LivesPanel/LivesLabelContainer/LivesLabel")
+                ?.GetComponent<TMP_Text>());
+            screen.RefreshJourney(session ?? new GameSession());
             foreach (MapNodeView node in nodes)
                 if (!node.IsComingSoon && !node.IsInteractable) node.SetAvailability(false, "ĐANG PHÁT TRIỂN");
         }
@@ -163,7 +172,7 @@ namespace KMA.Gameplay.UI
             hearts.SetSlots(slots);
             int currentLives = session == null ? GameSession.MaxLives : session.Lives;
             hearts.SetHearts(currentLives);
-            TMP_Text lives = LayoutLabel(livesPanel, "LivesLabel", "LƯỢT: " + currentLives + "/" + GameSession.MaxLives, 24,
+            TMP_Text lives = LayoutLabel(livesPanel, "LivesLabel", $"Lượt thi: {currentLives}/{GameSession.MaxLives}", 24,
                 Color.white, TextAnchor.MiddleRight);
             lives.enableWordWrapping = false;
             LayoutElement livesLabelLayout = lives.transform.parent.gameObject.AddComponent<LayoutElement>();

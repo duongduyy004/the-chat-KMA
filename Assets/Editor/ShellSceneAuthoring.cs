@@ -91,11 +91,24 @@ namespace KMA.EditorTools
                     "Authored Map grid is missing layout components");
                 MapPresentationBuilder.Build(screen, null);
                 Check(screen.Nodes.Length == 3, "Map needs three authored subject nodes");
+                Check(screen.Nodes[0].SubjectId == KMA.Gameplay.SubjectId.Sprint &&
+                    screen.Nodes[0].IsInteractable && !screen.Nodes[1].IsInteractable &&
+                    !screen.Nodes[2].IsInteractable,
+                    "Map must unlock only Sprint before its exam is passed");
+                Check(screen.LessonList != null && screen.LessonList.CurrentChallengeId == "sprint_learn" &&
+                    screen.LessonList.LessonIds.Count == 3,
+                    "Map must show the three Sprint challenges at the current checkpoint");
                 int selected = 0;
                 screen.SubjectRequested += _ => selected++;
                 foreach (var node in screen.Nodes)
                     node.GetComponent<Button>()?.onClick.Invoke();
                 Check(selected == 3, "Authored Map buttons were not rebound");
+                string challenge = null;
+                KMA.Gameplay.ChallengeAttemptMode? mode = null;
+                screen.ChallengeRequested += (id, attemptMode) => { challenge = id; mode = attemptMode; };
+                screen.LessonList.transform.Find("Lesson1")?.GetComponent<Button>()?.onClick.Invoke();
+                Check(challenge == "sprint_learn" && mode == KMA.Gameplay.ChallengeAttemptMode.Journey,
+                    "Map lesson button must request the current challenge in Journey mode");
             });
             ValidateScene("GameOver", scene =>
             {

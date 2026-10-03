@@ -83,6 +83,9 @@ namespace KMA.Tests.Gameplay.Core
         {
             SaveData prepared = SaveData.CreateDefault();
             prepared.lives = 2;
+            prepared.journey.completedChallengeIds.Add("sprint_learn");
+            prepared.journey.completedChallengeIds.Add("sprint_practice");
+            prepared.journey.completedChallengeIds.Add("sprint_exam");
             SubjectRecordData sprint = Array.Find(prepared.subjects, record => record.id == SubjectId.Sprint);
             sprint.passed = true;
             sprint.bestScore = 0.875f;
@@ -175,13 +178,16 @@ namespace KMA.Tests.Gameplay.Core
         public IEnumerator SubjectCompleted_SavesExactlyOnce()
         {
             SceneRouter router = CreateRouter();
+            router.ConfigureRouteAcceptanceForTests((_, complete) => { complete(); return true; });
             int saves = 0;
             GameManager manager = CreateInitializedManager(router, _ => saves++);
-
-            router.Session.StartSubject(SubjectId.Sprint);
+            CompleteThroughSprintPractice(manager.Session);
+            Assert.That(router.StartSubject(SubjectId.Sprint), Is.True);
+            saves = 0;
             router.SubmitSubjectResult(SubjectId.Sprint, new MinigameResult(true, 0.9f, Rank.A));
 
             Assert.That(manager.Session.GetRecord(SubjectId.Sprint).Passed, Is.True);
+            Assert.That(manager.Session.Journey.IsChallengeComplete("sprint_exam"), Is.True);
             Assert.That(saves, Is.EqualTo(1));
             yield return new WaitUntil(() => !router.IsTransitioning);
         }
@@ -190,10 +196,12 @@ namespace KMA.Tests.Gameplay.Core
         public IEnumerator LifeLost_SavesExactlyOnce()
         {
             SceneRouter router = CreateRouter();
+            router.ConfigureRouteAcceptanceForTests((_, complete) => { complete(); return true; });
             int saves = 0;
             GameManager manager = CreateInitializedManager(router, _ => saves++);
-
-            router.Session.StartSubject(SubjectId.Sprint);
+            CompleteThroughSprintPractice(manager.Session);
+            Assert.That(router.StartSubject(SubjectId.Sprint), Is.True);
+            saves = 0;
             router.SubmitSubjectResult(SubjectId.Sprint, new MinigameResult(false, 0f, Rank.F));
 
             Assert.That(manager.Session.Lives, Is.EqualTo(4));
@@ -321,6 +329,18 @@ namespace KMA.Tests.Gameplay.Core
             manager.ConfigureStartup(SaveData.CreateDefault, save, router, _ => { });
             manager.gameObject.SetActive(true);
             return manager;
+        }
+
+        static void CompleteThroughSprintPractice(GameSession session)
+        {
+            foreach (string id in new[] { "sprint_learn", "sprint_practice" })
+            {
+                ChallengeDefinition definition = session.Journey.Catalog.Get(id);
+                Assert.That(session.TryStartChallenge(id, ChallengeAttemptMode.Journey,
+                    definition.Difficulty, out ChallengeAttemptContext context), Is.True);
+                session.SubmitChallengeResult(new ChallengeAttemptResult(context, true,
+                    new ChallengeMetrics(completedTargets: definition.TargetCount)));
+            }
         }
 
         sealed class RecordingSettingsService : MonoBehaviour, IGameSettingsService

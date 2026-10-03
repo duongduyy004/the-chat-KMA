@@ -39,6 +39,8 @@ namespace KMA.Gameplay.UI
         string finalScoreText = string.Empty;
         ChallengeAttemptContext challengeContext;
         string challengeSaveError;
+        JourneyCommitOutcome? challengeOutcome;
+        ChallengeAttemptResult challengeResult;
 
         public event Action<string> ActionRequested;
         public event Action<JourneyResultAction> JourneyActionRequested;
@@ -97,6 +99,8 @@ namespace KMA.Gameplay.UI
         {
             challengeContext = null;
             challengeSaveError = null;
+            challengeOutcome = null;
+            challengeResult = null;
             CurrentResult = result ?? throw new ArgumentNullException(nameof(result));
             PreviewRoute = previewRoute ?? string.Empty;
             HasContinued = false;
@@ -139,8 +143,10 @@ namespace KMA.Gameplay.UI
             HasContinued = true;
             if (challengeContext != null)
             {
-                JourneyActionRequested?.Invoke(challengeSaveError == null
-                    ? JourneyResultAction.Continue : JourneyResultAction.RetrySave);
+                JourneyActionRequested?.Invoke(challengeSaveError != null && !challengeOutcome.HasValue
+                    ? JourneyResultAction.RetrySave
+                    : challengeOutcome.HasValue && challengeOutcome.Value.AwaitingSupplementary
+                        ? JourneyResultAction.Practice : JourneyResultAction.Continue);
                 return;
             }
             ActionRequested?.Invoke(PreviewRoute);
@@ -164,6 +170,8 @@ namespace KMA.Gameplay.UI
         {
             challengeContext = context;
             challengeSaveError = outcome.HasValue ? null : saveError;
+            challengeOutcome = outcome;
+            challengeResult = result;
             var display = result.ExamResult ?? new MinigameResult(result.Pass,
                 result.Metrics.CompletedTargets, result.Pass ? Rank.C : Rank.F);
             ShowChallengeCore(context, display, result, outcome, saveError);
@@ -199,12 +207,27 @@ namespace KMA.Gameplay.UI
                 rankLabel.gameObject.SetActive(result.ExamResult != null);
             }
             SetDetail(saveError ?? (context.Mode == ChallengeAttemptMode.Journey
-                ? outcome.HasValue ? "Kết quả đã lưu" : "Kết quả đang chờ lưu"
+                ? outcome.HasValue ? outcome.Value.AwaitingSupplementary
+                    ? "Bạn đã hết lượt thi. Hãy ôn tập bài luyện hiện tại." : "Kết quả đã lưu"
+                    : "Kết quả đang chờ lưu"
                 : $"Thời gian {result.Metrics.Elapsed:0.0}s"));
             if (errorLabel != null) errorLabel.text = VietText.Fix(saveError ?? string.Empty);
-            SetButtonLabel(actionButton, saveError == null ? "TIẾP TỤC"
+            bool awaitingPractice = outcome.HasValue && outcome.Value.AwaitingSupplementary;
+            SetButtonLabel(actionButton, saveError == null ? awaitingPractice ? "ÔN BÀI" : "TIẾP TỤC"
                 : outcome.HasValue ? "THỬ LẠI" : "LƯU LẠI");
-            if (retryButton != null) retryButton.gameObject.SetActive(false);
+            retryAvailable = result.ExamResult != null && !result.Pass && outcome.HasValue &&
+                outcome.Value.AttemptsRemaining > 0 && !awaitingPractice;
+            if (retryButton != null)
+            {
+                retryButton.gameObject.SetActive(retryAvailable);
+                SetButtonLabel(retryButton, "THI LẠI");
+            }
+            if (livesLabel != null)
+            {
+                int attemptsRemaining = outcome.HasValue ? outcome.Value.AttemptsRemaining : 0;
+                livesLabel.text = VietText.Fix($"LƯỢT THI: {attemptsRemaining}/{GameSession.MaxLives}");
+                livesLabel.gameObject.SetActive(result.ExamResult != null);
+            }
             RefreshButtons();
             Reveal(result.ExamResult == null ? result.Metrics.CompletedTargets : result.ExamResult.Score);
         }

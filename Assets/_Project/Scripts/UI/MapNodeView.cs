@@ -76,6 +76,19 @@ namespace KMA.Gameplay.UI
             ConfigureState(subjectId, displayName, comingSoon, record, lives, unlocked);
         }
 
+        public void ConfigureJourneyState(SubjectId subject, string title, bool unlocked, bool passed,
+            SubjectRecord record)
+        {
+            subjectId = subject;
+            displayName = title;
+            comingSoon = false;
+            BestRank = record == null ? Rank.F : record.BestRank;
+            completed = passed;
+            Stars = completed ? ScoreUtil.ToStars(BestRank) : 0;
+            if (titleLabel != null) titleLabel.text = VietText.Fix(title);
+            RenderAvailability(unlocked, unlocked ? completed ? "HOÀN THÀNH" : "SẴN SÀNG" : "CHƯA MỞ KHÓA");
+        }
+
         public void Bind(Button target, TMP_Text title, TMP_Text detail, GameObject detailRoot = null)
         {
             button = target;
