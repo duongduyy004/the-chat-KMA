@@ -1,0 +1,201 @@
+using System;
+using System.Collections.Generic;
+using KMA.Gameplay.UI;
+using UnityEngine;
+
+namespace KMA.Gameplay.Core
+{
+    public sealed partial class SceneRouter
+    {
+        readonly Dictionary<IChallengeController, Action<ChallengeAttemptResult>> challengeHandlers =
+            new Dictionary<IChallengeController, Action<ChallengeAttemptResult>>();
+        JourneySaveCoordinator journeyCoordinator;
+        JourneyPersistHandler journeyPersist;
+        IChallengeResultPanel challengePanel;
+        Action<JourneyResultAction> challengePanelHandler;
+        ChallengeAttemptContext displayedChallenge;
+        ChallengeAttemptResult displayedResult;
+        JourneyCommitOutcome? displayedOutcome;
+        string displayedSaveError;
+
+        public void ConfigureJourneyPersistence(JourneyPersistHandler persist)
+        {
+            journeyPersist = persist ?? throw new ArgumentNullException(nameof(persist));
+            journeyCoordinator = new JourneySaveCoordinator(session, journeyPersist);
+            SceneLoadFailed -= OnJourneyRouteFailed;
+            SceneLoadFailed += OnJourneyRouteFailed;
+        }
+
+        public bool TryStartChallenge(string id, ChallengeAttemptMode mode = ChallengeAttemptMode.Journey,
+            ChallengeDifficulty difficulty = ChallengeDifficulty.Normal)
+        {
+            if (IsTransitioning || session.ActiveSubject.HasValue)
+                return false;
+            ChallengeDefinition definition;
+            try { definition = session.Journey.Catalog.Get(id); }
+            catch (Exception) { return false; }
+            if (!TryGetSceneName(SessionRoute.Subject, definition.Subject, out string sceneName))
+                return false;
+
+            SaveData snapshot = session.ToSaveData();
+            if (!session.TryStartChallenge(id, mode, difficulty, out _))
+                return false;
+            if (journeyPersist != null && !journeyPersist(out _))
+            {
+                session.RestoreSnapshot(snapshot);
+                return false;
+            }
+
+            SessionChanged?.Invoke();
+            PrepareSceneBinding(SessionRoute.Subject, definition.Subject);
+            return transitioner.TryRoute(SessionRoute.Subject, definition.Subject, sceneName);
+        }
+
+        public bool RetryActiveChallenge()
+        {
+            ChallengeAttemptContext context = session.Journey.ActiveAttempt;
+            if (context == null || IsTransitioning || !TryGetSceneName(SessionRoute.Subject,
+                session.ActiveSubject, out string sceneName))
+                return false;
+            PrepareSceneBinding(SessionRoute.Subject, session.ActiveSubject);
+            return transitioner.TryRoute(SessionRoute.Subject, session.ActiveSubject, sceneName);
+        }
+
+        public bool PracticeCurrentSubject()
+        {
+            if (!session.Journey.AwaitingSupplementary)
+                return false;
+            ChallengeDefinition practice = session.Journey.Catalog.Get(session.Journey.CheckpointChallengeId);
+            return TryStartChallenge(practice.Id, ChallengeAttemptMode.Supplementary, practice.Difficulty);
+        }
+
+        void BindChallenge(IChallengeController controller)
+        {
+            if (controller == null || challengeHandlers.ContainsKey(controller))
+                return;
+            ChallengeAttemptContext context = session.Journey.ActiveAttempt;
+            if (context == null || (!(controller is JourneyControllerAdapter) &&
+                session.Journey.Catalog.Get(context.ChallengeId).Subject != controller.Subject))
+                return;
+            ChallengeDefinition definition = session.Journey.Catalog.Get(context.ChallengeId);
+            controller.ConfigureChallenge(definition, context);
+            Action<ChallengeAttemptResult> handler = result => PreviewChallengeResult(context, result);
+            challengeHandlers.Add(controller, handler);
+            controller.ChallengeCompleted += handler;
+        }
+
+        void PreviewChallengeResult(ChallengeAttemptContext context, ChallengeAttemptResult result)
+        {
+            if (result == null || context.AttemptId != result.Context.AttemptId)
+                return;
+            UnbindChallengePanel();
+            challengePanel = FindChallengePanel();
+            if (challengePanel == null)
+                throw new InvalidOperationException("A challenge result panel is required.");
+            displayedChallenge = context;
+            displayedResult = result;
+            displayedOutcome = null;
+            displayedSaveError = null;
+            journeyCoordinator ??= new JourneySaveCoordinator(session, (out string error) =>
+            {
+                error = null;
+                return true;
+            });
+            if (journeyCoordinator.TryCommit(result, out JourneyCommitOutcome committed, out string saveError))
+            {
+                displayedOutcome = committed;
+                SessionChanged?.Invoke();
+            }
+            else
+                displayedSaveError = saveError;
+            challengePanelHandler = HandleChallengeAction;
+            challengePanel.JourneyActionRequested += challengePanelHandler;
+            challengePanel.ShowChallenge(context, result, displayedOutcome, displayedSaveError);
+        }
+
+        void HandleChallengeAction(JourneyResultAction action)
+        {
+            if (displayedResult == null || journeyCoordinator == null)
+                return;
+            if (action == JourneyResultAction.RetrySave)
+            {
+                if (!journeyCoordinator.RetrySave(out JourneyCommitOutcome retried, out string retryError))
+                {
+                    displayedSaveError = retryError;
+                    challengePanel?.ShowChallenge(displayedChallenge, displayedResult, null, retryError);
+                    return;
+                }
+                displayedOutcome = retried;
+            }
+            else if (!displayedOutcome.HasValue)
+                return;
+
+            if (action == JourneyResultAction.Retry)
+                TryStartChallenge(displayedChallenge.ChallengeId, displayedChallenge.Mode,
+                    displayedChallenge.Difficulty);
+            else if (action == JourneyResultAction.Practice)
+                PracticeCurrentSubject();
+            else
+            {
+                bool routed = Route(displayedOutcome.HasValue && displayedOutcome.Value.AttemptsRemaining == 0 &&
+                    !displayedOutcome.Value.AwaitingSupplementary && !displayedOutcome.Value.CourseComplete
+                    ? SessionRoute.GameOver : SessionRoute.Map);
+                if (!routed)
+                    challengePanel?.ShowChallenge(displayedChallenge, displayedResult, displayedOutcome,
+                        lastRouteError ?? "Không thể chuyển cảnh. Hãy thử lại.");
+            }
+        }
+
+        void OnJourneyRouteFailed(string message)
+        {
+            if (!displayedOutcome.HasValue || displayedResult == null || challengePanel == null)
+                return;
+            challengePanel.ShowChallenge(displayedChallenge, displayedResult, displayedOutcome, message);
+        }
+
+        void BindJourneyControllers()
+        {
+            if (session.Journey.ActiveAttempt != null)
+            {
+                foreach (MinigameBase minigame in FindObjectsByType<MinigameBase>(
+                    FindObjectsInactive.Include, FindObjectsSortMode.None))
+                {
+                    var adapter = minigame.GetComponent<JourneyControllerAdapter>();
+                    if (adapter == null) adapter = minigame.gameObject.AddComponent<JourneyControllerAdapter>();
+                    BindChallenge(adapter);
+                }
+            }
+            foreach (MonoBehaviour behaviour in FindObjectsByType<MonoBehaviour>(
+                FindObjectsInactive.Include, FindObjectsSortMode.None))
+                if (behaviour is IChallengeController controller)
+                    BindChallenge(controller);
+        }
+
+        void UnbindJourneyControllers()
+        {
+            foreach (var binding in challengeHandlers)
+                binding.Key.ChallengeCompleted -= binding.Value;
+            challengeHandlers.Clear();
+        }
+
+        bool RetryDisplayedChallenge() => displayedChallenge != null && TryStartChallenge(
+            displayedChallenge.ChallengeId, displayedChallenge.Mode, displayedChallenge.Difficulty);
+
+        void UnbindChallengePanel()
+        {
+            if (challengePanel != null && challengePanelHandler != null)
+                challengePanel.JourneyActionRequested -= challengePanelHandler;
+            challengePanel = null;
+            challengePanelHandler = null;
+        }
+
+        static IChallengeResultPanel FindChallengePanel()
+        {
+            foreach (MonoBehaviour behaviour in FindObjectsByType<MonoBehaviour>(
+                FindObjectsInactive.Include, FindObjectsSortMode.None))
+                if (behaviour is IChallengeResultPanel panel)
+                    return panel;
+            return null;
+        }
+    }
+}

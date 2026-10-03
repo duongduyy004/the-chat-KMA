@@ -153,10 +153,20 @@ namespace KMA.Gameplay
 
         public void Restore(SaveData data)
         {
+            RestoreCore(data, true);
+        }
+
+        public void RestoreSnapshot(SaveData snapshot)
+        {
+            RestoreCore(snapshot, false);
+        }
+
+        void RestoreCore(SaveData data, bool normalize)
+        {
             if (data == null)
                 throw new ArgumentNullException(nameof(data));
 
-            SaveData normalized = JourneySaveMigration.Normalize(data, catalog);
+            SaveData normalized = normalize ? JourneySaveMigration.Normalize(data, catalog) : data;
             int lives = normalized.lives;
             foreach (SubjectId id in Enum.GetValues(typeof(SubjectId)))
             {
@@ -166,8 +176,8 @@ namespace KMA.Gameplay
 
             Journey = new JourneyProgress(catalog);
             Journey.Restore(normalized.journey, lives);
-            active = null;
-            activeChallenge = null;
+            activeChallenge = Journey.ActiveAttempt;
+            active = activeChallenge == null ? null : (SubjectId?)catalog.Get(activeChallenge.ChallengeId).Subject;
         }
 
         public SessionRoute StartSubject(SubjectId id)

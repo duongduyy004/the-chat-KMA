@@ -31,6 +31,7 @@ namespace KMA.Gameplay.Core
         bool[] tutorialSeen;
         bool startupConfigured;
         bool initialized;
+        bool journeySaveInProgress;
 
         public static GameManager Instance => instance;
         public SaveSystem SaveSystem => saveSystem;
@@ -193,6 +194,7 @@ namespace KMA.Gameplay.Core
             HasSavedCampaign = hasExistingSave != null && hasExistingSave() && !loaded.settingsOnly;
 
             router.LoadSession(session);
+            router.ConfigureJourneyPersistence(TryPersistSession);
             SubscribeToRouter();
             ApplySettings();
             initialized = true;
@@ -211,8 +213,38 @@ namespace KMA.Gameplay.Core
 
         void OnSessionChanged()
         {
-            HasSavedCampaign = true;
-            SaveCurrentState();
+            // Journey commits persist before notifying this view-facing event.
+        }
+
+        public bool TryPersistSession(out string error)
+        {
+            error = null;
+            if (!initialized || journeySaveInProgress)
+            {
+                error = "The game session is not ready to save.";
+                return false;
+            }
+
+            journeySaveInProgress = true;
+            try
+            {
+                SaveData current = session.ToSaveData();
+                current.settingsOnly = false;
+                current.settings = settings;
+                current.tutorialSeen = CloneTutorialFlags(tutorialSeen);
+                saveData(current);
+                HasSavedCampaign = true;
+                return true;
+            }
+            catch (Exception exception)
+            {
+                error = exception.Message;
+                return false;
+            }
+            finally
+            {
+                journeySaveInProgress = false;
+            }
         }
 
         void SaveCurrentState()

@@ -38,6 +38,7 @@ namespace KMA.Gameplay
         public int SupplementaryRounds => supplementaryRounds;
         public bool CourseComplete => catalog.Ordered.All(x => completedChallengeIds.Contains(x.Id));
         public ChallengeAttemptContext ActiveAttempt => activeAttempt;
+        public ChallengeCatalog Catalog => catalog;
 
         public bool IsChallengeComplete(string id) =>
             !string.IsNullOrWhiteSpace(id) && completedChallengeIds.Contains(id);

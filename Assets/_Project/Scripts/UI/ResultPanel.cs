@@ -11,7 +11,7 @@ namespace KMA.Gameplay.UI
 {
     /// The shared result screen of every minigame. Tiếp tục raises the preview route; Chơi lại
     /// (only when a retry is configured) raises ResultPanelActions.Retry.
-    public sealed class ResultPanel : MonoBehaviour, IRetryResultPreviewPanel
+    public sealed class ResultPanel : MonoBehaviour, IRetryResultPreviewPanel, IChallengeResultPanel
     {
         static float ScrimDuration => Mathf.Max(0f, UITheme.Shared.Motion.resultScrim);
         static float ModalDuration => Mathf.Max(0f, UITheme.Shared.Motion.resultModal);
@@ -37,8 +37,11 @@ namespace KMA.Gameplay.UI
         bool actionPending;
         bool listenersBound;
         string finalScoreText = string.Empty;
+        ChallengeAttemptContext challengeContext;
+        string challengeSaveError;
 
         public event Action<string> ActionRequested;
+        public event Action<JourneyResultAction> JourneyActionRequested;
 
         public MinigameResult CurrentResult { get; private set; }
         public string PreviewRoute { get; private set; } = string.Empty;
@@ -92,6 +95,8 @@ namespace KMA.Gameplay.UI
 
         public void Show(MinigameResult result, string previewRoute)
         {
+            challengeContext = null;
+            challengeSaveError = null;
             CurrentResult = result ?? throw new ArgumentNullException(nameof(result));
             PreviewRoute = previewRoute ?? string.Empty;
             HasContinued = false;
@@ -132,6 +137,12 @@ namespace KMA.Gameplay.UI
             if (CurrentResult == null || HasContinued || actionPending)
                 return;
             HasContinued = true;
+            if (challengeContext != null)
+            {
+                JourneyActionRequested?.Invoke(challengeSaveError == null
+                    ? JourneyResultAction.Continue : JourneyResultAction.RetrySave);
+                return;
+            }
             ActionRequested?.Invoke(PreviewRoute);
         }
 
@@ -140,7 +151,62 @@ namespace KMA.Gameplay.UI
             if (CurrentResult == null || HasContinued || actionPending || !retryAvailable)
                 return;
             HasContinued = true;
+            if (challengeContext != null)
+            {
+                JourneyActionRequested?.Invoke(JourneyResultAction.Retry);
+                return;
+            }
             ActionRequested?.Invoke(ResultPanelActions.Retry);
+        }
+
+        public void ShowChallenge(ChallengeAttemptContext context, ChallengeAttemptResult result,
+            JourneyCommitOutcome? outcome, string saveError)
+        {
+            challengeContext = context;
+            challengeSaveError = outcome.HasValue ? null : saveError;
+            var display = result.ExamResult ?? new MinigameResult(result.Pass,
+                result.Metrics.CompletedTargets, result.Pass ? Rank.C : Rank.F);
+            ShowChallengeCore(context, display, result, outcome, saveError);
+        }
+
+        void ShowChallengeCore(ChallengeAttemptContext context, MinigameResult display,
+            ChallengeAttemptResult result, JourneyCommitOutcome? outcome, string saveError)
+        {
+            CurrentResult = display;
+            PreviewRoute = string.Empty;
+            HasContinued = false;
+            actionPending = false;
+            gameObject.SetActive(true);
+            transform.SetAsLastSibling();
+            if (contentRoot != null) contentRoot.SetActive(true);
+            ApplyTheme();
+            if (statusLabel != null)
+            {
+                bool practice = context.Mode != ChallengeAttemptMode.Journey;
+                statusLabel.text = VietText.Fix(result.Pass ? practice ? "LUYỆN TẬP HOÀN THÀNH" : successTitle
+                    : failureTitle);
+                statusLabel.color = result.Pass ? MinigameUiTheme.Success : MinigameUiTheme.Energy;
+            }
+            finalScoreText = result.ExamResult == null
+                ? result.Metrics.CompletedTargets.ToString()
+                : Mathf.RoundToInt(result.ExamResult.Score).ToString();
+            if (scoreLabel != null) scoreLabel.text = VietText.Fix(finalScoreText);
+            if (rankLabel != null)
+            {
+                rankLabel.text = result.ExamResult == null
+                    ? VietText.Fix($"{result.Metrics.CompletedTargets} MỤC TIÊU")
+                    : VietText.Fix($"XẾP HẠNG {result.ExamResult.Rank}");
+                rankLabel.gameObject.SetActive(result.ExamResult != null);
+            }
+            SetDetail(saveError ?? (context.Mode == ChallengeAttemptMode.Journey
+                ? outcome.HasValue ? "Kết quả đã lưu" : "Kết quả đang chờ lưu"
+                : $"Thời gian {result.Metrics.Elapsed:0.0}s"));
+            if (errorLabel != null) errorLabel.text = VietText.Fix(saveError ?? string.Empty);
+            SetButtonLabel(actionButton, saveError == null ? "TIẾP TỤC"
+                : outcome.HasValue ? "THỬ LẠI" : "LƯU LẠI");
+            if (retryButton != null) retryButton.gameObject.SetActive(false);
+            RefreshButtons();
+            Reveal(result.ExamResult == null ? result.Metrics.CompletedTargets : result.ExamResult.Score);
         }
 
         public void SetActionPending(bool pending, string error)

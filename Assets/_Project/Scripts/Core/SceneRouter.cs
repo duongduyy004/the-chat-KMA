@@ -77,7 +77,7 @@ namespace KMA.Gameplay.Core
     }
 
     [DefaultExecutionOrder(-1000)]
-    public sealed class SceneRouter : MonoBehaviour, ISceneRouteTransitionSink
+    public sealed partial class SceneRouter : MonoBehaviour, ISceneRouteTransitionSink
     {
         [Serializable]
         public struct SubjectScene
@@ -156,6 +156,10 @@ namespace KMA.Gameplay.Core
             SceneManager.sceneLoaded -= OnSceneLoaded;
             UnbindSubjects();
             UnbindResultPanel();
+            UnbindJourneyControllers();
+            UnbindChallengePanel();
+            UnbindJourneyControllers();
+            UnbindChallengePanel();
         }
 
         public bool StartSubject(SubjectId subject)
@@ -206,6 +210,8 @@ namespace KMA.Gameplay.Core
             awaitingSubjectScene = false;
             session = restoredSession;
             transitioner = new SessionRouteTransitioner(session, this);
+            if (journeyPersist != null)
+                journeyCoordinator = new JourneySaveCoordinator(session, journeyPersist);
         }
 
         public bool SubmitSubjectResult(SubjectId subject, MinigameResult result) =>
@@ -230,7 +236,7 @@ namespace KMA.Gameplay.Core
             }
             catch
             {
-                session.Restore(previous);
+                session.RestoreSnapshot(previous);
                 throw;
             }
 
@@ -313,6 +319,13 @@ namespace KMA.Gameplay.Core
         {
             if (controller == null)
                 throw new ArgumentNullException(nameof(controller));
+            if (session.Journey.ActiveAttempt != null)
+            {
+                var adapter = controller.GetComponent<JourneyControllerAdapter>() ??
+                    controller.gameObject.AddComponent<JourneyControllerAdapter>();
+                BindChallenge(adapter);
+                return;
+            }
             if (subjectCompletionHandlers.ContainsKey(controller))
                 return;
 
@@ -383,14 +396,24 @@ namespace KMA.Gameplay.Core
                     (subject.HasValue ? $" ({subject.Value})." : "."));
 
             bool abandonActiveSubject = route == SessionRoute.Map && session.ActiveSubject.HasValue;
-            if (!transitioner.TryRoute(route, subject, sceneName))
-                return false;
-
+            SaveData routeSnapshot = abandonActiveSubject ? session.ToSaveData() : null;
             if (abandonActiveSubject)
             {
                 session.AbandonActiveSubject();
-                SessionChanged?.Invoke();
+                if (journeyPersist != null && !journeyPersist(out lastRouteError))
+                {
+                    session.RestoreSnapshot(routeSnapshot);
+                    return false;
+                }
             }
+            if (!transitioner.TryRoute(route, subject, sceneName))
+            {
+                if (journeyPersist == null && routeSnapshot != null)
+                    session.RestoreSnapshot(routeSnapshot);
+                return false;
+            }
+            if (abandonActiveSubject)
+                SessionChanged?.Invoke();
             PrepareSceneBinding(route, subject);
             return true;
         }
@@ -436,7 +459,7 @@ namespace KMA.Gameplay.Core
         {
             UnbindSubjects();
 
-            if (awaitingSubjectScene && activeSubject.HasValue &&
+            if (session.Journey.ActiveAttempt == null && awaitingSubjectScene && activeSubject.HasValue &&
                 string.Equals(scene.name, SceneFor(activeSubject), StringComparison.Ordinal))
             {
                 var boundController = false;
@@ -448,6 +471,7 @@ namespace KMA.Gameplay.Core
                 }
                 awaitingSubjectScene = !boundController;
             }
+            BindJourneyControllers();
         }
 
         void EnsureRouteIsConfigured(SessionRoute route, SubjectId? subject)
@@ -584,6 +608,11 @@ namespace KMA.Gameplay.Core
 
         bool TryRouteMutatedSession(SaveData previous, SessionRoute route, SubjectId? subject)
         {
+            if (journeyPersist != null && !journeyPersist(out lastRouteError))
+            {
+                session.RestoreSnapshot(previous);
+                return false;
+            }
             try
             {
                 if (Route(route, subject))
@@ -591,11 +620,13 @@ namespace KMA.Gameplay.Core
             }
             catch
             {
-                session.Restore(previous);
+                if (journeyPersist == null)
+                    session.RestoreSnapshot(previous);
                 throw;
             }
 
-            session.Restore(previous);
+            if (journeyPersist == null)
+                session.RestoreSnapshot(previous);
             return false;
         }
 
