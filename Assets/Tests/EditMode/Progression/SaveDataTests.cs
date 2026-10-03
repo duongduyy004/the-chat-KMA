@@ -16,7 +16,7 @@ namespace KMA.Tests.Gameplay.Progression
             Assert.That(subjectIds, Has.Length.EqualTo(3));
             Assert.That(subjectIds, Is.EqualTo(new[]
                 { SubjectId.Sprint, SubjectId.Football, SubjectId.Volleyball }));
-            Assert.That(SaveData.CurrentVersion, Is.EqualTo(6));
+            Assert.That(SaveData.CurrentVersion, Is.EqualTo(7));
             Assert.That(data.version, Is.EqualTo(SaveData.CurrentVersion));
             Assert.That(data.lives, Is.EqualTo(5));
             Assert.That(data.hasActiveSubject, Is.False);
@@ -37,6 +37,8 @@ namespace KMA.Tests.Gameplay.Progression
             }
 
             Assert.That(data.settings, Is.Not.Null);
+            Assert.That(data.journey, Is.Not.Null);
+            Assert.That(data.journey.completedChallengeIds, Is.Empty);
             Assert.That(data.settings.musicVol, Is.EqualTo(1f));
             Assert.That(data.settings.sfxVol, Is.EqualTo(1f));
             Assert.That(data.settings.vibration, Is.True);
@@ -57,6 +59,8 @@ namespace KMA.Tests.Gameplay.Progression
             StringAssert.Contains("\"awaitingPunishment\":", json);
             StringAssert.Contains("\"tutorialSeen\":", json);
             StringAssert.Contains("\"settings\":", json);
+            StringAssert.Contains("\"journey\":", json);
+            StringAssert.Contains("\"completedChallengeIds\":", json);
             StringAssert.Contains("\"id\":", json);
             StringAssert.Contains("\"passed\":", json);
             StringAssert.Contains("\"bestScore\":", json);
@@ -78,6 +82,8 @@ namespace KMA.Tests.Gameplay.Progression
             Assert.That(restored.tutorialSeen, Has.Length.EqualTo(3));
             Assert.That(restored.tutorialSeen, Is.All.False);
             Assert.That(restored.settings.musicVol, Is.EqualTo(1f));
+            Assert.That(restored.journey, Is.Not.Null);
+            Assert.That(restored.journey.completedChallengeIds, Is.Empty);
             Assert.That(restored.settings.sfxVol, Is.EqualTo(1f));
             Assert.That(restored.settings.vibration, Is.True);
             Assert.That(restored.settings.rhythmOffsetMs, Is.EqualTo(0f));

@@ -5,7 +5,7 @@ namespace KMA.Gameplay
     [Serializable]
     public sealed class SaveData
     {
-        public const int CurrentVersion = 6;
+        public const int CurrentVersion = 7;
 
         public int version;
         // Absent in legacy saves, which already represent a campaign.
@@ -18,6 +18,7 @@ namespace KMA.Gameplay
         public bool awaitingPunishment;
         public bool[] tutorialSeen;
         public Settings settings;
+        public JourneyStateData journey = new JourneyStateData();
 
         public static SaveData CreateDefault()
         {
@@ -45,7 +46,8 @@ namespace KMA.Gameplay
                 visitAttempt = GameSession.FirstVisit,
                 awaitingPunishment = false,
                 tutorialSeen = new bool[subjectValues.Length],
-                settings = Settings.CreateDefault()
+                settings = Settings.CreateDefault(),
+                journey = new JourneyStateData()
             };
         }
     }

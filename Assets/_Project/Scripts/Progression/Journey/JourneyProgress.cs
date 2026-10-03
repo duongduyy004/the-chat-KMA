@@ -161,7 +161,8 @@ namespace KMA.Gameplay
 
         public JourneyStateData ToData() => new JourneyStateData
         {
-            completedChallengeIds = completedChallengeIds.ToList(),
+            completedChallengeIds = catalog.Ordered.Where(x => completedChallengeIds.Contains(x.Id))
+                .Select(x => x.Id).ToList(),
             activeAttempt = JourneyAttemptData.FromContext(activeAttempt),
             lastCommittedAttemptId = lastCommittedAttemptId,
             lastCommittedResult = lastCommittedResult?.Copy(),

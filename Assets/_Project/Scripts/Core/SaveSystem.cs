@@ -127,7 +127,9 @@ namespace KMA.Gameplay
 
             if (data.version == SaveData.CurrentVersion)
             {
-                return IsCurrentVersionStructureValid(data) ? data : SaveData.CreateDefault();
+                return IsCurrentVersionStructureValid(data)
+                    ? JourneySaveMigration.Normalize(data, ChallengeCatalog.LoadDefault())
+                    : SaveData.CreateDefault();
             }
 
             SaveData defaults = SaveData.CreateDefault();
@@ -155,7 +157,9 @@ namespace KMA.Gameplay
                 settings = data.settings ?? defaults.settings
             };
 
-            return IsCurrentVersionStructureValid(migrated) ? migrated : defaults;
+            return IsCurrentVersionStructureValid(migrated)
+                ? JourneySaveMigration.MigrateLegacy(migrated, ChallengeCatalog.LoadDefault())
+                : defaults;
         }
 
         private static LegacyData ParseLegacy(string json)

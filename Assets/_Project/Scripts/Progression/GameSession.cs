@@ -131,7 +131,8 @@ namespace KMA.Gameplay
             data.hasActiveSubject = active.HasValue;
             data.activeSubject = active ?? default;
             data.visitAttempt = FirstVisit;
-            data.awaitingPunishment = Journey.AwaitingSupplementary;
+            data.awaitingPunishment = false;
+            data.journey = Journey.ToData();
 
             int index = 0;
             foreach (SubjectId id in Enum.GetValues(typeof(SubjectId)))
@@ -155,23 +156,18 @@ namespace KMA.Gameplay
             if (data == null)
                 throw new ArgumentNullException(nameof(data));
 
-            int lives = Math.Max(0, Math.Min(MaxLives, data.lives));
+            SaveData normalized = JourneySaveMigration.Normalize(data, catalog);
+            int lives = normalized.lives;
             foreach (SubjectId id in Enum.GetValues(typeof(SubjectId)))
             {
-                SubjectRecordData recordData = FindRecordData(data.subjects, id);
+                SubjectRecordData recordData = FindRecordData(normalized.subjects, id);
                 records[id] = recordData == null ? new SubjectRecord() : SubjectRecord.FromData(recordData);
             }
 
             Journey = new JourneyProgress(catalog);
-            Journey.Restore(new JourneyStateData(), lives);
+            Journey.Restore(normalized.journey, lives);
             active = null;
             activeChallenge = null;
-            if (data.hasActiveSubject && lives > 0 && Enum.IsDefined(typeof(SubjectId), data.activeSubject))
-            {
-                ChallengeDefinition checkpoint = catalog.Get(Journey.CheckpointChallengeId);
-                if (checkpoint.Subject == data.activeSubject)
-                    TryStartChallenge(checkpoint.Id, ChallengeAttemptMode.Journey, checkpoint.Difficulty, out _);
-            }
         }
 
         public SessionRoute StartSubject(SubjectId id)
