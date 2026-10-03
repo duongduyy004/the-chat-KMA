@@ -20,9 +20,8 @@ namespace KMA.Gameplay
                 throw new ArgumentException("Only a passing result can be accepted.", nameof(result));
             }
 
-            bool hadResult = Passed;
             Passed = true;
-            if (!hadResult || result.Score > BestScore)
+            if (bestResult == null || result.Score > BestScore)
             {
                 bestResult = Copy(result);
                 BestScore = result.Score;
@@ -46,7 +45,7 @@ namespace KMA.Gameplay
                 BestRank = data.bestRank,
                 FailedVisits = data.failedVisits
             };
-            if (record.Passed)
+            if (record.Passed || record.BestScore > 0f)
             {
                 record.bestResult = new MinigameResult(true, record.BestScore, record.BestRank);
             }

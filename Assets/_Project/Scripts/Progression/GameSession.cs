@@ -6,9 +6,8 @@ namespace KMA.Gameplay
     public enum SessionRoute
     {
         Subject,
-        // Retired in place: the punishment leg is unreachable, and nothing emits this route.
+        // Retained for old serialized route identifiers; the supplementary route uses Map.
         Punishment,
-        // Retired in place: the punishment leg is unreachable, and nothing emits this route.
         RetrySubject,
         Map,
         GameOver
@@ -25,53 +24,97 @@ namespace KMA.Gameplay
         public const int MaxLives = 5;
         public const int FirstVisit = 1;
 
-        const int FinalVisit = 2;
-
-        readonly Dictionary<SubjectId, SubjectRecord> records =
-            new Dictionary<SubjectId, SubjectRecord>();
+        readonly Dictionary<SubjectId, SubjectRecord> records = new Dictionary<SubjectId, SubjectRecord>();
+        readonly ChallengeCatalog catalog;
         SubjectId? active;
-        // Held at FirstVisit / false by every remaining assignment now that the punishment
-        // leg is retired; nothing in the repo ever sets visitAttempt to FinalVisit or
-        // awaitingPunishment to true. Kept only to hold the SaveData format stable. See
-        // docs/superpowers/specs/2026-09-14-remove-punishment-loss-route-design.md.
-        int visitAttempt = FirstVisit;
-        bool awaitingPunishment;
+        ChallengeAttemptContext activeChallenge;
 
-        public GameSession()
+        public GameSession(ChallengeCatalog catalog = null)
         {
+            this.catalog = catalog == null ? ChallengeCatalog.LoadDefault() : catalog;
+            Journey = new JourneyProgress(this.catalog);
             foreach (SubjectId id in Enum.GetValues(typeof(SubjectId)))
-            {
                 records.Add(id, new SubjectRecord());
-            }
         }
 
-        public int Lives { get; private set; } = MaxLives;
+        public event Action JourneyChanged;
+
+        public int Lives => Journey.AttemptsRemaining;
         public IReadOnlyDictionary<SubjectId, SubjectRecord> Records => records;
-        public SubjectId? PendingPunishmentSubject => awaitingPunishment && active.HasValue ? active : (SubjectId?)null;
+        public JourneyProgress Journey { get; private set; }
+        public SubjectId? PendingPunishmentSubject => Journey.AwaitingSupplementary
+            ? (SubjectId?)catalog.Get(Journey.CheckpointChallengeId).Subject
+            : null;
         public SubjectId? ActiveSubject => active;
-        public int VisitAttempt => visitAttempt;
-        public bool AwaitingPunishment => awaitingPunishment;
+        public int VisitAttempt => FirstVisit;
+        public bool AwaitingPunishment => Journey.AwaitingSupplementary;
 
         public SubjectRecord GetRecord(SubjectId id) => records[id];
 
+        public bool TryStartChallenge(string id, ChallengeAttemptMode mode,
+            ChallengeDifficulty difficulty, out ChallengeAttemptContext context)
+        {
+            context = null;
+            if (active.HasValue || !Journey.TryBegin(id, mode, difficulty, out context))
+                return false;
+            activeChallenge = context;
+            active = catalog.Get(context.ChallengeId).Subject;
+            JourneyChanged?.Invoke();
+            return true;
+        }
+
+        public JourneyCommitOutcome SubmitChallengeResult(ChallengeAttemptResult result, bool notify = true)
+        {
+            JourneyCommitOutcome outcome = Journey.Apply(result);
+            if (!outcome.Accepted)
+                return outcome;
+
+            ChallengeDefinition definition = catalog.Get(result.Context.ChallengeId);
+            if (definition.Kind == ChallengeKind.Exam && result.ExamResult != null &&
+                result.Context.Difficulty == ChallengeDifficulty.Normal)
+            {
+                if (result.Pass && result.ExamResult.Pass)
+                    records[definition.Subject].Accept(result.ExamResult);
+                else
+                    records[definition.Subject].RecordFailedVisit();
+            }
+
+            active = null;
+            activeChallenge = null;
+            if (notify)
+                NotifyJourneyChanged();
+            return outcome;
+        }
+
+        public void AbandonActiveChallenge()
+        {
+            if (activeChallenge == null)
+                return;
+            Journey.AbandonAttempt();
+            activeChallenge = null;
+            active = null;
+            NotifyJourneyChanged();
+        }
+
+        public void NotifyJourneyChanged() => JourneyChanged?.Invoke();
+
         public SessionRoute ResumeRoute()
         {
-            if (!active.HasValue)
-                return SessionRoute.Map;
-            // Unreachable while punishment is retired: awaitingPunishment is never true.
-            if (awaitingPunishment)
-                return SessionRoute.Punishment;
-            // The RetrySubject half is unreachable while punishment is retired: visitAttempt
-            // is never FinalVisit.
-            return visitAttempt == FirstVisit ? SessionRoute.Subject : SessionRoute.RetrySubject;
+            if (active.HasValue)
+                return SessionRoute.Subject;
+            return Journey.AttemptsRemaining == 0 && !Journey.AwaitingSupplementary
+                ? SessionRoute.GameOver
+                : SessionRoute.Map;
         }
 
         public void ResetCampaign()
         {
-            Lives = MaxLives;
             foreach (SubjectId id in Enum.GetValues(typeof(SubjectId)))
                 records[id] = new SubjectRecord();
-            ClearActiveSubject();
+            Journey = new JourneyProgress(catalog);
+            active = null;
+            activeChallenge = null;
+            NotifyJourneyChanged();
         }
 
         public SessionRoute PreviewRoute(SubjectId id, MinigameResult result)
@@ -87,8 +130,8 @@ namespace KMA.Gameplay
             data.lives = Lives;
             data.hasActiveSubject = active.HasValue;
             data.activeSubject = active ?? default;
-            data.visitAttempt = visitAttempt;
-            data.awaitingPunishment = awaitingPunishment;
+            data.visitAttempt = FirstVisit;
+            data.awaitingPunishment = Journey.AwaitingSupplementary;
 
             int index = 0;
             foreach (SubjectId id in Enum.GetValues(typeof(SubjectId)))
@@ -110,80 +153,69 @@ namespace KMA.Gameplay
         public void Restore(SaveData data)
         {
             if (data == null)
-            {
                 throw new ArgumentNullException(nameof(data));
-            }
 
-            Lives = Math.Max(0, Math.Min(MaxLives, data.lives));
+            int lives = Math.Max(0, Math.Min(MaxLives, data.lives));
             foreach (SubjectId id in Enum.GetValues(typeof(SubjectId)))
             {
                 SubjectRecordData recordData = FindRecordData(data.subjects, id);
                 records[id] = recordData == null ? new SubjectRecord() : SubjectRecord.FromData(recordData);
             }
 
-            RestoreActiveAttempt(data);
-        }
-
-        void RestoreActiveAttempt(SaveData data)
-        {
-            ClearActiveSubject();
-
-            if (!data.hasActiveSubject || Lives <= 0)
-                return;
-            if (!Enum.IsDefined(typeof(SubjectId), data.activeSubject))
-                return;
-            if (data.visitAttempt != FirstVisit && data.visitAttempt != FinalVisit)
-                return;
-            if (data.awaitingPunishment && data.visitAttempt != FinalVisit)
-                return;
-
-            // The punishment leg is no longer routable. A save written before it was removed
-            // can carry awaitingPunishment and FinalVisit; restoring those verbatim would send
-            // the player to a scene nothing can complete. Resume the subject attempt instead.
-            // The two guards above still stand so a malformed save keeps falling back to no
-            // active attempt.
-            active = data.activeSubject;
-            visitAttempt = FirstVisit;
-            awaitingPunishment = false;
+            Journey = new JourneyProgress(catalog);
+            Journey.Restore(new JourneyStateData(), lives);
+            active = null;
+            activeChallenge = null;
+            if (data.hasActiveSubject && lives > 0 && Enum.IsDefined(typeof(SubjectId), data.activeSubject))
+            {
+                ChallengeDefinition checkpoint = catalog.Get(Journey.CheckpointChallengeId);
+                if (checkpoint.Subject == data.activeSubject)
+                    TryStartChallenge(checkpoint.Id, ChallengeAttemptMode.Journey, checkpoint.Difficulty, out _);
+            }
         }
 
         public SessionRoute StartSubject(SubjectId id)
         {
             if (active.HasValue)
-            {
-                throw new InvalidOperationException("A subject attempt is already active.");
-            }
-
-            if (Lives <= 0)
-            {
+                throw new InvalidOperationException("A challenge attempt is already active.");
+            if (Lives <= 0 && !Journey.AwaitingSupplementary)
                 return SessionRoute.GameOver;
-            }
 
-            active = id;
-            visitAttempt = FirstVisit;
-            awaitingPunishment = false;
-            return SessionRoute.Subject;
-        }
-
-        // Unreachable while punishment is retired: awaitingPunishment is never true, so this
-        // always throws.
-        public SessionRoute CompletePunishment()
-        {
-            if (!awaitingPunishment || !active.HasValue)
+            string challengeId = Journey.CheckpointChallengeId;
+            ChallengeAttemptMode mode;
+            if (string.IsNullOrEmpty(challengeId))
             {
-                throw new InvalidOperationException("No punishment is active.");
+                if (!Journey.CourseComplete)
+                    return SessionRoute.GameOver;
+                challengeId = ExamId(id);
+                mode = ChallengeAttemptMode.FreePlay;
+            }
+            else
+            {
+                ChallengeDefinition current = catalog.Get(challengeId);
+                if (current.Subject != id)
+                    throw new InvalidOperationException($"Subject {id} is locked by the course order.");
+                mode = Journey.AwaitingSupplementary
+                    ? ChallengeAttemptMode.Supplementary
+                    : ChallengeAttemptMode.Journey;
             }
 
-            awaitingPunishment = false;
-            return SessionRoute.RetrySubject;
+            ChallengeDefinition definition = catalog.Get(challengeId);
+            return TryStartChallenge(challengeId, mode, definition.Difficulty, out _)
+                ? SessionRoute.Subject
+                : Lives <= 0 ? SessionRoute.GameOver : SessionRoute.Map;
         }
+
+        // Kept for old callers. The new course has no punishment-only scene.
+        public SessionRoute CompletePunishment() => throw new InvalidOperationException(
+            "Supplementary exams are resumed from their required practice on the course map.");
 
         public SubjectId AbandonActiveSubject()
         {
             if (!active.HasValue)
                 throw new InvalidOperationException("No subject attempt is active.");
-            var subject = active.Value;
-            ClearActiveSubject();
+            SubjectId subject = active.Value;
+            AbandonActiveChallenge();
             return subject;
         }
 
@@ -191,64 +223,44 @@ namespace KMA.Gameplay
         {
             if (result == null) throw new ArgumentNullException(nameof(result));
             RequireActive(id);
-
-            SessionRoute route = RouteForResult(result);
-
-            if (result.Pass)
-            {
-                records[id].Accept(result);
-                ClearActiveSubject();
-                return route;
-            }
-
-            Lives--;
-            records[id].RecordFailedVisit();
-            ClearActiveSubject();
-            return route;
+            ChallengeDefinition definition = catalog.Get(activeChallenge.ChallengeId);
+            var attemptResult = new ChallengeAttemptResult(activeChallenge, result.Pass,
+                new ChallengeMetrics(completedTargets: definition.TargetCount),
+                definition.Kind == ChallengeKind.Exam ? result : null);
+            JourneyCommitOutcome outcome = SubmitChallengeResult(attemptResult);
+            if (!outcome.Accepted)
+                throw new InvalidOperationException("The challenge result did not match its active attempt.");
+            return RouteForResult(result);
         }
 
-        // Lives is read before SubmitResult decrements it, so "Lives <= 1" means
-        // "this loss empties the last life".
-        SessionRoute RouteForResult(MinigameResult result) => result.Pass
-            ? SessionRoute.Map
-            : Lives <= 1 ? SessionRoute.GameOver : SessionRoute.Map;
+        SessionRoute RouteForResult(MinigameResult result) =>
+            !result.Pass && Lives == 0 && !Journey.AwaitingSupplementary
+                ? SessionRoute.GameOver
+                : SessionRoute.Map;
 
         void RequireActive(SubjectId id)
         {
-            if (!active.HasValue || active.Value != id)
-            {
+            if (!active.HasValue || active.Value != id || activeChallenge == null)
                 throw new InvalidOperationException($"Subject {id} is not active.");
-            }
-
-            // Unreachable while punishment is retired: awaitingPunishment is never true.
-            if (awaitingPunishment)
-            {
-                throw new InvalidOperationException("Complete punishment before submitting attempt two.");
-            }
         }
 
-        void ClearActiveSubject()
+        string ExamId(SubjectId subject) => subject switch
         {
-            active = null;
-            visitAttempt = FirstVisit;
-            awaitingPunishment = false;
-        }
+            SubjectId.Sprint => "sprint_exam",
+            SubjectId.Volleyball => "volleyball_exam",
+            SubjectId.Football => "soccer_exam",
+            _ => throw new ArgumentOutOfRangeException(nameof(subject))
+        };
 
         static SubjectRecordData FindRecordData(SubjectRecordData[] subjectData, SubjectId id)
         {
             if (subjectData == null)
-            {
                 return null;
-            }
-
             foreach (SubjectRecordData data in subjectData)
             {
                 if (data != null && data.id == id)
-                {
                     return data;
-                }
             }
-
             return null;
         }
     }
