@@ -12,6 +12,7 @@ namespace KMA.Gameplay.UI
         public MapNodeView[] Nodes { get; private set; } = new MapNodeView[0];
         public JourneyLessonList LessonList { get; private set; }
         public TMPro.TMP_Text BudgetLabel { get; private set; }
+        public JourneyCourseSummary CourseSummary { get; private set; }
 
 
         public void BindPresentation(MapNodeView[] nodes, HeartBar heartBar, GameSession session)
@@ -23,6 +24,7 @@ namespace KMA.Gameplay.UI
             Nodes = nodes ?? new MapNodeView[0];
             Hearts = heartBar;
             LessonList = lessonList != null ? lessonList : GetComponentInChildren<JourneyLessonList>(true);
+            CourseSummary = GetComponentInChildren<JourneyCourseSummary>(true);
             if (session == null)
                 return;
             if (LessonList != null)
@@ -35,6 +37,11 @@ namespace KMA.Gameplay.UI
             if (session == null) return;
             if (Hearts != null) Hearts.SetHearts(session.Lives);
             if (BudgetLabel != null) BudgetLabel.text = VietText.Fix($"Lượt thi: {session.Lives}/{GameSession.MaxLives}");
+            if (CourseSummary != null)
+            {
+                if (session.Journey.CourseComplete) CourseSummary.Show(session);
+                else CourseSummary.Hide();
+            }
             foreach (MapNodeView node in Nodes)
             {
                 if (node == null || node.IsComingSoon) continue;

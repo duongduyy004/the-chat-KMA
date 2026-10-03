@@ -46,6 +46,7 @@ namespace KMA.Gameplay.UI
                 if (oldFutureRow != null) oldFutureRow.gameObject.SetActive(false);
                 var lessonList = existing.GetComponentInChildren<JourneyLessonList>(true) ??
                     JourneyLessonList.Create(existing.Find("Content"));
+                EnsureCourseSummary(screen, existing.Find("Content"));
                 screen.BindPresentation(existingNodes, existingHearts, session ?? new GameSession(), lessonList);
                 screen.BindBudgetLabel(existing.Find("Content/Header/LivesPanel/LivesLabelContainer/LivesLabel")
                     ?.GetComponent<TMP_Text>());
@@ -98,12 +99,43 @@ namespace KMA.Gameplay.UI
             foreach (Entry entry in Entries) nodes.Add(Card(grid, screen, entry, card, muted, mutedForeground, border));
             grid.GetComponent<ResponsiveGridLayout>().Refresh();
             JourneyLessonList lessons = JourneyLessonList.Create(content);
+            EnsureCourseSummary(screen, content);
             screen.BindPresentation(nodes.ToArray(), hearts, session ?? new GameSession(), lessons);
             screen.BindBudgetLabel(content.Find("Header/LivesPanel/LivesLabelContainer/LivesLabel")
                 ?.GetComponent<TMP_Text>());
             screen.RefreshJourney(session ?? new GameSession());
             foreach (MapNodeView node in nodes)
                 if (!node.IsComingSoon && !node.IsInteractable) node.SetAvailability(false, "ĐANG PHÁT TRIỂN");
+        }
+
+        static JourneyCourseSummary EnsureCourseSummary(MapScreen screen, Transform parent)
+        {
+            JourneyCourseSummary summary = screen.GetComponentInChildren<JourneyCourseSummary>(true);
+            if (summary != null) return summary;
+            var panel = new GameObject("JourneyCourseSummary", typeof(RectTransform), typeof(Image));
+            panel.transform.SetParent(parent, false);
+            RectTransform rect = panel.GetComponent<RectTransform>();
+            rect.anchorMin = new Vector2(.08f, .33f);
+            rect.anchorMax = new Vector2(.92f, .82f);
+            rect.offsetMin = rect.offsetMax = Vector2.zero;
+            panel.GetComponent<Image>().color = MinigameUiTheme.WithAlpha(UITheme.Shared.Surface, .98f);
+            Outline outline = panel.AddComponent<Outline>();
+            outline.effectColor = UITheme.Shared.Accent;
+            outline.effectDistance = new Vector2(4f, -4f);
+            var labelObject = new GameObject("SummaryText", typeof(RectTransform));
+            labelObject.transform.SetParent(panel.transform, false);
+            RectTransform labelRect = labelObject.GetComponent<RectTransform>();
+            labelRect.anchorMin = Vector2.zero;
+            labelRect.anchorMax = Vector2.one;
+            labelRect.offsetMin = new Vector2(28f, 20f);
+            labelRect.offsetMax = new Vector2(-28f, -20f);
+            TMP_Text label = labelObject.AddComponent<TextMeshProUGUI>();
+            label.alignment = TextAlignmentOptions.Center;
+            UiKit.StyleLabel(label, 26f, UITheme.Shared.TextPrimary);
+            JourneyCourseSummary view = panel.AddComponent<JourneyCourseSummary>();
+            view.Configure(label);
+            view.Hide();
+            return view;
         }
 
         static HeartBar Header(Transform parent, GameSession session, Color border)

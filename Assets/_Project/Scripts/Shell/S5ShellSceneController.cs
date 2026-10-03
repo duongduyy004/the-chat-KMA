@@ -55,6 +55,10 @@ namespace KMA.Gameplay.Shell
             {
                 var router = SceneRouter.Instance;
                 BuildMapPresentation(router == null ? null : router.Session);
+                JourneyDialoguePresenter dialogues = map.GetComponent<JourneyDialoguePresenter>();
+                if (dialogues == null) dialogues = map.gameObject.AddComponent<JourneyDialoguePresenter>();
+                if (router != null && router.Session != null && GameManager.Instance != null)
+                    dialogues.ShowJourney(router.Session, GameManager.Instance);
                 map.SubjectRequested += SelectMapSubject;
                 map.ChallengeRequested += StartChallenge;
             }

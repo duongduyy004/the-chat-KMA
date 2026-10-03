@@ -174,6 +174,36 @@ namespace KMA.Tests.Gameplay.Core
             Assert.That(saves, Is.EqualTo(1));
         }
 
+        [Test]
+        public void DialogueSeenMarkerPersistsWithJourneyAndDoesNotSaveTwice()
+        {
+            SceneRouter router = CreateRouter();
+            SaveData saved = null;
+            GameManager manager = CreateInactiveManager();
+            manager.ConfigureStartup(SaveData.CreateDefault, data => saved = data, router, _ => { });
+            manager.gameObject.SetActive(true);
+
+            Assert.That(manager.TryMarkJourneyDialogueSeen("opening", out string error), Is.True, error);
+            Assert.That(saved.journey.seenDialogueIds, Does.Contain("opening"));
+            saved = null;
+            Assert.That(manager.TryMarkJourneyDialogueSeen("opening", out error), Is.True, error);
+            Assert.That(saved, Is.Null);
+        }
+
+        [Test]
+        public void DialogueSeenMarkerRollsBackWhenPersistenceFails()
+        {
+            SceneRouter router = CreateRouter();
+            GameManager manager = CreateInactiveManager();
+            manager.ConfigureStartup(SaveData.CreateDefault,
+                _ => throw new InvalidOperationException("disk full"), router, _ => { });
+            manager.gameObject.SetActive(true);
+
+            Assert.That(manager.TryMarkJourneyDialogueSeen("opening", out string error), Is.False);
+            Assert.That(error, Is.EqualTo("disk full"));
+            Assert.That(manager.Session.Journey.IsDialogueSeen("opening"), Is.False);
+        }
+
         [UnityTest]
         public IEnumerator SubjectCompleted_SavesExactlyOnce()
         {

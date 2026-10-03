@@ -40,6 +40,20 @@ namespace KMA.Gameplay
         public ChallengeAttemptContext ActiveAttempt => activeAttempt;
         public ChallengeCatalog Catalog => catalog;
 
+        public bool IsDialogueSeen(string key) => !string.IsNullOrWhiteSpace(key) &&
+            seenDialogueIds.Contains(key, StringComparer.Ordinal);
+
+        public void MarkDialogueSeen(string key)
+        {
+            if (string.IsNullOrWhiteSpace(key)) throw new ArgumentException("A dialogue seen key is required.", nameof(key));
+            if (!IsDialogueSeen(key)) seenDialogueIds.Add(key);
+        }
+
+        public void UnmarkDialogueSeen(string key)
+        {
+            if (!string.IsNullOrWhiteSpace(key)) seenDialogueIds.RemoveAll(item => item == key);
+        }
+
         public bool IsChallengeComplete(string id) =>
             !string.IsNullOrWhiteSpace(id) && completedChallengeIds.Contains(id);
 

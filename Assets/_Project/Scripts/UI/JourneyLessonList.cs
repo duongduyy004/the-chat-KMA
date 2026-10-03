@@ -116,7 +116,9 @@ namespace KMA.Gameplay.UI
                 };
                 lessonLabels[index].text = VietText.Fix($"{label}  ·  {challenge.Objective}");
                 button.interactable = unlocked;
-                ChallengeAttemptMode mode = checkpoint && session.Journey.AwaitingSupplementary
+                ChallengeAttemptMode mode = session.Journey.CourseComplete
+                    ? ChallengeAttemptMode.FreePlay
+                    : checkpoint && session.Journey.AwaitingSupplementary
                     ? ChallengeAttemptMode.Supplementary
                     : complete ? ChallengeAttemptMode.Review
                         : checkpoint ? ChallengeAttemptMode.Journey : ChallengeAttemptMode.Review;

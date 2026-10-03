@@ -84,6 +84,24 @@ namespace KMA.Tests.Presentation
             Assert.That(selectedMode, Is.EqualTo(ChallengeAttemptMode.Supplementary));
         }
 
+        [Test]
+        public void CompletedCourseShowsSummaryAndLessonReplayUsesFreePlay()
+        {
+            var session = new GameSession();
+            foreach (ChallengeDefinition challenge in session.Journey.Catalog.Ordered)
+                Play(session, challenge.Id, true);
+            MapPresentationBuilder.Build(screen, session);
+
+            Assert.That(session.Journey.CourseComplete, Is.True);
+            Assert.That(screen.CourseSummary, Is.Not.Null);
+            Assert.That(screen.CourseSummary.gameObject.activeSelf, Is.True);
+            Assert.That(screen.CourseSummary.ScoreRows.Count, Is.EqualTo(3));
+            ChallengeAttemptMode mode = default;
+            screen.ChallengeRequested += (_, requested) => mode = requested;
+            screen.LessonList.transform.Find("Lesson1").GetComponent<Button>().onClick.Invoke();
+            Assert.That(mode, Is.EqualTo(ChallengeAttemptMode.FreePlay));
+        }
+
         static void Play(GameSession session, string id, bool pass)
         {
             ChallengeDefinition definition = session.Journey.Catalog.Get(id);

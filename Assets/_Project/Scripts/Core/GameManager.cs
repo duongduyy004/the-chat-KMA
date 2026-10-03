@@ -247,6 +247,21 @@ namespace KMA.Gameplay.Core
             }
         }
 
+        public bool TryMarkJourneyDialogueSeen(string seenKey, out string error)
+        {
+            error = null;
+            if (!initialized || session == null || string.IsNullOrWhiteSpace(seenKey))
+            {
+                error = "The journey dialogue cannot be saved right now.";
+                return false;
+            }
+            if (session.Journey.IsDialogueSeen(seenKey)) return true;
+            session.Journey.MarkDialogueSeen(seenKey);
+            if (TryPersistSession(out error)) return true;
+            session.Journey.UnmarkDialogueSeen(seenKey);
+            return false;
+        }
+
         void SaveCurrentState()
         {
             SaveData current = session.ToSaveData();

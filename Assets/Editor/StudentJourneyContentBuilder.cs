@@ -11,6 +11,21 @@ namespace KMA.EditorTools
         const string ResourcesFolder = "Assets/_Project/Resources/Journey";
         const string CatalogPath = ResourcesFolder + "/ChallengeCatalog.asset";
         const string SprintBalancePath = ResourcesFolder + "/SprintBalance.asset";
+        const string DialoguePath = ResourcesFolder + "/JourneyDialogues.asset";
+
+        readonly struct DialogueLineSpec
+        {
+            public readonly string Speaker, Text, Portrait;
+            public DialogueLineSpec(string speaker, string text, string portrait)
+            { Speaker = speaker; Text = text; Portrait = portrait; }
+        }
+
+        readonly struct DialogueSpec
+        {
+            public readonly string Id;
+            public readonly DialogueLineSpec[] Lines;
+            public DialogueSpec(string id, params DialogueLineSpec[] lines) { Id = id; Lines = lines; }
+        }
 
         readonly struct ChallengeSpec
         {
@@ -156,6 +171,87 @@ namespace KMA.EditorTools
             serialized.ApplyModifiedPropertiesWithoutUndo();
             EditorUtility.SetDirty(config);
             AssetDatabase.SaveAssets();
+        }
+
+        [MenuItem("KMA/Journey/Build Dialogue Library")]
+        public static void BuildDialogues()
+        {
+            EnsureFolder(ResourcesFolder);
+            JourneyDialogueLibrary library = AssetDatabase.LoadAssetAtPath<JourneyDialogueLibrary>(DialoguePath);
+            if (library == null)
+            {
+                library = ScriptableObject.CreateInstance<JourneyDialogueLibrary>();
+                AssetDatabase.CreateAsset(library, DialoguePath);
+            }
+
+            string male = "Assets/_Project/Art/Characters/MalePerson/MalePerson_idle.png";
+            string female = "Assets/_Project/Art/Characters/FemalePerson/FemalePerson_idle.png";
+            string senior = "Assets/_Project/Art/Characters/MaleAdventurer/MaleAdventurer_idle.png";
+            DialogueSpec[] specs =
+            {
+                new DialogueSpec("opening", new DialogueLineSpec("Anh/chị khóa trên", "Muốn biết sân trường dài bao nhiêu, cứ đợi buổi thể chất đầu tiên.", senior),
+                    new DialogueLineSpec("Bạn cùng lớp", "Nghe dọa đủ rồi. Ra sân tập thử đã.", female),
+                    new DialogueLineSpec("Tân sinh viên", "Qua môn trước. Ngầu tính sau.", male),
+                    new DialogueLineSpec("Giảng viên", "Học lần lượt: chạy nước rút, bóng chuyền, rồi bóng đá. Đạt môn trước mới học môn sau.", senior)),
+                new DialogueSpec("sprint_intro", new DialogueLineSpec("Giảng viên", "Bắt đầu bằng nhịp chân. Trái, phải luân phiên và giữ nhịp.", senior),
+                    new DialogueLineSpec("Bạn cùng lớp", "Mười hai lần đúng liên tiếp. Sai thì bình tĩnh làm lại nhé.", female)),
+                new DialogueSpec("sprint_exam", new DialogueLineSpec("Giảng viên", "Bài thi: hoàn thành 100 mét trong 14 giây.", senior),
+                    new DialogueLineSpec("Tân sinh viên", "Mình đã tập rồi. Vào thi thôi!", male)),
+                new DialogueSpec("sprint_pass", new DialogueLineSpec("Giảng viên", "Đạt. Nhịp chân của em đã ổn định hơn.", senior),
+                    new DialogueLineSpec("Bạn cùng lớp", "Sân trường vẫn dài, nhưng giờ mình biết cách chạy rồi.", female)),
+                new DialogueSpec("volleyball_intro", new DialogueLineSpec("Bạn cùng lớp", "Hai chân trước, đỡ bóng đúng tầm rồi mới tính đường chuyền.", female),
+                    new DialogueLineSpec("Giảng viên", "Hãy giữ bóng trong pha của đội và phối hợp đủ ba chạm.", senior)),
+                new DialogueSpec("volleyball_exam", new DialogueLineSpec("Giảng viên", "Thi đấu đến năm điểm trước đối thủ, giới hạn 120 giây.", senior),
+                    new DialogueLineSpec("Bạn cùng lớp", "Mình sẽ đỡ thật đẹp. Cậu lo cú đập nhé!", female)),
+                new DialogueSpec("volleyball_pass", new DialogueLineSpec("Giảng viên", "Đạt. Em đã phối hợp tốt giữa các chạm bóng.", senior),
+                    new DialogueLineSpec("Tân sinh viên", "Cảm ơn đồng đội. Sang môn tiếp theo thôi!", male)),
+                new DialogueSpec("soccer_intro", new DialogueLineSpec("Bạn cùng lớp", "Hai môn rồi. Giờ bình tĩnh, bóng không có deadline đâu.", female),
+                    new DialogueLineSpec("Giảng viên", "Tập hướng và lực sút; khi thi, em có đúng năm cú.", senior)),
+                new DialogueSpec("soccer_exam", new DialogueLineSpec("Giảng viên", "Thi đủ năm cú sút. Cần ít nhất ba bàn để đạt.", senior),
+                    new DialogueLineSpec("Tân sinh viên", "Nhắm chắc, giữ lực vừa đủ. Mình sẵn sàng.", male)),
+                new DialogueSpec("soccer_pass", new DialogueLineSpec("Giảng viên", "Đạt học phần. Em đã hoàn thành đủ ba môn.", senior),
+                    new DialogueLineSpec("Bạn cùng lớp", "Qua rồi! Lần sau nhớ kể nhẹ tay cho khóa dưới nhé.", female)),
+                new DialogueSpec("supplementary", new DialogueLineSpec("Giảng viên", "Ôn lại bài luyện, rồi vào thi tiếp. Các phần đã đạt vẫn được ghi nhận.", senior),
+                    new DialogueLineSpec("Bạn cùng lớp", "Mình tập đúng phần còn vướng rồi thử lại nhé.", female)),
+                new DialogueSpec("course_complete", new DialogueLineSpec("Giảng viên", "Chúc mừng. Học phần Thể chất đã hoàn tất.", senior),
+                    new DialogueLineSpec("Tân sinh viên", "Từ hơi lo đến tự tin ra sân. Đáng nhớ thật.", male),
+                    new DialogueLineSpec("Bạn cùng lớp", "Qua rồi! Lần sau nhớ kể nhẹ tay cho khóa dưới nhé.", female))
+            };
+
+            SerializedObject serialized = new SerializedObject(library);
+            SerializedProperty nodes = serialized.FindProperty("nodes");
+            nodes.arraySize = specs.Length;
+            for (int i = 0; i < specs.Length; i++)
+            {
+                SerializedProperty node = nodes.GetArrayElementAtIndex(i);
+                node.FindPropertyRelative("id").stringValue = specs[i].Id;
+                SerializedProperty lines = node.FindPropertyRelative("lines");
+                lines.arraySize = specs[i].Lines.Length;
+                for (int lineIndex = 0; lineIndex < specs[i].Lines.Length; lineIndex++)
+                {
+                    DialogueLineSpec line = specs[i].Lines[lineIndex];
+                    SerializedProperty serializedLine = lines.GetArrayElementAtIndex(lineIndex);
+                    serializedLine.FindPropertyRelative("speakerRole").stringValue = line.Speaker;
+                    serializedLine.FindPropertyRelative("text").stringValue = line.Text;
+                    serializedLine.FindPropertyRelative("portrait").objectReferenceValue =
+                        AssetDatabase.LoadAssetAtPath<Sprite>(line.Portrait);
+                }
+            }
+            serialized.ApplyModifiedPropertiesWithoutUndo();
+            if (!library.Validate(out string error))
+                throw new InvalidOperationException("Generated journey dialogue library is invalid: " + error);
+            EditorUtility.SetDirty(library);
+            AssetDatabase.SaveAssets();
+            Debug.Log("[KMA] Student journey dialogue library built.");
+        }
+
+        [MenuItem("KMA/Journey/Build All Journey Content")]
+        public static void BuildAll()
+        {
+            BuildChallenges();
+            BuildSprintBalance();
+            BuildDialogues();
+            ShellSceneAuthoring.Apply();
         }
 
         static void Apply(ChallengeDefinition definition, ChallengeSpec spec)

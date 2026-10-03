@@ -1,0 +1,144 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9511e7562f1393783a0a8fbd97719e22, type: 3}
+  m_Name: JourneyDialogues
+  m_EditorClassIdentifier: KMA.Gameplay.Progression::KMA.Gameplay.JourneyDialogueLibrary
+  nodes:
+  - id: opening
+    lines:
+    - speakerRole: "Anh/ch\u1ECB kh\xF3a tr\xEAn"
+      text: "Mu\u1ED1n bi\u1EBFt s\xE2n tr\u01B0\u1EDDng d\xE0i bao nhi\xEAu, c\u1EE9
+        \u0111\u1EE3i bu\u1ED5i th\u1EC3 ch\u1EA5t \u0111\u1EA7u ti\xEAn."
+      portrait: {fileID: 21300000, guid: c37e96d0bfc36f9409920ee17ba47754, type: 3}
+    - speakerRole: "B\u1EA1n c\xF9ng l\u1EDBp"
+      text: "Nghe d\u1ECDa \u0111\u1EE7 r\u1ED3i. Ra s\xE2n t\u1EADp th\u1EED \u0111\xE3."
+      portrait: {fileID: 21300000, guid: f9454fc9a0d1d2b42b2225bf913749cb, type: 3}
+    - speakerRole: "T\xE2n sinh vi\xEAn"
+      text: "Qua m\xF4n tr\u01B0\u1EDBc. Ng\u1EA7u t\xEDnh sau."
+      portrait: {fileID: 21300000, guid: 8dd0011b70903b440a7000345141466b, type: 3}
+    - speakerRole: "Gi\u1EA3ng vi\xEAn"
+      text: "H\u1ECDc l\u1EA7n l\u01B0\u1EE3t: ch\u1EA1y n\u01B0\u1EDBc r\xFAt, b\xF3ng
+        chuy\u1EC1n, r\u1ED3i b\xF3ng \u0111\xE1. \u0110\u1EA1t m\xF4n tr\u01B0\u1EDBc
+        m\u1EDBi h\u1ECDc m\xF4n sau."
+      portrait: {fileID: 21300000, guid: c37e96d0bfc36f9409920ee17ba47754, type: 3}
+  - id: sprint_intro
+    lines:
+    - speakerRole: "Gi\u1EA3ng vi\xEAn"
+      text: "B\u1EAFt \u0111\u1EA7u b\u1EB1ng nh\u1ECBp ch\xE2n. Tr\xE1i, ph\u1EA3i
+        lu\xE2n phi\xEAn v\xE0 gi\u1EEF nh\u1ECBp."
+      portrait: {fileID: 21300000, guid: c37e96d0bfc36f9409920ee17ba47754, type: 3}
+    - speakerRole: "B\u1EA1n c\xF9ng l\u1EDBp"
+      text: "M\u01B0\u1EDDi hai l\u1EA7n \u0111\xFAng li\xEAn ti\u1EBFp. Sai th\xEC
+        b\xECnh t\u0129nh l\xE0m l\u1EA1i nh\xE9."
+      portrait: {fileID: 21300000, guid: f9454fc9a0d1d2b42b2225bf913749cb, type: 3}
+  - id: sprint_exam
+    lines:
+    - speakerRole: "Gi\u1EA3ng vi\xEAn"
+      text: "B\xE0i thi: ho\xE0n th\xE0nh 100 m\xE9t trong 14 gi\xE2y."
+      portrait: {fileID: 21300000, guid: c37e96d0bfc36f9409920ee17ba47754, type: 3}
+    - speakerRole: "T\xE2n sinh vi\xEAn"
+      text: "M\xECnh \u0111\xE3 t\u1EADp r\u1ED3i. V\xE0o thi th\xF4i!"
+      portrait: {fileID: 21300000, guid: 8dd0011b70903b440a7000345141466b, type: 3}
+  - id: sprint_pass
+    lines:
+    - speakerRole: "Gi\u1EA3ng vi\xEAn"
+      text: "\u0110\u1EA1t. Nh\u1ECBp ch\xE2n c\u1EE7a em \u0111\xE3 \u1ED5n \u0111\u1ECBnh
+        h\u01A1n."
+      portrait: {fileID: 21300000, guid: c37e96d0bfc36f9409920ee17ba47754, type: 3}
+    - speakerRole: "B\u1EA1n c\xF9ng l\u1EDBp"
+      text: "S\xE2n tr\u01B0\u1EDDng v\u1EABn d\xE0i, nh\u01B0ng gi\u1EDD m\xECnh
+        bi\u1EBFt c\xE1ch ch\u1EA1y r\u1ED3i."
+      portrait: {fileID: 21300000, guid: f9454fc9a0d1d2b42b2225bf913749cb, type: 3}
+  - id: volleyball_intro
+    lines:
+    - speakerRole: "B\u1EA1n c\xF9ng l\u1EDBp"
+      text: "Hai ch\xE2n tr\u01B0\u1EDBc, \u0111\u1EE1 b\xF3ng \u0111\xFAng t\u1EA7m
+        r\u1ED3i m\u1EDBi t\xEDnh \u0111\u01B0\u1EDDng chuy\u1EC1n."
+      portrait: {fileID: 21300000, guid: f9454fc9a0d1d2b42b2225bf913749cb, type: 3}
+    - speakerRole: "Gi\u1EA3ng vi\xEAn"
+      text: "H\xE3y gi\u1EEF b\xF3ng trong pha c\u1EE7a \u0111\u1ED9i v\xE0 ph\u1ED1i
+        h\u1EE3p \u0111\u1EE7 ba ch\u1EA1m."
+      portrait: {fileID: 21300000, guid: c37e96d0bfc36f9409920ee17ba47754, type: 3}
+  - id: volleyball_exam
+    lines:
+    - speakerRole: "Gi\u1EA3ng vi\xEAn"
+      text: "Thi \u0111\u1EA5u \u0111\u1EBFn n\u0103m \u0111i\u1EC3m tr\u01B0\u1EDBc
+        \u0111\u1ED1i th\u1EE7, gi\u1EDBi h\u1EA1n 120 gi\xE2y."
+      portrait: {fileID: 21300000, guid: c37e96d0bfc36f9409920ee17ba47754, type: 3}
+    - speakerRole: "B\u1EA1n c\xF9ng l\u1EDBp"
+      text: "M\xECnh s\u1EBD \u0111\u1EE1 th\u1EADt \u0111\u1EB9p. C\u1EADu lo c\xFA
+        \u0111\u1EADp nh\xE9!"
+      portrait: {fileID: 21300000, guid: f9454fc9a0d1d2b42b2225bf913749cb, type: 3}
+  - id: volleyball_pass
+    lines:
+    - speakerRole: "Gi\u1EA3ng vi\xEAn"
+      text: "\u0110\u1EA1t. Em \u0111\xE3 ph\u1ED1i h\u1EE3p t\u1ED1t gi\u1EEFa c\xE1c
+        ch\u1EA1m b\xF3ng."
+      portrait: {fileID: 21300000, guid: c37e96d0bfc36f9409920ee17ba47754, type: 3}
+    - speakerRole: "T\xE2n sinh vi\xEAn"
+      text: "C\u1EA3m \u01A1n \u0111\u1ED3ng \u0111\u1ED9i. Sang m\xF4n ti\u1EBFp
+        theo th\xF4i!"
+      portrait: {fileID: 21300000, guid: 8dd0011b70903b440a7000345141466b, type: 3}
+  - id: soccer_intro
+    lines:
+    - speakerRole: "B\u1EA1n c\xF9ng l\u1EDBp"
+      text: "Hai m\xF4n r\u1ED3i. Gi\u1EDD b\xECnh t\u0129nh, b\xF3ng kh\xF4ng c\xF3
+        deadline \u0111\xE2u."
+      portrait: {fileID: 21300000, guid: f9454fc9a0d1d2b42b2225bf913749cb, type: 3}
+    - speakerRole: "Gi\u1EA3ng vi\xEAn"
+      text: "T\u1EADp h\u01B0\u1EDBng v\xE0 l\u1EF1c s\xFAt; khi thi, em c\xF3 \u0111\xFAng
+        n\u0103m c\xFA."
+      portrait: {fileID: 21300000, guid: c37e96d0bfc36f9409920ee17ba47754, type: 3}
+  - id: soccer_exam
+    lines:
+    - speakerRole: "Gi\u1EA3ng vi\xEAn"
+      text: "Thi \u0111\u1EE7 n\u0103m c\xFA s\xFAt. C\u1EA7n \xEDt nh\u1EA5t ba
+        b\xE0n \u0111\u1EC3 \u0111\u1EA1t."
+      portrait: {fileID: 21300000, guid: c37e96d0bfc36f9409920ee17ba47754, type: 3}
+    - speakerRole: "T\xE2n sinh vi\xEAn"
+      text: "Nh\u1EAFm ch\u1EAFc, gi\u1EEF l\u1EF1c v\u1EEBa \u0111\u1EE7. M\xECnh
+        s\u1EB5n s\xE0ng."
+      portrait: {fileID: 21300000, guid: 8dd0011b70903b440a7000345141466b, type: 3}
+  - id: soccer_pass
+    lines:
+    - speakerRole: "Gi\u1EA3ng vi\xEAn"
+      text: "\u0110\u1EA1t h\u1ECDc ph\u1EA7n. Em \u0111\xE3 ho\xE0n th\xE0nh \u0111\u1EE7
+        ba m\xF4n."
+      portrait: {fileID: 21300000, guid: c37e96d0bfc36f9409920ee17ba47754, type: 3}
+    - speakerRole: "B\u1EA1n c\xF9ng l\u1EDBp"
+      text: "Qua r\u1ED3i! L\u1EA7n sau nh\u1EDB k\u1EC3 nh\u1EB9 tay cho kh\xF3a
+        d\u01B0\u1EDBi nh\xE9."
+      portrait: {fileID: 21300000, guid: f9454fc9a0d1d2b42b2225bf913749cb, type: 3}
+  - id: supplementary
+    lines:
+    - speakerRole: "Gi\u1EA3ng vi\xEAn"
+      text: "\xD4n l\u1EA1i b\xE0i luy\u1EC7n, r\u1ED3i v\xE0o thi ti\u1EBFp. C\xE1c
+        ph\u1EA7n \u0111\xE3 \u0111\u1EA1t v\u1EABn \u0111\u01B0\u1EE3c ghi nh\u1EADn."
+      portrait: {fileID: 21300000, guid: c37e96d0bfc36f9409920ee17ba47754, type: 3}
+    - speakerRole: "B\u1EA1n c\xF9ng l\u1EDBp"
+      text: "M\xECnh t\u1EADp \u0111\xFAng ph\u1EA7n c\xF2n v\u01B0\u1EDBng r\u1ED3i
+        th\u1EED l\u1EA1i nh\xE9."
+      portrait: {fileID: 21300000, guid: f9454fc9a0d1d2b42b2225bf913749cb, type: 3}
+  - id: course_complete
+    lines:
+    - speakerRole: "Gi\u1EA3ng vi\xEAn"
+      text: "Ch\xFAc m\u1EEBng. H\u1ECDc ph\u1EA7n Th\u1EC3 ch\u1EA5t \u0111\xE3
+        ho\xE0n t\u1EA5t."
+      portrait: {fileID: 21300000, guid: c37e96d0bfc36f9409920ee17ba47754, type: 3}
+    - speakerRole: "T\xE2n sinh vi\xEAn"
+      text: "T\u1EEB h\u01A1i lo \u0111\u1EBFn t\u1EF1 tin ra s\xE2n. \u0110\xE1ng
+        nh\u1EDB th\u1EADt."
+      portrait: {fileID: 21300000, guid: 8dd0011b70903b440a7000345141466b, type: 3}
+    - speakerRole: "B\u1EA1n c\xF9ng l\u1EDBp"
+      text: "Qua r\u1ED3i! L\u1EA7n sau nh\u1EDB k\u1EC3 nh\u1EB9 tay cho kh\xF3a
+        d\u01B0\u1EDBi nh\xE9."
+      portrait: {fileID: 21300000, guid: f9454fc9a0d1d2b42b2225bf913749cb, type: 3}

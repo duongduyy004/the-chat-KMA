@@ -31,6 +31,8 @@ namespace KMA.Gameplay.UI
 
         public void Configure(TMP_Text text) => summaryText = text;
 
+        public void Hide() => gameObject.SetActive(false);
+
         public void Show(GameSession session)
         {
             if (session == null) return;
@@ -47,6 +49,7 @@ namespace KMA.Gameplay.UI
             }
             SupplementaryRounds = session.Journey.SupplementaryRounds;
             lines.Add($"Lượt thi bổ sung: {SupplementaryRounds}");
+            lines.Add("Chọn một môn bên dưới để ôn tập hoặc chơi lại.");
             if (summaryText != null) summaryText.text = VietText.Fix(string.Join("\n", lines));
             gameObject.SetActive(true);
         }
