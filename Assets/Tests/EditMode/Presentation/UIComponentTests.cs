@@ -200,6 +200,41 @@ namespace KMA.Tests.Presentation
         }
 
         [Test]
+        public void JourneyLessonLabelsMeetContrastOnTheirButtonSurface()
+        {
+            var root = new GameObject("map", typeof(RectTransform));
+            try
+            {
+                var screen = root.AddComponent<MapScreen>();
+                MapPresentationBuilder.Build(screen, new GameSession());
+
+                Transform lesson = root.transform.Find("S5MapPresentation/Content/JourneyLessons/Lesson1");
+                Color foreground = lesson.GetComponentInChildren<TMP_Text>(true).color;
+                Color background = lesson.GetComponent<Image>().color;
+                Assert.That(ContrastRatio(foreground, background), Is.GreaterThanOrEqualTo(4.5f),
+                    "Unlocked lesson copy must remain readable on its bright card surface.");
+            }
+            finally
+            {
+                Object.DestroyImmediate(root);
+            }
+        }
+
+        static float ContrastRatio(Color foreground, Color background)
+        {
+            float first = RelativeLuminance(foreground);
+            float second = RelativeLuminance(background);
+            return (Mathf.Max(first, second) + .05f) / (Mathf.Min(first, second) + .05f);
+        }
+
+        static float RelativeLuminance(Color color)
+        {
+            static float Linear(float value) => value <= .04045f
+                ? value / 12.92f : Mathf.Pow((value + .055f) / 1.055f, 2.4f);
+            return .2126f * Linear(color.r) + .7152f * Linear(color.g) + .0722f * Linear(color.b);
+        }
+
+        [Test]
         public void MapCardsCommunicateCompletedAndLockedStatesWithoutColorAlone()
         {
             var root = new GameObject("map", typeof(RectTransform));

@@ -1,6 +1,6 @@
 # Student Journey QA
 
-QA was run against Unity `6000.3.23f1` on Linux on 2026-10-04, from the Task 9 checkpoint `c86dbdc` plus the Task 10 test and map fallback changes in this working tree. Visual captures use the Unity Editor Play Mode screenshot service. Each capture completed with a matching request ID and `status: ok`.
+QA was run against Unity `6000.3.23f1` on Linux on 2026-10-04, from the Task 9 checkpoint `c86dbdc` plus the Task 10 test and map fallback changes. Visual captures use the Unity Editor Play Mode screenshot service. Each capture completed with a matching request ID and `status: ok`.
 
 ## Automated checks
 
@@ -32,6 +32,10 @@ Only the available Editor viewport aspect was captured. The requested 16:9, 16:1
 
 The three-person novice playtest was not run in this environment. Session duration, attempts per lesson, misunderstanding points, and failure reasons therefore have no player evidence yet.
 
-`tools/build-apk.sh --arm64 --output-dir Builds/Android --name journey` succeeded with zero errors and 54 warnings. The APK is `Builds/Android/journey-arm64.apk`, 59,800,642 bytes (58 MiB), SHA-256 `98910c4ed86dcd46da13140569e5e751d6be06171ac23ba5876d67293299a456`. The archive contains `lib/arm64-v8a/libil2cpp.so` and `libunity.so`, with no `armeabi-v7a` library. `adb devices` could not start its daemon (`Operation not permitted`), so no emulator or physical-device installation, gameplay, performance, audio, touch, or background/resume validation is claimed.
+An Android 17 API 37 AVD (`sdk_gphone16k_x86_64`, 1080x2400 at 420 dpi, 16 KB page-size system image) was used for an x86_64 smoke run. The pre-contrast-fix build launched, New Game and dialogue flow reached the journey map, Sprint Learn accepted alternating left/right touches and completed with score 12, and Continue restored progress after force-stop and relaunch. Unity/Android logcat had no exception, fatal, or crash entries. This was a virtual-device smoke run; it does not establish physical handset behavior, performance, audio quality, or background-resume behavior.
+
+That emulator screenshot also exposed low contrast on lesson labels rendered over white cards: the original `TextPrimary` foreground measured 1.05:1. `JourneyLessonLabelsMeetContrastOnTheirButtonSurface` now asserts a minimum 4.5:1, and the focused EditMode test passed after switching the label to `MutedForeground`. The updated x86_64 APK installed and launched, but ADB disconnected during the follow-up capture, so the corrected map was not visually confirmed on the emulator.
+
+Both current APKs include the contrast fix. `tools/build-apk.sh --arm64 --output-dir Builds/Android --name journey` completed with zero errors and 20 warnings; `Builds/Android/journey-arm64.apk` is 59,800,646 bytes (58 MiB), SHA-256 `0acfa79daf0af4337fa8e9a29f8316d6dde97f08caae1124d6ab656b314011c3`. `tools/build-apk.sh --x86_64 --output-dir Builds/Android --name journey` completed with zero errors and 29 warnings; `Builds/Android/journey-x86_64.apk` is 61,084,901 bytes, SHA-256 `77738f564672232c00594b7bc57ec2d95f3bcb6c3fc59cd96742180a37436b90`. The archives contain their matching `lib/arm64-v8a` and `lib/x86_64` `libil2cpp.so` and `libunity.so` libraries. No physical-device validation is claimed.
 
 The end-to-end journey test exercises the persisted challenge ordering, subject unlocks, exam records, and five-failure supplementary recovery through `GameSession`. Per-subject PlayMode tests separately exercise Sprint input, Volleyball match rules, and Soccer controller outcomes. The complete nine-challenge progression test uses deterministic challenge results; it does not yet drive real input through all three controller scenes in one uninterrupted run.

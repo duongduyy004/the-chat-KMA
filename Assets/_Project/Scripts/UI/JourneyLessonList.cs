@@ -195,7 +195,7 @@ namespace KMA.Gameplay.UI
             TMP_Text text = button.GetComponentInChildren<TMP_Text>(true);
             text.alignment = TextAlignmentOptions.MidlineLeft;
             text.fontSize = 16f;
-            text.color = UITheme.Shared.TextPrimary;
+            text.color = UITheme.Shared.MutedForeground;
             return button;
         }
 
