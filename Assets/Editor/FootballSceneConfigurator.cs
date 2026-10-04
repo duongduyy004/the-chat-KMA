@@ -252,12 +252,6 @@ namespace KMA.EditorTools
             UiKit.Anchor(instructions.rectTransform, new Vector2(.08f, .55f), new Vector2(.92f, .77f));
             UiKit.FitLabel(instructions, MinigameUiTheme.Body);
             instructions.textWrappingMode = TextWrappingModes.Normal;
-            TMP_Text difficultyTitle = UiKit.Label(start.transform, "DifficultyTitle", "ĐỘ KHÓ", MinigameUiTheme.Caption,
-                MinigameUiTheme.Accent);
-            UiKit.Anchor(difficultyTitle.rectTransform, new Vector2(.1f, .45f), new Vector2(.9f, .55f));
-            Button easy = StartButton(start.transform, "Easy", "DỄ", ButtonVariant.Secondary, .08f, .34f, .29f, .44f);
-            Button normal = StartButton(start.transform, "Normal", "THƯỜNG", ButtonVariant.Primary, .35f, .65f, .29f, .44f);
-            Button hard = StartButton(start.transform, "Hard", "KHÓ", ButtonVariant.Secondary, .66f, .92f, .29f, .44f);
             Button startButton = StartButton(start.transform, "StartButton", "BẮT ĐẦU", ButtonVariant.Primary, .29f, .71f, .06f, .22f);
 
             // The shared pause button sits in the safe area's top-right corner, as in Volleyball.
@@ -267,7 +261,7 @@ namespace KMA.EditorTools
                 Vector2.one * MinigameUiTheme.ButtonHeight);
 
             hud.Configure(direction.Slider, hold, power, warning.gameObject, score.Label, remaining.Label, markers,
-                start.gameObject, startButton, easy, normal, hard, directionValue, feedback);
+                start.gameObject, startButton, null, null, null, directionValue, feedback);
             hud.ShowStart(FootballDifficulty.Normal);
 
             var result = UnityEngine.Object.FindFirstObjectByType<ResultPanel>(FindObjectsInactive.Include);

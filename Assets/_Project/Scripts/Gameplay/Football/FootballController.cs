@@ -58,8 +58,7 @@ namespace KMA.Gameplay
                 PresentationPhase != MinigamePhase.Tutorial)
                 return false;
 
-            if (challengeContext != null && challengeContext.Mode != ChallengeAttemptMode.FreePlay)
-                difficulty = ToFootballDifficulty(challengeDefinition.Difficulty);
+            difficulty = FootballDifficulty.Normal;
             selectedDifficulty = difficulty;
             preferredDifficulty = difficulty;
             rules = new FootballRules(difficultyConfig.Get(difficulty),
@@ -83,13 +82,13 @@ namespace KMA.Gameplay
                 throw new InvalidOperationException("Football challenge must be configured before the start gate opens.");
             challengeDefinition = definition;
             challengeContext = context;
-            selectedDifficulty = ToFootballDifficulty(definition.Difficulty);
+            selectedDifficulty = FootballDifficulty.Normal;
             rules = new FootballRules(difficultyConfig.Get(selectedDifficulty), OptionsFor(definition));
             matchRequested = false;
             rulesStarted = false;
             resultSubmitted = false;
             lastResult = null;
-            hud.ConfigureChallenge(definition, context.Mode == ChallengeAttemptMode.FreePlay);
+            hud.ConfigureChallenge(definition, false);
             hud.ShowStart(selectedDifficulty);
             inputBridge.SetEnabled(false, false);
             presentation.HidePreview();

@@ -21,5 +21,4 @@ MonoBehaviour:
   keeperEnabled: 0
   difficulty: 0
   timingHelp: 1
-  objective: "Ghi hai \u0111i\u1EC3m b\u1EB1ng chu\u1ED7i \u0110\u1EE1 \u2192 Chuy\u1EC1n
-    \u2192 \u0110\u1EADp trong c\xF9ng pha b\xF3ng."
+  objective: "Ghi hai điểm bằng chuỗi đỡ, đỡ rồi đập trong cùng pha bóng."

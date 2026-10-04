@@ -256,7 +256,8 @@ namespace KMA.Gameplay
         protected override void TickPlay(float dt)
         {
             float before = rules.Snapshot.Distance;
-            rules.Tick(dt);
+            if (challengeRules != null) challengeRules.Tick(dt);
+            else rules.Tick(dt);
             stepDistance += Mathf.Max(0f, rules.Snapshot.Distance - before);
             if (dt > 0f && stepDistance >= 1.6f)
             {

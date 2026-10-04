@@ -113,6 +113,9 @@ namespace KMA.Gameplay
             if (!allowed)
                 return false;
 
+            if (definition.Subject == SubjectId.Football)
+                difficulty = ChallengeDifficulty.Normal;
+
             if ((mode == ChallengeAttemptMode.Journey || mode == ChallengeAttemptMode.Supplementary) &&
                 difficulty != definition.Difficulty)
             {

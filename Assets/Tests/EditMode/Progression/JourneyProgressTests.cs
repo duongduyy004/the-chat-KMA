@@ -5,6 +5,26 @@ namespace KMA.Tests.Gameplay.Progression
 {
     public sealed class JourneyProgressTests
     {
+        [TestCase(ChallengeDifficulty.Easy)]
+        [TestCase(ChallengeDifficulty.Hard)]
+        public void FootballAlwaysUsesNormalForLegacyDifficultyRequests(ChallengeDifficulty legacyDifficulty)
+        {
+            var session = new GameSession();
+            JourneyTestData.CompleteThrough(session, "volleyball_exam");
+            Assert.That(session.TryStartChallenge("soccer_learn", ChallengeAttemptMode.Journey, legacyDifficulty,
+                out ChallengeAttemptContext normal), Is.True);
+            Assert.That(normal.Difficulty, Is.EqualTo(ChallengeDifficulty.Normal));
+            session.SubmitChallengeResult(new ChallengeAttemptResult(normal, true, new ChallengeMetrics()));
+            Assert.That(session.TryStartChallenge("soccer_learn", ChallengeAttemptMode.Review, legacyDifficulty,
+                out ChallengeAttemptContext review), Is.True);
+            Assert.That(review.Difficulty, Is.EqualTo(ChallengeDifficulty.Normal));
+            session.AbandonActiveChallenge();
+            JourneyTestData.CompleteThrough(session, "soccer_exam");
+            Assert.That(session.TryStartChallenge("soccer_exam", ChallengeAttemptMode.FreePlay, legacyDifficulty,
+                out ChallengeAttemptContext replay), Is.True);
+            Assert.That(replay.Difficulty, Is.EqualTo(ChallengeDifficulty.Normal));
+        }
+
         [Test]
         public void CourseProgress_UnlocksSubjectsOnlyAfterTheirExamPasses()
         {

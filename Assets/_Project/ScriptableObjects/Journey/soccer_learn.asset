@@ -19,7 +19,7 @@ MonoBehaviour:
   timeLimit: 0
   targetCount: 3
   keeperEnabled: 0
-  difficulty: 0
+  difficulty: 1
   timingHelp: 1
   objective: "Ghi ba b\xE0n; th\u1EE7 m\xF4n t\u1EAFt v\xE0 s\u1ED1 c\xFA s\xFAt
     kh\xF4ng gi\u1EDBi h\u1EA1n."

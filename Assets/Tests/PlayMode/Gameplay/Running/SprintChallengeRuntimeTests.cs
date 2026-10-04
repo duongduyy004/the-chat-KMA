@@ -1,4 +1,5 @@
 using System.Collections;
+using System.Reflection;
 using KMA.Gameplay;
 using KMA.Input;
 using NUnit.Framework;
@@ -56,6 +57,29 @@ namespace KMA.Tests.Gameplay.Running
             Assert.That(received.ExamResult, Is.Null);
             Assert.That(session.SubmitChallengeResult(received).Accepted, Is.True);
             Assert.That(session.Journey.CheckpointChallengeId, Is.EqualTo("sprint_practice"));
+        }
+
+        [UnityTest]
+        public IEnumerator FinishingDuringDeadlineFramePassesAtTheExactLimit()
+        {
+            var controller = controllerObject.AddComponent<SprintController>();
+            ChallengeDefinition definition = ChallengeCatalog.LoadDefault().Get("sprint_exam");
+            controller.ConfigureChallenge(definition, new ChallengeAttemptContext(
+                "deadline", definition.Id, ChallengeAttemptMode.Journey, ChallengeDifficulty.Normal));
+            controller.SetTutorialGate(false);
+            for (int frame = 0; frame < 301; frame++) controller.Simulate(.01f);
+            var rules = (SprintRules)typeof(SprintController).GetField("rules",
+                BindingFlags.Instance | BindingFlags.NonPublic).GetValue(controller);
+            foreach (var value in new[] { ("elapsed", 13.99f), ("distance", 99.95f), ("speed", 100f) })
+                typeof(SprintRules).GetField(value.Item1, BindingFlags.Instance | BindingFlags.NonPublic)
+                    .SetValue(rules, value.Item2);
+            ChallengeAttemptResult received = null;
+            controller.ChallengeCompleted += result => received = result;
+            controller.Simulate(.02f);
+            Assert.That(received, Is.Not.Null);
+            Assert.That(received.Pass, Is.True);
+            Assert.That(received.Metrics.Elapsed, Is.EqualTo(14f));
+            yield return null;
         }
 
         [UnityTest]

@@ -28,7 +28,12 @@ namespace KMA.Gameplay.Core
 
         public bool TryStartChallenge(string id, ChallengeAttemptMode mode = ChallengeAttemptMode.Journey,
             ChallengeDifficulty difficulty = ChallengeDifficulty.Normal)
+            => TryStartChallenge(id, mode, difficulty, null);
+
+        bool TryStartChallenge(string id, ChallengeAttemptMode mode, ChallengeDifficulty difficulty,
+            SaveData restartSnapshot)
         {
+            lastRouteError = null;
             if (IsTransitioning || session.ActiveSubject.HasValue)
                 return false;
             ChallengeDefinition definition;
@@ -37,18 +42,55 @@ namespace KMA.Gameplay.Core
             if (!TryGetSceneName(SessionRoute.Subject, definition.Subject, out string sceneName))
                 return false;
 
-            SaveData snapshot = session.ToSaveData();
+            SaveData snapshot = restartSnapshot ?? session.ToSaveData();
             if (!session.TryStartChallenge(id, mode, difficulty, out _))
                 return false;
-            if (journeyPersist != null && !journeyPersist(out _))
+            try
             {
+                if (journeyPersist != null && !journeyPersist(out lastRouteError))
+                {
+                    session.RestoreSnapshot(snapshot);
+                    return false;
+                }
+            }
+            catch (Exception exception)
+            {
+                lastRouteError = exception.Message;
                 session.RestoreSnapshot(snapshot);
                 return false;
             }
 
-            SessionChanged?.Invoke();
+            SubjectId? previousSubject = activeSubject;
+            bool previousAwaitingScene = awaitingSubjectScene;
             PrepareSceneBinding(SessionRoute.Subject, definition.Subject);
-            return transitioner.TryRoute(SessionRoute.Subject, definition.Subject, sceneName);
+            try
+            {
+                if (transitioner.TryRoute(SessionRoute.Subject, definition.Subject, sceneName))
+                {
+                    SessionChanged?.Invoke();
+                    return true;
+                }
+            }
+            catch (Exception exception)
+            {
+                lastRouteError = exception.Message;
+            }
+
+            // A rejected load must leave the displayed result or paused attempt usable.
+            // Persist the rollback too: the new attempt was saved before routing.
+            session.RestoreSnapshot(snapshot);
+            activeSubject = previousSubject;
+            awaitingSubjectScene = previousAwaitingScene;
+            if (journeyPersist != null)
+            {
+                try
+                {
+                    if (!journeyPersist(out string rollbackError))
+                        lastRouteError = rollbackError ?? lastRouteError;
+                }
+                catch (Exception exception) { lastRouteError = exception.Message; }
+            }
+            return false;
         }
 
         public bool RetryActiveChallenge()
@@ -131,10 +173,14 @@ namespace KMA.Gameplay.Core
                 return;
 
             if (action == JourneyResultAction.Retry)
-                TryStartChallenge(displayedChallenge.ChallengeId, displayedChallenge.Mode,
-                    displayedChallenge.Difficulty);
+            {
+                if (!TryStartChallenge(displayedChallenge.ChallengeId, displayedChallenge.Mode,
+                    displayedChallenge.Difficulty)) RestoreChallengeActions();
+            }
             else if (action == JourneyResultAction.Practice)
-                PracticeCurrentSubject();
+            {
+                if (!PracticeCurrentSubject()) RestoreChallengeActions();
+            }
             else
             {
                 bool routed = Route(displayedOutcome.HasValue && displayedOutcome.Value.AttemptsRemaining == 0 &&
@@ -145,6 +191,9 @@ namespace KMA.Gameplay.Core
                         lastRouteError ?? "Không thể chuyển cảnh. Hãy thử lại.");
             }
         }
+
+        void RestoreChallengeActions() => challengePanel?.ShowChallenge(displayedChallenge,
+            displayedResult, displayedOutcome, lastRouteError ?? "Không thể bắt đầu bài. Hãy thử lại.");
 
         void OnJourneyRouteFailed(string message)
         {

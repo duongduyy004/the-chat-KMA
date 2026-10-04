@@ -306,10 +306,20 @@ namespace KMA.Gameplay.Core
             var subject = activeSubject.Value;
             EnsureRouteIsConfigured(SessionRoute.Subject, subject);
             SaveData previous = session.ToSaveData();
+            ChallengeAttemptContext context = session.Journey.ActiveAttempt;
+            if (context != null)
+            {
+                session.AbandonActiveChallenge();
+                if (!TryStartChallenge(context.ChallengeId, context.Mode, context.Difficulty, previous))
+                {
+                    session.RestoreSnapshot(previous);
+                    return false;
+                }
+                return true;
+            }
             session.AbandonActiveSubject();
             SessionRoute route = session.StartSubject(subject);
-            if (!TryRouteMutatedSession(previous, route, subject))
-                return false;
+            if (!TryRouteMutatedSession(previous, route, subject)) return false;
             SessionChanged?.Invoke();
             return true;
         }

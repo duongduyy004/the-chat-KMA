@@ -127,6 +127,21 @@ namespace KMA.Tests.Gameplay.Football
             Assert.That(fixture.controller.LastResult.Pass, Is.EqualTo(typed.Pass));
         }
 
+        [TestCase(FootballDifficulty.Easy)]
+        [TestCase(FootballDifficulty.Hard)]
+        public void FreePlayIgnoresLegacyDifficultyAndUsesNormalChargeTiming(FootballDifficulty legacyDifficulty)
+        {
+            ChallengeDefinition definition = ChallengeCatalog.LoadDefault().Get("soccer_exam");
+            fixture.controller.ConfigureChallenge(definition, new ChallengeAttemptContext(
+                "normal-replay", definition.Id, ChallengeAttemptMode.FreePlay, ChallengeDifficulty.Normal));
+            Assert.That(fixture.controller.BeginMatch(legacyDifficulty), Is.True);
+            AdvanceLifecycle(10f);
+            TickPlay(.01f);
+            fixture.controller.Rules.BeginCharge();
+            fixture.controller.Rules.Tick(2.042035f);
+            Assert.That(fixture.controller.Rules.Power, Is.EqualTo(1f).Within(.00001f));
+        }
+
         [Test]
         public void PausingCancelsChargeButFreezesAFlightWithoutConsumingAnotherShot()
         {

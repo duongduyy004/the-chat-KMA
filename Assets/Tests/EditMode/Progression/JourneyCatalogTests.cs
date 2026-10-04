@@ -40,7 +40,7 @@ namespace KMA.Tests.Gameplay.Progression
             Assert.That(catalog.Get("soccer_learn").TargetCount, Is.EqualTo(3));
             Assert.That(catalog.Get("soccer_learn").KeeperEnabled, Is.False);
             Assert.That(catalog.Get("soccer_practice").TargetCount, Is.EqualTo(2));
-            Assert.That(catalog.Get("soccer_practice").Difficulty, Is.EqualTo(ChallengeDifficulty.Easy));
+            Assert.That(catalog.Get("soccer_practice").Difficulty, Is.EqualTo(ChallengeDifficulty.Normal));
             Assert.That(catalog.Get("soccer_exam").TargetCount, Is.EqualTo(3));
             Assert.That(catalog.Get("soccer_exam").Difficulty, Is.EqualTo(ChallengeDifficulty.Normal));
             Assert.That(catalog.Get("sprint_learn").TimeLimit, Is.Zero);

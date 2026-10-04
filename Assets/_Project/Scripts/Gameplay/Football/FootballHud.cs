@@ -61,7 +61,8 @@ namespace KMA.Gameplay
 
         public void ShowStart(FootballDifficulty selected)
         {
-            selectedDifficulty = selected;
+            selectedDifficulty = FootballDifficulty.Normal;
+            HideDifficultySelection();
             if (startPanel)
                 startPanel.SetActive(true);
             if (directionSlider) directionSlider.interactable = false;
@@ -76,17 +77,15 @@ namespace KMA.Gameplay
 
         public void SetDifficulty(FootballDifficulty selected)
         {
-            selectedDifficulty = selected;
+            selectedDifficulty = FootballDifficulty.Normal;
             UpdateDifficultyButtons();
         }
 
         public void ConfigureChallenge(ChallengeDefinition definition, bool difficultySelectionEnabled)
         {
             challenge = definition;
-            selectedDifficulty = definition == null ? FootballDifficulty.Normal : ToFootballDifficulty(definition.Difficulty);
-            SetButtonAvailable(easyButton, difficultySelectionEnabled);
-            SetButtonAvailable(normalButton, difficultySelectionEnabled);
-            SetButtonAvailable(hardButton, difficultySelectionEnabled);
+            selectedDifficulty = FootballDifficulty.Normal;
+            HideDifficultySelection();
             UpdateDifficultyButtons();
         }
 
@@ -167,6 +166,14 @@ namespace KMA.Gameplay
             SetDifficultyVariant(easyButton, selectedDifficulty == FootballDifficulty.Easy);
             SetDifficultyVariant(normalButton, selectedDifficulty == FootballDifficulty.Normal);
             SetDifficultyVariant(hardButton, selectedDifficulty == FootballDifficulty.Hard);
+        }
+
+        void HideDifficultySelection()
+        {
+            foreach (Button button in new[] { easyButton, normalButton, hardButton })
+                if (button) button.gameObject.SetActive(false);
+            Transform title = startPanel ? startPanel.transform.Find("DifficultyTitle") : null;
+            if (title) title.gameObject.SetActive(false);
         }
 
         static void SetDifficultyVariant(Button button, bool selected)
