@@ -16,6 +16,8 @@ namespace KMA.Gameplay.UI
         static readonly string[] CourseTitles = { "Chạy nước rút", "Bóng chuyền", "Bóng đá" };
         readonly List<LessonCard> lessonCards = new List<LessonCard>(3);
         TMP_Text heading;
+        TMP_Text progress;
+        TMP_Text hint;
         Button continueButton;
         GameSession session;
         Action<string, ChallengeAttemptMode> onSelected;
@@ -31,44 +33,9 @@ namespace KMA.Gameplay.UI
 
         public static JourneyLessonList Create(Transform parent)
         {
-            var panelObject = new GameObject("JourneyLessons", typeof(RectTransform), typeof(Image));
-            panelObject.transform.SetParent(parent, false);
-            var panel = panelObject.GetComponent<RectTransform>();
-            panel.anchorMin = new Vector2(.02f, .015f);
-            panel.anchorMax = new Vector2(.98f, .34f);
-            panel.offsetMin = panel.offsetMax = Vector2.zero;
-            panelObject.GetComponent<Image>().color = MinigameUiTheme.WithAlpha(UITheme.Shared.Surface, .96f);
-            Outline outline = panelObject.AddComponent<Outline>();
-            outline.effectColor = UITheme.Shared.Border;
-            outline.effectDistance = new Vector2(2f, -2f);
-
-            HorizontalLayoutGroup layout = panelObject.AddComponent<HorizontalLayoutGroup>();
-            layout.padding = new RectOffset(12, 12, 44, 42);
-            layout.spacing = 8f;
-            layout.childAlignment = TextAnchor.MiddleCenter;
-            layout.childControlWidth = true;
-            layout.childControlHeight = true;
-            layout.childForceExpandWidth = true;
-            layout.childForceExpandHeight = false;
-
-            JourneyLessonList list = panelObject.AddComponent<JourneyLessonList>();
-            list.heading = CreateLabel(panel, "CourseTitle", 23, UITheme.Shared.TextPrimary,
-                FontStyles.Bold, 26f);
-            LayoutElement headingLayout = list.heading.GetComponent<LayoutElement>();
-            headingLayout.ignoreLayout = true;
-            list.heading.rectTransform.anchorMin = new Vector2(.02f, .77f);
-            list.heading.rectTransform.anchorMax = new Vector2(.98f, 1f);
-            list.heading.rectTransform.offsetMin = list.heading.rectTransform.offsetMax = Vector2.zero;
-            list.CreateCards(panel);
-            list.continueButton = CreateActionButton(panel, "ContinueCheckpoint", "TIẾP TỤC BÀI ĐANG HỌC");
-            LayoutElement continueLayout = list.continueButton.GetComponent<LayoutElement>();
-            continueLayout.preferredHeight = 28f;
-            continueLayout.ignoreLayout = true;
-            RectTransform continueRect = (RectTransform)list.continueButton.transform;
-            continueRect.anchorMin = new Vector2(.02f, .02f);
-            continueRect.anchorMax = new Vector2(.98f, .19f);
-            continueRect.offsetMin = continueRect.offsetMax = Vector2.zero;
-            list.continueButton.onClick.AddListener(list.ContinueCheckpoint);
+            RectTransform panel = JourneyLessonPresentation.Create(parent);
+            JourneyLessonList list = panel.gameObject.AddComponent<JourneyLessonList>();
+            list.CacheChildReferences();
             return list;
         }
 
@@ -104,7 +71,22 @@ namespace KMA.Gameplay.UI
             if (session == null) return;
             int subjectIndex = Array.IndexOf(CourseOrder, selectedSubject);
             if (subjectIndex < 0) subjectIndex = 0;
-            if (heading != null) heading.text = VietText.Fix($"{CourseTitles[subjectIndex]} · BA BÀI HỌC");
+            if (heading != null)
+                heading.text = VietText.Fix($"Chương {subjectIndex + 1:00} · {CourseTitles[subjectIndex]}");
+            Color chapterColor = selectedSubject switch
+            {
+                SubjectId.Volleyball => UITheme.Shared.LessonJourney.volleyball,
+                SubjectId.Football => UITheme.Shared.LessonJourney.football,
+                _ => UITheme.Shared.LessonJourney.sprint
+            };
+            transform.Find("ChapterAccent").GetComponent<Image>().color = chapterColor;
+            transform.Find("CourseIcon").GetComponent<Image>().color = chapterColor;
+            Transform courseIcon = transform.Find("CourseIcon");
+            for (int i = 0; i < courseIcon.childCount; i++)
+                courseIcon.GetChild(i).gameObject.SetActive(i == subjectIndex);
+            Transform patterns = transform.Find("CourtPattern");
+            for (int i = 0; i < patterns.childCount; i++)
+                patterns.GetChild(i).gameObject.SetActive(i == subjectIndex);
 
             ChallengeDefinition[] challenges = session.Journey.Catalog.Ordered
                 .Where(challenge => challenge.Subject == selectedSubject).ToArray();
@@ -132,10 +114,11 @@ namespace KMA.Gameplay.UI
                     ChallengeKind.Practice => "LUYỆN",
                     _ => "THI"
                 };
-                card.Title.text = VietText.Fix($"{index + 1:00}  ·  {stage}");
+                card.Title.text = VietText.Fix(stage);
                 card.Objective.text = VietText.Fix(objective);
                 card.Button.interactable = unlocked;
-                ApplyState(card, complete, checkpoint, unlocked);
+                ApplyState(card, index, complete, checkpoint, unlocked, chapterColor,
+                    checkpoint && session.Journey.AwaitingSupplementary);
 
                 if (checkpoint) currentCardIndex = index;
                 ChallengeAttemptMode mode = session.Journey.CourseComplete
@@ -149,6 +132,23 @@ namespace KMA.Gameplay.UI
                 card.Button.onClick.AddListener(() => onSelected?.Invoke(id, mode));
             }
 
+            int completedCount = challenges.Count(challenge => session.Journey.IsChallengeComplete(challenge.Id));
+            if (progress != null)
+                progress.text = VietText.Fix($"{completedCount}/{challenges.Length} bài hoàn thành");
+            for (int index = 0; index < 2; index++)
+            {
+                bool passed = index < challenges.Length && session.Journey.IsChallengeComplete(challenges[index].Id);
+                Color color = passed ? chapterColor : UITheme.Shared.MapLockedBorder;
+                transform.Find($"LessonConnector{index + 1}").GetComponent<Image>().color = color;
+                transform.Find($"LessonArrow{index + 1}").GetComponent<Image>().color = color;
+            }
+            if (hint != null)
+                hint.text = VietText.Fix(session.Journey.CourseComplete
+                    ? "Đã hoàn thành khóa học · Chạm một chặng để chơi lại"
+                    : session.Journey.AwaitingSupplementary
+                    ? "Hoàn thành bài luyện bổ sung để nhận lại 5 lượt thi"
+                    : "Hoàn thành từng chặng để mở bài tiếp theo");
+
             string current = session.Journey.CheckpointChallengeId;
             CurrentChallengeId = !string.IsNullOrEmpty(current) &&
                 session.Journey.Catalog.Get(current).Subject == selectedSubject ? current : null;
@@ -161,137 +161,37 @@ namespace KMA.Gameplay.UI
             if (reveal) PlayReveal();
         }
 
-        void CreateCards(Transform panel)
+        static void ApplyState(LessonCard card, int index, bool complete, bool checkpoint,
+            bool unlocked, Color chapterColor, bool supplementary)
         {
-            for (int index = 0; index < 3; index++)
-                lessonCards.Add(CreateLessonCard(panel, index));
-        }
-
-        static LessonCard CreateLessonCard(Transform parent, int index)
-        {
-            var root = new GameObject($"Lesson{index + 1}", typeof(RectTransform), typeof(Image), typeof(Button));
-            root.transform.SetParent(parent, false);
-            root.AddComponent<LayoutElement>().preferredHeight = 82f;
-            Image background = root.GetComponent<Image>();
-            background.color = UITheme.Shared.MapLockedCard;
-            Button button = root.GetComponent<Button>();
-            button.targetGraphic = background;
-            button.transition = Selectable.Transition.None;
-            Outline outline = root.AddComponent<Outline>();
-            outline.effectColor = UITheme.Shared.MapLockedBorder;
-            outline.effectDistance = new Vector2(2f, -2f);
-            CanvasGroup group = root.AddComponent<CanvasGroup>();
-
-            var accentObject = new GameObject("StageIcon", typeof(RectTransform), typeof(Image));
-            accentObject.transform.SetParent(root.transform, false);
-            RectTransform accentRect = accentObject.GetComponent<RectTransform>();
-            accentRect.anchorMin = accentRect.anchorMax = new Vector2(0f, .76f);
-            accentRect.pivot = new Vector2(0f, .5f);
-            accentRect.anchoredPosition = new Vector2(12f, 0f);
-            accentRect.sizeDelta = new Vector2(32f, 32f);
-            Image iconBackground = accentObject.GetComponent<Image>();
-            iconBackground.sprite = UiKitAssets.Load().Circle;
-            iconBackground.color = UITheme.Shared.Accent;
-            iconBackground.raycastTarget = false;
-
-            var markObject = new GameObject("StageMark", typeof(RectTransform), typeof(TextMeshProUGUI));
-            markObject.transform.SetParent(accentObject.transform, false);
-            TMP_Text mark = markObject.GetComponent<TMP_Text>();
-            mark.text = new[] { "H", "L", "T" }[index];
-            mark.fontSize = 16f;
-            mark.fontStyle = FontStyles.Bold;
-            mark.alignment = TextAlignmentOptions.Center;
-            mark.color = UITheme.Shared.Surface;
-            mark.raycastTarget = false;
-            mark.rectTransform.anchorMin = Vector2.zero;
-            mark.rectTransform.anchorMax = Vector2.one;
-            mark.rectTransform.offsetMin = mark.rectTransform.offsetMax = Vector2.zero;
-            VietTypography.Apply(mark);
-
-            TMP_Text title = CreateCardLabel(root.transform, "StageTitle", 19f, FontStyles.Bold);
-            title.alignment = TextAlignmentOptions.MidlineLeft;
-            title.rectTransform.anchorMin = new Vector2(0f, .52f);
-            title.rectTransform.anchorMax = new Vector2(1f, 1f);
-            title.rectTransform.offsetMin = new Vector2(54f, 0f);
-            title.rectTransform.offsetMax = new Vector2(-8f, -6f);
-
-            TMP_Text objective = CreateCardLabel(root.transform, "Objective", 16f, FontStyles.Normal);
-            objective.alignment = TextAlignmentOptions.TopLeft;
-            objective.enableWordWrapping = true;
-            objective.overflowMode = TextOverflowModes.Ellipsis;
-            objective.rectTransform.anchorMin = new Vector2(0f, .20f);
-            objective.rectTransform.anchorMax = new Vector2(1f, .58f);
-            objective.rectTransform.offsetMin = new Vector2(12f, 2f);
-            objective.rectTransform.offsetMax = new Vector2(-8f, 0f);
-
-            TMP_Text status = CreateCardLabel(root.transform, "Status", 16f, FontStyles.Bold);
-            status.alignment = TextAlignmentOptions.MidlineLeft;
-            status.rectTransform.anchorMin = Vector2.zero;
-            status.rectTransform.anchorMax = new Vector2(1f, .24f);
-            status.rectTransform.offsetMin = new Vector2(12f, 4f);
-            status.rectTransform.offsetMax = new Vector2(-8f, 0f);
-
-            return new LessonCard(button, background, outline, group, iconBackground,
-                title, objective, status);
-        }
-
-        static TMP_Text CreateCardLabel(Transform parent, string name, float fontSize, FontStyles style)
-        {
-            var go = new GameObject(name, typeof(RectTransform), typeof(TextMeshProUGUI));
-            go.transform.SetParent(parent, false);
-            TMP_Text text = go.GetComponent<TMP_Text>();
-            text.fontSize = fontSize;
-            text.fontStyle = style;
-            text.color = UITheme.Shared.TextPrimary;
-            text.raycastTarget = false;
-            VietTypography.Apply(text);
-            return text;
-        }
-
-        static void ApplyState(LessonCard card, bool complete, bool checkpoint, bool unlocked)
-        {
-            Color background;
-            Color ink;
-            Color accent;
-            string status;
-            if (checkpoint)
-            {
-                background = UITheme.Shared.TextPrimary;
-                ink = UITheme.Shared.Surface;
-                accent = UITheme.Shared.Accent;
-                status = "ĐANG HỌC  ›";
-            }
-            else if (complete)
-            {
-                background = new Color32(225, 244, 222, 255);
-                ink = UITheme.Shared.Surface;
-                accent = UITheme.Shared.Success;
-                status = "HOÀN THÀNH";
-            }
-            else if (unlocked)
-            {
-                background = UITheme.Shared.Card;
-                ink = UITheme.Shared.Surface;
-                accent = UITheme.Shared.Accent;
-                status = "SẴN SÀNG";
-            }
-            else
-            {
-                background = UITheme.Shared.MapLockedCard;
-                ink = UITheme.Shared.MapLockedText;
-                accent = UITheme.Shared.MapLockedIcon;
-                status = "CHƯA MỞ";
-            }
-
-            card.Background.color = background;
-            card.Outline.effectColor = checkpoint ? UITheme.Shared.Accent
-                : complete ? UITheme.Shared.Success : UITheme.Shared.MapLockedBorder;
-            card.StageAccent.color = accent;
-            card.Title.color = ink;
-            card.Objective.color = ink;
-            card.Status.color = checkpoint ? UITheme.Shared.MapActionText
-                : complete ? UITheme.Shared.MapReadyText : ink;
-            card.Status.text = VietText.Fix(status);
+            UITheme theme = UITheme.Shared;
+            card.Background.color = checkpoint ? theme.TextPrimary
+                : complete ? theme.LessonJourney.completedSurface
+                : unlocked ? theme.Card : theme.Muted;
+            card.Outline.effectColor = checkpoint ? theme.Accent
+                : complete ? theme.Success : theme.MapLockedBorder;
+            card.StageAccent.color = unlocked ? chapterColor : theme.MapLockedCard;
+            card.Title.color = card.Objective.color = theme.Surface;
+            card.StateBadge.color = checkpoint ? theme.Accent
+                : complete ? theme.Success : theme.MapLockedCard;
+            card.StateLabel.text = VietText.Fix(checkpoint ? "TIẾP THEO"
+                : complete ? "ĐÃ XONG" : unlocked ? "SẴN SÀNG" : "KHÓA");
+            card.StateLabel.color = theme.Surface;
+            card.StateBadge.transform.Find("CompletedMark").gameObject.SetActive(complete && !checkpoint);
+            card.StateLabel.rectTransform.offsetMin = complete && !checkpoint
+                ? new Vector2(16f, 0f) : Vector2.zero;
+            card.ActionSurface.color = checkpoint ? theme.Accent
+                : complete ? theme.Success : theme.MapLockedCard;
+            card.Status.color = theme.Surface;
+            card.Status.text = VietText.Fix(checkpoint
+                ? supplementary ? "LUYỆN BỔ SUNG  ›" : "BẮT ĐẦU  ›"
+                : complete ? "ÔN LẠI  ›" : unlocked ? "CHƠI LẠI  ›"
+                : index == 1 ? "Hoàn thành HỌC để mở" : "Hoàn thành LUYỆN để mở");
+            card.Glow.gameObject.SetActive(checkpoint);
+            card.Glow.color = MinigameUiTheme.WithAlpha(theme.Accent, theme.LessonJourney.glowAlpha.x);
+            Transform glyph = card.StageAccent.transform.Find("Glyph");
+            foreach (Image stroke in glyph.GetComponentsInChildren<Image>(true))
+                stroke.color = stroke.name.StartsWith("Line") ? card.StageAccent.color : theme.Surface;
         }
 
         void PlayReveal()
@@ -321,17 +221,17 @@ namespace KMA.Gameplay.UI
                 card.Group.alpha = 0f;
                 card.Group.interactable = false;
                 card.Group.blocksRaycasts = false;
-                card.Button.transform.localScale = Vector3.one * .88f;
-                yield return new WaitForSecondsRealtime(i * .045f);
+                card.Button.transform.localScale = Vector3.one * UITheme.Shared.LessonJourney.revealScale;
+                yield return new WaitForSecondsRealtime(UITheme.Shared.LessonJourney.revealStagger);
                 float elapsed = 0f;
-                const float duration = .18f;
+                float duration = UITheme.Shared.LessonJourney.revealDuration;
                 while (elapsed < duration)
                 {
                     elapsed += Time.unscaledDeltaTime;
                     float t = Mathf.Clamp01(elapsed / duration);
                     float eased = 1f - Mathf.Pow(1f - t, 3f);
                     card.Group.alpha = eased;
-                    card.Button.transform.localScale = Vector3.one * Mathf.Lerp(.88f, 1f, eased);
+                    card.Button.transform.localScale = Vector3.one * Mathf.Lerp(UITheme.Shared.LessonJourney.revealScale, 1f, eased);
                     yield return null;
                 }
                 card.Group.alpha = 1f;
@@ -346,8 +246,10 @@ namespace KMA.Gameplay.UI
         {
             if (revealRoutine != null || currentCardIndex < 0 || currentCardIndex >= lessonCards.Count)
                 return;
-            float pulse = 1f + Mathf.Sin(Time.unscaledTime * 3.2f) * .012f;
-            lessonCards[currentCardIndex].Button.transform.localScale = Vector3.one * pulse;
+            UITheme.LessonJourneyStyle style = UITheme.Shared.LessonJourney;
+            float pulse = (Mathf.Sin(Time.unscaledTime * style.glowSpeed) + 1f) * .5f;
+            lessonCards[currentCardIndex].Glow.color = MinigameUiTheme.WithAlpha(UITheme.Shared.Accent,
+                Mathf.Lerp(style.glowAlpha.x, style.glowAlpha.y, pulse));
         }
 
         void ContinueCheckpoint()
@@ -362,6 +264,8 @@ namespace KMA.Gameplay.UI
         void CacheChildReferences()
         {
             if (heading == null) heading = transform.Find("CourseTitle")?.GetComponent<TMP_Text>();
+            if (progress == null) progress = transform.Find("CourseProgress")?.GetComponent<TMP_Text>();
+            if (hint == null) hint = transform.Find("JourneyHint")?.GetComponent<TMP_Text>();
             if (continueButton == null)
             {
                 continueButton = transform.Find("ContinueCheckpoint")?.GetComponent<Button>();
@@ -377,51 +281,9 @@ namespace KMA.Gameplay.UI
                 {
                     Transform item = transform.Find($"Lesson{index + 1}");
                     if (item == null) continue;
-                    lessonCards.Add(new LessonCard(item.GetComponent<Button>(), item.GetComponent<Image>(),
-                        item.GetComponent<Outline>(), item.GetComponent<CanvasGroup>(),
-                        item.Find("StageIcon")?.GetComponent<Image>(), item.Find("StageTitle")?.GetComponent<TMP_Text>(),
-                        item.Find("Objective")?.GetComponent<TMP_Text>(), item.Find("Status")?.GetComponent<TMP_Text>()));
+                    lessonCards.Add(new LessonCard(item));
                 }
             }
-        }
-
-        static TMP_Text CreateLabel(Transform parent, string name, float fontSize, Color color,
-            FontStyles style, float height)
-        {
-            var go = new GameObject(name, typeof(RectTransform), typeof(TextMeshProUGUI));
-            go.transform.SetParent(parent, false);
-            TMP_Text text = go.GetComponent<TMP_Text>();
-            text.rectTransform.anchorMin = Vector2.zero;
-            text.rectTransform.anchorMax = Vector2.one;
-            text.rectTransform.offsetMin = Vector2.zero;
-            text.rectTransform.offsetMax = Vector2.zero;
-            text.fontSize = fontSize;
-            text.fontStyle = style;
-            text.color = color;
-            text.enableWordWrapping = false;
-            VietTypography.Apply(text);
-            go.AddComponent<LayoutElement>().preferredHeight = height;
-            return text;
-        }
-
-        static Button CreateActionButton(Transform parent, string name, string label)
-        {
-            var go = new GameObject(name, typeof(RectTransform), typeof(Image), typeof(Button));
-            go.transform.SetParent(parent, false);
-            Image image = go.GetComponent<Image>();
-            image.color = UITheme.Shared.Accent;
-            Button button = go.GetComponent<Button>();
-            button.targetGraphic = image;
-            button.colors = ColorBlock.defaultColorBlock;
-            TMP_Text text = CreateLabel(go.transform, "Label", 17f, Color.white, FontStyles.Bold, 24f);
-            text.text = VietText.Fix(label);
-            RectTransform rect = text.rectTransform;
-            rect.anchorMin = Vector2.zero;
-            rect.anchorMax = Vector2.one;
-            rect.offsetMin = new Vector2(8f, 0f);
-            rect.offsetMax = new Vector2(-8f, 0f);
-            go.AddComponent<LayoutElement>().preferredHeight = 40f;
-            return button;
         }
 
         sealed class LessonCard
@@ -431,21 +293,28 @@ namespace KMA.Gameplay.UI
             public readonly Outline Outline;
             public readonly CanvasGroup Group;
             public readonly Image StageAccent;
+            public readonly Image Glow;
+            public readonly Image StateBadge;
+            public readonly TMP_Text StateLabel;
+            public readonly Image ActionSurface;
             public readonly TMP_Text Title;
             public readonly TMP_Text Objective;
             public readonly TMP_Text Status;
 
-            public LessonCard(Button button, Image background, Outline outline, CanvasGroup group,
-                Image stageAccent, TMP_Text title, TMP_Text objective, TMP_Text status)
+            public LessonCard(Transform root)
             {
-                Button = button;
-                Background = background;
-                Outline = outline;
-                Group = group;
-                StageAccent = stageAccent;
-                Title = title;
-                Objective = objective;
-                Status = status;
+                Button = root.GetComponent<Button>();
+                Background = root.GetComponent<Image>();
+                Outline = root.GetComponent<Outline>();
+                Group = root.GetComponent<CanvasGroup>();
+                StageAccent = root.Find("StageIcon").GetComponent<Image>();
+                Glow = root.Find("StageIcon/Glow").GetComponent<Image>();
+                StateBadge = root.Find("StateBadge").GetComponent<Image>();
+                StateLabel = root.Find("StateBadge/Label").GetComponent<TMP_Text>();
+                ActionSurface = root.Find("ActionSurface").GetComponent<Image>();
+                Title = root.Find("StageTitle").GetComponent<TMP_Text>();
+                Objective = root.Find("Objective").GetComponent<TMP_Text>();
+                Status = root.Find("Status").GetComponent<TMP_Text>();
             }
         }
     }

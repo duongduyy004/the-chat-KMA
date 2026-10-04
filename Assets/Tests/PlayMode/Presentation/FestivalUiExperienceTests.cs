@@ -124,10 +124,16 @@ namespace KMA.Tests.Presentation
 
             Transform grid = root.Find("Content/SelectionGrid");
             Assert.That(grid, Is.Not.Null);
-            Assert.That(grid.GetComponent<GridLayoutGroup>().cellSize.y,
-                Is.GreaterThanOrEqualTo(220f));
             var nodes = grid.GetComponentsInChildren<MapNodeView>();
             Assert.That(nodes, Has.Length.EqualTo(3));
+            // The connected route owns card placement; the legacy disabled grid's
+            // cellSize no longer describes anything rendered on screen.
+            Assert.That(nodes.Select(node => ((RectTransform)node.transform).rect.size).Distinct().Count(),
+                Is.EqualTo(1), "All chapter cards must have the same rendered size.");
+            foreach (TMP_Text label in nodes.SelectMany(node => node.GetComponentsInChildren<TMP_Text>()))
+                Assert.That(label.preferredHeight,
+                    Is.LessThanOrEqualTo(label.rectTransform.rect.height + 1f),
+                    $"{label.name} must remain readable inside the rendered chapter card.");
             Assert.That(nodes.Select(node => node.SubjectId), Is.EqualTo(new[]
                 { SubjectId.Sprint, SubjectId.Volleyball, SubjectId.Football }));
             Assert.That(grid.GetComponentsInChildren<Image>().Count(image => image.name.StartsWith("PathTrack")), Is.EqualTo(2));

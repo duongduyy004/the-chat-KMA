@@ -46,6 +46,33 @@ MonoBehaviour:
   mapLockedCard: {r: 0.72156864, g: 0.78039217, b: 0.827451, a: 1}
   mapLockedIcon: {r: 0.4862745, g: 0.5647059, b: 0.627451, a: 1}
   mapLockedText: {r: 0.21960784, g: 0.29411766, b: 0.3529412, a: 1}
+  lessonJourney:
+    sprint: {r: 0.19215687, g: 0.63529414, b: 0.87058824, a: 1}
+    volleyball: {r: 0.9607843, g: 0.61960787, b: 0.18039216, a: 1}
+    football: {r: 0.20784314, g: 0.6627451, b: 0.35686275, a: 1}
+    completedSurface: {r: 0.88235295, g: 0.95686275, b: 0.87058824, a: 1}
+    panelAnchorMin: {x: 0.02, y: 0.015}
+    panelAnchorMax: {x: 0.98, y: 0.56}
+    courseAnchorMin: {x: 0, y: 0.58}
+    courseAnchorMax: {x: 1, y: 0.84}
+    summaryAnchorMin: {x: 0.025, y: 0.562}
+    summaryAnchorMax: {x: 0.975, y: 0.619}
+    cardLeft: 0.025
+    cardWidth: 0.28
+    cardGap: 0.055
+    cardBottom: 0.1
+    cardTop: 0.76
+    borderWidth: 3
+    headingSize: 32
+    stageSize: 32
+    bodySize: 24
+    captionSize: 20
+    iconSize: 92
+    revealDuration: 0.2
+    revealStagger: 0.05
+    revealScale: 0.94
+    glowSpeed: 2.4
+    glowAlpha: {x: 0.12, y: 0.32}
   menu:
     navy: {r: 0.043137256, g: 0.16470589, b: 0.2901961, a: 1}
     gold: {r: 1, g: 0.7882353, b: 0.15686275, a: 1}

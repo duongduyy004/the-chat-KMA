@@ -46,14 +46,7 @@ namespace KMA.EditorTools
                 RemoveChild(screen.transform, "HomeLogo");
                 RemoveChild(screen.transform, "HomeTitle");
             });
-            Author("Map", scene =>
-            {
-                var screen = Require<MapScreen>(scene);
-                var controller = Require<S5ShellSceneController>(scene);
-                RemoveChild(screen.transform, "S5MapPresentation");
-                MapPresentationBuilder.Build(screen, null, controller.MainMenuBackground);
-                KeepOnly(screen.transform, "S5MapPresentation");
-            });
+            ApplyMap();
             Author("GameOver", scene =>
             {
                 var screen = Require<GameOverScreen>(scene);
@@ -62,6 +55,23 @@ namespace KMA.EditorTools
             });
             AssetDatabase.SaveAssets();
             Debug.Log("[KMA] Authored Bootstrap, Menu, Map, and GameOver scene UI.");
+        }
+
+        [MenuItem("KMA/Presentation/Author Map Lesson Journey")]
+        public static void ApplyMap()
+        {
+            if (!Application.isBatchMode && !EditorSceneManager.SaveCurrentModifiedScenesIfUserWantsTo())
+                return;
+            Author("Map", scene =>
+            {
+                var screen = Require<MapScreen>(scene);
+                var controller = Require<S5ShellSceneController>(scene);
+                RemoveChild(screen.transform, "S5MapPresentation");
+                MapPresentationBuilder.Build(screen, null, controller.MainMenuBackground);
+                KeepOnly(screen.transform, "S5MapPresentation");
+            });
+            EditorUtility.SetDirty(UITheme.Shared);
+            AssetDatabase.SaveAssets();
         }
 
         public static void Validate()

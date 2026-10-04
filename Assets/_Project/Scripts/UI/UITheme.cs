@@ -70,6 +70,9 @@ namespace KMA.Gameplay.UI
         public Color MapLockedIcon => mapLockedIcon;
         [SerializeField] private Color mapLockedText = new Color32(56, 75, 90, 255);
         public Color MapLockedText => mapLockedText;
+        [Header("Chapter lesson journey")]
+        [SerializeField] private LessonJourneyStyle lessonJourney = new LessonJourneyStyle();
+        public LessonJourneyStyle LessonJourney => lessonJourney;
         [Header("Menu palette and geometry")]
         [SerializeField] private MenuStyle menu = new MenuStyle();
         [Header("Splash presentation")]
@@ -87,6 +90,37 @@ namespace KMA.Gameplay.UI
         public Color ShadowColor => shadowColor;
         public MenuStyle Menu => menu;
         public MotionStyle Motion => motion;
+
+        [Serializable]
+        public sealed class LessonJourneyStyle
+        {
+            public Color sprint = new Color32(49, 162, 222, 255);
+            public Color volleyball = new Color32(245, 158, 46, 255);
+            public Color football = new Color32(53, 169, 91, 255);
+            public Color completedSurface = new Color32(225, 244, 222, 255);
+            public Vector2 panelAnchorMin = new Vector2(.02f, .015f);
+            public Vector2 panelAnchorMax = new Vector2(.98f, .56f);
+            public Vector2 courseAnchorMin = new Vector2(0f, .58f);
+            public Vector2 courseAnchorMax = new Vector2(1f, .84f);
+            public Vector2 summaryAnchorMin = new Vector2(.025f, .562f);
+            public Vector2 summaryAnchorMax = new Vector2(.975f, .619f);
+            public float cardLeft = .025f;
+            public float cardWidth = .28f;
+            public float cardGap = .055f;
+            public float cardBottom = .10f;
+            public float cardTop = .76f;
+            public float borderWidth = 3f;
+            public float headingSize = 32f;
+            public float stageSize = 32f;
+            public float bodySize = 24f;
+            public float captionSize = 20f;
+            public float iconSize = 92f;
+            public float revealDuration = .20f;
+            public float revealStagger = .05f;
+            public float revealScale = .94f;
+            public float glowSpeed = 2.4f;
+            public Vector2 glowAlpha = new Vector2(.12f, .32f);
+        }
 
         [Serializable]
         public sealed class MenuStyle

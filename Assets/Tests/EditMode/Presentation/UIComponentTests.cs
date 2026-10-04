@@ -220,11 +220,131 @@ namespace KMA.Tests.Presentation
             }
         }
 
+        [Test]
+        public void LessonJourneyShowsCompletionCountAndExplainsTheNextLockedStage()
+        {
+            var root = new GameObject("lesson-journey", typeof(RectTransform));
+            try
+            {
+                var session = new GameSession();
+                var screen = root.AddComponent<MapScreen>();
+                MapPresentationBuilder.Build(screen, session);
+                Transform panel = screen.LessonList.transform;
+                var progress = panel.Find("CourseProgress")?.GetComponent<TMP_Text>();
+                Assert.That(progress, Is.Not.Null, "The chapter must show its lesson completion count.");
+                Assert.That(progress.text, Is.EqualTo("0/3 bài hoàn thành"));
+                Assert.That(panel.Find("Lesson2/Status").GetComponent<TMP_Text>().text,
+                    Does.Contain("HỌC"), "A locked practice must explain which stage opens it.");
+
+                var definition = session.Journey.Catalog.Get("sprint_learn");
+                Assert.That(session.TryStartChallenge(definition.Id, ChallengeAttemptMode.Journey,
+                    definition.Difficulty, out ChallengeAttemptContext attempt), Is.True);
+                session.SubmitChallengeResult(new ChallengeAttemptResult(attempt, true,
+                    new ChallengeMetrics(completedTargets: definition.TargetCount)));
+                screen.RefreshJourney(session);
+
+                Assert.That(progress.text, Is.EqualTo("1/3 bài hoàn thành"));
+                Assert.That(panel.Find("Lesson1").GetComponent<Button>().interactable, Is.True);
+                Assert.That(panel.Find("Lesson2").GetComponent<Button>().interactable, Is.True);
+                Assert.That(panel.Find("Lesson3").GetComponent<Button>().interactable, Is.False);
+                Assert.That(panel.Find("Lesson3/Status").GetComponent<TMP_Text>().text,
+                    Does.Contain("LUYỆN"));
+            }
+            finally { Object.DestroyImmediate(root); }
+        }
+
+        [Test]
+        public void LessonJourneyKeepsThreeReadableCardsInSequence(
+            [Values(1440f, 1920f, 2400f)] float width, [Values(0, 1, 2)] int chapter)
+        {
+            const float height = 1080f;
+            var root = new GameObject("lesson-layout", typeof(RectTransform));
+            try
+            {
+                ((RectTransform)root.transform).sizeDelta = new Vector2(width, height);
+                var screen = root.AddComponent<MapScreen>();
+                var session = new GameSession();
+                foreach (ChallengeDefinition definition in session.Journey.Catalog.Ordered.Take(chapter * 3))
+                {
+                    Assert.That(session.TryStartChallenge(definition.Id, ChallengeAttemptMode.Journey,
+                        definition.Difficulty, out ChallengeAttemptContext attempt), Is.True);
+                    session.SubmitChallengeResult(new ChallengeAttemptResult(attempt, true,
+                        new ChallengeMetrics(completedTargets: definition.TargetCount),
+                        definition.Kind == ChallengeKind.Exam ? new MinigameResult(true, 8f, Rank.A) : null));
+                }
+                MapPresentationBuilder.Build(screen, session);
+                Canvas.ForceUpdateCanvases();
+                LayoutRebuilder.ForceRebuildLayoutImmediate((RectTransform)root.transform);
+                RectTransform panel = (RectTransform)screen.LessonList.transform;
+                Rect previous = default;
+                for (int i = 0; i < 3; i++)
+                {
+                    RectTransform card = (RectTransform)panel.Find($"Lesson{i + 1}");
+                    Vector3[] corners = new Vector3[4];
+                    card.GetWorldCorners(corners);
+                    var bounds = new Rect(corners[0], corners[2] - corners[0]);
+                    Assert.That(card.rect.width, Is.GreaterThan(width * .22f));
+                    Assert.That(card.rect.height, Is.GreaterThan(height * .24f),
+                        "Each stage needs enough space for its icon, objective and action.");
+                    if (i > 0) Assert.That(bounds.xMin, Is.GreaterThan(previous.xMax));
+                    previous = bounds;
+                    foreach (TMP_Text label in card.GetComponentsInChildren<TMP_Text>(true))
+                    {
+                        label.ForceMeshUpdate(true);
+                        Assert.That(label.preferredHeight,
+                            Is.LessThanOrEqualTo(label.rectTransform.rect.height + 1f), label.name);
+                    }
+                }
+            }
+            finally { Object.DestroyImmediate(root); }
+        }
+
         static float ContrastRatio(Color foreground, Color background)
         {
             float first = RelativeLuminance(foreground);
             float second = RelativeLuminance(background);
             return (Mathf.Max(first, second) + .05f) / (Mathf.Min(first, second) + .05f);
+        }
+
+        [Test]
+        public void CompletedCourseSummaryLeavesLessonCardsVisibleAndClickable()
+        {
+            var root = new GameObject("completed-lesson-journey", typeof(RectTransform));
+            try
+            {
+                ((RectTransform)root.transform).sizeDelta = new Vector2(1440f, 1080f);
+                var session = new GameSession();
+                foreach (ChallengeDefinition definition in session.Journey.Catalog.Ordered)
+                {
+                    Assert.That(session.TryStartChallenge(definition.Id, ChallengeAttemptMode.Journey,
+                        definition.Difficulty, out ChallengeAttemptContext attempt), Is.True);
+                    session.SubmitChallengeResult(new ChallengeAttemptResult(attempt, true,
+                        new ChallengeMetrics(completedTargets: definition.TargetCount),
+                        definition.Kind == ChallengeKind.Exam ? new MinigameResult(true, 8f, Rank.A) : null));
+                }
+                var screen = root.AddComponent<MapScreen>();
+                MapPresentationBuilder.Build(screen, session);
+                var summary = (RectTransform)screen.CourseSummary.transform;
+                var panel = (RectTransform)screen.LessonList.transform;
+                Vector3[] corners = new Vector3[4];
+                summary.GetWorldCorners(corners);
+                var summaryBounds = new Rect(corners[0], corners[2] - corners[0]);
+                panel.GetWorldCorners(corners);
+                Assert.That(summaryBounds.Overlaps(new Rect(corners[0], corners[2] - corners[0])), Is.False,
+                    "Course results must not cover any portion of the replay lessons.");
+                Assert.That(summary.GetComponent<Image>().raycastTarget, Is.False);
+                foreach (TMP_Text label in summary.GetComponentsInChildren<TMP_Text>())
+                {
+                    label.ForceMeshUpdate(true);
+                    Assert.That(label.preferredHeight,
+                        Is.LessThanOrEqualTo(label.rectTransform.rect.height + 1f));
+                    Assert.That(label.preferredWidth,
+                        Is.LessThanOrEqualTo(label.rectTransform.rect.width + 1f));
+                }
+                Assert.That(screen.LessonList.GetComponentsInChildren<Button>()
+                    .All(button => button.interactable), Is.True);
+            }
+            finally { Object.DestroyImmediate(root); }
         }
 
         static float RelativeLuminance(Color color)

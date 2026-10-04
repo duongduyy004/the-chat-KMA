@@ -37,7 +37,7 @@ namespace KMA.Gameplay.UI
         {
             if (session == null) return;
             scoreRows.Clear();
-            var lines = new List<string> { "HÀNH TRÌNH TÂN SINH VIÊN HOÀN TẤT" };
+            var scores = new List<string>();
             for (int index = 0; index < CourseOrder.Length; index++)
             {
                 SubjectRecord record = session.GetRecord(CourseOrder[index]);
@@ -45,12 +45,12 @@ namespace KMA.Gameplay.UI
                 float score = best == null ? record.BestScore : best.Score;
                 Rank rank = best == null ? record.BestRank : best.Rank;
                 scoreRows.Add(new JourneyScoreRow(CourseOrder[index], score, rank));
-                lines.Add($"{Labels[index]}  ·  {score:0}  ·  {rank}");
+                scores.Add($"{Labels[index]}: {score:0} · {rank}");
             }
             SupplementaryRounds = session.Journey.SupplementaryRounds;
-            lines.Add($"Lượt thi bổ sung: {SupplementaryRounds}");
-            lines.Add("Chọn một môn bên dưới để ôn tập hoặc chơi lại.");
-            if (summaryText != null) summaryText.text = VietText.Fix(string.Join("\n", lines));
+            if (summaryText != null)
+                summaryText.text = VietText.Fix("HOÀN TẤT  |  " + string.Join("   |   ", scores) +
+                    $"  |  Lượt thi bổ sung: {SupplementaryRounds}");
             gameObject.SetActive(true);
         }
     }

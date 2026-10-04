@@ -331,8 +331,14 @@ namespace KMA.Tests.Gameplay.Progression
                 }
 
                 foreach (TMP_Text label in lessonPanel.GetComponentsInChildren<TMP_Text>(true))
+                {
                     Assert.That(Contains(lessonPanel, label.rectTransform), Is.True,
                         $"{label.name} must remain inside JourneyLessons at {resolution.x}x{resolution.y}.");
+                    if (!label.gameObject.activeInHierarchy) continue;
+                    Assert.That(label.preferredHeight,
+                        Is.LessThanOrEqualTo(label.rectTransform.rect.height + 1f),
+                        $"{label.name} must not be vertically truncated in the authored scene at {resolution.x}x{resolution.y}.");
+                }
             }
         }
 

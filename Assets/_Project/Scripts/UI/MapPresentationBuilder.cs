@@ -29,9 +29,9 @@ namespace KMA.Gameplay.UI
 
         static readonly Entry[] Entries =
         {
-            new Entry(SubjectId.Sprint, "Chạy nước rút", new Color32(49, 162, 222, 255), true),
-            new Entry(SubjectId.Volleyball, "Bóng chuyền", new Color32(245, 158, 46, 255), true),
-            new Entry(SubjectId.Football, "Bóng đá", new Color32(53, 169, 91, 255), true),
+            new Entry(SubjectId.Sprint, "Chạy nước rút", UITheme.Shared.LessonJourney.sprint, true),
+            new Entry(SubjectId.Volleyball, "Bóng chuyền", UITheme.Shared.LessonJourney.volleyball, true),
+            new Entry(SubjectId.Football, "Bóng đá", UITheme.Shared.LessonJourney.football, true),
         };
 
         public static void Build(MapScreen screen, GameSession session, Sprite sharedBackground = null)
@@ -138,6 +138,8 @@ namespace KMA.Gameplay.UI
         static void ConfigureJourneyPath(Transform selectionGrid, MapNodeView[] nodes)
         {
             if (selectionGrid == null) return;
+            Anchor((RectTransform)selectionGrid, UITheme.Shared.LessonJourney.courseAnchorMin,
+                UITheme.Shared.LessonJourney.courseAnchorMax);
             GridLayoutGroup grid = selectionGrid.GetComponent<GridLayoutGroup>();
             if (grid != null) grid.enabled = false;
             ResponsiveGridLayout responsive = selectionGrid.GetComponent<ResponsiveGridLayout>();
@@ -154,23 +156,27 @@ namespace KMA.Gameplay.UI
             var panel = new GameObject("JourneyCourseSummary", typeof(RectTransform), typeof(Image));
             panel.transform.SetParent(parent, false);
             RectTransform rect = panel.GetComponent<RectTransform>();
-            rect.anchorMin = new Vector2(.08f, .33f);
-            rect.anchorMax = new Vector2(.92f, .82f);
+            rect.anchorMin = UITheme.Shared.LessonJourney.summaryAnchorMin;
+            rect.anchorMax = UITheme.Shared.LessonJourney.summaryAnchorMax;
             rect.offsetMin = rect.offsetMax = Vector2.zero;
             panel.GetComponent<Image>().color = MinigameUiTheme.WithAlpha(UITheme.Shared.Surface, .98f);
+            panel.GetComponent<Image>().raycastTarget = false;
             Outline outline = panel.AddComponent<Outline>();
             outline.effectColor = UITheme.Shared.Accent;
-            outline.effectDistance = new Vector2(4f, -4f);
+            outline.effectDistance = new Vector2(1f, -1f);
             var labelObject = new GameObject("SummaryText", typeof(RectTransform));
             labelObject.transform.SetParent(panel.transform, false);
             RectTransform labelRect = labelObject.GetComponent<RectTransform>();
             labelRect.anchorMin = Vector2.zero;
             labelRect.anchorMax = Vector2.one;
-            labelRect.offsetMin = new Vector2(28f, 20f);
-            labelRect.offsetMax = new Vector2(-28f, -20f);
+            labelRect.offsetMin = new Vector2(16f, 2f);
+            labelRect.offsetMax = new Vector2(-16f, -2f);
             TMP_Text label = labelObject.AddComponent<TextMeshProUGUI>();
             label.alignment = TextAlignmentOptions.Center;
-            UiKit.StyleLabel(label, 26f, UITheme.Shared.TextPrimary);
+            UiKit.StyleLabel(label, UITheme.Shared.LessonJourney.captionSize, UITheme.Shared.TextPrimary);
+            label.fontSize = UITheme.Shared.LessonJourney.captionSize;
+            label.enableWordWrapping = false;
+            label.raycastTarget = false;
             JourneyCourseSummary view = panel.AddComponent<JourneyCourseSummary>();
             view.Configure(label);
             view.Hide();
@@ -421,7 +427,7 @@ namespace KMA.Gameplay.UI
             return colors;
         }
 
-        static Sprite SportIconSprite(SubjectId subject)
+        internal static Sprite SportIconSprite(SubjectId subject)
         {
             if (SportSprites.TryGetValue(subject, out Sprite cached) && cached != null)
                 return cached;
