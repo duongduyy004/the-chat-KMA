@@ -155,8 +155,9 @@ namespace KMA.Tests.Gameplay.Progression
                 Assert.That(gridLayout.cellSize.x, Is.Not.EqualTo(220f));
                 Assert.That(grid.GetComponent<LayoutElement>().preferredHeight,
                     Is.GreaterThanOrEqualTo(gridLayout.cellSize.y * 2f + gridLayout.spacing.y));
-                Assert.That(grid.transform.childCount, Is.EqualTo(3));
-                Assert.That(grid.transform.GetChild(2).name, Is.EqualTo("FootballNode"));
+                Assert.That(grid.GetComponentsInChildren<MapNodeView>(true), Has.Length.EqualTo(3));
+                Assert.That(screen.Nodes.Select(node => node.SubjectId), Is.EqualTo(new[]
+                    { SubjectId.Sprint, SubjectId.Volleyball, SubjectId.Football }));
                 foreach (MapNodeView node in screen.Nodes)
                 {
                     Assert.That(node.GetComponent<Image>().sprite, Is.Not.Null, node.name);
@@ -174,6 +175,16 @@ namespace KMA.Tests.Gameplay.Progression
                     {
                         Assert.That(label.rectTransform.anchorMin.y, Is.EqualTo(0f));
                         Assert.That(label.rectTransform.anchorMax.y, Is.EqualTo(0f));
+                    }
+                    else if (label.GetComponentInParent<JourneyLessonList>() != null)
+                    {
+                        // Lesson cards place their title, objective and status in
+                        // distinct bands. Each label must stay inside its parent.
+                        RectTransform rect = label.rectTransform;
+                        Assert.That(rect.anchorMin.x, Is.InRange(0f, rect.anchorMax.x), label.name);
+                        Assert.That(rect.anchorMin.y, Is.InRange(0f, rect.anchorMax.y), label.name);
+                        Assert.That(rect.anchorMax.x, Is.LessThanOrEqualTo(1f), label.name);
+                        Assert.That(rect.anchorMax.y, Is.LessThanOrEqualTo(1f), label.name);
                     }
                     else
                     {

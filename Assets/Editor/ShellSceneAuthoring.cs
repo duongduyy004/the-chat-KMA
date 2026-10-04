@@ -49,8 +49,9 @@ namespace KMA.EditorTools
             Author("Map", scene =>
             {
                 var screen = Require<MapScreen>(scene);
+                var controller = Require<S5ShellSceneController>(scene);
                 RemoveChild(screen.transform, "S5MapPresentation");
-                MapPresentationBuilder.Build(screen, null);
+                MapPresentationBuilder.Build(screen, null, controller.MainMenuBackground);
                 KeepOnly(screen.transform, "S5MapPresentation");
             });
             Author("GameOver", scene =>

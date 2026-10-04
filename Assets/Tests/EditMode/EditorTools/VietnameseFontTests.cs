@@ -105,7 +105,7 @@ namespace KMA.Tests.EditorTools
         public void CurrentProjectCoverageHasNoMissingCharactersOrLegacyComponents()
         {
             var report = FontCoverageChecker.Scan();
-            Assert.That(report.scenes, Is.GreaterThanOrEqualTo(9));
+            Assert.That(report.scenes, Is.EqualTo(AssetDatabase.FindAssets("t:Scene", new[] { "Assets" }).Length));
             Assert.That(report.missing, Is.Empty, string.Join("\n", report.missing));
             Assert.That(report.sourceCandidates, Is.Empty, string.Join("\n", report.sourceCandidates));
         }

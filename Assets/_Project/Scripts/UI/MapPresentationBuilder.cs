@@ -34,7 +34,7 @@ namespace KMA.Gameplay.UI
             new Entry(SubjectId.Football, "Bóng đá", new Color32(53, 169, 91, 255), true),
         };
 
-        public static void Build(MapScreen screen, GameSession session)
+        public static void Build(MapScreen screen, GameSession session, Sprite sharedBackground = null)
         {
             if (screen == null) return;
             var existing = screen.transform.Find("S5MapPresentation");
@@ -42,6 +42,7 @@ namespace KMA.Gameplay.UI
             {
                 var existingNodes = existing.GetComponentsInChildren<MapNodeView>(true);
                 var existingHearts = existing.GetComponentInChildren<HeartBar>(true);
+                ApplySharedBackground(existing, sharedBackground);
                 Transform oldFutureRow = existing.Find("Content/FutureRow");
                 if (oldFutureRow != null) oldFutureRow.gameObject.SetActive(false);
                 var lessonList = existing.GetComponentInChildren<JourneyLessonList>(true) ??
@@ -51,6 +52,7 @@ namespace KMA.Gameplay.UI
                 screen.BindBudgetLabel(existing.Find("Content/Header/LivesPanel/LivesLabelContainer/LivesLabel")
                     ?.GetComponent<TMP_Text>());
                 screen.RefreshJourney(session ?? new GameSession());
+                ConfigureJourneyPath(existing.Find("Content/SelectionGrid"), existingNodes);
                 var back = existing.Find("Content/Header/BackButton")?.GetComponent<Button>();
                 if (back != null)
                 {
@@ -79,14 +81,18 @@ namespace KMA.Gameplay.UI
 
             RectTransform root = Rect(screen.transform, "S5MapPresentation");
             Stretch(root, Vector2.zero, Vector2.zero);
-            root.gameObject.AddComponent<Image>().color = background;
+            Image backdrop = root.gameObject.AddComponent<Image>();
+            backdrop.color = sharedBackground != null ? Color.white : background;
+            backdrop.sprite = sharedBackground;
+            backdrop.preserveAspect = false;
+            if (sharedBackground != null) AddBackdropShade(root);
             RectTransform content = Rect(root, "Content");
             Stretch(content, new Vector2(64, 40), new Vector2(-64, -40));
 
             HeartBar hearts = Header(content, session, border);
             PinToTop((RectTransform)hearts.transform.parent.parent, 116f);
             RectTransform grid = Rect(content, "SelectionGrid");
-            Anchor(grid, new Vector2(0f, .33f), new Vector2(1f, .84f));
+            Anchor(grid, new Vector2(0f, .37f), new Vector2(1f, .84f));
             GridLayoutGroup gridLayout = grid.gameObject.AddComponent<GridLayoutGroup>();
             gridLayout.constraint = GridLayoutGroup.Constraint.FixedColumnCount;
             gridLayout.constraintCount = 3;
@@ -104,6 +110,41 @@ namespace KMA.Gameplay.UI
             screen.BindBudgetLabel(content.Find("Header/LivesPanel/LivesLabelContainer/LivesLabel")
                 ?.GetComponent<TMP_Text>());
             screen.RefreshJourney(session ?? new GameSession());
+            ConfigureJourneyPath(grid, nodes.ToArray());
+        }
+
+        static void ApplySharedBackground(Transform root, Sprite sharedBackground)
+        {
+            if (root == null || sharedBackground == null) return;
+            Image backdrop = root.GetComponent<Image>();
+            if (backdrop == null) backdrop = root.gameObject.AddComponent<Image>();
+            backdrop.sprite = sharedBackground;
+            backdrop.color = Color.white;
+            backdrop.preserveAspect = false;
+            AddBackdropShade(root);
+        }
+
+        static void AddBackdropShade(Transform root)
+        {
+            if (root.Find("BackgroundShade") != null) return;
+            RectTransform shade = Rect(root, "BackgroundShade");
+            Stretch(shade, Vector2.zero, Vector2.zero);
+            Image image = shade.gameObject.AddComponent<Image>();
+            image.color = new Color(HomeMenuStyle.Navy.r, HomeMenuStyle.Navy.g, HomeMenuStyle.Navy.b, .42f);
+            image.raycastTarget = false;
+            shade.SetAsFirstSibling();
+        }
+
+        static void ConfigureJourneyPath(Transform selectionGrid, MapNodeView[] nodes)
+        {
+            if (selectionGrid == null) return;
+            GridLayoutGroup grid = selectionGrid.GetComponent<GridLayoutGroup>();
+            if (grid != null) grid.enabled = false;
+            ResponsiveGridLayout responsive = selectionGrid.GetComponent<ResponsiveGridLayout>();
+            if (responsive != null) responsive.enabled = false;
+            MapJourneyPathLayout path = selectionGrid.GetComponent<MapJourneyPathLayout>();
+            if (path == null) path = selectionGrid.gameObject.AddComponent<MapJourneyPathLayout>();
+            path.Configure(nodes);
         }
 
         static JourneyCourseSummary EnsureCourseSummary(MapScreen screen, Transform parent)

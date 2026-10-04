@@ -342,7 +342,7 @@ namespace KMA.Tests.Presentation
                 Assert.That(splash, Is.Not.Null);
                 Assert.That(splash.GetComponent<EventSystem>(), Is.Not.Null);
                 Assert.That(splash.GetComponent<BaseInputModule>(), Is.Not.Null);
-                Assert.That(splash.transform.Find("Logo"), Is.Not.Null);
+                Assert.That(splash.transform.Find("SplashSafeArea/SplashLayout/SportBadge"), Is.Not.Null);
                 Assert.That(splash.transform.Find("Illustration"), Is.Not.Null);
                 Transform content = splash.transform.Find("SplashSafeArea/SplashLayout");
                 Assert.That(content, Is.Not.Null, "Splash must build its presentation inside the safe area.");
@@ -380,7 +380,7 @@ namespace KMA.Tests.Presentation
             AssertLabel("SETTINGSButton", "CÀI ĐẶT");
             AssertLabel("QUITButton", "THOÁT");
             var menu = UnityEngine.Object.FindFirstObjectByType<MainMenuScreen>();
-            Assert.That(menu.transform.Find("HomeLogo"), Is.Not.Null);
+            Assert.That(menu.transform.Find("HomeMenuLayout/SportBadge"), Is.Not.Null);
             Assert.That(GameObject.Find("HomeIllustration"), Is.Not.Null);
             Assert.That(GameObject.Find("TitleTop").GetComponent<TMP_Text>().text, Is.EqualTo("THỂ CHẤT"));
             Assert.That(GameObject.Find("TitleKMA").GetComponent<TMP_Text>().text, Is.EqualTo("KMA"));

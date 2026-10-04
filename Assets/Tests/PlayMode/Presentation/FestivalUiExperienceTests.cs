@@ -32,7 +32,20 @@ namespace KMA.Tests.Presentation
             Image overlay = splash.Find("SplashNavyGradient")?.GetComponent<Image>();
             Assert.That(overlay, Is.Not.Null,
                 "The slogan needs the shared navy gradient over the stadium art.");
-            Assert.That(overlay.sprite.texture.GetPixel(0, 0).a, Is.GreaterThanOrEqualTo(.7f));
+            // Read the source PNG in this Editor test; imported scene sprites deliberately
+            // release their CPU texture copy in the player.
+#if UNITY_EDITOR
+            var texture = new Texture2D(2, 2);
+            try
+            {
+                string path = UnityEditor.AssetDatabase.GetAssetPath(overlay.sprite);
+                Assert.That(texture.LoadImage(System.IO.File.ReadAllBytes(path)), Is.True);
+                Assert.That(texture.GetPixel(0, 0).a, Is.GreaterThanOrEqualTo(.7f));
+            }
+            finally { Object.Destroy(texture); }
+#else
+            Assert.That(overlay.sprite, Is.Not.Null);
+#endif
         }
 
         [UnityTearDown]
@@ -113,8 +126,11 @@ namespace KMA.Tests.Presentation
             Assert.That(grid, Is.Not.Null);
             Assert.That(grid.GetComponent<GridLayoutGroup>().cellSize.y,
                 Is.GreaterThanOrEqualTo(220f));
-            Assert.That(grid.childCount, Is.EqualTo(3));
-            Assert.That(grid.GetChild(2).name, Is.EqualTo("FootballNode"));
+            var nodes = grid.GetComponentsInChildren<MapNodeView>();
+            Assert.That(nodes, Has.Length.EqualTo(3));
+            Assert.That(nodes.Select(node => node.SubjectId), Is.EqualTo(new[]
+                { SubjectId.Sprint, SubjectId.Volleyball, SubjectId.Football }));
+            Assert.That(grid.GetComponentsInChildren<Image>().Count(image => image.name.StartsWith("PathTrack")), Is.EqualTo(2));
             Assert.That(grid.Find("SprintNode/ActionHint").GetComponent<TMP_Text>().text,
                 Is.EqualTo("THI"));
         }

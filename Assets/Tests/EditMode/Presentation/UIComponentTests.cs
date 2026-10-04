@@ -127,7 +127,7 @@ namespace KMA.Tests.Presentation
         }
 
         [Test]
-        public void MapPresentationPlacesTwoSubjectsInUniformGrid()
+        public void MapPresentationPlacesThreeOrderedSubjectsOnJourneyPath()
         {
             var root = new GameObject("map", typeof(RectTransform));
             try
@@ -140,7 +140,7 @@ namespace KMA.Tests.Presentation
                     .GetComponent<GridLayoutGroup>();
                 Assert.That(grid.constraint, Is.EqualTo(GridLayoutGroup.Constraint.FixedColumnCount));
                 Assert.That(grid.constraintCount, Is.EqualTo(3));
-                Assert.That(grid.transform.childCount, Is.EqualTo(3));
+                Assert.That(grid.GetComponentsInChildren<MapNodeView>(true), Has.Length.EqualTo(3));
                 Assert.That(root.GetComponentsInChildren<MapNodeView>(true), Has.Length.EqualTo(3));
                 Assert.That(root.GetComponentsInChildren<MapNodeView>(true).Select(node => node.SubjectId),
                     Is.EqualTo(new[] { SubjectId.Sprint, SubjectId.Volleyball, SubjectId.Football }));
@@ -322,8 +322,9 @@ namespace KMA.Tests.Presentation
                 MapPresentationBuilder.Build(screen, new GameSession());
 
                 Transform grid = root.transform.Find("S5MapPresentation/Content/SelectionGrid");
-                foreach (Transform card in grid)
+                foreach (var node in grid.GetComponentsInChildren<MapNodeView>(true))
                 {
+                    Transform card = node.transform;
                     Image surface = card.GetComponent<Image>();
                     Assert.That(surface.sprite, Is.Not.Null, card.name);
                     Assert.That(surface.type, Is.EqualTo(Image.Type.Sliced), card.name);

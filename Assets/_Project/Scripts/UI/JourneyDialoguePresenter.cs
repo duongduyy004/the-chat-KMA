@@ -19,8 +19,10 @@ namespace KMA.Gameplay.UI
 
         JourneyDialogueLibrary library;
         Func<string, bool> persistSeen;
+        Sprite instructorPortrait;
         readonly Queue<DialogueRequest> pending = new Queue<DialogueRequest>();
         RectTransform overlay;
+        Image backgroundImage;
         Image portrait;
         TMP_Text speaker, body, errorText, continueLabel;
         Button continueButton, skipButton;
@@ -32,11 +34,15 @@ namespace KMA.Gameplay.UI
         public bool IsShowing => overlay != null && overlay.gameObject.activeSelf;
         public int CurrentLineIndex => lineIndex;
 
-        public void Configure(JourneyDialogueLibrary dialogueLibrary, Func<string, bool> saveSeen)
+        public void Configure(JourneyDialogueLibrary dialogueLibrary, Func<string, bool> saveSeen,
+            Sprite sharedBackground = null, Sprite femaleInstructorPortrait = null)
         {
             library = dialogueLibrary;
             persistSeen = saveSeen;
+            if (femaleInstructorPortrait != null) instructorPortrait = femaleInstructorPortrait;
             EnsureView();
+            if (backgroundImage != null && sharedBackground != null)
+                backgroundImage.sprite = sharedBackground;
         }
 
         public void Show(string nodeId, Action onClosed)
@@ -44,10 +50,12 @@ namespace KMA.Gameplay.UI
             Show(nodeId, nodeId, onClosed);
         }
 
-        public void ShowJourney(GameSession session, GameManager manager)
+        public void ShowJourney(GameSession session, GameManager manager, Sprite sharedBackground = null,
+            Sprite femaleInstructorPortrait = null)
         {
             if (session == null || manager == null) return;
-            Configure(JourneyDialogueLibrary.LoadDefault(), key => manager.TryMarkJourneyDialogueSeen(key, out _));
+            Configure(JourneyDialogueLibrary.LoadDefault(), key => manager.TryMarkJourneyDialogueSeen(key, out _),
+                sharedBackground, femaleInstructorPortrait);
             pending.Clear();
             JourneyProgress journey = session.Journey;
             void Add(string node, string key = null)
@@ -106,26 +114,56 @@ namespace KMA.Gameplay.UI
             overlay.anchorMax = Vector2.one;
             overlay.offsetMin = overlay.offsetMax = Vector2.zero;
             Image veil = overlay.GetComponent<Image>();
-            veil.color = new Color(3f / 255f, 19f / 255f, 34f / 255f, .78f);
+            veil.color = new Color(0f, 0f, 0f, 0f);
             veil.raycastTarget = true;
+
+            var backgroundObject = new GameObject("SharedMenuBackground", typeof(RectTransform),
+                typeof(CanvasRenderer), typeof(Image), typeof(AspectRatioFitter));
+            backgroundObject.transform.SetParent(overlay, false);
+            RectTransform backgroundRect = backgroundObject.GetComponent<RectTransform>();
+            backgroundRect.anchorMin = backgroundRect.anchorMax = new Vector2(.5f, .5f);
+            backgroundRect.sizeDelta = Vector2.zero;
+            backgroundImage = backgroundObject.GetComponent<Image>();
+            backgroundImage.raycastTarget = false;
+            AspectRatioFitter backgroundFit = backgroundObject.GetComponent<AspectRatioFitter>();
+            backgroundFit.aspectMode = AspectRatioFitter.AspectMode.EnvelopeParent;
+            backgroundFit.aspectRatio = 1928f / 816f;
+
+            RectTransform dimmerRect = new GameObject("BackgroundDimmer", typeof(RectTransform),
+                typeof(CanvasRenderer), typeof(Image)).GetComponent<RectTransform>();
+            dimmerRect.SetParent(overlay, false);
+            dimmerRect.anchorMin = Vector2.zero;
+            dimmerRect.anchorMax = Vector2.one;
+            dimmerRect.offsetMin = dimmerRect.offsetMax = Vector2.zero;
+            Image dimmer = dimmerRect.GetComponent<Image>();
+            dimmer.color = new Color(HomeMenuStyle.Navy.r, HomeMenuStyle.Navy.g, HomeMenuStyle.Navy.b, .36f);
+            dimmer.raycastTarget = false;
 
             var card = new GameObject("DialogueCard", typeof(RectTransform), typeof(Image), typeof(Outline));
             card.transform.SetParent(overlay, false);
             RectTransform cardRect = card.GetComponent<RectTransform>();
-            cardRect.anchorMin = cardRect.anchorMax = new Vector2(.5f, .5f);
-            cardRect.sizeDelta = new Vector2(900f, 430f);
-            card.GetComponent<Image>().color = new Color32(255, 249, 231, 255);
-            card.GetComponent<Outline>().effectColor = new Color32(3, 18, 33, 255);
+            cardRect.anchorMin = cardRect.anchorMax = new Vector2(.5f, 0f);
+            cardRect.pivot = new Vector2(.5f, 0f);
+            cardRect.anchoredPosition = new Vector2(0f, 54f);
+            cardRect.sizeDelta = new Vector2(1500f, 310f);
+            card.GetComponent<Image>().color = HomeMenuStyle.Glass;
+            Outline cardOutline = card.GetComponent<Outline>();
+            cardOutline.effectColor = HomeMenuStyle.Gold;
+            cardOutline.effectDistance = new Vector2(5f, -5f);
 
-            portrait = MakeImage(card.transform, "Portrait", new Vector2(-325f, 0f), new Vector2(230f, 320f));
-            speaker = MakeText(card.transform, "Speaker", new Vector2(155f, 132f), new Vector2(500f, 52f), 28,
-                MinigameUiTheme.Accent, TextAlignmentOptions.Left);
-            body = MakeText(card.transform, "Dialogue", new Vector2(155f, 28f), new Vector2(500f, 165f), 25,
-                new Color32(8, 35, 61, 255), TextAlignmentOptions.TopLeft);
-            errorText = MakeText(card.transform, "SaveError", new Vector2(155f, -103f), new Vector2(500f, 38f), 16,
-                MinigameUiTheme.Energy, TextAlignmentOptions.Left);
-            continueButton = MakeButton(card.transform, "CONTINUE", new Vector2(265f, -165f), new Vector2(220f, 60f));
-            skipButton = MakeButton(card.transform, "BỎ QUA", new Vector2(30f, -165f), new Vector2(180f, 60f));
+            portrait = MakeImage(card.transform, "Portrait", new Vector2(-608f, 164f), new Vector2(230f, 330f));
+            portrait.color = Color.white;
+            Outline portraitOutline = portrait.gameObject.AddComponent<Outline>();
+            portraitOutline.effectColor = HomeMenuStyle.Gold;
+            portraitOutline.effectDistance = new Vector2(4f, -4f);
+            speaker = MakeText(card.transform, "Speaker", new Vector2(-210f, 111f), new Vector2(500f, 48f), 30,
+                HomeMenuStyle.Gold, TextAlignmentOptions.Left);
+            body = MakeText(card.transform, "Dialogue", new Vector2(105f, 28f), new Vector2(880f, 112f), 31,
+                HomeMenuStyle.White, TextAlignmentOptions.TopLeft);
+            errorText = MakeText(card.transform, "SaveError", new Vector2(220f, -63f), new Vector2(650f, 38f), 18,
+                HomeMenuStyle.GoldLight, TextAlignmentOptions.Left);
+            continueButton = MakeButton(card.transform, "TIẾP", new Vector2(630f, -108f), new Vector2(220f, 66f));
+            skipButton = MakeButton(card.transform, "BỎ QUA", new Vector2(385f, -108f), new Vector2(220f, 66f));
             continueButton.onClick.AddListener(Advance);
             skipButton.onClick.AddListener(FinishNode);
             overlay.gameObject.SetActive(false);
@@ -136,8 +174,9 @@ namespace KMA.Gameplay.UI
             JourneyDialogueLine line = activeLines[lineIndex];
             speaker.text = VietText.Fix(line.SpeakerRole);
             body.text = VietText.Fix(line.Text);
-            portrait.sprite = line.Portrait;
-            portrait.enabled = line.Portrait != null;
+            portrait.sprite = line.SpeakerRole == "Giảng viên" && instructorPortrait != null
+                ? instructorPortrait : line.Portrait;
+            portrait.enabled = portrait.sprite != null;
             continueLabel.text = VietText.Fix(lineIndex + 1 >= activeLines.Count ? "ĐÓNG" : "TIẾP");
         }
 
@@ -187,6 +226,7 @@ namespace KMA.Gameplay.UI
             text.alignment = alignment;
             text.enableWordWrapping = true;
             UiKit.StyleLabel(text, fontSize, color);
+            VietTypography.Apply(text);
             return text;
         }
 
@@ -211,11 +251,15 @@ namespace KMA.Gameplay.UI
             rect.anchorMin = rect.anchorMax = new Vector2(.5f, .5f);
             rect.anchoredPosition = position;
             rect.sizeDelta = size;
-            go.GetComponent<Image>().color = MinigameUiTheme.Accent;
+            bool primary = label == "TIẾP";
+            go.GetComponent<Image>().color = primary ? HomeMenuStyle.Gold : HomeMenuStyle.Navy;
+            Outline outline = go.AddComponent<Outline>();
+            outline.effectColor = primary ? HomeMenuStyle.White : HomeMenuStyle.Gold;
+            outline.effectDistance = new Vector2(3f, -3f);
             Button button = go.GetComponent<Button>();
-            TMP_Text text = MakeText(go.transform, "Label", Vector2.zero, size, 20,
-                Color.white, TextAlignmentOptions.Center);
-            if (label == "CONTINUE") continueLabel = text;
+            TMP_Text text = MakeText(go.transform, "Label", Vector2.zero, size, 23,
+                primary ? HomeMenuStyle.Navy : HomeMenuStyle.White, TextAlignmentOptions.Center);
+            if (label == "TIẾP") continueLabel = text;
             else text.text = VietText.Fix(label);
             return button;
         }
