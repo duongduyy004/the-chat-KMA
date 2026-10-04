@@ -17,11 +17,18 @@ namespace KMA.Tests.Gameplay.Core
     public sealed class AudioGameplayTests
     {
         readonly List<GameSound> sounds = new List<GameSound>();
+#if UNITY_EDITOR
+        bool originalEditorMute;
+#endif
 
         [SetUp]
         public void SetUp()
         {
             Time.timeScale = 1f;
+#if UNITY_EDITOR
+            originalEditorMute = UnityEditor.EditorUtility.audioMasterMute;
+            UnityEditor.EditorUtility.audioMasterMute = false;
+#endif
             sounds.Clear();
             GameAudio.Requested += Record;
         }
@@ -30,6 +37,9 @@ namespace KMA.Tests.Gameplay.Core
         public IEnumerator TearDown()
         {
             GameAudio.Requested -= Record;
+#if UNITY_EDITOR
+            UnityEditor.EditorUtility.audioMasterMute = originalEditorMute;
+#endif
             Time.timeScale = 1f;
             Scene previous = SceneManager.GetActiveScene();
             SceneManager.SetActiveScene(SceneManager.CreateScene("AudioTestCleanup"));
@@ -50,6 +60,10 @@ namespace KMA.Tests.Gameplay.Core
                 yield return SceneManager.LoadSceneAsync(scene);
                 Assert.That(Object.FindObjectsByType<AudioListener>(FindObjectsSortMode.None)
                     .Count(listener => listener.isActiveAndEnabled), Is.EqualTo(1), scene + " needs an active audio listener.");
+                AudioManager.Instance.SetMusicVolume(1f);
+                yield return null;
+                // Start can bind saved settings on the first frame. Set the test's
+                // explicit audible volume after that lifecycle work has completed.
                 AudioManager.Instance.SetMusicVolume(1f);
                 float peak = 0f;
                 // Cipher has about .82 s of leading silence; sample beyond the intro.

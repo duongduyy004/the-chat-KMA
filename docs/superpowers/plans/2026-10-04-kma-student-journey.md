@@ -357,10 +357,10 @@ Controller triển khai interface, HUD drill dùng bộ đếm/điểm rơi/timi
     Assert.That(fiveKicksThreeGoalsResult.Pass, Is.True);
     Assert.That(fiveKicksTwoGoalsResult.Pass, Is.False);
 
-Learn chưa đạt ba bàn tiếp tục sau cú thứ 5, thủ môn không can thiệp; Practice cần hai bàn/Easy; Exam đợi đủ năm cú kể cả đã ghi ba sớm. Kiểm tra mode Journey không tự chọn Easy cho bài thi; FreePlay Easy không ghi đè bảng điểm Normal. Runtime tests hold → pause/exit/disable → resume: preview tắt, charge hủy, không phát shot muộn; result một lần, Retry không trừ lượt lần hai.
+Learn chưa đạt ba bàn tiếp tục sau cú thứ 5, thủ môn không can thiệp; Practice cần hai bàn/Normal; Exam đợi đủ năm cú kể cả đã ghi ba sớm. Kiểm tra Journey/Review/FreePlay luôn chạy Normal, bộ chọn độ khó không xuất hiện. Runtime tests hold → pause/exit/disable → resume: preview tắt, charge hủy, không phát shot muộn; result một lần, Retry không trừ lượt lần hai.
 
 - [ ] **Step 2: Chạy red** — FootballChallengeTests (EditMode, namespace KMA.Tests.Gameplay.Football), FootballChallengeRuntimeTests (PlayMode cùng namespace).
-- [ ] **Step 3: Triển khai** — bỏ phụ thuộc constant MaxKicks ở drill, terminal theo requiredGoals; Exam vẫn 5 kicks và goals ≥3. Chuyển keeperEnabled vào cả prediction và FootballFlightSimulation thật. HUD drill hiển thị mục tiêu/bàn đạt, Exam giữ năm chấm kết quả; khóa picker Normal trong Journey, dùng Easy/Normal/Hard sau CourseComplete. Trial metrics giữ số cú thực hiện, practice không tạo điểm học phần. Dùng tuning asset hiện có, mapping difficulty bằng switch tường minh.
+- [ ] **Step 3: Triển khai** — bỏ phụ thuộc constant MaxKicks ở drill, terminal theo requiredGoals; Exam vẫn 5 kicks và goals ≥3. Chuyển keeperEnabled vào cả prediction và FootballFlightSimulation thật. HUD drill hiển thị mục tiêu/bàn đạt, Exam giữ năm chấm kết quả; bỏ picker và cố định Normal trong Journey/Review/FreePlay theo điều chỉnh của người dùng ngày 2026-10-04. Trial metrics giữ số cú thực hiện, practice không tạo điểm học phần. Dùng tuning asset hiện có, mapping difficulty bằng switch tường minh.
 
 Controller đi qua TryBeginResolve và typed result khi có context, hủy charge/bridge khi pause/rời scene. Author scene nếu serialized wiring đổi, kiểm tra input references và preview release synchronous.
 

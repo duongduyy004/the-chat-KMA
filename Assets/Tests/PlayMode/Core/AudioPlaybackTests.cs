@@ -66,7 +66,8 @@ namespace KMA.Tests.Gameplay.Core
             var music = Music();
             music.time = 4f;
             Time.timeScale = 0f;
-            yield return null;
+            yield return new WaitForSecondsRealtime(.1f);
+            Assert.That(music.isPlaying, Is.False);
             float paused = music.time;
             yield return new WaitForSecondsRealtime(.15f);
             Assert.That(music.time, Is.EqualTo(paused).Within(.03f));

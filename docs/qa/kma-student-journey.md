@@ -1,23 +1,35 @@
 # Student Journey QA
 
-QA was run against Unity `6000.3.23f1` on Linux on 2026-10-04, from the Task 9 checkpoint `c86dbdc` plus the Task 10 test and map fallback changes. Visual captures use the Unity Editor Play Mode screenshot service. Each capture completed with a matching request ID and `status: ok`.
+Review fixes were verified against Unity `6000.3.23f1` on Linux on 2026-10-04, in the working tree after `61b1bd3`. The screenshots and Android smoke run below are historical Task 10 evidence and predate these review fixes.
+
+## Review fixes
+
+- Football has no difficulty selector and uses Normal in Journey, Review and FreePlay, including regenerated lesson assets. Learn keeps its goalkeeper disabled; Practice and Exam enable it.
+- Pause Restart keeps the selected challenge and attempt mode. Rejected scene loads restore the old attempt in memory and in the save.
+- Sprint processes its final frame through `SprintChallengeRules.Tick`, so a finish inside the 14-second limit is judged at the exact deadline.
+- Result Retry and supplementary Practice stay available after a save/start failure, with a visible error and no extra life spent.
+- Authored Map path segments are reused on rebinding. Lesson objective/status copy uses at least 16-point text. Unsupported arrow/checkmark glyphs use plain Vietnamese copy.
 
 ## Automated checks
 
-The focused progression/recovery set passed `14/14` PlayMode tests (`Builds/TestResults/tmp/kma-task10-focused-green.xml.xml`). The full suites contain the journey and recovery checks, including `ScenePresentationContractTests.EveryExistingSceneHasS2CameraAndCanvas`.
+Initial regressions for the four review findings failed before the fixes; the focused set then passed 15/15. The additional rejected-load restart regression also failed before its rollback fix and then passed.
 
-| Suite | Passed | Failed | Skipped | Result |
+| Suite | Passed | Failed | Skipped | XML |
 |---|---:|---:|---:|---|
-| EditMode | 602/607 | 2 | 3 | Failed on the same two pre-existing baseline cases |
-| PlayMode | 223/227 | 4 | 0 | Failed on the pre-existing baseline cases below |
+| EditMode | 608/611 | 0 | 3 | `Builds/TestResults/journey-review-edit-final3.xml` |
+| PlayMode | 239/239 | 0 | 0 | `Builds/TestResults/journey-review-play-final3.xml` |
 
-EditMode XML: `Builds/TestResults/tmp/kma-task10-edit-full.xml.xml`. The failures are `ProjectConfiguratorApplyRepairsProductNameDrift` (FMOD cannot initialize an output device) and `CurrentProjectCoverageHasNoMissingCharactersOrLegacyComponents` (coverage 8, expected at least 9). Its only skipped leaves are the three named `ChallengeSequenceTests` ignores in the plan.
+EditMode uses an ALSA null output for headless ProjectConfigurator audio reinitialization. PlayMode uses the host Pulse/PipeWire output for a real audio clock; an unpaced null output distorted DSP timing. `AudioGameplayTests` explicitly saves, disables and restores Unity Editor master mute. Actual scene mix peaks in the final full run were Sprint 0.393268, Volleyball 0.401565 and Football 0.152914, above the unchanged 1E-05 threshold.
 
-PlayMode XML: `Builds/TestResults/tmp/kma-task10-play-full.xml.xml`. The remaining failures are `AudioGameplayTests.AllPlayableScenesHaveOneListenerAndProduceAudioSamples` (MG_Sprint peak `1.27413768E-08`, below `1E-05`), `FestivalUiExperienceTests.SplashShowsReadableProgressAndLoadingHint` (texture is not CPU-readable), and two `SplashLoadingFlowTests` whose presenter lookup returns null. The initial full run had eight additional failures from stale one-visit subject fixtures; those were updated for the nine-challenge journey, and the focused progression fixtures now pass.
+The only EditMode skips are the existing named `ChallengeSequenceTests`: `Controller_ActivatesAuthoredCueAndCounterplayAdapter`, `Controller_RequestsRetryOnceWithoutChangingLivesOrMutatingTheSession`, and `NonFiniteProgress_CannotAdvanceOrCompletePunishment`. The test runner returns nonzero for these ignored tests; XML confirms zero failures.
+
+`BootstrapToSummaryUsesAllNineRealControllersAndPersistsCompletion` loads Bootstrap, starts a new game, traverses Map and all nine minigame scenes, receives real controller results, persists receipts, and restores completed progress. `VolleyballFiveFailuresRequireFreshPracticeAndKeepSprintPassed` drives real exam failures and fresh supplementary practice, preserving Sprint completion and restoring five attempts. These tests use deterministic inputs and controlled Volleyball court positions. Soccer input calls rules directly, and controller time is advanced explicitly; they do not establish UI touch acceptance or device frame timing.
+
+Independent code review caught a builder/asset Normal mismatch, which was fixed and covered by `RegeneratedFootballLessonsKeepNormalAndLearnKeepsKeeperOff`. The follow-up review found no further actionable defect in the focused fixes.
 
 ## Visual captures
 
-Captured and inspected at the Editor viewport's available `1088x503` resolution. These are static Editor images; they do not establish touch interaction, Android safe-area, or device rendering.
+Historical captures were inspected at the Editor viewport's available `1088x503` resolution. These are static Editor images; they do not establish touch interaction, Android safe-area, or device rendering.
 
 | Capture | Observation |
 |---|---|
@@ -36,6 +48,4 @@ An Android 17 API 37 AVD (`sdk_gphone16k_x86_64`, 1080x2400 at 420 dpi, 16 KB pa
 
 That emulator screenshot also exposed low contrast on lesson labels rendered over white cards: the original `TextPrimary` foreground measured 1.05:1. `JourneyLessonLabelsMeetContrastOnTheirButtonSurface` now asserts a minimum 4.5:1, and the focused EditMode test passed after switching the label to `MutedForeground`. The updated x86_64 APK installed and launched, but ADB disconnected during the follow-up capture, so the corrected map was not visually confirmed on the emulator.
 
-Both current APKs include the contrast fix. `tools/build-apk.sh --arm64 --output-dir Builds/Android --name journey` completed with zero errors and 20 warnings; `Builds/Android/journey-arm64.apk` is 59,800,646 bytes (58 MiB), SHA-256 `0acfa79daf0af4337fa8e9a29f8316d6dde97f08caae1124d6ab656b314011c3`. `tools/build-apk.sh --x86_64 --output-dir Builds/Android --name journey` completed with zero errors and 29 warnings; `Builds/Android/journey-x86_64.apk` is 61,084,901 bytes, SHA-256 `77738f564672232c00594b7bc57ec2d95f3bcb6c3fc59cd96742180a37436b90`. The archives contain their matching `lib/arm64-v8a` and `lib/x86_64` `libil2cpp.so` and `libunity.so` libraries. No physical-device validation is claimed.
-
-The end-to-end journey test exercises the persisted challenge ordering, subject unlocks, exam records, and five-failure supplementary recovery through `GameSession`. Per-subject PlayMode tests separately exercise Sprint input, Volleyball match rules, and Soccer controller outcomes. The complete nine-challenge progression test uses deterministic challenge results; it does not yet drive real input through all three controller scenes in one uninterrupted run.
+The following historical APKs include the earlier contrast fix and predate the current review fixes. They have not been rebuilt for this patch. `tools/build-apk.sh --arm64 --output-dir Builds/Android --name journey` completed with zero errors and 20 warnings; `Builds/Android/journey-arm64.apk` is 59,800,646 bytes (58 MiB), SHA-256 `0acfa79daf0af4337fa8e9a29f8316d6dde97f08caae1124d6ab656b314011c3`. `tools/build-apk.sh --x86_64 --output-dir Builds/Android --name journey` completed with zero errors and 29 warnings; `Builds/Android/journey-x86_64.apk` is 61,084,901 bytes, SHA-256 `77738f564672232c00594b7bc57ec2d95f3bcb6c3fc59cd96742180a37436b90`. The archives contain their matching `lib/arm64-v8a` and `lib/x86_64` `libil2cpp.so` and `libunity.so` libraries. No physical-device validation is claimed.

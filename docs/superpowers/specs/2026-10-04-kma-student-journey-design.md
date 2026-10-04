@@ -46,7 +46,7 @@ ID thử thách ổn định trong bản lưu; tên hiển thị có thể chỉ
 | `volleyball_practice` | Bóng chuyền / luyện tập | Chuyền rồi đập | Ghi hai điểm trong một lượt luyện bằng chuỗi đỡ → chuyền → đập; các điểm từ cách đánh khác không tính vào mục tiêu này |
 | `volleyball_exam` | Bóng chuyền / thi | Thi với bạn cùng lớp | Đạt năm điểm trước đối thủ trong thời gian không quá 120 giây |
 | `soccer_learn` | Soccer / làm quen | Trúng khung trước đã | Ghi ba bàn trong một lượt luyện, tắt thủ môn; số cú thử không giới hạn |
-| `soccer_practice` | Soccer / luyện tập | Đọc thủ môn | Ghi hai bàn trong một lượt luyện với thủ môn ở cấu hình Easy; số cú thử không giới hạn |
+| `soccer_practice` | Soccer / luyện tập | Đọc thủ môn | Ghi hai bàn trong một lượt luyện với thủ môn ở cấu hình Normal; số cú thử không giới hạn |
 | `soccer_exam` | Soccer / thi | Năm cú sút định đoạt | Ghi ít nhất ba bàn sau đủ năm lượt sút, thủ môn ở cấu hình Normal |
 
 Các ngưỡng 12 lần, 20 giây và 14 giây là mốc xuất phát cho cân bằng. Việc điều chỉnh phải dựa trên chơi thử; bài luyện Sprint luôn có giới hạn thời gian dài hơn bài thi. Bài luyện Sprint không có điều kiện thể lực tối thiểu.
@@ -92,9 +92,9 @@ Bài thi dùng đối thủ phối hợp đập mạnh, bỏ nhỏ và bóng sâ
 
 Soccer là môn bóng đá hiện có. Các màn tiếng Việt dùng tên “Bóng đá”; bản đặc tả dùng Soccer để khớp cách gọi trong hội thoại. Định danh nội bộ tiếp tục dùng `SubjectId.Football = 6`, scene `MG_Football` và lớp Football hiện có để giữ tương thích dữ liệu.
 
-Bài đầu học hướng, lực và đường bay với thủ môn tắt. Bài thứ hai dùng cấu hình Easy: giữ lực 2,4 giây để đạt tối đa, thủ môn phản ứng sau 0,38 giây và tốc độ 1,9 theo cấu hình hiện có. Bài thi dùng Normal: khoảng 2,042035 giây, 0,23 giây và tốc độ 2,5. Dấu hiệu chuẩn bị và phản hồi kết quả giúp người chơi hiểu cách thủ môn bắt bóng.
+Bài đầu học hướng, lực và đường bay với thủ môn tắt. Theo điều chỉnh của người dùng ngày 2026-10-04, cả ba bài và mọi lần chơi lại đều dùng Normal: giữ lực khoảng 2,042035 giây để đạt tối đa, thủ môn phản ứng sau 0,23 giây và tốc độ 2,5. Thủ môn vẫn tắt ở bài học đầu. Dấu hiệu chuẩn bị và phản hồi kết quả giúp người chơi hiểu cách thủ môn bắt bóng.
 
-Hai bài luyện liên tục cấp lượt sút mới đến khi đạt số bàn mục tiêu. Bài thi kết thúc sau đủ năm cú sút, tính đạt khi có ít nhất ba bàn. Điểm bài thi là số bàn × 2 như hiện có. Chế độ thi của hành trình dùng cấu hình Normal cố định; chơi lại sau khi hoàn tất học phần cho phép chọn Easy/Normal/Hard. Chỉ kết quả ở cấu hình bài thi học phần (Normal) cải thiện bảng điểm học phần; Easy/Hard hiển thị kết quả chơi tự do.
+Hai bài luyện liên tục cấp lượt sút mới đến khi đạt số bàn mục tiêu. Bài thi kết thúc sau đủ năm cú sút, tính đạt khi có ít nhất ba bàn. Điểm bài thi là số bàn × 2 như hiện có. Bóng đá dùng Normal cố định ở cả hành trình, ôn tập và chơi tự do; không có bộ chọn độ khó. Kết quả chơi lại bài thi vẫn có thể cải thiện bảng điểm học phần theo hợp đồng hiện có.
 
 Dùng chung mô phỏng đường bay cho preview và cú sút thật. Preview hiển thị khi giữ nút và ẩn khi thả. Kết quả chạm khung, ra ngoài, bắt được và ghi bàn tiếp tục dựa trên mô phỏng hiện có.
 
@@ -214,7 +214,7 @@ Bản lưu cũ đạt đủ ba môn được nhập thành hành trình hoàn th
 
 - Sprint: chuỗi 12 đúng, reset chuỗi khi sai, 100 m/20 giây luyện và 100 m/14 giây thi; kiểm tra đúng mốc giới hạn và thứ hạng không khóa đạt. Mô phỏng xác nhận người giữ nhịp đúng có thể đạt bài thi với cơ chế thể lực mới.
 - Volleyball: ba Receive hợp lệ; chỉ điểm từ đúng chuỗi mới tính bài luyện; thi cần năm điểm trước đối thủ trong 120 giây, gồm hết giờ khi đang dẫn và điểm thứ năm đúng mốc giới hạn.
-- Soccer: thủ môn tắt ở bài đầu, Easy ở bài luyện, Normal ở bài thi; lượt luyện cấp lại đến khi đủ bàn; bài thi đúng năm cú sút và ngưỡng ba bàn. Kiểm tra preview và đường bóng thật dùng cùng mô phỏng.
+- Soccer: Normal cố định ở mọi bài, thủ môn tắt ở bài đầu và bật ở bài luyện/bài thi; lượt luyện cấp lại đến khi đủ bàn; bài thi đúng năm cú sút và ngưỡng ba bàn. Kiểm tra preview và đường bóng thật dùng cùng mô phỏng.
 - Tutorial, pause, retry và kết quả một lần hoạt động trong mọi cấu hình thử thách.
 
 ### Trải nghiệm và thiết bị

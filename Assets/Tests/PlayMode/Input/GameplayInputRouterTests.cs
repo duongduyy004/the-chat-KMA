@@ -315,10 +315,10 @@ namespace KMA.Tests.Input
             detector.OnJudge += (_, delta) => deltaMs = delta;
             Router.SetDetectors(null, detector, null, null, null);
             Router.RhythmOffsetMs = 125d;
-            Router.RhythmBeatDsp = AudioSettings.dspTime;
             Router.ConfigureInputForTest(actions, "Gameplay", rhythmAction);
 
             var keyboard = InputSystem.AddDevice<Keyboard>();
+            Router.RhythmBeatDsp = AudioSettings.dspTime;
             Press(keyboard.rKey);
 
             Assert.That(deltaMs, Is.EqualTo(125d).Within(30d));
