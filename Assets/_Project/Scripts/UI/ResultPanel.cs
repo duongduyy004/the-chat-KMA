@@ -323,7 +323,8 @@ namespace KMA.Gameplay.UI
                 livesLabel.gameObject.SetActive(true);
             }
             if (errorLabel != null) errorLabel.text = VietText.Fix(view.Error ?? string.Empty);
-            SetButtonLabel(actionButton, view.LivesRemaining > 0 ? "THI LẠI" : "VỀ BẢN ĐỒ");
+            SetButtonLabel(actionButton, view.LivesRemaining <= 0 ? "VỀ BẢN ĐỒ"
+                : view.RetryIsPractice ? "LUYỆN LẠI" : "THI LẠI");
             retryAvailable = false;
             RefreshButtons();
             Reveal(0f, scoreless: true);

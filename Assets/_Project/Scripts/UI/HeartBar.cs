@@ -12,6 +12,9 @@ namespace KMA.Gameplay.UI
 
         [SerializeField] TMPro.TMP_Text countdownLabel;
 
+        int shownSeconds = -1;
+        bool shownWarning;
+
         public int CurrentHearts { get; private set; }
         public Color FilledColor => MinigameUiTheme.Energy;
         public Color EmptyColor => MinigameUiTheme.WithAlpha(MinigameUiTheme.TextPrimary, .25f);
@@ -31,19 +34,37 @@ namespace KMA.Gameplay.UI
         public bool CountdownVisible => countdownLabel != null && countdownLabel.gameObject.activeSelf;
         public string CountdownText => CountdownVisible ? countdownLabel.text : string.Empty;
 
+        /// Number of times the countdown text has been rewritten (it changes once per second).
+        public int CountdownWrites { get; private set; }
+
+        static int WholeSeconds(System.TimeSpan remaining) =>
+            Mathf.Max(0, Mathf.CeilToInt((float)remaining.TotalSeconds));
+
         public static string FormatCountdown(System.TimeSpan remaining)
         {
-            int seconds = Mathf.Max(0, Mathf.CeilToInt((float)remaining.TotalSeconds));
+            int seconds = WholeSeconds(remaining);
             return $"{seconds / 60}:{seconds % 60:00}";
         }
 
+        /// Called every frame by the map: only rewrites the label when the shown second or the
+        /// warning colour changes, so the per-frame call allocates nothing.
         public void SetCountdown(System.TimeSpan? remaining, bool warning)
         {
             EnsureCountdownLabel();
-            countdownLabel.gameObject.SetActive(remaining.HasValue);
-            if (!remaining.HasValue) return;
+            if (countdownLabel.gameObject.activeSelf != remaining.HasValue)
+                countdownLabel.gameObject.SetActive(remaining.HasValue);
+            if (!remaining.HasValue)
+            {
+                shownSeconds = -1;
+                return;
+            }
+            int seconds = WholeSeconds(remaining.Value);
+            if (seconds == shownSeconds && warning == shownWarning) return;
+            shownSeconds = seconds;
+            shownWarning = warning;
             countdownLabel.text = FormatCountdown(remaining.Value);
             countdownLabel.color = warning ? MinigameUiTheme.Energy : MinigameUiTheme.TextPrimary;
+            CountdownWrites++;
         }
 
         void EnsureCountdownLabel()

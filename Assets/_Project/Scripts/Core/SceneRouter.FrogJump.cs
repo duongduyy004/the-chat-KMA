@@ -17,6 +17,7 @@ namespace KMA.Gameplay.Core
         string frogRetryChallengeId;
         bool frogSavePending;
         bool frogContinueUsed;
+        bool frogRetryIsPractice;
 
         public string FrogJumpScene => frogJumpScene;
 
@@ -29,6 +30,13 @@ namespace KMA.Gameplay.Core
             PrepareSceneBinding(SessionRoute.FrogJump, null);
             if (!transitioner.TryRoute(SessionRoute.FrogJump, null, sceneName))
                 return false;
+            // The failed challenge's panel dies with its scene; a later load failure must not
+            // reach for it.
+            UnbindChallengePanel();
+            displayedChallenge = null;
+            displayedResult = null;
+            displayedOutcome = null;
+            displayedSaveError = null;
             SessionChanged?.Invoke();
             return true;
         }
@@ -73,6 +81,7 @@ namespace KMA.Gameplay.Core
                 return;
 
             frogRetryChallengeId = retryId;
+            frogRetryIsPractice = session.Journey.Catalog.Get(retryId).Kind == ChallengeKind.Practice;
             frogContinueUsed = false;
             frogSavePending = !TryPersistJourney(out string saveError);
             SessionChanged?.Invoke();
@@ -81,7 +90,8 @@ namespace KMA.Gameplay.Core
             frogPanel = FindFrogJumpPanel() ??
                 throw new InvalidOperationException("A frog jump result panel is required.");
             frogPanel.FrogJumpContinueRequested += OnFrogJumpContinue;
-            frogView = new FrogJumpResultView(result.Pass, savesLife, session.Lives, saveError);
+            frogView = new FrogJumpResultView(result.Pass, savesLife, session.Lives, saveError,
+                frogRetryIsPractice);
             frogPanel.ShowFrogJump(frogView);
         }
 
@@ -120,7 +130,8 @@ namespace KMA.Gameplay.Core
 
         void ShowFrogError(string error)
         {
-            frogView = new FrogJumpResultView(frogView.ReachedFinish, frogView.SavesLife, session.Lives, error);
+            frogView = new FrogJumpResultView(frogView.ReachedFinish, frogView.SavesLife, session.Lives, error,
+                frogView.RetryIsPractice);
             frogPanel?.ShowFrogJump(frogView);
         }
 

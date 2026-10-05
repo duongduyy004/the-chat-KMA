@@ -17,13 +17,24 @@ namespace KMA.Gameplay.UI
 
 
         GameSession boundSession;
+        Func<bool> persistLives;
+
+        /// Overrides how a regenerated life is saved (defaults to the GameManager save).
+        public void ConfigureLifePersistence(Func<bool> persist) => persistLives = persist;
+
+        bool PersistLives()
+        {
+            if (persistLives != null) return persistLives();
+            var manager = KMA.Gameplay.Core.GameManager.Instance;
+            return manager != null && manager.TryPersistSession(out _);
+        }
 
         void Update()
         {
             if (boundSession == null) return;
             if (boundSession.RefreshLives())
             {
-                KMA.Gameplay.Core.GameManager.Instance?.TryPersistSession(out _);
+                PersistLives();
                 RefreshJourney(boundSession);
             }
             Hearts?.SetCountdown(boundSession.TimeUntilNextLife, boundSession.Lives == 0);

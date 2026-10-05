@@ -26,9 +26,11 @@ namespace KMA.Gameplay.Core
             SceneLoadFailed += OnJourneyRouteFailed;
         }
 
+        /// With a frog jump still owed, every start is refused by the journey; send the player
+        /// to the frog jump instead so a map reached in that state is never a dead end.
         public bool TryStartChallenge(string id, ChallengeAttemptMode mode = ChallengeAttemptMode.Journey,
             ChallengeDifficulty difficulty = ChallengeDifficulty.Normal)
-            => TryStartChallenge(id, mode, difficulty, null);
+            => session.PendingFrogJump != null ? StartFrogJump() : TryStartChallenge(id, mode, difficulty, null);
 
         bool TryStartChallenge(string id, ChallengeAttemptMode mode, ChallengeDifficulty difficulty,
             SaveData restartSnapshot)

@@ -72,6 +72,51 @@ namespace KMA.Tests.Gameplay.Progression
             yield return JourneyRuntimeDriver.WaitForScene(router, "Map");
         }
 
+        [UnityTest]
+        public IEnumerator TheRealFrogJumpSceneEndsThroughItsControllerAndRetriesThePractice()
+        {
+            yield return StartRuntime();
+            yield return PlayCheckpoint();
+            ChallengeDefinition practice = router.Session.Journey.Catalog.Get("sprint_practice");
+            yield return StartCheckpoint();
+            yield return FailIntoFrogJump(practice);
+            Assert.That(router.Session.PendingFrogJump.SavesLife, Is.True);
+
+            // Drive the scene's own controller: no test hook completes the frog jump here.
+            var frog = Object.FindFirstObjectByType<KMA.Gameplay.FrogJump.FrogJumpController>();
+            Assert.That(frog, Is.Not.Null);
+            foreach (Transform item in Object.FindObjectsByType<Transform>(FindObjectsInactive.Include,
+                         FindObjectsSortMode.None))
+                if (item.name == "HeartBar" && item.GetComponentInParent<Canvas>(true) != null &&
+                    item.gameObject.scene.name == "MG_FrogJump")
+                    Assert.That(item.gameObject.activeInHierarchy, Is.False, "Unbound frog HUD hearts are hidden.");
+            frog.SetTutorialGate(false);
+            var lifecycle = (MinigameLifecycle)typeof(MinigameBase).GetField("lifecycle",
+                System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic).GetValue(frog);
+            lifecycle.Tick(10f);
+            Assert.That(frog.PresentationPhase, Is.EqualTo(MinigamePhase.Play));
+            frog.Rules.Tick(61f);
+            Assert.That(frog.Rules.IsOver, Is.True);
+            float deadline = Time.realtimeSinceStartup + 5f;
+            while (router.Session.PendingFrogJump != null)
+            {
+                Assert.That(Time.realtimeSinceStartup, Is.LessThan(deadline), "The frog scene never reported.");
+                yield return null;
+            }
+
+            Assert.That(router.Session.Lives, Is.EqualTo(4), "Losing the first-failure frog jump costs a life.");
+            Assert.That(string.IsNullOrEmpty(saved.journey.pendingFrogJump?.id), Is.True,
+                "The frog result persists.");
+            Assert.That(saved.lives, Is.EqualTo(4));
+            ResultPanel panel = Object.FindFirstObjectByType<ResultPanel>(FindObjectsInactive.Include);
+            Assert.That(panel.IsVisible, Is.True);
+            Assert.That(panel.CurrentResult.Pass, Is.False);
+            Assert.That(panel.ContinueLabel, Is.EqualTo(VietText.Fix("LUYỆN LẠI")));
+            panel.Continue();
+            yield return JourneyRuntimeDriver.WaitForScene(router, "MG_Sprint");
+            Assert.That(router.Session.Journey.ActiveAttempt.ChallengeId, Is.EqualTo("sprint_practice"));
+        }
+
         IEnumerator FailIntoFrogJump(ChallengeDefinition challenge)
         {
             yield return JourneyRuntimeDriver.CompleteCurrent(challenge, false);

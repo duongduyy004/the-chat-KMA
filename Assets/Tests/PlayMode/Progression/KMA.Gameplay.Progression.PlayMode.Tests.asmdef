@@ -15,6 +15,7 @@
         "Unity.InputSystem.TestFramework",
         "KMA.Gameplay.Football",
         "KMA.Gameplay.Volleyball",
+        "KMA.Gameplay.FrogJump",
         "UnityEngine.UI",
         "Unity.TextMeshPro",
         "KMA.Text"

@@ -191,7 +191,8 @@ namespace KMA.EditorTools
             EditorSceneManager.SaveScene(scene);
         }
 
-        /// The frog jump has no phase caption, stamina or score. Keep the timer, hearts and the distance
+        /// The frog jump has no phase caption, stamina or score, and its hearts are never bound to the
+        /// session (they would always show 5 full), so hide them too. Keep the timer and the distance
         /// progress bar, and put the "Còn x m" status under the progress bar.
         static void ConfigureSharedHud(Transform hud)
         {
@@ -209,7 +210,7 @@ namespace KMA.EditorTools
                 to.sizeDelta = new Vector2(Mathf.Max(from.sizeDelta.x, 300f), 36f);
                 to.anchoredPosition = from.anchoredPosition + new Vector2(0f, -from.sizeDelta.y * from.pivot.y - 6f);
             }
-            foreach (string name in new[] { "Phase", "Stamina", "Score" })
+            foreach (string name in new[] { "Phase", "Stamina", "Score", "HeartBar" })
                 Child(name)?.gameObject.SetActive(false);
         }
 

@@ -31,5 +31,30 @@ namespace KMA.Tests.Presentation
             }
             finally { UnityEngine.Object.DestroyImmediate(go); }
         }
+
+        [Test]
+        public void RewritesTheLabelOnlyWhenTheShownSecondChanges()
+        {
+            var go = new GameObject("HeartBar", typeof(RectTransform));
+            try
+            {
+                var bar = go.AddComponent<HeartBar>();
+                bar.SetCountdown(TimeSpan.FromSeconds(271.9), false);
+                bar.SetCountdown(TimeSpan.FromSeconds(271.5), false);
+                bar.SetCountdown(TimeSpan.FromSeconds(271.1), false);
+                Assert.That(bar.CountdownWrites, Is.EqualTo(1));
+                Assert.That(bar.CountdownText, Is.EqualTo("4:32"));
+                bar.SetCountdown(TimeSpan.FromSeconds(270.9), false);
+                Assert.That(bar.CountdownWrites, Is.EqualTo(2));
+                Assert.That(bar.CountdownText, Is.EqualTo("4:31"));
+                bar.SetCountdown(TimeSpan.FromSeconds(270.5), true);
+                Assert.That(bar.CountdownWrites, Is.EqualTo(3), "A warning colour change rewrites.");
+                bar.SetCountdown(null, true);
+                bar.SetCountdown(TimeSpan.FromSeconds(270.4), true);
+                Assert.That(bar.CountdownVisible, Is.True);
+                Assert.That(bar.CountdownWrites, Is.EqualTo(4), "Reappearing rewrites the label.");
+            }
+            finally { UnityEngine.Object.DestroyImmediate(go); }
+        }
     }
 }

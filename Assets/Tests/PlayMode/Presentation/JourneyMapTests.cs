@@ -1,9 +1,13 @@
+using System;
+using System.Collections;
 using KMA.Gameplay;
 using KMA.Gameplay.UI;
 using NUnit.Framework;
 using TMPro;
 using UnityEngine;
+using UnityEngine.TestTools;
 using UnityEngine.UI;
+using Object = UnityEngine.Object;
 
 namespace KMA.Tests.Presentation
 {
@@ -105,6 +109,43 @@ namespace KMA.Tests.Presentation
             screen.ChallengeRequested += (_, requested) => mode = requested;
             screen.LessonList.transform.Find("Lesson1").GetComponent<Button>().onClick.Invoke();
             Assert.That(mode, Is.EqualTo(ChallengeAttemptMode.FreePlay));
+        }
+
+        sealed class TestClock : IClock
+        {
+            public DateTime UtcNow { get; set; } = new DateTime(2026, 10, 5, 8, 0, 0, DateTimeKind.Utc);
+        }
+
+        [UnityTest]
+        public IEnumerator ALifeRegeneratedOnTheMapUnlocksTheExamAndIsSaved()
+        {
+            var clock = new TestClock();
+            var session = new GameSession(null, clock);
+            Play(session, "sprint_learn", true);
+            Play(session, "sprint_practice", true);
+            session.Journey.SetAttemptsRemaining(0);
+            session.RefreshLives();
+            Assert.That(session.TimeUntilNextLife, Is.EqualTo(TimeSpan.FromMinutes(5)));
+
+            MapPresentationBuilder.Build(screen, session);
+            int persists = 0;
+            screen.ConfigureLifePersistence(() => { persists++; return true; });
+            screen.SelectSubject(SubjectId.Sprint);
+            Button exam = screen.LessonList.transform.Find("Lesson3").GetComponent<Button>();
+            Assert.That(exam.interactable, Is.False);
+            Assert.That(screen.BudgetLabel.text, Is.EqualTo("Lượt thi: 0/5"));
+            yield return null;
+            Assert.That(persists, Is.Zero, "Nothing regenerated yet.");
+
+            clock.UtcNow += TimeSpan.FromMinutes(5);
+            yield return null;
+
+            Assert.That(session.Lives, Is.EqualTo(1));
+            Assert.That(exam.interactable, Is.True);
+            Assert.That(screen.BudgetLabel.text, Is.EqualTo("Lượt thi: 1/5"));
+            Assert.That(screen.Hearts.CurrentHearts, Is.EqualTo(1));
+            Assert.That(screen.Hearts.CountdownText, Is.EqualTo("5:00"));
+            Assert.That(persists, Is.EqualTo(1), "The regenerated life is saved.");
         }
 
         static void Play(GameSession session, string id, bool pass)

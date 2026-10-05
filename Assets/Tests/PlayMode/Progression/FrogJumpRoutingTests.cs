@@ -1,9 +1,14 @@
+using System;
 using System.Collections.Generic;
+using System.Text.RegularExpressions;
 using KMA.Gameplay;
 using KMA.Gameplay.Core;
 using KMA.Gameplay.UI;
 using NUnit.Framework;
+using TMPro;
 using UnityEngine;
+using UnityEngine.TestTools;
+using Object = UnityEngine.Object;
 
 namespace KMA.Tests.Gameplay.Progression
 {
@@ -89,6 +94,60 @@ namespace KMA.Tests.Gameplay.Progression
             panel.Continue();
             Assert.That(routes[routes.Count - 1].Route, Is.EqualTo(SessionRoute.Map));
             Assert.That(router.Session.ActiveSubject, Is.Null);
+        }
+
+        [Test]
+        public void FailedPracticeFrogResultOffersPracticeAgain()
+        {
+            JourneyRoutingFixture.CompleteThrough(router.Session, "sprint_learn");
+            JourneyRoutingFixture.FailActive(router, panel, "sprint_practice");
+            panel.Continue();
+            router.CompleteFrogJumpForTests(true);
+
+            Assert.That(panel.ContinueLabel, Is.EqualTo(VietText.Fix("LUYỆN LẠI")));
+            panel.Continue();
+            Assert.That(router.Session.Journey.ActiveAttempt.ChallengeId, Is.EqualTo("sprint_practice"));
+        }
+
+        [Test]
+        public void StartingAChallengeWhileTheFrogJumpIsOwedRoutesToTheFrogJump()
+        {
+            JourneyRoutingFixture.CompleteThrough(router.Session, "sprint_practice");
+            JourneyRoutingFixture.FailActive(router, panel, "sprint_exam");
+            Assert.That(router.Route(SessionRoute.Map), Is.True);
+
+            ChallengeDefinition exam = router.Session.Journey.Catalog.Get("sprint_exam");
+            Assert.That(router.TryStartChallenge(exam.Id, ChallengeAttemptMode.Journey, exam.Difficulty), Is.True);
+            Assert.That(routes[routes.Count - 1].Route, Is.EqualTo(SessionRoute.FrogJump));
+            Assert.That(router.TryStartChallenge("sprint_learn", ChallengeAttemptMode.Review), Is.True);
+            Assert.That(routes[routes.Count - 1].Route, Is.EqualTo(SessionRoute.FrogJump));
+            Assert.That(router.Session.PendingFrogJump, Is.Not.Null);
+            Assert.That(router.Session.Journey.ActiveAttempt, Is.Null);
+        }
+
+        [Test]
+        public void FrogContinueLoadFailureShowsTheLoadErrorAfterTheChallengeSceneIsGone()
+        {
+            router.ConfigureJourneyPersistence((out string error) => { error = null; return true; });
+            JourneyRoutingFixture.CompleteThrough(router.Session, "sprint_practice");
+            JourneyRoutingFixture.FailActive(router, panel, "sprint_exam");
+            panel.Continue();
+            Assert.That(routes[routes.Count - 1].Route, Is.EqualTo(SessionRoute.FrogJump));
+
+            // The challenge scene (and its result panel) unloads; the frog scene brings its own.
+            Object.DestroyImmediate(panel.gameObject);
+            panel = JourneyRoutingFixture.CreateResultPanel();
+            router.CompleteFrogJumpForTests(true);
+
+            router.ConfigureSceneLoaderForTests(_ => throw new InvalidOperationException("load refused"));
+            LogAssert.Expect(LogType.Error, new Regex("Could not load scene"));
+            panel.Continue();
+
+            string error = panel.transform.Find("Error").GetComponent<TMP_Text>().text;
+            Assert.That(error, Does.Contain("Could not load scene"));
+            Assert.That(error, Does.Not.Contain("Missing"));
+            Assert.That(panel.ContinueLabel, Is.EqualTo(VietText.Fix("THI LẠI")));
+            Assert.That(router.Session.Journey.ActiveAttempt, Is.Null, "The rejected retry is rolled back.");
         }
 
         [Test]

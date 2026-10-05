@@ -120,5 +120,39 @@ namespace KMA.Tests.Gameplay.Progression
             Assert.That(restored.Journey.SupplementaryRounds, Is.EqualTo(2));
             Assert.That(restored.TimeUntilNextLife, Is.EqualTo(TimeSpan.FromMinutes(5)));
         }
+
+        [Test]
+        public void Version7SaveWithARunningSupplementaryAttemptDropsTheAttempt()
+        {
+            var clock = new FakeClock();
+            SaveData data = SaveData.CreateDefault();
+            data.version = 7;
+            data.lives = 2;
+            data.hasActiveSubject = true;
+            data.activeSubject = SubjectId.Sprint;
+            data.journey.completedChallengeIds.AddRange(new[] { "sprint_learn", "sprint_practice" });
+            data.journey.awaitingSupplementaryChallengeId = "sprint_practice";
+            data.journey.supplementaryRounds = 1;
+            data.journey.activeAttempt = new JourneyAttemptData
+            {
+                attemptId = "supplementary-attempt",
+                challengeId = "sprint_practice",
+                mode = ChallengeAttemptMode.Supplementary,
+                difficulty = ChallengeDifficulty.Normal
+            };
+            SaveData json = JsonUtility.FromJson<SaveData>(JsonUtility.ToJson(data));
+
+            var restored = new GameSession(null, clock);
+            Assert.DoesNotThrow(() => restored.Restore(json));
+            Assert.That(restored.Journey.ActiveAttempt, Is.Null);
+            Assert.That(restored.ActiveSubject, Is.Null);
+            Assert.That(restored.PendingFrogJump, Is.Null);
+            Assert.That(restored.ResumeRoute(), Is.EqualTo(SessionRoute.Map));
+            Assert.That(restored.Journey.CheckpointChallengeId, Is.EqualTo("sprint_exam"));
+            Assert.That(restored.Lives, Is.EqualTo(2));
+            Assert.That(restored.ToSaveData().version, Is.EqualTo(8));
+            Assert.That(restored.TryStartChallenge("sprint_exam", ChallengeAttemptMode.Journey,
+                ChallengeDifficulty.Normal, out _), Is.True, "The migrated journey is playable.");
+        }
     }
 }

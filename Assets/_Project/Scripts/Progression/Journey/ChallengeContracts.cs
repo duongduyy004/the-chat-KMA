@@ -70,13 +70,17 @@ namespace KMA.Gameplay
         public bool SavesLife { get; }
         public int LivesRemaining { get; }
         public string Error { get; }
+        /// The failed challenge the frog jump retries is a practice (not an exam).
+        public bool RetryIsPractice { get; }
 
-        public FrogJumpResultView(bool reachedFinish, bool savesLife, int livesRemaining, string error)
+        public FrogJumpResultView(bool reachedFinish, bool savesLife, int livesRemaining, string error,
+            bool retryIsPractice = false)
         {
             ReachedFinish = reachedFinish;
             SavesLife = savesLife;
             LivesRemaining = livesRemaining;
             Error = error;
+            RetryIsPractice = retryIsPractice;
         }
     }
 
