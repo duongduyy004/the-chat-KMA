@@ -215,7 +215,8 @@ namespace KMA.Gameplay.UI
             livesOutline.effectColor = MinigameUiTheme.WithAlpha(UITheme.Shared.Accent, 210f / 255f);
             livesOutline.effectDistance = new Vector2(UITheme.Shared.BorderWidth * .5f, -UITheme.Shared.BorderWidth * .5f);
             HorizontalLayoutGroup livesLayout = livesPanel.gameObject.AddComponent<HorizontalLayoutGroup>();
-            livesLayout.padding = new RectOffset(14, 14, 6, 6);
+            // The top padding leaves room for the life regen countdown above the hearts.
+            livesLayout.padding = new RectOffset(14, 14, 30, 4);
             livesLayout.spacing = 12;
             livesLayout.childAlignment = TextAnchor.MiddleCenter;
             livesLayout.childControlWidth = true;
@@ -224,7 +225,7 @@ namespace KMA.Gameplay.UI
             livesLayout.childForceExpandHeight = false;
             LayoutElement livesElement = livesPanel.gameObject.AddComponent<LayoutElement>();
             livesElement.preferredWidth = 470;
-            livesElement.preferredHeight = 60;
+            livesElement.preferredHeight = 66;
             RectTransform bar = Rect(livesPanel, "HeartBar");
             HorizontalLayoutGroup heartLayout = bar.gameObject.AddComponent<HorizontalLayoutGroup>();
             heartLayout.spacing = 6; heartLayout.childAlignment = TextAnchor.MiddleCenter;

@@ -152,8 +152,7 @@ namespace KMA.Gameplay.Volleyball
 
         protected override MinigameHudState BuildHudState() => new MinigameHudState(
             PresentationPhase.ToString(),
-            Match == null ? VolleyballMatch.TimeLimit : challengeDefinition != null && challengeDefinition.Kind != ChallengeKind.Exam
-                ? 0f : Match.TimeRemaining,
+            Match == null ? VolleyballMatch.TimeLimit : Match.TimeRemaining,
             challengeRules == null || challengeDefinition.Kind == ChallengeKind.Exam ? 0f
                 : Mathf.Clamp01(challengeRules.CompletedTargets / (float)Mathf.Max(1, challengeDefinition.TargetCount)),
             0f,

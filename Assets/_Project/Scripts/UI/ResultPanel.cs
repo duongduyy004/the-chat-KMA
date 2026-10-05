@@ -104,6 +104,7 @@ namespace KMA.Gameplay.UI
         public void Show(MinigameResult result, string previewRoute)
         {
             frogMode = false;
+            ApplyFrogLayout(false);
             challengeContext = null;
             challengeSaveError = null;
             challengeOutcome = null;
@@ -181,6 +182,7 @@ namespace KMA.Gameplay.UI
             JourneyCommitOutcome? outcome, string saveError)
         {
             frogMode = false;
+            ApplyFrogLayout(false);
             challengeContext = context;
             challengeSaveError = outcome.HasValue ? null : saveError;
             challengeOutcome = outcome;
@@ -249,9 +251,48 @@ namespace KMA.Gameplay.UI
             Reveal(result.ExamResult == null ? result.Metrics.CompletedTargets : result.ExamResult.Score);
         }
 
+        // The frog card has no score or rank, so it closes that gap by using a shorter card.
+        struct RectState { public Vector2 min, max, size; }
+        readonly System.Collections.Generic.Dictionary<RectTransform, RectState> layoutOriginals =
+            new System.Collections.Generic.Dictionary<RectTransform, RectState>();
+
+        void SetRect(RectTransform rect, float minY, float maxY)
+        {
+            if (rect == null) return;
+            if (!layoutOriginals.ContainsKey(rect))
+                layoutOriginals[rect] = new RectState { min = rect.anchorMin, max = rect.anchorMax, size = rect.sizeDelta };
+            rect.anchorMin = new Vector2(rect.anchorMin.x, minY);
+            rect.anchorMax = new Vector2(rect.anchorMax.x, maxY);
+        }
+
+        void ApplyFrogLayout(bool frog)
+        {
+            if (!frog)
+            {
+                foreach (var pair in layoutOriginals)
+                {
+                    if (pair.Key == null) continue;
+                    pair.Key.anchorMin = pair.Value.min;
+                    pair.Key.anchorMax = pair.Value.max;
+                    pair.Key.sizeDelta = pair.Value.size;
+                }
+                layoutOriginals.Clear();
+                return;
+            }
+            RectTransform card = contentRoot != null ? contentRoot.GetComponent<RectTransform>() : null;
+            if (card == null || layoutOriginals.ContainsKey(card)) return;
+            layoutOriginals[card] = new RectState { min = card.anchorMin, max = card.anchorMax, size = card.sizeDelta };
+            card.sizeDelta = new Vector2(card.sizeDelta.x, 420f);
+            SetRect(statusLabel != null ? statusLabel.rectTransform : null, .74f, .95f);
+            SetRect(detailLabel != null ? detailLabel.rectTransform : null, .51f, .63f);
+            SetRect(livesLabel != null ? livesLabel.rectTransform : null, .38f, .48f);
+            SetRect(actionButton != null ? (RectTransform)actionButton.transform : null, .06f, .27f);
+        }
+
         public void ShowFrogJump(FrogJumpResultView view)
         {
             frogMode = true;
+            ApplyFrogLayout(true);
             challengeContext = null;
             challengeSaveError = null;
             challengeOutcome = null;

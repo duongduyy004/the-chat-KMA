@@ -81,10 +81,23 @@ namespace KMA.Gameplay.UI
         public void SetLeaveOptionsVisible(bool visible)
         {
             leaveOptionsVisible = visible;
+            ApplyMenuLayout();
             if (restartButton != null)
                 restartButton.gameObject.SetActive(visible);
             if (exitButton != null)
                 exitButton.gameObject.SetActive(visible);
+        }
+
+        // With only Tiếp tục left, shrink the card so it does not keep room for the hidden buttons.
+        void ApplyMenuLayout()
+        {
+            if (menuCard == null) return;
+            bool compact = !leaveOptionsVisible;
+            ((RectTransform)menuCard).sizeDelta = new Vector2(560f, compact ? 270f : 440f);
+            Transform heading = menuCard.Find("Heading");
+            if (heading != null) ((RectTransform)heading).anchoredPosition = new Vector2(0f, compact ? 80f : 155f);
+            if (resumeButton != null)
+                ((RectTransform)resumeButton.transform).anchoredPosition = new Vector2(0f, compact ? -35f : 55f);
         }
 
         void WireButtons()

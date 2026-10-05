@@ -51,6 +51,7 @@ namespace KMA.Gameplay.UI
             if (countdownLabel != null) return;
             countdownLabel = UiKit.Label(transform, "LifeTimer", string.Empty, 22f, MinigameUiTheme.TextPrimary);
             countdownLabel.fontSize = 22f;
+            countdownLabel.alignment = TMPro.TextAlignmentOptions.Center;
             countdownLabel.textWrappingMode = TMPro.TextWrappingModes.NoWrap;
             var layout = countdownLabel.gameObject.AddComponent<LayoutElement>();
             layout.ignoreLayout = true;
@@ -58,8 +59,8 @@ namespace KMA.Gameplay.UI
             rect.anchorMin = new Vector2(0f, 1f);
             rect.anchorMax = new Vector2(1f, 1f);
             rect.pivot = new Vector2(.5f, 0f);
-            rect.anchoredPosition = new Vector2(0f, 2f);
-            rect.sizeDelta = new Vector2(0f, 26f);
+            rect.anchoredPosition = Vector2.zero;
+            rect.sizeDelta = new Vector2(0f, 24f);
             countdownLabel.raycastTarget = false;
         }
     }

@@ -32,14 +32,17 @@ Notes on the captures: the result cards in 4a/4b are forced during the pre-play 
 digit shows through the scrim near the card centre; it is a capture artefact, not part of the real flow. In 6a only
 two lesson cards are visible because the hook rebinds the list and it scrolls to the checkpoint.
 
-## Defects found
+## Defects found and fixed
 
-1. FIXED: `FrogJumpController` did not override `UsesSharedTutorial`, so the generic English `LEFT / RIGHT - Tap the
-   matching side.` card gated the start. Now `false` (as Sprint/Football/Volleyball do) with a test.
-2. Frog HUD still shows the generic `PLAY` state label and two grey placeholder bars (progress and stamina, stamina
-   fed 0) under the timer. Visible in every frog image.
-3. Map header: the regen countdown (`5:00`, red at 0 lives) is about 8 px tall and sits on the header's top border
-   above the hearts (6a, 6b).
-4. `Còn 40,0 m` sits on the power bar's bottom border, right of centre, and is crossed by the needle (2).
-5. Frog result card keeps the score and rank slot as an empty gap between title and detail (4a, 4b).
-6. Pause panel with a single button keeps its three-button height (pause).
+1. Generic English tutorial card opened (fixed earlier: `FrogJumpController.UsesSharedTutorial => false`).
+2. Frog HUD: the stray `PLAY` caption, stamina and score are hidden; the progress bar stays (real distance). Re-captured in images 1, 2, 3.
+3. `Còn x m` now sits under the progress bar at the top, clear of the power bar and needle (image 2).
+4. Map countdown: the lives panel has room above the hearts and the label is 22 px, centred, inside the panel (6a, 6b).
+5. Frog result card uses a shorter card, so there is no empty score gap (4a, 4b). The normal result layout is restored on every other `Show`.
+6. Single-button pause menu shrinks to fit (pause).
+7. At 0 lives the `TIẾP TỤC BÀI HỌC` button is dimmed with the kit's disabled alpha (6b).
+8. Volleyball shows an `m:ss` clock under the scoreboard whenever the match has a time limit (`volleyball-timer.png`, 1:57 of 2:00); `BuildHudState` reports the remaining time for practice too.
+9. Frog scene Sky and Grass quads shared a sorting order, so a rebuild could draw the sky over the grass; Sky is now -31.
+
+Capture note: a background Editor only renders the Game view reliably when its window is activated; activate it
+before each capture and restart it after editing scripts.

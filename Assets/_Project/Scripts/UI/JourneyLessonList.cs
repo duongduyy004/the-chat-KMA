@@ -162,6 +162,9 @@ namespace KMA.Gameplay.UI
             {
                 continueButton.gameObject.SetActive(CurrentChallengeId != null);
                 continueButton.interactable = CurrentChallengeId != null && !currentOutOfLives;
+                // The button has no press-feedback component, so show the disabled state here.
+                UiKit.GetOrAdd<CanvasGroup>(continueButton.gameObject).alpha =
+                    continueButton.interactable ? 1f : MinigameUiTheme.DisabledAlpha;
             }
 
             if (reveal) PlayReveal();

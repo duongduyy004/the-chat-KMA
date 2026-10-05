@@ -13,6 +13,7 @@ namespace KMA.Gameplay.Volleyball
         [SerializeField] TMP_Text feedbackLabel;
         [SerializeField] TMP_Text hintLabel;
         [SerializeField] GameObject hintBackdrop;
+        [SerializeField] TMP_Text timerLabel;
 
         float feedbackLeft;
         float hintLeft = HintSeconds;
@@ -35,6 +36,15 @@ namespace KMA.Gameplay.Volleyball
             $"{playerPoints}  :  {opponentPoints}";
 
         public void ConfigureHintBackdrop(GameObject backdrop) => hintBackdrop = backdrop;
+
+        public void ConfigureTimer(TMP_Text timer) => timerLabel = timer;
+
+        /// m:ss for the time left on the match clock.
+        public static string TimerText(float secondsRemaining)
+        {
+            int seconds = Mathf.Max(0, Mathf.CeilToInt(secondsRemaining));
+            return $"{seconds / 60}:{seconds % 60:00}";
+        }
 
         public void ConfigureChallenge(ChallengeDefinition definition, VolleyballChallengeRules rules)
         {
@@ -73,6 +83,13 @@ namespace KMA.Gameplay.Volleyball
         {
             if (match != null && scoreLabel)
                 scoreLabel.text = VietText.Fix(ScoreText(match.PlayerPoints, match.OpponentPoints));
+            if (timerLabel)
+            {
+                bool timed = match != null && match.ClockLimit > 0f;
+                timerLabel.gameObject.SetActive(timed);
+                if (timed)
+                    timerLabel.text = VietText.Fix(TimerText(match.TimeRemaining));
+            }
             if (phase != previousPhase)
             {
                 if (phase == MinigamePhase.Play)

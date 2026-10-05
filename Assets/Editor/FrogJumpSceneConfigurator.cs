@@ -66,7 +66,7 @@ namespace KMA.EditorTools
             Sprite pixel = AssetDatabase.LoadAssetAtPath<Sprite>(PixelPath) ??
                 throw new InvalidOperationException($"[KMA] {PixelPath} is missing; build the volleyball scene first.");
 
-            Quad("Sky", pixel, new Color32(120, 205, 240, 255), new Vector3(0f, 4f, 0f), new Vector2(60f, 16f));
+            Quad("Sky", pixel, new Color32(120, 205, 240, 255), new Vector3(0f, 4f, 0f), new Vector2(60f, 16f), -31);
             Quad("Grass", pixel, new Color32(110, 190, 90, 255), new Vector3(0f, GroundY - 6f, 0f), new Vector2(60f, 12f));
             Quad("Track", pixel, new Color32(214, 120, 80, 255), new Vector3(0f, GroundY - .6f, 0f),
                 new Vector2(FinishX - StartX + 2f, 1.2f), -29);
@@ -123,6 +123,7 @@ namespace KMA.EditorTools
             hudRoot.GetComponent<Canvas>().sortingOrder = HudSortingOrder;
             var parent = (RectTransform)(hudRoot.transform.Find("SafeAreaRoot") ?? hudRoot.transform);
             Vector2 centre = new Vector2(.5f, .5f);
+            ConfigureSharedHud(hudRoot.transform);
 
             // Full-screen tap catcher behind every other HUD element.
             RectTransform tapRect = UiRect("TapArea", parent, Vector2.zero, Vector2.one);
@@ -188,6 +189,28 @@ namespace KMA.EditorTools
                 EditorUtility.SetDirty(dirty);
             EditorSceneManager.MarkSceneDirty(scene);
             EditorSceneManager.SaveScene(scene);
+        }
+
+        /// The frog jump has no phase caption, stamina or score. Keep the timer, hearts and the distance
+        /// progress bar, and put the "Còn x m" status under the progress bar.
+        static void ConfigureSharedHud(Transform hud)
+        {
+            Transform Child(string name) => hud.GetComponentsInChildren<Transform>(true).FirstOrDefault(t => t.name == name);
+            Transform progress = Child("Progress");
+            Transform status = Child("Status");
+            if (progress != null && status != null)
+            {
+                var from = (RectTransform)progress;
+                var to = (RectTransform)status;
+                to.SetParent(from.parent, false);
+                to.anchorMin = from.anchorMin;
+                to.anchorMax = from.anchorMax;
+                to.pivot = new Vector2(.5f, 1f);
+                to.sizeDelta = new Vector2(Mathf.Max(from.sizeDelta.x, 300f), 36f);
+                to.anchoredPosition = from.anchoredPosition + new Vector2(0f, -from.sizeDelta.y * from.pivot.y - 6f);
+            }
+            foreach (string name in new[] { "Phase", "Stamina", "Score" })
+                Child(name)?.gameObject.SetActive(false);
         }
 
         static RectTransform UiRect(string name, Transform parent, Vector2 anchorMin, Vector2 anchorMax)

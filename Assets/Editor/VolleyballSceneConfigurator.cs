@@ -328,6 +328,13 @@ namespace KMA.EditorTools
                 MinigameUiTheme.Energy);
             UiKit.Place(enemyTitle.rectTransform, new Vector2(1f, .5f), centre, new Vector2(-136f, 0f), new Vector2(225f, 65f));
 
+            // Practice and exam run against a clock; the generic HUD timer is hidden in this scene.
+            TMP_Text timer = UiKit.Label(controls, "Timer", "2:00", MinigameUiTheme.Headline,
+                MinigameUiTheme.Accent, TextAlignmentOptions.Center, outline: true);
+            timer.raycastTarget = false;
+            UiKit.Place(timer.rectTransform, new Vector2(.5f, 1f), new Vector2(.5f, 1f), new Vector2(0f, -104f),
+                new Vector2(240f, 56f));
+
             TMP_Text feedback = UiKit.Label(controls, "Feedback", string.Empty, MinigameUiTheme.Headline,
                 MinigameUiTheme.Accent, TextAlignmentOptions.Center, outline: true);
             UiKit.Place(feedback.rectTransform, new Vector2(.5f, .75f), centre, Vector2.zero, new Vector2(680f, 100f));
@@ -337,6 +344,7 @@ namespace KMA.EditorTools
             var hud = controls.gameObject.AddComponent<VolleyballHud>();
             hud.Configure(score, feedback, hint.Label);
             hud.ConfigureHintBackdrop(hint.Background.gameObject);
+            hud.ConfigureTimer(timer);
 
             var pause = Object.FindFirstObjectByType<PausePanel>();
             if (pause)
