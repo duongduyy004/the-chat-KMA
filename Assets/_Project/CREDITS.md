@@ -89,6 +89,7 @@ style by `tools/render-journey-emoji.js` and packed into a 360x216 atlas
 
 ## Project-generated campus backdrop
 
-`Art/Environments/Campus/` (sky, skyline with the KMA main building, track, volleyball net and a
+`Art/Environments/Campus/` (sky, track, volleyball net and a
 white pixel for tinted quads) is drawn by `tools/render-campus-art.js` as SVG and rasterised with
-`@resvg/resvg-js` on 2026-10-06. Same palette and ink outline as the Football GoalView art.
+`@resvg/resvg-js` on 2026-10-06. Same palette and ink outline as the Football GoalView art. `CampusSkyline.png` is not drawn: it is
+cropped, pixels unchanged, from the Sprint campus illustration `Art/Environments/Sprint/Campus.png`.

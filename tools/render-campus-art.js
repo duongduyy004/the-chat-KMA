@@ -1,12 +1,19 @@
 // Draws the shared campus backdrop layers in the "Chạy trốn thể chất" flat cartoon style:
 // ink outlines, flat colours, no gradients. Palette shared with render-football-goalview-art.js.
-// Run: TMP_NODE="$TEMP/kma-resvg"; npm install --prefix "$TMP_NODE" @resvg/resvg-js
+// CampusSkyline is not drawn: it is cropped (pixels unchanged) from the Sprint campus illustration
+// Assets/_Project/Art/Environments/Sprint/Campus.png to its opaque bounding box (alpha > 8; the source has alpha 1 noise).
+// Run: TMP_NODE="$TEMP/kma-resvg"; npm install --prefix "$TMP_NODE" @resvg/resvg-js pngjs
 //      NODE_PATH="$TMP_NODE/node_modules" node tools/render-campus-art.js Assets/_Project/Art/Environments/Campus
 const fs = require('fs');
 const path = require('path');
 const { Resvg } = require('@resvg/resvg-js');
+const { PNG } = require('pngjs');
 
 const OUT = process.argv[2];
+if (!OUT) {
+  console.error('Usage: node tools/render-campus-art.js <output-dir>   (e.g. Assets/_Project/Art/Environments/Campus)');
+  process.exit(2);
+}
 const C = {
   ink: '#1c2546', sky: '#2e9be6', cloud: '#fbf4e2', tree: '#5cb346', treeDark: '#3f8f3a',
   seatBlue: '#2f6fd1', seatYellow: '#f4c531', stand: '#efe6cf', wall: '#fbf4e2', coral: '#e85a48',
@@ -28,65 +35,7 @@ const svg = (w, h, body) =>
 function sky() {
   // Clouds sit between 30 % and 60 % of the height; none crosses the left/right edge so it tiles.
   return svg(1024, 512, `<rect width="1024" height="512" fill="${C.sky}"/>` +
-    cloud(110, 200, 1.1) + cloud(420, 250, .8) + cloud(640, 175, 1.2) + cloud(880, 270, .7));
-}
-
-function tree(x, base, r, dark) {
-  return `<rect x="${x - 5}" y="${base - r * .9}" width="10" height="${r * .9}" fill="#8a5a36" stroke="${C.ink}" stroke-width="3"/>` +
-    blob([[x, base - r * 1.2, r], [x - r * .6, base - r * .8, r * .7], [x + r * .6, base - r * .8, r * .7]],
-      dark ? C.treeDark : C.tree, 3);
-}
-
-function stand(x, base, w) {
-  let rows = '';
-  for (let i = 0; i < 4; i++)
-    rows += `<rect x="${x + 6}" y="${base - 18 - i * 14}" width="${w - 12}" height="9" fill="${i % 2 ? C.seatYellow : C.seatBlue}"/>`;
-  const light = `<rect x="${x + w - 16}" y="${base - 150}" width="8" height="90" fill="${C.ink}"/>` +
-    rect(x + w - 34, base - 172, 44, 26, C.seatYellow, 3);
-  return rect(x, base - 76, w, 76, C.stand) + rows +
-    `<path d="M${x - 6} ${base - 76}H${x + w + 6}L${x + w - 10} ${base - 92}H${x + 10}Z" fill="${C.treeDark}" stroke="${C.ink}" stroke-width="4" stroke-linejoin="round"/>` + light;
-}
-
-function mainBuilding(x, base) {
-  const w = 520, h = 175;
-  let windows = '';
-  for (let row = 0; row < 5; row++)
-    for (let col = 0; col < 8; col++) {
-      if (col === 3 || col === 4) continue; // atrium column
-      windows += rect(x + 24 + col * 60, base - h + 14 + row * 31, 40, 20, C.glass, 3);
-    }
-  const atrium = rect(x + 200, base - h - 24, 120, h + 24, C.glass) +
-    `<path d="M${x + 230} ${base - h - 24}V${base}M${x + 260} ${base - h - 24}V${base}M${x + 290} ${base - h - 24}V${base}" stroke="${C.ink}" stroke-width="3"/>`;
-  const frame = rect(x - 8, base - h - 8, w + 16, 16, C.brick) + rect(x + 190, base - h - 38, 140, 14, C.brick);
-  const door = rect(x + 232, base - 44, 56, 44, C.ink, 2);
-  const flag = `<rect x="${x + 258}" y="${base - h - 100}" width="5" height="62" fill="${C.ink}"/>` +
-    `<path d="M${x + 263} ${base - h - 98}L${x + 305} ${base - h - 87}L${x + 263} ${base - h - 76}Z" fill="${C.yellow}" stroke="${C.ink}" stroke-width="3" stroke-linejoin="round"/>`;
-  return rect(x, base - h, w, h, C.wall) + windows + atrium + frame + door + flag;
-}
-
-function hall(x, base) {
-  const w = 300, h = 110;
-  let windows = '';
-  for (let i = 0; i < 5; i++) windows += rect(x + 24 + i * 54, base - 70, 38, 26, C.glass, 3);
-  return rect(x, base - h, w, h, C.wall) +
-    `<path d="M${x - 8} ${base - h}Q${x + w / 2} ${base - h - 70} ${x + w + 8} ${base - h}Z" fill="${C.brick}" stroke="${C.ink}" stroke-width="4" stroke-linejoin="round"/>` +
-    windows;
-}
-
-function skyline() {
-  const W = 2048, H = 320, base = H - 24;
-  let body = '';
-  for (const [x, r, d] of [[40, 34, 0], [100, 44, 1], [170, 30, 0]]) body += tree(x, base, r, d);
-  body += stand(210, base, 260);
-  for (const [x, r, d] of [[520, 40, 1], [580, 30, 0]]) body += tree(x, base, r, d);
-  body += mainBuilding(640, base);
-  for (const [x, r, d] of [[1200, 36, 0], [1260, 46, 1]]) body += tree(x, base, r, d);
-  body += hall(1310, base);
-  for (const [x, r, d] of [[1650, 30, 0]]) body += tree(x, base, r, d);
-  body += stand(1690, base, 260);
-  for (const [x, r, d] of [[1990, 40, 1]]) body += tree(x, base, r, d);
-  const hedge = `<rect x="-4" y="${base}" width="${W + 8}" height="28" fill="${C.grass}" stroke="${C.ink}" stroke-width="4"/>`;
-  return svg(W, H, body + hedge);
+    cloud(110, 200, 1.1) + cloud(420, 250, .8) + cloud(640, 190, 1.2) + cloud(880, 270, .7));
 }
 
 const pixel = () => svg(8, 8, `<rect width="8" height="8" fill="${C.white}"/>`);
@@ -107,7 +56,7 @@ function volleyNet() {
   return svg(W, H, mesh + post(0) + post(H - 40));
 }
 
-const layers = { CampusSky: sky, CampusSkyline: skyline, CampusPixel: pixel, SprintTrack: sprintTrack, VolleyNet: volleyNet };
+const layers = { CampusSky: sky, CampusPixel: pixel, SprintTrack: sprintTrack, VolleyNet: volleyNet };
 fs.mkdirSync(OUT, { recursive: true });
 for (const [name, make] of Object.entries(layers)) {
   const image = make();
@@ -116,4 +65,18 @@ for (const [name, make] of Object.entries(layers)) {
   const png = new Resvg(image, { fitTo: { mode: 'width', value: width } }).render().asPng();
   fs.writeFileSync(path.join(OUT, name + '.png'), png);
   console.log(name, width);
+}
+
+// Skyline: crop the Sprint campus illustration to its opaque bounding box (alpha > 8; the source has alpha 1 noise).
+{
+  const src = PNG.sync.read(fs.readFileSync(path.join(__dirname, '..', 'Assets/_Project/Art/Environments/Sprint/Campus.png')));
+  let x0 = src.width, y0 = src.height, x1 = -1, y1 = -1;
+  for (let y = 0; y < src.height; y++)
+    for (let x = 0; x < src.width; x++)
+      if (src.data[(y * src.width + x) * 4 + 3] > 8) { x0 = Math.min(x0, x); x1 = Math.max(x1, x); y0 = Math.min(y0, y); y1 = Math.max(y1, y); }
+  const w = x1 - x0 + 1, h = y1 - y0 + 1;
+  const out = new PNG({ width: w, height: h });
+  PNG.bitblt(src, out, x0, y0, w, h, 0, 0);
+  fs.writeFileSync(path.join(OUT, 'CampusSkyline.png'), PNG.sync.write(out));
+  console.log(`CampusSkyline ${w}x${h} (crop x ${x0}-${x1}, y ${y0}-${y1} of ${src.width}x${src.height})`);
 }
