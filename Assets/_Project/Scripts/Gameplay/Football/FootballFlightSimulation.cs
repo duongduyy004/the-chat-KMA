@@ -148,14 +148,13 @@ namespace KMA.Gameplay
             public Capsule(float ax, float ay, float bx, float by, float r)
             { a = new Vector2(ax, ay); b = new Vector2(bx, by); radius = r; }
         }
-        // Kenney Toon `Male person` `fall` pose drawn FootballPresentation.KeeperDisplayWidth x Height,
-        // feet KeeperFeetDrop px below the hip. Head, torso, upper arms, hands, legs.
+        // `MalePerson` `cheer1` pose (arms raised wide) drawn FootballPresentation.KeeperDisplayWidth x Height,
+        // feet KeeperFeetDrop px below the hip. Head, raised arms, torso, legs, right shoe.
         static readonly Capsule[] KeeperCapsules = {
-            new Capsule(-8,-74,14,-74,15), new Capsule(-8,-57,14,-57,16),
-            new Capsule(1,-32,1,-12,19),
-            new Capsule(-20,-34,-36,-30,7), new Capsule(20,-37,40,-33,7),
-            new Capsule(-38,-21,-38,-21,10), new Capsule(41,-24,41,-24,10),
-            new Capsule(-11,-6,-12,14,9), new Capsule(15,-6,19,8,9)
+            new Capsule(0,-76,0,-63,18),
+            new Capsule(-26,-87,-18,-65,6), new Capsule(27,-87,18,-65,6),
+            new Capsule(0,-51,0,-23,14),
+            new Capsule(-3,-15,-18,10,8), new Capsule(8,-15,17,8,7), new Capsule(17,11,25,11,4)
         };
 
         public static int KeeperCapsuleCount => KeeperCapsules.Length;

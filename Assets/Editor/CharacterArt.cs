@@ -8,10 +8,10 @@ using UnityEngine;
 namespace KMA.EditorTools
 {
     /// <summary>
-    /// The one place Kenney Toon Characters poses are imported and loaded. Every minigame draws
+    /// The one place the project character poses are imported and loaded. Every minigame draws
     /// its characters through here, so the hero keeps one size, pivot and filter in all scenes.
     /// </summary>
-    public static class ToonCharacterArt
+    public static class CharacterArt
     {
         public const string Root = "Assets/_Project/Art/Characters/";
         /// <summary>The player's character in every minigame.</summary>
@@ -47,7 +47,7 @@ namespace KMA.EditorTools
             string path = PosePath(character, pose);
             var sprite = AssetDatabase.LoadAssetAtPath<Sprite>(path);
             if (sprite == null)
-                throw new InvalidOperationException("[KMA] Toon character pose is missing or not imported: " + path);
+                throw new InvalidOperationException("[KMA] Character pose is missing or not imported: " + path);
             return sprite;
         }
 
@@ -61,7 +61,7 @@ namespace KMA.EditorTools
         {
             if (!File.Exists(path))
                 throw new FileNotFoundException(
-                    "[KMA] Missing Toon character pose: " + path + ". Copy it from Kenney Toon Characters (PNG/Poses HD).", path);
+                    "[KMA] Missing character pose: " + path + ". Every character folder needs all 18 poses.", path);
             AssetDatabase.ImportAsset(path, ImportAssetOptions.ForceSynchronousImport);
             var importer = (TextureImporter)AssetImporter.GetAtPath(path);
             var current = new TextureImporterSettings();

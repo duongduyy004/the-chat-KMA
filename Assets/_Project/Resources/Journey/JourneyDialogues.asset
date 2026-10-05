@@ -23,7 +23,7 @@ MonoBehaviour:
     - pose: 1
       sprite: {fileID: 21300000, guid: 90413955dd19cbb4eb4f37c6d8aaabe8, type: 3}
     - pose: 2
-      sprite: {fileID: 21300000, guid: 1abf6f60adfa87d4a80a78a06ba0cc0f, type: 3}
+      sprite: {fileID: 21300000, guid: 0b1ab150db6c08643abaeb71a47eed1c, type: 3}
     - pose: 3
       sprite: {fileID: 21300000, guid: 32b500e429a4e8745b1259d36acfb38c, type: 3}
     - pose: 4
@@ -38,7 +38,7 @@ MonoBehaviour:
     - pose: 1
       sprite: {fileID: 21300000, guid: 3c472b66dc0cc954d85e8e6bb2b16ca8, type: 3}
     - pose: 2
-      sprite: {fileID: 21300000, guid: fd7d583d4c9d23d4b8fc1f9068ef9095, type: 3}
+      sprite: {fileID: 21300000, guid: 09774ee14599c2b47aa3d3f4325f8b3a, type: 3}
     - pose: 3
       sprite: {fileID: 21300000, guid: dec6ff3a004a5644894c63a38dc2f100, type: 3}
     - pose: 4
@@ -53,7 +53,7 @@ MonoBehaviour:
     - pose: 1
       sprite: {fileID: 21300000, guid: b819380933de41a499fbf0b79b017295, type: 3}
     - pose: 2
-      sprite: {fileID: 21300000, guid: 56a812d94dbb5404dad0dc412cb10dd5, type: 3}
+      sprite: {fileID: 21300000, guid: 6a1d60edaf60eaf478c6a59c2e02e02b, type: 3}
     - pose: 3
       sprite: {fileID: 21300000, guid: 4282f9c2978bff04a8ce0fe16cf1b032, type: 3}
     - pose: 4
@@ -68,7 +68,7 @@ MonoBehaviour:
     - pose: 1
       sprite: {fileID: 21300000, guid: 9064347d014e7e243bbbcbd45ae4cbf0, type: 3}
     - pose: 2
-      sprite: {fileID: 21300000, guid: 8c1321f10db946d4eafb4c73205c6050, type: 3}
+      sprite: {fileID: 21300000, guid: 8ea6cdc92cc12cc44ade1f2571c28d63, type: 3}
     - pose: 3
       sprite: {fileID: 21300000, guid: 0df3d4f85977b5d46b1282d88dc38383, type: 3}
     - pose: 4

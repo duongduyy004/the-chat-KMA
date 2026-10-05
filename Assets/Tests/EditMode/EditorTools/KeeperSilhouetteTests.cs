@@ -13,7 +13,7 @@ namespace KMA.Tests.EditorTools
         public void KeeperCapsulesTraceTheDrawnKeeperPose()
         {
             var texture = new Texture2D(2, 2);
-            string path = ToonCharacterArt.PosePath(FootballSceneConfigurator.KeeperCharacter, FootballSceneConfigurator.KeeperReadyPose);
+            string path = CharacterArt.PosePath(FootballSceneConfigurator.KeeperCharacter, FootballSceneConfigurator.KeeperReadyPose);
             Assert.That(texture.LoadImage(File.ReadAllBytes(path)), Is.True, path);
             float scale = FootballPresentation.KeeperDisplayHeight / texture.height; // preview px per texture px
             Assert.That(FootballPresentation.KeeperDisplayWidth / texture.width, Is.EqualTo(scale).Within(1e-4f),

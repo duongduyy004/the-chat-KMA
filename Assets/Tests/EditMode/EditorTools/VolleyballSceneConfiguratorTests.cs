@@ -27,7 +27,7 @@ namespace KMA.Tests.EditorTools
 
             Assert.That(Object.FindObjectsByType<VolleyAthleteView>(FindObjectsSortMode.None), Has.Length.EqualTo(2));
             var controller = Object.FindFirstObjectByType<VolleyballController>();
-            AssertDrawnFrom(controller.PlayerView, ToonCharacterArt.Hero);
+            AssertDrawnFrom(controller.PlayerView, CharacterArt.Hero);
             AssertDrawnFrom(controller.OpponentView, VolleyballSceneConfigurator.OpponentCharacter);
             Assert.That(Mirrored(controller.PlayerView), Is.False, "The hero is never mirrored.");
             Assert.That(Mirrored(controller.OpponentView), Is.True, "The opponent faces the net.");
@@ -50,7 +50,7 @@ namespace KMA.Tests.EditorTools
                 Assert.That(renderer.sprite, Is.Not.Null, renderer.name);
                 string path = AssetDatabase.GetAssetPath(renderer.sprite);
                 Assert.That(renderer.sprite.texture.filterMode, Is.EqualTo(FilterMode.Bilinear),
-                    renderer.name + " uses " + path + ": pixel-filtered art next to the smooth Toon athletes");
+                    renderer.name + " uses " + path + ": pixel-filtered art next to the smooth character athletes");
                 if (path.Contains("/Environments/Volleyball/"))
                     Assert.That(allowedEnvironment, Does.Contain(System.IO.Path.GetFileName(path)),
                         renderer.name + " still draws the pixel-art BVA2 sheet " + path);
@@ -112,7 +112,7 @@ namespace KMA.Tests.EditorTools
             Assert.That(pause.GetComponent<Image>().sprite, Is.SameAs(assets.RoundRect20));
             Assert.That(Object.FindObjectsByType<Text>(FindObjectsInactive.Include, FindObjectsSortMode.None), Is.Empty);
         }
-        // World height, above the feet pivot, of the highest opaque pixel of an imported Toon pose.
+        // World height, above the feet pivot, of the highest opaque pixel of an imported character pose.
         static float OpaqueTop(Sprite sprite)
         {
             var texture = new Texture2D(2, 2);
@@ -135,7 +135,7 @@ namespace KMA.Tests.EditorTools
         {
             foreach (AthleteAction action in Enum.GetValues(typeof(AthleteAction)))
                 foreach (Sprite sprite in view.FramesFor(action))
-                    Assert.That(ToonCharacterArt.IsPoseOf(sprite, character), Is.True,
+                    Assert.That(CharacterArt.IsPoseOf(sprite, character), Is.True,
                         $"{view.name} {action} uses {AssetDatabase.GetAssetPath(sprite)}");
         }
     }

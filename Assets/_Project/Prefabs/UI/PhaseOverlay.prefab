@@ -1953,7 +1953,7 @@ GameObject:
   - component: {fileID: 6909399311207261542}
   - component: {fileID: 3735736704928320330}
   - component: {fileID: 4679405148162565661}
-  - component: {fileID: 387070310476076863}
+  - component: {fileID: 9046892404977402468}
   m_Layer: 0
   m_Name: TutorialRoot
   m_TagString: Untagged
@@ -2047,7 +2047,7 @@ MonoBehaviour:
   nextButton: {fileID: 2337293660367942587}
   skipButton: {fileID: 7064996553738116737}
   closeButton: {fileID: 5267739935570982197}
---- !u!114 &387070310476076863
+--- !u!114 &9046892404977402468
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}

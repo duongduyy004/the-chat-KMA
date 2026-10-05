@@ -23,7 +23,7 @@ namespace KMA.EditorTools
 
         /// The player and every rival draw from a different pack character, so a glance at the
         /// track tells four runners apart. PlayerCharacter also owns the authored lane order.
-        const string PlayerCharacter = ToonCharacterArt.Hero;
+        const string PlayerCharacter = CharacterArt.Hero;
         static readonly Dictionary<int, string> RivalCharacterByLane = new Dictionary<int, string>
         {
             { 1, "MalePerson" },
@@ -32,7 +32,7 @@ namespace KMA.EditorTools
         };
 
         /// <summary>One pack character's eight authored poses.</summary>
-        sealed class CharacterArt
+        sealed class RunnerArt
         {
             public string Folder;
             public Sprite Idle;
@@ -48,8 +48,8 @@ namespace KMA.EditorTools
             AssetDatabase.Refresh();
 
             var characters = RivalCharacterByLane.Values.Concat(new[] { PlayerCharacter }).Distinct().ToArray();
-            // Every pose is imported before any is loaded; see ToonCharacterArt.ImportAll for why.
-            ToonCharacterArt.ImportAll();
+            // Every pose is imported before any is loaded; see CharacterArt.ImportAll for why.
+            CharacterArt.ImportAll();
             var artByCharacter = characters.ToDictionary(folder => folder, LoadCharacter);
 
             // The base controller's own clips belong to lane 1's character; every other character
@@ -184,19 +184,19 @@ namespace KMA.EditorTools
             return AssetDatabase.LoadAssetAtPath<Sprite>(path);
         }
 
-        /// <summary>One character's Sprint poses; ToonCharacterArt.ImportAll must have run first.</summary>
-        static CharacterArt LoadCharacter(string folder) => new CharacterArt
+        /// <summary>One character's Sprint poses; CharacterArt.ImportAll must have run first.</summary>
+        static RunnerArt LoadCharacter(string folder) => new RunnerArt
         {
             Folder = folder,
-            Idle = ToonCharacterArt.Load(folder, "idle"),
-            Hit = ToonCharacterArt.Load(folder, "hit"),
-            FallDown = ToonCharacterArt.Load(folder, "fallDown"),
-            Run = ToonCharacterArt.Frames(folder, "run0", "run1", "run2"),
-            Cheer = ToonCharacterArt.Frames(folder, "cheer0", "cheer1")
+            Idle = CharacterArt.Load(folder, "idle"),
+            Hit = CharacterArt.Load(folder, "hurt"),
+            FallDown = CharacterArt.Load(folder, "fallDown"),
+            Run = CharacterArt.Frames(folder, "run0", "run1", "run2"),
+            Cheer = CharacterArt.Frames(folder, "cheer0", "cheer1")
         };
 
         /// <summary>Frames for one state, so Celebrate cheers and Fail drops instead of reusing Idle and Hit.</summary>
-        static Sprite[] SelectFrames(string state, CharacterArt art) => state switch
+        static Sprite[] SelectFrames(string state, RunnerArt art) => state switch
         {
             "Run" or "Burst" => new[] { art.Run[0], art.Run[1], art.Run[2], art.Run[1], art.Run[0] },
             "Celebrate" => new[] { art.Cheer[0], art.Cheer[1] },
@@ -205,7 +205,7 @@ namespace KMA.EditorTools
             _ => new[] { art.Idle, art.Idle }
         };
 
-        static void AuthorClip(string state, CharacterArt art, string clipPath)
+        static void AuthorClip(string state, RunnerArt art, string clipPath)
         {
             var clip = AssetDatabase.LoadAssetAtPath<AnimationClip>(clipPath);
             if (clip == null)
@@ -237,7 +237,7 @@ namespace KMA.EditorTools
         }
 
         /// <summary>Gives one character its own clip set behind the shared state machine.</summary>
-        static RuntimeAnimatorController AuthorOverrideController(CharacterArt art, RuntimeAnimatorController baseController)
+        static RuntimeAnimatorController AuthorOverrideController(RunnerArt art, RuntimeAnimatorController baseController)
         {
             var clips = States.ToDictionary(state => state,
                 state => AuthorClipAndLoad(state, art, Animations + art.Folder + "_" + state + ".anim"));
@@ -267,7 +267,7 @@ namespace KMA.EditorTools
             return controller;
         }
 
-        static AnimationClip AuthorClipAndLoad(string state, CharacterArt art, string clipPath)
+        static AnimationClip AuthorClipAndLoad(string state, RunnerArt art, string clipPath)
         {
             AuthorClip(state, art, clipPath);
             return AssetDatabase.LoadAssetAtPath<AnimationClip>(clipPath);

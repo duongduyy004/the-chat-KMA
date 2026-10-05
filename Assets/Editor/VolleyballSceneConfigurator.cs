@@ -21,7 +21,7 @@ namespace KMA.EditorTools
     {
         public const string ScenePath = "Assets/_Project/Scenes/MG_Volleyball.unity";
         public const string OpponentCharacter = "FemaleAdventurer";
-        // Toon poses are 1.28 units tall; this matches the court scale the BVA2 athletes were tuned for.
+        // Character poses are 1.28 units tall; this matches the court scale the BVA2 athletes were tuned for.
         public const float AthleteScale = 1.8f;
         // Marker centre, in world units above the feet; its lowest point clears the tallest (jump) pose.
         const float MarkerWorldHeight = 2.4f;
@@ -92,7 +92,7 @@ namespace KMA.EditorTools
             EnsureGeneratedTexture(ShadowPath, ShadowWidth, ShadowHeight, ShadowColor);
             foreach (TextureSpec spec in Textures)
                 ConfigureTexture(spec);
-            ToonCharacterArt.ImportAll();
+            CharacterArt.ImportAll();
         }
 
         static readonly Color BallCream = new Color32(252, 246, 230, 255);
@@ -207,7 +207,7 @@ namespace KMA.EditorTools
                     new Vector3(0f, side * courtY, 0f), new Vector2(courtX * 2f, .09f), -9);
             }
 
-            VolleyAthleteView player = Athlete("Player", false, ToonCharacterArt.Hero);
+            VolleyAthleteView player = Athlete("Player", false, CharacterArt.Hero);
             VolleyAthleteView opponent = Athlete("Opponent", true, OpponentCharacter);
             AddAthleteMarker(player.transform, pixel, "Player", MinigameUiTheme.Player);
             AddAthleteMarker(opponent.transform, pixel, "Enemy", MinigameUiTheme.Energy);
@@ -236,7 +236,7 @@ namespace KMA.EditorTools
 
         static VolleyAthleteView Athlete(string name, bool mirror, string character)
         {
-            Sprite[] Poses(params string[] poses) => ToonCharacterArt.Frames(character, poses);
+            Sprite[] Poses(params string[] poses) => CharacterArt.Frames(character, poses);
             Sprite[] idle = Poses("idle");
             SpriteRenderer body = Renderer(name, idle[0], Vector3.zero, 0);
             body.transform.localScale = Vector3.one * AthleteScale;

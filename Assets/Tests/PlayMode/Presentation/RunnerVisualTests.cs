@@ -93,7 +93,7 @@ namespace KMA.Tests.Presentation
             {
                 Assert.That(rival.Sprite.sprite.texture.name,
                     Does.Match("^(MalePerson|FemalePerson|FemaleAdventurer)_"),
-                    "Rivals draw from the shared Toon character library, never from the hero.");
+                    "Rivals draw from the shared character library, never from the hero.");
                 Assert.That(rival.Animator.runtimeAnimatorController.animationClips
                     .Where(c => c.name.Contains("Run")), Is.Not.Empty);
             }

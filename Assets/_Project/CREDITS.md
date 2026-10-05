@@ -21,8 +21,8 @@ assets.
 Every character in Sprint, Football and Volleyball is a project-generated flat cartoon
 sprite in PE uniform (white T-shirt, navy track pants, sneakers), made with image
 generation from the "Chạy trốn thể chất" art brief and cut to 192 × 256 RGBA PNGs on
-2026-10-05. They replace the Kenney Toon Characters poses under the same file names, so
-folder names and pose names are kept from that pack. `MaleAdventurer` is the player in
+2026-10-05. Folder and pose names are
+fixed identifiers used by `CharacterArt`. `MaleAdventurer` is the player in
 every minigame and is never tinted.
 
 | Project folder | Character | Roles |
@@ -83,7 +83,6 @@ SoccerBallKick - purchasing102: https://freesound.org/people/purchasing102/sound
 Source files and licenses are retained in Assets/_Project/Audio/ThirdParty.
 Prepared cue offsets and hashes: Assets/_Project/Audio/Prepared/provenance.json.
 
-Twemoji graphics (15 emoji used in journey dialogue) © Twitter, Inc. and other contributors,
-maintained at https://github.com/jdecked/twemoji, licensed under CC BY 4.0:
-https://creativecommons.org/licenses/by/4.0/
-Edits: packed into a 360x216 atlas (Assets/_Project/Art/Emoji/JourneyEmojiAtlas.png).
+Journey dialogue emoji (15 glyphs) are drawn for this project in the shared flat cartoon
+style by `tools/render-journey-emoji.js` and packed into a 360x216 atlas
+(Assets/_Project/Art/Emoji/JourneyEmojiAtlas.png).

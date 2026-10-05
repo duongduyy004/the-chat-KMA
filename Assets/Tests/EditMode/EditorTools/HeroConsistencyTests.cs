@@ -11,7 +11,7 @@ using Object = UnityEngine.Object;
 
 namespace KMA.Tests.EditorTools
 {
-    /// <summary>The player is the same Toon character in every minigame, untinted, and nobody else is.</summary>
+    /// <summary>The player is the same project character in every minigame, untinted, and nobody else is.</summary>
     public sealed class HeroConsistencyTests
     {
         const string SprintScene = "Assets/_Project/Scenes/MG_Sprint.unity";
@@ -68,14 +68,14 @@ namespace KMA.Tests.EditorTools
         static void AssertHero(Sprite sprite, string where)
         {
             Assert.That(sprite, Is.Not.Null, where + ": sprite is missing");
-            Assert.That(ToonCharacterArt.IsPoseOf(sprite, ToonCharacterArt.Hero), Is.True,
+            Assert.That(CharacterArt.IsPoseOf(sprite, CharacterArt.Hero), Is.True,
                 where + " uses " + AssetDatabase.GetAssetPath(sprite));
         }
 
         static void AssertNotHero(Sprite sprite, string where)
         {
             Assert.That(sprite, Is.Not.Null, where + ": sprite is missing");
-            Assert.That(ToonCharacterArt.IsPoseOf(sprite, ToonCharacterArt.Hero), Is.False, where + " must not be the hero");
+            Assert.That(CharacterArt.IsPoseOf(sprite, CharacterArt.Hero), Is.False, where + " must not be the hero");
         }
     }
 }
