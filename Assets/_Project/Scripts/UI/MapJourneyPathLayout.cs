@@ -7,7 +7,7 @@ using UnityEngine.UI;
 
 namespace KMA.Gameplay.UI
 {
-    // Places the three stops on fixed fractions of the map zone and draws the
+    // Places the course stops on fixed fractions of the map zone and draws the
     // road between them as pooled rotated rectangles sampled from cubic Béziers.
     [DisallowMultipleComponent]
     public sealed class MapJourneyPathLayout : MonoBehaviour
@@ -23,9 +23,9 @@ namespace KMA.Gameplay.UI
             public readonly List<RectTransform> Dots = new List<RectTransform>();
         }
 
-        readonly List<MapNodeView> nodes = new List<MapNodeView>(3);
-        readonly List<Leg> legs = new List<Leg>(2);
-        readonly Vector2[] centers = new Vector2[3];
+        readonly List<MapNodeView> nodes = new List<MapNodeView>(4);
+        readonly List<Leg> legs = new List<Leg>(3);
+        readonly Vector2[] centers = new Vector2[4];
         RectTransform root;
         Vector2 lastSize;
 
@@ -63,16 +63,21 @@ namespace KMA.Gameplay.UI
             lastSize = size;
 
             UITheme.LessonJourneyStyle style = Style;
-            // Shrink the whole stop if the zone is shorter than the stop's fixed height.
+            int count = Mathf.Min(nodes.Count, Mathf.Min(style.stopX.Length, style.stopY.Length), centers.Length);
+            // Shrink the whole stop if the zone is shorter than the stop's fixed height,
+            // or too narrow for neighbouring stops to sit side by side.
             float stopScale = Mathf.Min(1f, size.y / (style.stopSize.y + 20f));
+            for (int i = 1; i < count; i++)
+                stopScale = Mathf.Min(stopScale, (style.stopX[i] - style.stopX[i - 1]) * size.x / style.stopSize.x);
             float badgeFromTop = style.stopTagHeight + style.stopBadgeSize * style.stopCurrentScale * .5f;
             float minCenter = (style.stopSize.y - badgeFromTop) * stopScale;
             float maxCenter = size.y - badgeFromTop * stopScale;
-            int count = Mathf.Min(nodes.Count, 3);
+            float halfWidth = style.stopSize.x * stopScale * .5f;
             for (int i = 0; i < count; i++)
             {
                 float cy = Mathf.Clamp(style.stopY[i] * size.y, minCenter, Mathf.Max(minCenter, maxCenter));
-                centers[i] = new Vector2((style.stopX[i] - .5f) * size.x, cy - size.y * .5f);
+                float cx = Mathf.Clamp(style.stopX[i] * size.x, halfWidth, Mathf.Max(halfWidth, size.x - halfWidth));
+                centers[i] = new Vector2(cx - size.x * .5f, cy - size.y * .5f);
                 RectTransform stop = (RectTransform)nodes[i].transform;
                 stop.anchorMin = stop.anchorMax = new Vector2(.5f, .5f);
                 stop.pivot = new Vector2(.5f, 1f);
@@ -198,6 +203,7 @@ namespace KMA.Gameplay.UI
             SubjectId.Sprint => 0,
             SubjectId.Volleyball => 1,
             SubjectId.Football => 2,
+            SubjectId.Chess => 3,
             _ => int.MaxValue
         };
     }

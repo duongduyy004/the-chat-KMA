@@ -125,7 +125,7 @@ namespace KMA.Tests.Presentation
             Transform grid = root.Find("Content/SelectionGrid");
             Assert.That(grid, Is.Not.Null);
             var nodes = grid.GetComponentsInChildren<MapNodeView>();
-            Assert.That(nodes, Has.Length.EqualTo(3));
+            Assert.That(nodes, Has.Length.EqualTo(4));
             // The connected route owns card placement; the legacy disabled grid's
             // cellSize no longer describes anything rendered on screen.
             Assert.That(nodes.Select(node => ((RectTransform)node.transform).rect.size).Distinct().Count(),
@@ -135,8 +135,8 @@ namespace KMA.Tests.Presentation
                     Is.LessThanOrEqualTo(label.rectTransform.rect.height + 1f),
                     $"{label.name} must remain readable inside the rendered chapter card.");
             Assert.That(nodes.Select(node => node.SubjectId), Is.EqualTo(new[]
-                { SubjectId.Sprint, SubjectId.Volleyball, SubjectId.Football }));
-            Assert.That(grid.Cast<Transform>().Count(child => child.name.StartsWith("PathTrack")), Is.EqualTo(2));
+                { SubjectId.Sprint, SubjectId.Volleyball, SubjectId.Football, SubjectId.Chess }));
+            Assert.That(grid.Cast<Transform>().Count(child => child.name.StartsWith("PathTrack")), Is.EqualTo(3));
         }
 
         [UnityTest]

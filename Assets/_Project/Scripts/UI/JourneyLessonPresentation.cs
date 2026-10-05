@@ -25,7 +25,7 @@ namespace KMA.Gameplay.UI
 
             Image emblem = Shape(panel, "CourseIcon", Theme.LessonJourney.sprint, true);
             Place(emblem.rectTransform, new Vector2(.025f, .90f), new Vector2(52f, 52f), new Vector2(0f, .5f));
-            SubjectId[] subjects = { SubjectId.Sprint, SubjectId.Volleyball, SubjectId.Football };
+            SubjectId[] subjects = { SubjectId.Sprint, SubjectId.Volleyball, SubjectId.Football, SubjectId.Chess };
             foreach (SubjectId subject in subjects)
             {
                 Image sport = Shape(emblem.transform, subject + "Glyph", Theme.Surface);

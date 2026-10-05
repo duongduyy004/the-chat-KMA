@@ -64,6 +64,7 @@ namespace KMA.Gameplay.Shell
                     dialogues.ShowJourney(router.Session, GameManager.Instance, mainMenuBackground);
                 map.SubjectRequested += SelectMapSubject;
                 map.ChallengeRequested += StartChallenge;
+                map.CelebrationRequested += ReplayCelebration;
             }
             if (gameOver != null)
             {
@@ -102,6 +103,7 @@ namespace KMA.Gameplay.Shell
             {
                 map.SubjectRequested -= SelectMapSubject;
                 map.ChallengeRequested -= StartChallenge;
+                map.CelebrationRequested -= ReplayCelebration;
             }
             if (gameOver != null)
             {
@@ -293,6 +295,8 @@ namespace KMA.Gameplay.Shell
         {
             map?.LessonList?.ShowSubject(subject);
         }
+
+        static void ReplayCelebration() => SceneRouter.Instance?.RouteToCelebration();
 
         static void StartChallenge(string id, ChallengeAttemptMode mode)
         {

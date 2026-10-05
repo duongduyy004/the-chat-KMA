@@ -140,10 +140,10 @@ namespace KMA.Tests.Presentation
                     .GetComponent<GridLayoutGroup>();
                 Assert.That(grid.constraint, Is.EqualTo(GridLayoutGroup.Constraint.FixedColumnCount));
                 Assert.That(grid.constraintCount, Is.EqualTo(3));
-                Assert.That(grid.GetComponentsInChildren<MapNodeView>(true), Has.Length.EqualTo(3));
-                Assert.That(root.GetComponentsInChildren<MapNodeView>(true), Has.Length.EqualTo(3));
+                Assert.That(grid.GetComponentsInChildren<MapNodeView>(true), Has.Length.EqualTo(4));
+                Assert.That(root.GetComponentsInChildren<MapNodeView>(true), Has.Length.EqualTo(4));
                 Assert.That(root.GetComponentsInChildren<MapNodeView>(true).Select(node => node.SubjectId),
-                    Is.EqualTo(new[] { SubjectId.Sprint, SubjectId.Volleyball, SubjectId.Football }));
+                    Is.EqualTo(new[] { SubjectId.Sprint, SubjectId.Volleyball, SubjectId.Football, SubjectId.Chess }));
                 Assert.That(grid.cellSize.y, Is.GreaterThanOrEqualTo(220f));
                 Assert.That(root.transform.Find("S5MapPresentation/Content/ProgressSection"), Is.Null);
             }
@@ -372,7 +372,7 @@ namespace KMA.Tests.Presentation
                 Assert.That(football.GetComponent<Button>().interactable, Is.False);
                 var iconSprites = screen.Nodes.Select(node => node.transform.Find("Badge/IconGlyph")
                     .GetComponent<Image>().sprite).ToArray();
-                Assert.That(iconSprites.Distinct().Count(), Is.EqualTo(3));
+                Assert.That(iconSprites.Distinct().Count(), Is.EqualTo(4));
                 foreach (MapNodeView node in screen.Nodes)
                     Assert.That(node.transform.Find("LabelGroup/TitleContainer/Title").GetComponent<TMP_Text>().fontSize,
                         Is.GreaterThanOrEqualTo(30), node.name);
@@ -640,9 +640,10 @@ namespace KMA.Tests.Presentation
                         Is.EqualTo(UITheme.Shared.LessonJourney.stopSize), node.name);
                 }
                 Assert.That(stars, Has.Count.EqualTo(1), "All stars share one runtime sprite.");
-                Assert.That(screen.Nodes[2].transform.Find("Badge/FinishFlag"), Is.Not.Null);
+                Assert.That(screen.Nodes[3].transform.Find("Badge/FinishFlag"), Is.Not.Null);
                 Assert.That(screen.Nodes[0].transform.Find("Badge/FinishFlag"), Is.Null);
                 Assert.That(screen.Nodes[1].transform.Find("Badge/FinishFlag"), Is.Null);
+                Assert.That(screen.Nodes[2].transform.Find("Badge/FinishFlag"), Is.Null);
             }
             finally { Object.DestroyImmediate(root); }
         }
@@ -674,8 +675,8 @@ namespace KMA.Tests.Presentation
             {
                 var screen = root.AddComponent<MapScreen>();
                 MapPresentationBuilder.Build(screen, new GameSession());
-                Assert.That(screen.Nodes.Select(node => node.IsCurrent), Is.EqualTo(new[] { true, false, false }));
-                Assert.That(screen.Nodes.Select(node => node.IsSelected), Is.EqualTo(new[] { true, false, false }));
+                Assert.That(screen.Nodes.Select(node => node.IsCurrent), Is.EqualTo(new[] { true, false, false, false }));
+                Assert.That(screen.Nodes.Select(node => node.IsSelected), Is.EqualTo(new[] { true, false, false, false }));
                 Assert.That(screen.Nodes[0].transform.Find("CurrentTag").gameObject.activeSelf, Is.True);
                 Assert.That(screen.Nodes[1].transform.Find("CurrentTag").gameObject.activeSelf, Is.False);
             }
@@ -805,7 +806,7 @@ namespace KMA.Tests.Presentation
                     float statusLeft = status.anchorMin.x * pillWidth + status.offsetMin.x;
                     Assert.That(starsRight, Is.LessThanOrEqualTo(statusLeft), node.name);
                 }
-                var flag = (RectTransform)screen.Nodes[2].transform.Find("Badge/FinishFlag");
+                var flag = (RectTransform)screen.Nodes[3].transform.Find("Badge/FinishFlag");
                 Assert.That(flag.anchorMin.y, Is.LessThanOrEqualTo(.8f),
                     "The flag must sit below the badge top so the current-stop tag never covers it.");
             }
@@ -904,13 +905,16 @@ namespace KMA.Tests.Presentation
                 var (screen, grid) = BuildMapAt(root, new Vector2(width, 1080f), new GameSession());
                 MapPresentationBuilder.Build(screen, new GameSession());   // second build must not duplicate
                 var layout = grid.GetComponent<MapJourneyPathLayout>();
-                Assert.That(grid.Cast<Transform>().Count(child => child.name.StartsWith("PathTrack")), Is.EqualTo(2));
+                Assert.That(grid.Cast<Transform>().Count(child => child.name.StartsWith("PathTrack")), Is.EqualTo(3));
                 Assert.That(grid.Find("PathTrack1").childCount, Is.GreaterThan(30));
-                Vector2 first = layout.StopCenter(0), second = layout.StopCenter(1), third = layout.StopCenter(2);
-                Assert.That(second.y, Is.GreaterThan(first.y), "Middle stop sits higher than the outer stops.");
+                Vector2 first = layout.StopCenter(0), second = layout.StopCenter(1), third = layout.StopCenter(2),
+                    fourth = layout.StopCenter(3);
+                Assert.That(second.y, Is.GreaterThan(first.y), "Even stops sit higher than odd stops.");
                 Assert.That(third.y, Is.EqualTo(first.y).Within(.5f));
+                Assert.That(fourth.y, Is.EqualTo(second.y).Within(.5f));
                 Assert.That(first.x, Is.LessThan(second.x));
                 Assert.That(second.x, Is.LessThan(third.x));
+                Assert.That(third.x, Is.LessThan(fourth.x));
                 Image firstOutline = grid.Find("PathTrack1/Outline1").GetComponent<Image>();
                 Assert.That(Vector2.Distance(firstOutline.rectTransform.anchoredPosition, first),
                     Is.LessThan(Style().stopBadgeSize), "Road starts under the first badge.");

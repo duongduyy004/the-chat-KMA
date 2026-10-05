@@ -155,9 +155,9 @@ namespace KMA.Tests.Gameplay.Progression
                 Assert.That(gridLayout.cellSize.x, Is.Not.EqualTo(220f));
                 Assert.That(grid.GetComponent<LayoutElement>().preferredHeight,
                     Is.GreaterThanOrEqualTo(gridLayout.cellSize.y * 2f + gridLayout.spacing.y));
-                Assert.That(grid.GetComponentsInChildren<MapNodeView>(true), Has.Length.EqualTo(3));
+                Assert.That(grid.GetComponentsInChildren<MapNodeView>(true), Has.Length.EqualTo(4));
                 Assert.That(screen.Nodes.Select(node => node.SubjectId), Is.EqualTo(new[]
-                    { SubjectId.Sprint, SubjectId.Volleyball, SubjectId.Football }));
+                    { SubjectId.Sprint, SubjectId.Volleyball, SubjectId.Football, SubjectId.Chess }));
                 foreach (MapNodeView node in screen.Nodes)
                 {
                     Assert.That(node.transform.Find("Badge").GetComponent<Image>().sprite, Is.Not.Null, node.name);
@@ -211,7 +211,7 @@ namespace KMA.Tests.Gameplay.Progression
                 Assert.That(screen.LessonList, Is.Not.Null);
                 Assert.That(screen.LessonList.LessonIds,
                     Is.EqualTo(new[] { "sprint_learn", "sprint_practice", "sprint_exam" }));
-                Assert.That(screen.Nodes, Has.Length.EqualTo(3));
+                Assert.That(screen.Nodes, Has.Length.EqualTo(4));
                 screen.SelectSubject(SubjectId.Sprint);
                 screen.LessonList.GetComponentInChildren<Button>(true).onClick.Invoke();
                 Assert.That(requested, Is.EqualTo(new[] { SubjectId.Sprint }),

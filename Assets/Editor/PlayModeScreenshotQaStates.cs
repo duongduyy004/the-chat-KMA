@@ -17,6 +17,9 @@ namespace KMA.EditorTools
     ///   exam-fail-2        challenge result panel, second failure (life already lost)
     ///   map-lives-3        Map with 3 lives (regen countdown running)
     ///   map-lives-0        Map with 0 lives
+    ///   map-chess-locked   Map with the course done through soccer_practice (final stop locked)
+    ///   map-chess-open     Map with the course done through soccer_exam (final exam is the checkpoint)
+    ///   map-complete       Map with the whole course done (summary and replay button)
     ///   chess-select       MG_ChessFinal: start the attempt and select the first main-line piece
     ///   celebration-cheer  Celebration: wait until the timeline reaches 3 s (cheer beat)
     ///   celebration-teacher Celebration: wait until the timeline reaches 6 s (teacher and bubble)
@@ -28,6 +31,7 @@ namespace KMA.EditorTools
         public static bool IsKnown(string state) => state == "" || state == "frog-fall" ||
             state == "frog-win-keep" || state == "frog-lose-zero" || state == "exam-fail-1" ||
             state == "exam-fail-2" || state == "map-lives-3" || state == "map-lives-0" || state == "chess-select" ||
+            state == "map-chess-locked" || state == "map-chess-open" || state == "map-complete" ||
             state == "celebration-cheer" || state == "celebration-teacher" || state == "celebration-skip";
 
         /// Called every editor tick while a capture is active. Returns true once the state is applied.
@@ -43,6 +47,9 @@ namespace KMA.EditorTools
                 case "exam-fail-2": return ShowExamFailure(2, false);
                 case "map-lives-3": return SetMapLives(3);
                 case "map-lives-0": return SetMapLives(0);
+                case "map-chess-locked": return SetMapProgress("soccer_practice");
+                case "map-chess-open": return SetMapProgress("soccer_exam");
+                case "map-complete": return SetMapProgress("chess_final");
                 case "chess-select": return CaptureSoonAfterApply = ChessSelect();
                 case "celebration-cheer": return CaptureSoonAfterApply = CelebrationAt(3f);
                 case "celebration-teacher": return CaptureSoonAfterApply = CelebrationAt(6f);
@@ -123,6 +130,26 @@ namespace KMA.EditorTools
                 session.SubmitChallengeResult(new ChallengeAttemptResult(context, true, new ChallengeMetrics()));
             }
             session.Journey.SetAttemptsRemaining(lives);
+            session.RefreshLives();
+            map.BindPresentation(map.Nodes, map.Hearts, session, map.LessonList);
+            return true;
+        }
+
+        // A throwaway session (never persisted) with every challenge passed up to and including lastId.
+        static bool SetMapProgress(string lastId)
+        {
+            var map = Object.FindFirstObjectByType<MapScreen>(FindObjectsInactive.Include);
+            if (map == null || map.Hearts == null) return false;
+            var session = new GameSession();
+            foreach (ChallengeDefinition definition in session.Journey.Catalog.Ordered)
+            {
+                if (session.TryStartChallenge(definition.Id, ChallengeAttemptMode.Journey, definition.Difficulty,
+                        out var context))
+                    session.SubmitChallengeResult(new ChallengeAttemptResult(context, true,
+                        new ChallengeMetrics(completedTargets: definition.TargetCount),
+                        ChallengeDefinition.IsScored(definition.Kind) ? new MinigameResult(true, 8f, Rank.A) : null));
+                if (definition.Id == lastId) break;
+            }
             session.RefreshLives();
             map.BindPresentation(map.Nodes, map.Hearts, session, map.LessonList);
             return true;

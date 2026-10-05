@@ -101,7 +101,7 @@ namespace KMA.EditorTools
                     && grid.GetComponent<ResponsiveGridLayout>() != null,
                     "Authored Map grid is missing layout components");
                 MapPresentationBuilder.Build(screen, null);
-                Check(screen.Nodes.Length == 3, "Map needs three authored subject nodes");
+                Check(screen.Nodes.Length == 4, "Map needs the three authored subject nodes and the final exam stop");
                 Check(screen.Nodes.All(node => node.transform.Find("Badge") != null &&
                     node.transform.Find("LabelGroup/MetaPill/Stars") != null),
                     "Map stops must be the circular journey stops");

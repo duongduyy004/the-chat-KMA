@@ -9,6 +9,7 @@ namespace KMA.Gameplay.UI
     {
         public event Action<SubjectId> SubjectRequested;
         public event Action<string, ChallengeAttemptMode> ChallengeRequested;
+        public event Action CelebrationRequested;
         public HeartBar Hearts { get; private set; }
         public MapNodeView[] Nodes { get; private set; } = new MapNodeView[0];
         public JourneyLessonList LessonList { get; private set; }
@@ -50,6 +51,11 @@ namespace KMA.Gameplay.UI
             Hearts = heartBar;
             LessonList = lessonList != null ? lessonList : GetComponentInChildren<JourneyLessonList>(true);
             CourseSummary = GetComponentInChildren<JourneyCourseSummary>(true);
+            if (CourseSummary != null)
+            {
+                CourseSummary.ReplayRequested -= RaiseCelebration;
+                CourseSummary.ReplayRequested += RaiseCelebration;
+            }
             boundSession = session;
             if (session == null)
                 return;
@@ -76,6 +82,7 @@ namespace KMA.Gameplay.UI
                     SubjectId.Sprint => "Chạy nước rút",
                     SubjectId.Volleyball => "Bóng chuyền",
                     SubjectId.Football => "Bóng đá",
+                    SubjectId.Chess => "Bài kiểm tra cuối",
                     _ => node.DisplayName
                 };
                 SubjectRecord record = session.GetRecord(node.SubjectId);
@@ -95,7 +102,10 @@ namespace KMA.Gameplay.UI
             SubjectRequested?.Invoke(subject);
         }
 
-        static readonly SubjectId[] CourseOrder = { SubjectId.Sprint, SubjectId.Volleyball, SubjectId.Football };
+        static readonly SubjectId[] CourseOrder =
+            { SubjectId.Sprint, SubjectId.Volleyball, SubjectId.Football, SubjectId.Chess };
+
+        void RaiseCelebration() => CelebrationRequested?.Invoke();
 
         void ApplyMarkers()
         {

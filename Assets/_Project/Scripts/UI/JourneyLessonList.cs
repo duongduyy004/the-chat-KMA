@@ -12,8 +12,9 @@ namespace KMA.Gameplay.UI
 {
     public sealed class JourneyLessonList : MonoBehaviour
     {
-        static readonly SubjectId[] CourseOrder = { SubjectId.Sprint, SubjectId.Volleyball, SubjectId.Football };
-        static readonly string[] CourseTitles = { "Chạy nước rút", "Bóng chuyền", "Bóng đá" };
+        static readonly SubjectId[] CourseOrder =
+            { SubjectId.Sprint, SubjectId.Volleyball, SubjectId.Football, SubjectId.Chess };
+        static readonly string[] CourseTitles = { "Chạy nước rút", "Bóng chuyền", "Bóng đá", "Bài kiểm tra cuối" };
         readonly List<LessonCard> lessonCards = new List<LessonCard>(3);
         TMP_Text heading;
         TMP_Text progress;
@@ -79,11 +80,27 @@ namespace KMA.Gameplay.UI
             {
                 SubjectId.Volleyball => UITheme.Shared.LessonJourney.volleyball,
                 SubjectId.Football => UITheme.Shared.LessonJourney.football,
+                SubjectId.Chess => UITheme.Shared.LessonJourney.chess,
                 _ => UITheme.Shared.LessonJourney.sprint
             };
             transform.Find("ChapterAccent").GetComponent<Image>().color = chapterColor;
             transform.Find("CourseIcon").GetComponent<Image>().color = chapterColor;
             Transform courseIcon = transform.Find("CourseIcon");
+            // Panels baked before the final exam have no chess glyph yet.
+            if (courseIcon.childCount <= subjectIndex)
+            {
+                var glyph = new GameObject(selectedSubject + "Glyph", typeof(RectTransform), typeof(Image));
+                glyph.transform.SetParent(courseIcon, false);
+                var glyphRect = (RectTransform)glyph.transform;
+                glyphRect.anchorMin = Vector2.one * .2f;
+                glyphRect.anchorMax = Vector2.one * .8f;
+                glyphRect.offsetMin = glyphRect.offsetMax = Vector2.zero;
+                var image = glyph.GetComponent<Image>();
+                image.sprite = MapPresentationBuilder.SportIconSprite(selectedSubject);
+                image.color = UITheme.Shared.Surface;
+                image.preserveAspect = true;
+                image.raycastTarget = false;
+            }
             for (int i = 0; i < courseIcon.childCount; i++)
                 courseIcon.GetChild(i).gameObject.SetActive(i == subjectIndex);
             Transform patterns = transform.Find("CourtPattern");
@@ -115,11 +132,12 @@ namespace KMA.Gameplay.UI
                 {
                     ChallengeKind.Learn => "HỌC",
                     ChallengeKind.Practice => "LUYỆN",
+                    ChallengeKind.Final => "CUỐI",
                     _ => "THI"
                 };
                 card.Title.text = VietText.Fix(stage);
                 bool outOfLives = checkpoint && !complete && !session.Journey.CourseComplete &&
-                    challenge.Kind != ChallengeKind.Learn && session.Lives == 0;
+                    JourneyProgress.IsPenalizedKind(challenge.Kind) && session.Lives == 0;
                 card.Objective.text = VietText.Fix(outOfLives ? "Hết lượt thi" : objective);
                 card.Button.interactable = unlocked && !outOfLives;
                 ApplyState(card, index, complete, checkpoint, unlocked, chapterColor, outOfLives);
@@ -147,6 +165,9 @@ namespace KMA.Gameplay.UI
                 Color color = passed ? chapterColor : UITheme.Shared.MapLockedBorder;
                 transform.Find($"LessonConnector{index + 1}").GetComponent<Image>().color = color;
                 transform.Find($"LessonArrow{index + 1}").GetComponent<Image>().color = color;
+                bool used = index + 1 < challenges.Length;
+                transform.Find($"LessonConnector{index + 1}").gameObject.SetActive(used);
+                transform.Find($"LessonArrow{index + 1}").gameObject.SetActive(used);
             }
             if (hint != null)
                 hint.text = VietText.Fix(session.Journey.CourseComplete

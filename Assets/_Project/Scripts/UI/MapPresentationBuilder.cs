@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Linq;
 using KMA.Gameplay;
 using KMA.UI.Kit;
 using TMPro;
@@ -31,6 +32,7 @@ namespace KMA.Gameplay.UI
             new Entry(SubjectId.Sprint, "Chạy nước rút", UITheme.Shared.LessonJourney.sprint, true),
             new Entry(SubjectId.Volleyball, "Bóng chuyền", UITheme.Shared.LessonJourney.volleyball, true),
             new Entry(SubjectId.Football, "Bóng đá", UITheme.Shared.LessonJourney.football, true),
+            new Entry(SubjectId.Chess, "Bài kiểm tra cuối", UITheme.Shared.LessonJourney.chess, true),
         };
 
         public static void Build(MapScreen screen, GameSession session, Sprite sharedBackground = null)
@@ -40,6 +42,17 @@ namespace KMA.Gameplay.UI
             if (existing != null)
             {
                 var existingNodes = existing.GetComponentsInChildren<MapNodeView>(true);
+                // Scenes baked with three stops get the final exam stop added at runtime.
+                if (existingNodes.Length > 0 && existingNodes.All(n => n.SubjectId != SubjectId.Chess))
+                {
+                    Entry final = Entries.First(e => e.Subject == SubjectId.Chess);
+                    MapNodeView chess = MapStopBuilder.Build(existingNodes[0].transform.parent, screen,
+                        final.Subject, final.Label, final.Color, Entries.Length);
+                    existingNodes = existingNodes.Append(chess).ToArray();
+                    // The baked finish flag sat on the third stop; the final exam is the course's end now.
+                    foreach (MapNodeView node in existingNodes)
+                        if (node != chess) node.transform.Find("Badge/FinishFlag")?.gameObject.SetActive(false);
+                }
                 var existingHearts = existing.GetComponentInChildren<HeartBar>(true);
                 ApplySharedBackground(existing, sharedBackground);
                 Transform oldFutureRow = existing.Find("Content/FutureRow");

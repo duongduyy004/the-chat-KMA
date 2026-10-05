@@ -113,7 +113,8 @@ namespace KMA.Gameplay.UI
             lockImage.preserveAspect = true;
             lockImage.raycastTarget = false;
 
-            if (order == 3)
+            // The finish flag marks the last stop of the course.
+            if (subject == SubjectId.Chess)
             {
                 RectTransform flag = MapPresentationBuilder.Rect(badge, "FinishFlag");
                 Place(flag, new Vector2(1f, .72f), Vector2.one * 56f, new Vector2(26f, 0f));

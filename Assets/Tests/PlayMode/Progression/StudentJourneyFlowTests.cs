@@ -56,7 +56,7 @@ namespace KMA.Tests.Gameplay.Progression
             var reloaded = new GameSession();
             reloaded.Restore(saved);
             Assert.That(reloaded.Journey.CourseComplete, Is.True);
-            Assert.That(Object.FindFirstObjectByType<JourneyCourseSummary>().ScoreRows.Count, Is.EqualTo(3));
+            Assert.That(Object.FindFirstObjectByType<JourneyCourseSummary>().ScoreRows.Count, Is.EqualTo(4));
         }
 
         [UnityTest]

@@ -104,7 +104,7 @@ namespace KMA.Tests.Presentation
             Assert.That(session.Journey.CourseComplete, Is.True);
             Assert.That(screen.CourseSummary, Is.Not.Null);
             Assert.That(screen.CourseSummary.gameObject.activeSelf, Is.True);
-            Assert.That(screen.CourseSummary.ScoreRows.Count, Is.EqualTo(3));
+            Assert.That(screen.CourseSummary.ScoreRows.Count, Is.EqualTo(4));
             ChallengeAttemptMode mode = default;
             screen.ChallengeRequested += (_, requested) => mode = requested;
             screen.LessonList.transform.Find("Lesson1").GetComponent<Button>().onClick.Invoke();

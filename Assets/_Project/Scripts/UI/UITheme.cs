@@ -97,6 +97,7 @@ namespace KMA.Gameplay.UI
             public Color sprint = new Color32(49, 162, 222, 255);
             public Color volleyball = new Color32(245, 158, 46, 255);
             public Color football = new Color32(53, 169, 91, 255);
+            public Color chess = new Color32(232, 90, 72, 255);
             public Color completedSurface = new Color32(225, 244, 222, 255);
             public Vector2 panelAnchorMin = new Vector2(.02f, .005f);
             public Vector2 panelAnchorMax = new Vector2(.98f, .34f);
@@ -136,8 +137,8 @@ namespace KMA.Gameplay.UI
             public float stopCurrentScale = 1.3f;
             public float stopTagHeight = 52f;
             // Badge-centre positions inside the map zone (x of width, y of height).
-            public float[] stopX = { .17f, .5f, .83f };
-            public float[] stopY = { .45f, .70f, .45f };
+            public float[] stopX = { .12f, .37f, .63f, .88f };
+            public float[] stopY = { .45f, .70f, .45f, .70f };
             public float roadOutlineWidth = 30f;
             public float roadFillWidth = 16f;
             public float roadDotSize = 12f;
