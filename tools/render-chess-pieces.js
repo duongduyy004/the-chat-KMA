@@ -9,8 +9,10 @@ const { Resvg } = require('@resvg/resvg-js');
 const ROOT = path.resolve(__dirname, '..');
 const PIECES = path.join(ROOT, 'Assets/_Project/Art/Chess/Pieces');
 const ICON = path.join(ROOT, 'Assets/_Project/Resources/Icons/SportIcon_Chess.png');
-const INK = '#1c2546';
-const FILL = { w: '#fbf4e2', b: '#2b3350' };
+const INK = { w: '#1c2546', b: '#0d1230' };
+// Detail layer (eye, slash, inner rim) stays light on Black so it reads on any square.
+const DETAIL = { w: '#1c2546', b: '#fbf4e2' };
+const FILL = { w: '#fbf4e2', b: '#3a4570' };
 const SHINE = { w: '#ffffff', b: '#4a5680' };
 const W = 5;
 
@@ -26,21 +28,27 @@ const shapes = {
       'M47 9 H53 V17 H61 V23 H53 V36 H47 V23 H39 V17 H47 Z'],
 };
 const details = {
-  N: '<circle cx="50" cy="31" r="3" fill="' + INK + '"/>',
-  B: '<path d="M54 25 L46 36" stroke="' + INK + '" stroke-width="4" stroke-linecap="round"/>',
+  N: c => '<circle cx="50" cy="31" r="3" fill="' + DETAIL[c] + '"/>',
+  B: c => '<path d="M54 25 L46 36" stroke="' + DETAIL[c] + '" stroke-width="4" stroke-linecap="round"/>',
 };
 
-function part(d, fill) {
-  return d.startsWith('<')
-    ? d.replace('/>', ` fill="${fill}" stroke="${INK}" stroke-width="${W}"/>`)
-    : `<path d="${d}" fill="${fill}" stroke="${INK}" stroke-width="${W}" stroke-linejoin="round"/>`;
+function part(d, color) {
+  const fill = FILL[color];
+  const shape = d.startsWith('<')
+    ? d.replace('/>', ` fill="${fill}" stroke="${INK[color]}" stroke-width="${W}"/>`)
+    : `<path d="${d}" fill="${fill}" stroke="${INK[color]}" stroke-width="${W}" stroke-linejoin="round"/>`;
+  if (color === 'w') return shape;
+  // Thin light line down the middle of the dark outline keeps every edge visible on Black.
+  const rim = d.startsWith('<')
+    ? d.replace('/>', ` fill="none" stroke="${DETAIL.b}" stroke-width="1.6" opacity=".85"/>`)
+    : `<path d="${d}" fill="none" stroke="${DETAIL.b}" stroke-width="1.6" stroke-linejoin="round" opacity=".85"/>`;
+  return shape + rim;
 }
 
 function pieceSvg(color, type) {
-  const fill = FILL[color];
-  const body = [base, ...shapes[type]].map(d => part(d, fill)).join('');
+  const body = [base, ...shapes[type]].map(d => part(d, color)).join('');
   const shine = `<path d="M31 80 H45" stroke="${SHINE[color]}" stroke-width="3" stroke-linecap="round" opacity=".7"/>`;
-  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" width="128" height="128">${body}${shine}${details[type] || ''}</svg>`;
+  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" width="128" height="128">${body}${shine}${details[type] ? details[type](color) : ''}</svg>`;
 }
 
 function iconSvg() {
