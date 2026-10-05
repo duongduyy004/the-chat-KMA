@@ -168,7 +168,7 @@ namespace KMA.EditorTools
 
         static readonly (DialoguePose Pose, string Suffix)[] PoseFiles =
         {
-            (DialoguePose.Idle, "idle"), (DialoguePose.Cheer, "cheer0"), (DialoguePose.Hurt, "hurt"),
+            (DialoguePose.Idle, "idle"), (DialoguePose.Cheer, "cheer0"), (DialoguePose.Hurt, "hit"),
             (DialoguePose.Jump, "jump"), (DialoguePose.Duck, "duck")
         };
 

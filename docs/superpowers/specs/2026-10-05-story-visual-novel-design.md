@@ -22,7 +22,7 @@ Viết lại 12 đoạn hội thoại của hành trình tân sinh viên theo gi
 | `anh_khoa_tren` | Anh Khoá Trên | MaleAdventurer | Sinh viên khóa trên | Hay chém gió, dọa tân binh rồi tự cười. |
 | `co_the_chat` | Cô Thể Chất | FemaleAdventurer | Giảng viên | Nghiêm nhưng lầy ngầm, nói ngắn mà thâm. |
 
-Mỗi nhân vật có ảnh cho 5 tư thế lấy từ sprite sẵn có: `Idle` (`_idle`), `Cheer` (`_cheer0`), `Hurt` (`_hurt`), `Jump` (`_jump`), `Duck` (`_duck`). Màu tag tên: Tân Thủ `#FFC928` (gold), Mai Toang `#FF8FB1`, Anh Khoá Trên `#7FD1FF`, Cô Thể Chất `#B9F27C`; chữ trên tag luôn là navy `#0B2A4A`.
+Mỗi nhân vật có ảnh cho 5 tư thế lấy từ sprite sẵn có: `Idle` (`_idle`), `Cheer` (`_cheer0`), `Hurt` (`_hit`, mặt hoảng nhìn thẳng; `_hurt` là ảnh quay lưng nên không dùng), `Jump` (`_jump`), `Duck` (`_duck`). Màu tag tên: Tân Thủ `#FFC928` (gold), Mai Toang `#FF8FB1`, Anh Khoá Trên `#7FD1FF`, Cô Thể Chất `#B9F27C`; chữ trên tag luôn là navy `#0B2A4A`.
 
 ## 3. Dữ liệu và cấu trúc code
 

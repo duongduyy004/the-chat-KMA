@@ -49,3 +49,21 @@ An Android 17 API 37 AVD (`sdk_gphone16k_x86_64`, 1080x2400 at 420 dpi, 16 KB pa
 That emulator screenshot also exposed low contrast on lesson labels rendered over white cards: the original `TextPrimary` foreground measured 1.05:1. `JourneyLessonLabelsMeetContrastOnTheirButtonSurface` now asserts a minimum 4.5:1, and the focused EditMode test passed after switching the label to `MutedForeground`. The updated x86_64 APK installed and launched, but ADB disconnected during the follow-up capture, so the corrected map was not visually confirmed on the emulator.
 
 The following historical APKs include the earlier contrast fix and predate the current review fixes. They have not been rebuilt for this patch. `tools/build-apk.sh --arm64 --output-dir Builds/Android --name journey` completed with zero errors and 20 warnings; `Builds/Android/journey-arm64.apk` is 59,800,646 bytes (58 MiB), SHA-256 `0acfa79daf0af4337fa8e9a29f8316d6dde97f08caae1124d6ab656b314011c3`. `tools/build-apk.sh --x86_64 --output-dir Builds/Android --name journey` completed with zero errors and 29 warnings; `Builds/Android/journey-x86_64.apk` is 61,084,901 bytes, SHA-256 `77738f564672232c00594b7bc57ec2d95f3bcb6c3fc59cd96742180a37436b90`. The archives contain their matching `lib/arm64-v8a` and `lib/x86_64` `libil2cpp.so` and `libunity.so` libraries. No physical-device validation is claimed.
+
+## Cốt truyện visual novel (2026-10-05)
+
+Spec: `docs/superpowers/specs/2026-10-05-story-visual-novel-design.md`; plan: `docs/superpowers/plans/2026-10-05-story-visual-novel.md`.
+
+Ảnh chụp trong Unity Editor (Map, Play Mode) bằng `tools/qa-screenshot.sh ... <openDialogue> <dialogueTaps>`:
+
+| Node | Ảnh | Đã kiểm tra |
+|---|---|---|
+| `opening`, câu 2 (3 lần chạm) | ![opening](images/story-opening.png) | Mai Toang đang nói (sáng, mặt hoảng nhìn thẳng), Tân Thủ nghe bên phải (tối), sticker "ÉT O ÉT!", emoji 😭 đúng vị trí trong câu, tag hồng, chấm tiến độ, "TIẾP »" |
+| `course_complete`, câu 1 (1 lần chạm) | ![course complete](images/story-course-complete.png) | Cô Thể Chất cheer, sticker "HOÀN THÀNH!", emoji 🎉, tag xanh lá |
+
+Ghi chú khi chụp:
+- Tư thế `Hurt` dùng sprite `_hit` (mặt hoảng nhìn thẳng) vì cả bốn sprite `_hurt` là ảnh quay lưng.
+- Lần chụp đầu tiên ngay sau khi mở Editor có thể hiện emoji thành ô xanh lơ phẳng: đó là placeholder biên dịch shader bất đồng bộ của Unity, không phải lỗi. Chụp một ảnh bỏ đi trước, rồi chụp ảnh thật.
+- Chỉ kiểm tra ở viewport Editor (≈1102×533); chưa chụp trên thiết bị Android thật.
+
+Test liên quan (đều pass): `DialogueEmojiTests`, `DialogueTypewriterTests`, `JourneyDialogueValidationTests`, `JourneyDialogueDataTests`, `JourneyEmojiAssetTests`, `JourneyNarrativeTests` (PlayMode, 7 test), `StudentJourneyFlowTests`.

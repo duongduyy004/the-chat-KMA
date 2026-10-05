@@ -18,7 +18,7 @@
 - Unity: `UNITY="/c/Program Files/Unity/Hub/Editor/6000.3.23f1/Editor/Unity.exe"`.
 - Text hiển thị luôn qua `VietText.Fix`; label tạo qua `UiKit`/`VietTypography`; màu lấy từ `HomeMenuStyle` (Navy `#0B2A4A`, Gold `#FFC928`, GoldLight `#FFE066`).
 - Cast id cố định: `tan_thu` (Tân Thủ, MalePerson, `#FFC928`, isPlayer), `mai_toang` (Mai Toang, FemalePerson, `#FF8FB1`), `anh_khoa_tren` (Anh Khoá Trên, MaleAdventurer, `#7FD1FF`), `co_the_chat` (Cô Thể Chất, FemaleAdventurer, `#B9F27C`).
-- Tư thế: `Idle`→`_idle`, `Cheer`→`_cheer0`, `Hurt`→`_hurt`, `Jump`→`_jump`, `Duck`→`_duck` trong `Assets/_Project/Art/Characters/<Sprite>/<Sprite>_<suffix>.png`.
+- Tư thế: `Idle`→`_idle`, `Cheer`→`_cheer0`, `Hurt`→`_hit` (đã đổi ở Task 6: `_hurt` là ảnh quay lưng), `Jump`→`_jump`, `Duck`→`_duck` trong `Assets/_Project/Art/Characters/<Sprite>/<Sprite>_<suffix>.png`.
 - 15 mã emoji theo thứ tự: `sob, skull, sunglasses, fire, scream, runner, dash, soccer, volleyball, eyes, clown, salute, 100, tada, muscle`.
 - Node id giữ nguyên: `opening, sprint_intro, sprint_exam, sprint_pass, volleyball_intro, volleyball_exam, volleyball_pass, soccer_intro, soccer_exam, soccer_pass, supplementary, course_complete`; mỗi node 2–4 câu.
 - Nút bỏ qua là GameObject tên `"BỎ QUA"` có `Button` (được `JourneyRuntimeDriver.SkipDialogues` dùng).

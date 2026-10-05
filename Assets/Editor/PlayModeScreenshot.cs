@@ -39,6 +39,8 @@ namespace KMA.EditorTools
         const string KeyForceSprintDistance = "KMA_PMS_ForceSprintDistance";
         const string KeyForceSprintResult = "KMA_PMS_ForceSprintResult";
         const string KeyOpenPause = "KMA_PMS_OpenPause";
+        const string KeyOpenDialogue = "KMA_PMS_OpenDialogue";
+        const string KeyDialogueTaps = "KMA_PMS_DialogueTaps";
 
         [Serializable]
         class Request
@@ -54,6 +56,9 @@ namespace KMA.EditorTools
             public float forceSprintDistance = -1f;
             public string forceSprintResult = "";
             public bool openPause;
+            // QA-only: open a journey dialogue node on the loaded scene and tap it N times.
+            public string openDialogue = "";
+            public int dialogueTaps;
         }
 
         static PlayModeScreenshot()
@@ -137,6 +142,8 @@ namespace KMA.EditorTools
             SessionState.SetFloat(KeyForceSprintDistance, req.forceSprintDistance);
             SessionState.SetString(KeyForceSprintResult, req.forceSprintResult ?? "");
             SessionState.SetBool(KeyOpenPause, req.openPause);
+            SessionState.SetString(KeyOpenDialogue, req.openDialogue ?? "");
+            SessionState.SetInt(KeyDialogueTaps, req.dialogueTaps);
             SessionState.SetBool(KeyActive, true);
 
             EditorApplication.isPlaying = true;
@@ -180,6 +187,23 @@ namespace KMA.EditorTools
                 var pausePanel = UnityEngine.Object.FindFirstObjectByType<KMA.Gameplay.UI.PausePanel>();
                 if (pausePanel != null)
                     pausePanel.Open();
+            }
+
+            string dialogueNode = SessionState.GetString(KeyOpenDialogue, "");
+            if (!string.IsNullOrEmpty(dialogueNode))
+            {
+                Canvas canvas = UnityEngine.Object.FindFirstObjectByType<Canvas>();
+                if (canvas != null)
+                {
+                    var presenter = UnityEngine.Object.FindFirstObjectByType<KMA.Gameplay.UI.JourneyDialoguePresenter>();
+                    if (presenter == null)
+                        presenter = canvas.rootCanvas.gameObject.AddComponent<KMA.Gameplay.UI.JourneyDialoguePresenter>();
+                    var shell = UnityEngine.Object.FindFirstObjectByType<KMA.Gameplay.Shell.S5ShellSceneController>();
+                    presenter.Configure(KMA.Gameplay.JourneyDialogueLibrary.LoadDefault(), _ => true,
+                        shell != null ? shell.MainMenuBackground : null);
+                    presenter.Show(dialogueNode, null);
+                    for (int i = 0; i < SessionState.GetInt(KeyDialogueTaps, 0); i++) presenter.Advance();
+                }
             }
         }
 
