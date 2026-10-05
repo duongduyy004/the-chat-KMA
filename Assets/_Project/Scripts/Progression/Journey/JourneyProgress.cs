@@ -18,6 +18,8 @@ namespace KMA.Gameplay
         int attemptsRemaining = GameSession.MaxLives;
         int supplementaryRounds;
         List<string> seenDialogueIds = new List<string>();
+        JourneyChessRecordData chessBest = new JourneyChessRecordData();
+        bool celebrationSeen;
 
         public JourneyProgress(ChallengeCatalog catalog)
         {
@@ -30,6 +32,8 @@ namespace KMA.Gameplay
         public int AttemptsRemaining => attemptsRemaining;
         public int SupplementaryRounds => supplementaryRounds;
         public bool CourseComplete => catalog.Ordered.All(x => completedChallengeIds.Contains(x.Id));
+        public JourneyChessRecordData ChessBest => chessBest.Copy();
+        public bool CelebrationSeen => celebrationSeen;
         public ChallengeAttemptContext ActiveAttempt => activeAttempt;
         public ChallengeCatalog Catalog => catalog;
         public FrogJumpPending PendingFrogJump => pendingFrogJump;
@@ -170,13 +174,40 @@ namespace KMA.Gameplay
                 }
             }
 
+            if (definition.Kind == ChallengeKind.Final && result.Pass && result.ExamResult != null &&
+                result.ExamResult.Pass)
+                OfferChessResult(result.Metrics, result.ExamResult.Score);
+
             lastCommittedAttemptId = activeAttempt.AttemptId;
-            lastCommittedResult = JourneyResultData.FromResult(result);
+            lastCommittedResult =JourneyResultData.FromResult(result);
             activeAttempt = null;
             return Outcome(true, definition.Kind == ChallengeKind.Final);
         }
 
         public void AbandonAttempt() => activeAttempt = null;
+
+        /// The first celebration has played (or was skipped); later wins go to the map.
+        public bool MarkCelebrationSeen()
+        {
+            if (!CourseComplete) return false;
+            celebrationSeen = true;
+            return true;
+        }
+
+        public void UnmarkCelebrationSeen() => celebrationSeen = false;
+
+        void OfferChessResult(ChallengeMetrics metrics, float score)
+        {
+            if (chessBest.recorded && score <= chessBest.score) return;
+            chessBest = new JourneyChessRecordData
+            {
+                recorded = true,
+                score = score,
+                thinkSeconds = Math.Max(0f, metrics.Elapsed),
+                mistakes = Math.Max(0, metrics.Mistakes),
+                hintUsed = metrics.HintUsed
+            };
+        }
 
         public JourneyStateData ToData() => new JourneyStateData
         {
@@ -190,7 +221,9 @@ namespace KMA.Gameplay
             pendingFrogJump = JourneyFrogJumpData.FromPending(pendingFrogJump),
             lastAppliedFrogJumpId = lastAppliedFrogJumpId,
             supplementaryRounds = supplementaryRounds,
-            seenDialogueIds = new List<string>(seenDialogueIds)
+            seenDialogueIds = new List<string>(seenDialogueIds),
+            chessBest = chessBest.Copy(),
+            celebrationSeen = celebrationSeen
         };
 
         public void Restore(JourneyStateData data, int attemptsRemaining)
@@ -233,6 +266,17 @@ namespace KMA.Gameplay
             {
                 activeAttempt = null;
             }
+
+            JourneyChessRecordData best = data?.chessBest;
+            chessBest = best == null || !best.recorded ? new JourneyChessRecordData() : new JourneyChessRecordData
+            {
+                recorded = true,
+                score = Math.Max(0f, best.score),
+                thinkSeconds = Math.Max(0f, best.thinkSeconds),
+                mistakes = Math.Max(0, best.mistakes),
+                hintUsed = best.hintUsed
+            };
+            celebrationSeen = (data?.celebrationSeen ?? false) && CourseComplete;
         }
 
         JourneyCommitOutcome Outcome(bool accepted, bool finalChallenge = false) => new JourneyCommitOutcome(accepted,

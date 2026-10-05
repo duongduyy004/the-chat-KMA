@@ -5,7 +5,7 @@ namespace KMA.Gameplay
     [Serializable]
     public sealed class SaveData
     {
-        public const int CurrentVersion = 8;
+        public const int CurrentVersion = 9;
 
         public int version;
         // Absent in legacy saves, which already represent a campaign.

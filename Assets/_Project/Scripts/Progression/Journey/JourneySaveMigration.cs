@@ -77,6 +77,9 @@ namespace KMA.Gameplay
                 journey.lastCommittedAttemptId = source.lastCommittedAttemptId;
                 journey.lastCommittedResult = source.lastCommittedResult?.Copy();
 
+                journey.chessBest = source.chessBest?.Copy() ?? new JourneyChessRecordData();
+                journey.celebrationSeen = source.celebrationSeen;
+
                 journey.failCounts = NormalizeFailCounts(source.failCounts, catalog);
                 journey.lastAppliedFrogJumpId = source.lastAppliedFrogJumpId;
                 FrogJumpPending pending = source.pendingFrogJump?.ToPending();

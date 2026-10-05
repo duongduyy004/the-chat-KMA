@@ -56,7 +56,7 @@ namespace KMA.Tests.Gameplay.Progression
             var clock = new FakeClock();
             GameSession session = FailOnceAndLose(clock);
             SaveData saved = JsonUtility.FromJson<SaveData>(JsonUtility.ToJson(session.ToSaveData()));
-            Assert.That(saved.version, Is.EqualTo(8));
+            Assert.That(saved.version, Is.EqualTo(9));
             Assert.That(saved.nextLifeAtUtcTicks, Is.EqualTo(session.NextLifeAtUtcTicks));
 
             clock.Advance(TimeSpan.FromMinutes(7));
@@ -150,7 +150,7 @@ namespace KMA.Tests.Gameplay.Progression
             Assert.That(restored.ResumeRoute(), Is.EqualTo(SessionRoute.Map));
             Assert.That(restored.Journey.CheckpointChallengeId, Is.EqualTo("sprint_exam"));
             Assert.That(restored.Lives, Is.EqualTo(2));
-            Assert.That(restored.ToSaveData().version, Is.EqualTo(8));
+            Assert.That(restored.ToSaveData().version, Is.EqualTo(9));
             Assert.That(restored.TryStartChallenge("sprint_exam", ChallengeAttemptMode.Journey,
                 ChallengeDifficulty.Normal, out _), Is.True, "The migrated journey is playable.");
         }

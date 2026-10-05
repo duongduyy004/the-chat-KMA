@@ -132,6 +132,11 @@ namespace KMA.Gameplay
                     : SaveData.CreateDefault();
             }
 
+            // Journey-era saves (v7+) already hold the course state; Normalize pads the subject
+            // and tutorial arrays for new subjects. Only older saves rebuild the journey.
+            if (data.version >= 7)
+                return JourneySaveMigration.Normalize(data, ChallengeCatalog.LoadDefault());
+
             SaveData defaults = SaveData.CreateDefault();
             var migrated = new SaveData
             {

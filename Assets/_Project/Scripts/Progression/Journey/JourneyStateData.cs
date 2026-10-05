@@ -16,6 +16,23 @@ namespace KMA.Gameplay
         public List<JourneyFailCountData> failCounts = new List<JourneyFailCountData>();
         public JourneyFrogJumpData pendingFrogJump;
         public string lastAppliedFrogJumpId;
+        public JourneyChessRecordData chessBest = new JourneyChessRecordData();
+        public bool celebrationSeen;
+    }
+
+    [Serializable]
+    public sealed class JourneyChessRecordData
+    {
+        public bool recorded;
+        public float score;
+        public float thinkSeconds;
+        public int mistakes;
+        public bool hintUsed;
+
+        public JourneyChessRecordData Copy() => new JourneyChessRecordData
+        {
+            recorded = recorded, score = score, thinkSeconds = thinkSeconds, mistakes = mistakes, hintUsed = hintUsed
+        };
     }
 
     [Serializable]

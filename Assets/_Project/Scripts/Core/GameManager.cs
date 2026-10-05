@@ -265,6 +265,25 @@ namespace KMA.Gameplay.Core
             return false;
         }
 
+        public bool TryMarkCelebrationSeen(out string error)
+        {
+            error = null;
+            if (!initialized || session == null)
+            {
+                error = "The celebration cannot be saved right now.";
+                return false;
+            }
+            if (session.Journey.CelebrationSeen) return true;
+            if (!session.Journey.MarkCelebrationSeen())
+            {
+                error = "The course is not complete.";
+                return false;
+            }
+            if (TryPersistSession(out error)) return true;
+            session.Journey.UnmarkCelebrationSeen();
+            return false;
+        }
+
         void SaveCurrentState()
         {
             SaveData current = session.ToSaveData();

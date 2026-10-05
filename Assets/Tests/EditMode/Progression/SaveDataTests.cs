@@ -16,7 +16,7 @@ namespace KMA.Tests.Gameplay.Progression
             Assert.That(subjectIds, Has.Length.EqualTo(4));
             Assert.That(subjectIds, Is.EqualTo(new[]
                 { SubjectId.Sprint, SubjectId.Football, SubjectId.Volleyball, SubjectId.Chess }));
-            Assert.That(SaveData.CurrentVersion, Is.EqualTo(8));
+            Assert.That(SaveData.CurrentVersion, Is.EqualTo(9));
             Assert.That(data.version, Is.EqualTo(SaveData.CurrentVersion));
             Assert.That(data.lives, Is.EqualTo(5));
             Assert.That(data.hasActiveSubject, Is.False);
