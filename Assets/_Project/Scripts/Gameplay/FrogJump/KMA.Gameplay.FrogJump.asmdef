@@ -1,0 +1,23 @@
+{
+    "name": "KMA.Gameplay.FrogJump",
+    "rootNamespace": "KMA.Gameplay.FrogJump",
+    "references": [
+        "KMA.Gameplay",
+        "KMA.Gameplay.Core",
+        "KMA.Gameplay.UI",
+        "KMA.Gameplay.Progression",
+        "Unity.InputSystem",
+        "Unity.TextMeshPro",
+        "UnityEngine.UI",
+        "KMA.Text"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}
