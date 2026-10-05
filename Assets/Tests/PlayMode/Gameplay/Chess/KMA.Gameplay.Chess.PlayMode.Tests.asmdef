@@ -1,0 +1,27 @@
+{
+    "name": "KMA.Gameplay.Chess.PlayMode.Tests",
+    "rootNamespace": "KMA.Tests.Gameplay.Chess",
+    "references": [
+        "UnityEngine.TestRunner",
+        "KMA.Gameplay",
+        "KMA.Gameplay.Chess",
+        "KMA.Gameplay.Chess.Core",
+        "KMA.Gameplay.Progression",
+        "KMA.Gameplay.UI",
+        "UnityEngine.UI",
+        "Unity.TextMeshPro"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": true,
+    "precompiledReferences": [
+        "nunit.framework.dll"
+    ],
+    "autoReferenced": true,
+    "defineConstraints": [
+        "UNITY_INCLUDE_TESTS"
+    ],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

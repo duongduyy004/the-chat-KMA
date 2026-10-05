@@ -1,4 +1,5 @@
 using KMA.Gameplay;
+using KMA.Gameplay.Chess;
 using KMA.Gameplay.FrogJump;
 using KMA.Gameplay.UI;
 using UnityEngine;
@@ -15,13 +16,14 @@ namespace KMA.EditorTools
     ///   exam-fail-2        challenge result panel, second failure (life already lost)
     ///   map-lives-3        Map with 3 lives (regen countdown running)
     ///   map-lives-0        Map with 0 lives
+    ///   chess-select       MG_ChessFinal: start the attempt and select the first main-line piece
     public static class PlayModeScreenshotQaStates
     {
         public static bool CaptureSoonAfterApply { get; private set; }
 
         public static bool IsKnown(string state) => state == "" || state == "frog-fall" ||
             state == "frog-win-keep" || state == "frog-lose-zero" || state == "exam-fail-1" ||
-            state == "exam-fail-2" || state == "map-lives-3" || state == "map-lives-0";
+            state == "exam-fail-2" || state == "map-lives-3" || state == "map-lives-0" || state == "chess-select";
 
         /// Called every editor tick while a capture is active. Returns true once the state is applied.
         public static bool Apply(string state, float secondsToCapture)
@@ -36,6 +38,7 @@ namespace KMA.EditorTools
                 case "exam-fail-2": return ShowExamFailure(2, false);
                 case "map-lives-3": return SetMapLives(3);
                 case "map-lives-0": return SetMapLives(0);
+                case "chess-select": return CaptureSoonAfterApply = ChessSelect();
                 default: return true;
             }
         }
@@ -48,6 +51,18 @@ namespace KMA.EditorTools
             float needle = controller.Rules.Needle01;
             if (!FrogJumpRules.IsFall(needle, controller.Rules.Tuning)) return false;
             return controller.Rules.Stop() || controller.Rules.State != FrogJumpState.Aiming;
+        }
+
+        static bool ChessSelect()
+        {
+            var controller = Object.FindFirstObjectByType<ChessFinalController>();
+            var board = Object.FindFirstObjectByType<ChessBoardView>();
+            if (controller == null || board == null || controller.Machine == null) return false;
+            if (controller.Machine.Phase == ChessFinalPhase.Intro) controller.BeginAttempt();
+            if (!board.Interactable) return false;
+            ChessMove.TryParseUci(controller.Machine.Puzzle.nodes[0].moves[0].uci, out ChessMove move);
+            board.ClickSquare(move.From);
+            return board.SelectedSquare == move.From;
         }
 
         static bool ShowFrog(FrogJumpResultView view)
