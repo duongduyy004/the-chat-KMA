@@ -160,10 +160,8 @@ namespace KMA.Tests.Gameplay.Progression
                     { SubjectId.Sprint, SubjectId.Volleyball, SubjectId.Football }));
                 foreach (MapNodeView node in screen.Nodes)
                 {
-                    Assert.That(node.GetComponent<Image>().sprite, Is.Not.Null, node.name);
-                    Transform stripe = node.transform.Find("HeaderStripe");
-                    Assert.That(stripe, Is.Not.Null, node.name + " must have a subject-colored header stripe.");
-                    Image glyph = node.transform.Find("CardHeader/SportIcon/IconGlyph").GetComponent<Image>();
+                    Assert.That(node.transform.Find("Badge").GetComponent<Image>().sprite, Is.Not.Null, node.name);
+                    Image glyph = node.transform.Find("Badge/IconGlyph").GetComponent<Image>();
                     Assert.That(glyph.sprite, Is.Not.Null, node.name);
                     Assert.That(glyph.preserveAspect, Is.True, node.name);
                 }
@@ -272,7 +270,7 @@ namespace KMA.Tests.Gameplay.Progression
             Assert.That(screen.Nodes[0].IsInteractable, Is.True);
             Assert.That(screen.Nodes[1].IsInteractable, Is.False);
             Assert.That(screen.Nodes[2].IsInteractable, Is.False);
-            Assert.That(screen.Nodes.Skip(1).All(node => node.DetailText == "CHƯA MỞ KHÓA"), Is.True);
+            Assert.That(screen.Nodes.Skip(1).All(node => node.StatusText == "CHƯA MỞ KHÓA"), Is.True);
             Assert.That(GameObject.Find("SelectionGrid").GetComponent<GridLayoutGroup>(), Is.Not.Null);
         }
 

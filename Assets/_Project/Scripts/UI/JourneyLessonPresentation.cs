@@ -23,7 +23,7 @@ namespace KMA.Gameplay.UI
             Anchor(accent.rectTransform, new Vector2(.025f, .982f), new Vector2(.975f, .989f));
 
             Image emblem = Shape(panel, "CourseIcon", Theme.LessonJourney.sprint, true);
-            Place(emblem.rectTransform, new Vector2(.025f, .885f), new Vector2(76f, 76f), new Vector2(0f, .5f));
+            Place(emblem.rectTransform, new Vector2(.025f, .885f), new Vector2(52f, 52f), new Vector2(0f, .5f));
             SubjectId[] subjects = { SubjectId.Sprint, SubjectId.Volleyball, SubjectId.Football };
             foreach (SubjectId subject in subjects)
             {
@@ -36,21 +36,20 @@ namespace KMA.Gameplay.UI
             }
 
             TMP_Text heading = Label(panel, "CourseTitle", Style.headingSize, Theme.TextPrimary, FontStyles.Bold);
-            Anchor(heading.rectTransform, new Vector2(.025f, .875f), new Vector2(.66f, .96f));
-            heading.rectTransform.offsetMin = new Vector2(96f, 0f);
+            Anchor(heading.rectTransform, new Vector2(.025f, .80f), new Vector2(.30f, .97f));
+            heading.rectTransform.offsetMin = new Vector2(70f, 0f);
             TMP_Text progress = Label(panel, "CourseProgress", Style.bodySize, Theme.MapHint);
-            Anchor(progress.rectTransform, new Vector2(.025f, .80f), new Vector2(.66f, .875f));
-            progress.rectTransform.offsetMin = new Vector2(96f, 0f);
+            Anchor(progress.rectTransform, new Vector2(.31f, .80f), new Vector2(.66f, .97f));
 
             Button continueButton = ActionButton(panel, "ContinueCheckpoint", "TIẾP TỤC BÀI HỌC  ›");
-            Anchor((RectTransform)continueButton.transform, new Vector2(.69f, .835f), new Vector2(.975f, .955f));
+            Anchor((RectTransform)continueButton.transform, new Vector2(.69f, .81f), new Vector2(.975f, .96f));
 
             for (int index = 0; index < 2; index++) CreateConnector(panel, index);
             for (int index = 0; index < 3; index++) CreateCard(panel, index);
 
             TMP_Text hint = Label(panel, "JourneyHint", Style.captionSize, Theme.MapHint);
             hint.alignment = TextAlignmentOptions.Center;
-            Anchor(hint.rectTransform, new Vector2(.025f, .018f), new Vector2(.975f, .085f));
+            Anchor(hint.rectTransform, new Vector2(.025f, .68f), new Vector2(.975f, .78f));
             return panel;
         }
 
@@ -60,7 +59,7 @@ namespace KMA.Gameplay.UI
             RectTransform rect = face.rectTransform;
             float left = Style.cardLeft + index * (Style.cardWidth + Style.cardGap);
             Anchor(rect, new Vector2(left, Style.cardBottom), new Vector2(left + Style.cardWidth, Style.cardTop));
-            rect.gameObject.AddComponent<LayoutElement>().preferredHeight = 320f;
+            rect.gameObject.AddComponent<LayoutElement>().preferredHeight = 150f;
             face.raycastTarget = true;
             AddBorder(face, Theme.MapLockedBorder);
             var button = face.gameObject.AddComponent<Button>();
@@ -74,10 +73,10 @@ namespace KMA.Gameplay.UI
 
             TMP_Text number = Label(rect, "StepNumber", Style.captionSize, Theme.MutedForeground, FontStyles.Bold);
             number.text = $"0{index + 1}";
-            Anchor(number.rectTransform, new Vector2(.055f, .86f), new Vector2(.22f, .975f));
+            Anchor(number.rectTransform, new Vector2(.05f, .83f), new Vector2(.22f, .97f));
 
             Image badge = Shape(rect, "StateBadge", Theme.Accent);
-            Anchor(badge.rectTransform, new Vector2(.46f, .865f), new Vector2(.945f, .965f));
+            Anchor(badge.rectTransform, new Vector2(.50f, .83f), new Vector2(.95f, .97f));
             TMP_Text state = Label(badge.transform, "Label", Style.captionSize, Theme.Surface, FontStyles.Bold);
             state.alignment = TextAlignmentOptions.Center;
             Anchor(state.rectTransform, Vector2.zero, Vector2.one);
@@ -92,7 +91,7 @@ namespace KMA.Gameplay.UI
             completeMark.gameObject.SetActive(false);
 
             Image disc = Shape(rect, "StageIcon", Theme.Accent, true);
-            Place(disc.rectTransform, new Vector2(.5f, .73f), Vector2.one * Style.iconSize);
+            Place(disc.rectTransform, new Vector2(.14f, .62f), Vector2.one * Style.iconSize);
             Image glow = Shape(disc.transform, "Glow", Theme.Accent, true);
             glow.sprite = UiKitAssets.Load().Ring;
             Anchor(glow.rectTransform, Vector2.one * -.10f, Vector2.one * 1.10f);
@@ -101,28 +100,28 @@ namespace KMA.Gameplay.UI
             CreateStageGlyph(glyph, index);
 
             TMP_Text title = Label(rect, "StageTitle", Style.stageSize, Theme.Surface, FontStyles.Bold);
-            title.alignment = TextAlignmentOptions.Center;
-            Anchor(title.rectTransform, new Vector2(.05f, .45f), new Vector2(.95f, .59f));
+            title.alignment = TextAlignmentOptions.MidlineLeft;
+            Anchor(title.rectTransform, new Vector2(.28f, .50f), new Vector2(.95f, .78f));
 
-            TMP_Text objective = Label(rect, "Objective", Style.bodySize, Theme.Surface);
+            TMP_Text objective = Label(rect, "Objective", Style.objectiveSize, Theme.Surface);
             objective.alignment = TextAlignmentOptions.Top;
             objective.enableWordWrapping = true;
-            Anchor(objective.rectTransform, new Vector2(.055f, .18f), new Vector2(.945f, .445f));
+            Anchor(objective.rectTransform, new Vector2(.05f, .20f), new Vector2(.95f, .49f));
 
             Image action = Shape(rect, "ActionSurface", Theme.Muted);
-            Anchor(action.rectTransform, new Vector2(.04f, .04f), new Vector2(.96f, .175f));
+            Anchor(action.rectTransform, new Vector2(.04f, .04f), new Vector2(.96f, .18f));
             TMP_Text status = Label(rect, "Status", Style.captionSize, Theme.Surface, FontStyles.Bold);
             status.alignment = TextAlignmentOptions.Center;
-            Anchor(status.rectTransform, new Vector2(.045f, .04f), new Vector2(.955f, .175f));
+            Anchor(status.rectTransform, new Vector2(.045f, .04f), new Vector2(.955f, .18f));
         }
 
         static void CreateConnector(RectTransform panel, int index)
         {
             float left = Style.cardLeft + Style.cardWidth + index * (Style.cardWidth + Style.cardGap);
             Image track = Shape(panel, $"LessonConnector{index + 1}", Theme.MapLockedBorder);
-            Anchor(track.rectTransform, new Vector2(left, .425f), new Vector2(left + Style.cardGap, .437f));
+            Anchor(track.rectTransform, new Vector2(left, .355f), new Vector2(left + Style.cardGap, .367f));
             Image arrow = Shape(panel, $"LessonArrow{index + 1}", Theme.MapLockedBorder, true);
-            Place(arrow.rectTransform, new Vector2(left + Style.cardGap * .5f, .431f), new Vector2(38f, 38f));
+            Place(arrow.rectTransform, new Vector2(left + Style.cardGap * .5f, .361f), new Vector2(38f, 38f));
             TMP_Text mark = Label(arrow.transform, "Label", Style.bodySize, Theme.Surface, FontStyles.Bold);
             mark.text = "›";
             mark.alignment = TextAlignmentOptions.Center;

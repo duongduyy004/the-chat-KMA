@@ -167,16 +167,15 @@ namespace KMA.Tests.Presentation
                 Assert.That(header.Find("Divider"), Is.Not.Null);
 
                 LayoutElement back = header.Find("BackButton").GetComponent<LayoutElement>();
-                Assert.That(back.preferredWidth, Is.GreaterThanOrEqualTo(80f));
-                Assert.That(back.preferredHeight, Is.GreaterThanOrEqualTo(80f));
+                Assert.That(back.preferredWidth, Is.GreaterThanOrEqualTo(56f));
+                Assert.That(back.preferredHeight, Is.GreaterThanOrEqualTo(56f));
 
                 TMP_Text title = header.Find("Heading/TitleContainer/Title").GetComponent<TMP_Text>();
-                Assert.That(title.fontSize, Is.GreaterThanOrEqualTo(52));
+                Assert.That(title.fontSize, Is.InRange(36, 44));
+                Assert.That(title.text, Is.EqualTo("CHỌN MÔN THI"));
                 Assert.That(title.font, Is.SameAs(VietTypography.Library.bold));
                 Assert.That(title.extraPadding, Is.True);
-                TMP_Text subtitle = header.Find("Heading/SubtitleContainer/Subtitle").GetComponent<TMP_Text>();
-                Assert.That(subtitle.text, Is.EqualTo("Chọn một môn để bắt đầu"));
-                Assert.That(subtitle.fontSize, Is.GreaterThanOrEqualTo(24));
+                Assert.That(header.Find("Heading/SubtitleContainer"), Is.Null);
 
                 Transform livesPanel = header.Find("LivesPanel");
                 Assert.That(livesPanel, Is.Not.Null);
@@ -284,8 +283,8 @@ namespace KMA.Tests.Presentation
                     card.GetWorldCorners(corners);
                     var bounds = new Rect(corners[0], corners[2] - corners[0]);
                     Assert.That(card.rect.width, Is.GreaterThan(width * .22f));
-                    Assert.That(card.rect.height, Is.GreaterThan(height * .24f),
-                        "Each stage needs enough space for its icon, objective and action.");
+                    Assert.That(card.rect.height, Is.GreaterThan(height * .13f),
+                        "Each stage needs room for icon, title, objective and action.");
                     if (i > 0) Assert.That(bounds.xMin, Is.GreaterThan(previous.xMax));
                     previous = bounds;
                     foreach (TMP_Text label in card.GetComponentsInChildren<TMP_Text>(true))
@@ -363,49 +362,22 @@ namespace KMA.Tests.Presentation
                 var session = CompleteSprintJourney();
                 var screen = root.AddComponent<MapScreen>();
                 MapPresentationBuilder.Build(screen, session);
-
                 MapNodeView completed = screen.Nodes.Single(node => node.SubjectId == SubjectId.Sprint);
                 MapNodeView football = screen.Nodes.Single(node => node.SubjectId == SubjectId.Football);
-
-                Assert.That(completed.transform.Find("StatusContainer/Status").GetComponent<TMP_Text>().text,
-                    Is.EqualTo("HOÀN THÀNH"));
-                Assert.That(completed.transform.Find("DetailContainer").gameObject.activeSelf, Is.True);
-                Assert.That(completed.transform.Find("ActionHint").GetComponent<TMP_Text>().text,
-                    Is.EqualTo("THI"));
-                Assert.That(football.transform.Find("StatusContainer/Status").GetComponent<TMP_Text>().text,
-                    Is.EqualTo("CHƯA MỞ KHÓA"));
-                Assert.That(football.DetailText, Is.EqualTo("CHƯA MỞ KHÓA"));
-                Assert.That(football.transform.Find("DetailContainer").gameObject.activeSelf, Is.False);
-                Assert.That(football.transform.Find("ActionHint").GetComponent<TMP_Text>().text,
-                    Is.Empty);
-
+                Assert.That(completed.StatusText, Is.EqualTo("HOÀN THÀNH"));
+                Assert.That(completed.transform.Find("Badge/DoneMark").gameObject.activeSelf, Is.True);
+                Assert.That(football.StatusText, Is.EqualTo("CHƯA MỞ KHÓA"));
+                Assert.That(football.transform.Find("Badge/LockIcon").gameObject.activeSelf, Is.True);
                 Assert.That(completed.GetComponent<BrutalButton>(), Is.Not.Null);
-                Assert.That(football.GetComponent<BrutalButton>(), Is.Not.Null);
-                Assert.That(football.GetComponent<Button>(), Is.Not.Null);
                 Assert.That(football.GetComponent<Button>().interactable, Is.False);
-
-                var iconSprites = screen.Nodes.Select(node =>
-                {
-                    Image icon = node.transform.Find("CardHeader/SportIcon/IconGlyph")
-                        .GetComponent<Image>();
-                    Assert.That(icon.sprite, Is.Not.Null, node.name);
-                    Assert.That(icon.preserveAspect, Is.True, node.name);
-                    return icon.sprite;
-                }).ToArray();
+                var iconSprites = screen.Nodes.Select(node => node.transform.Find("Badge/IconGlyph")
+                    .GetComponent<Image>().sprite).ToArray();
                 Assert.That(iconSprites.Distinct().Count(), Is.EqualTo(3));
-
                 foreach (MapNodeView node in screen.Nodes)
-                {
-                    TMP_Text title = node.transform.Find("CardHeader/TitleContainer/Title").GetComponent<TMP_Text>();
-                    Assert.That(title.fontSize, Is.GreaterThanOrEqualTo(30), node.name);
-                    Assert.That(node.GetComponent<VerticalLayoutGroup>().padding.left,
-                        Is.GreaterThanOrEqualTo(20), node.name);
-                }
+                    Assert.That(node.transform.Find("LabelGroup/TitleContainer/Title").GetComponent<TMP_Text>().fontSize,
+                        Is.GreaterThanOrEqualTo(30), node.name);
             }
-            finally
-            {
-                Object.DestroyImmediate(root);
-            }
+            finally { Object.DestroyImmediate(root); }
         }
 
         [Test]
@@ -421,8 +393,7 @@ namespace KMA.Tests.Presentation
                 foreach (MapNodeView future in screen.Nodes.Where(node => node.SubjectId != SubjectId.Sprint))
                 {
                     Assert.That(future.IsInteractable, Is.False, future.DisplayName);
-                    Assert.That(future.transform.Find("StatusContainer/Status").GetComponent<TMP_Text>().text,
-                        Is.EqualTo("CHƯA MỞ KHÓA"));
+                    Assert.That(future.StatusText, Is.EqualTo("CHƯA MỞ KHÓA"));
                 }
 
             }
@@ -433,31 +404,23 @@ namespace KMA.Tests.Presentation
         }
 
         [Test]
-        public void MapCardsUseRoundedSurfacesAndControlledDepth()
+        public void MapBadgesUseCircleSurfacesAndControlledDepth()
         {
             var root = new GameObject("map", typeof(RectTransform));
             try
             {
                 var screen = root.AddComponent<MapScreen>();
                 MapPresentationBuilder.Build(screen, new GameSession());
-
-                Transform grid = root.transform.Find("S5MapPresentation/Content/SelectionGrid");
-                foreach (var node in grid.GetComponentsInChildren<MapNodeView>(true))
+                foreach (MapNodeView node in screen.Nodes)
                 {
-                    Transform card = node.transform;
-                    Image surface = card.GetComponent<Image>();
-                    Assert.That(surface.sprite, Is.Not.Null, card.name);
-                    Assert.That(surface.type, Is.EqualTo(Image.Type.Sliced), card.name);
-                    Shadow shadow = card.GetComponent<Shadow>();
-                    Assert.That(shadow, Is.Not.Null, card.name);
-                    Assert.That(Mathf.Abs(shadow.effectDistance.x), Is.LessThanOrEqualTo(8f), card.name);
+                    Transform badge = node.transform.Find("Badge");
+                    Assert.That(badge.GetComponent<Image>().sprite, Is.Not.Null, node.name);
+                    Shadow shadow = badge.GetComponent<Shadow>();
+                    Assert.That(shadow, Is.Not.Null, node.name);
+                    Assert.That(Mathf.Abs(shadow.effectDistance.y), Is.LessThanOrEqualTo(8f), node.name);
                 }
-
             }
-            finally
-            {
-                Object.DestroyImmediate(root);
-            }
+            finally { Object.DestroyImmediate(root); }
         }
 
         [Test]
@@ -471,14 +434,8 @@ namespace KMA.Tests.Presentation
 
                 Transform sprint = root.transform.Find(
                     "S5MapPresentation/Content/SelectionGrid/SprintNode");
-                HorizontalLayoutGroup cardHeader = sprint.Find("CardHeader")
-                    .GetComponent<HorizontalLayoutGroup>();
-                Assert.That(cardHeader.childForceExpandWidth, Is.False);
-                Assert.That(cardHeader.childForceExpandHeight, Is.False);
-                LayoutElement cardTitle = sprint.Find("CardHeader/TitleContainer")
-                    .GetComponent<LayoutElement>();
-                Assert.That(cardTitle.preferredHeight, Is.GreaterThanOrEqualTo(56f));
-                Assert.That(cardTitle.flexibleWidth, Is.GreaterThan(0f));
+                var titleBox = (RectTransform)sprint.Find("LabelGroup/TitleContainer");
+                Assert.That(-titleBox.offsetMin.y, Is.GreaterThanOrEqualTo(40f));
 
                 LayoutElement livesLabel = root.transform.Find(
                         "S5MapPresentation/Content/Header/LivesPanel/LivesLabelContainer")
@@ -499,25 +456,18 @@ namespace KMA.Tests.Presentation
         }
 
         [Test]
-        public void AvailableSportsCardsRenderWithoutLockPictograms()
+        public void LockPictogramsAppearOnlyOnLockedStops()
         {
             var root = new GameObject("map", typeof(RectTransform));
             try
             {
                 var screen = root.AddComponent<MapScreen>();
                 MapPresentationBuilder.Build(screen, new GameSession());
-
-                Assert.That(screen.Nodes[0].IsInteractable, Is.True, screen.Nodes[0].DisplayName);
-                Assert.That(screen.Nodes[1].IsInteractable, Is.False, screen.Nodes[1].DisplayName);
-                Assert.That(screen.Nodes[2].IsInteractable, Is.False, screen.Nodes[2].DisplayName);
-                foreach (MapNodeView node in screen.Nodes)
-                    Assert.That(node.transform.Find("LockIcon"), Is.Null, node.DisplayName);
-
+                Assert.That(screen.Nodes[0].transform.Find("Badge/LockIcon").gameObject.activeSelf, Is.False);
+                Assert.That(screen.Nodes[1].transform.Find("Badge/LockIcon").gameObject.activeSelf, Is.True);
+                Assert.That(screen.Nodes[2].transform.Find("Badge/LockIcon").gameObject.activeSelf, Is.True);
             }
-            finally
-            {
-                Object.DestroyImmediate(root);
-            }
+            finally { Object.DestroyImmediate(root); }
         }
 
         [Test]
@@ -531,12 +481,10 @@ namespace KMA.Tests.Presentation
 
                 Transform sprint = root.transform.Find(
                     "S5MapPresentation/Content/SelectionGrid/SprintNode");
-                Assert.That(sprint.Find("StatusContainer/Status").GetComponent<TMP_Text>().fontSize,
-                    Is.GreaterThanOrEqualTo(26));
-                Assert.That(sprint.Find("DetailContainer/Detail").GetComponent<TMP_Text>().fontSize,
-                    Is.GreaterThanOrEqualTo(26));
-                Assert.That(sprint.Find("ActionHint").GetComponent<TMP_Text>().fontSize,
-                    Is.GreaterThanOrEqualTo(26));
+                Assert.That(sprint.Find("LabelGroup/MetaPill/StatusContainer/Status").GetComponent<TMP_Text>().fontSize,
+                    Is.GreaterThanOrEqualTo(20));
+                Assert.That(sprint.Find("LabelGroup/TitleContainer/Title").GetComponent<TMP_Text>().fontSize,
+                    Is.GreaterThanOrEqualTo(30));
 
                 foreach (TMP_Text line in root.transform.Find("S5MapPresentation/Content/JourneyLessons")
                              .GetComponentsInChildren<TMP_Text>(true))
@@ -546,6 +494,24 @@ namespace KMA.Tests.Presentation
             {
                 Object.DestroyImmediate(root);
             }
+        }
+
+        [Test]
+        public void LockedLessonCardsStayReadable()
+        {
+            var root = new GameObject("locked-cards", typeof(RectTransform));
+            try
+            {
+                var screen = root.AddComponent<MapScreen>();
+                MapPresentationBuilder.Build(screen, new GameSession());
+                Transform locked = screen.LessonList.transform.Find("Lesson3");
+                Color background = locked.GetComponent<Image>().color;
+                Assert.That(ContrastRatio(locked.Find("Objective").GetComponent<TMP_Text>().color, background),
+                    Is.GreaterThanOrEqualTo(4.5f));
+                Assert.That(ContrastRatio(locked.Find("StageTitle").GetComponent<TMP_Text>().color, background),
+                    Is.GreaterThanOrEqualTo(4.5f));
+            }
+            finally { Object.DestroyImmediate(root); }
         }
 
         [Test]
@@ -878,26 +844,19 @@ namespace KMA.Tests.Presentation
                     candidate.SubjectId == SubjectId.Sprint);
                 Button button = node.GetComponent<Button>();
                 BrutalButton feedback = node.GetComponent<BrutalButton>();
-                TMP_Text status = node.transform.Find("StatusContainer/Status").GetComponent<TMP_Text>();
-                TMP_Text action = node.transform.Find("ActionHint").GetComponent<TMP_Text>();
+                TMP_Text status = node.transform.Find("LabelGroup/MetaPill/StatusContainer/Status").GetComponent<TMP_Text>();
 
                 node.SetAvailability(false, "TẠM KHÓA");
 
                 Assert.That(button.interactable, Is.False);
                 Assert.That(feedback.enabled, Is.False);
                 Assert.That(status.text, Is.EqualTo("TẠM KHÓA"));
-                Assert.That(node.DetailText, Is.EqualTo("TẠM KHÓA"));
-                Assert.That(node.transform.Find("DetailContainer").gameObject.activeSelf, Is.False);
-                Assert.That(action.text, Is.Empty);
 
                 node.SetAvailability(true, "TẠM KHÓA");
 
                 Assert.That(button.interactable, Is.True);
                 Assert.That(feedback.enabled, Is.True);
                 Assert.That(status.text, Is.EqualTo("SẴN SÀNG"));
-                Assert.That(node.DetailText, Is.EqualTo("SẴN SÀNG"));
-                Assert.That(node.transform.Find("DetailContainer").gameObject.activeSelf, Is.False);
-                Assert.That(action.text, Is.EqualTo("THI"));
             }
             finally
             {
@@ -906,7 +865,7 @@ namespace KMA.Tests.Presentation
         }
 
         [Test]
-        public void MapPaletteUsesBlueForSubjectsGreenForCompletionAndGoldForReadyState()
+        public void MapPaletteUsesBlueForSprintAndGoldForCompletion()
         {
             var root = new GameObject("map", typeof(RectTransform));
             try
@@ -914,22 +873,14 @@ namespace KMA.Tests.Presentation
                 var session = CompleteSprintJourney();
                 var screen = root.AddComponent<MapScreen>();
                 MapPresentationBuilder.Build(screen, session);
-
                 MapNodeView sprint = screen.Nodes.Single(node => node.SubjectId == SubjectId.Sprint);
-                Color sprintAccent = sprint.transform.Find("CardHeader/SportIcon")
-                    .GetComponent<Image>().color;
+                Color sprintAccent = sprint.transform.Find("Badge").GetComponent<Image>().color;
                 Assert.That(sprintAccent.b, Is.GreaterThan(sprintAccent.r),
                     "Subject accents should not use warning red.");
-
-                Color completed = sprint.GetComponent<Outline>().effectColor;
-                Assert.That(completed.g, Is.GreaterThan(completed.r));
-                Assert.That(completed.g, Is.GreaterThan(completed.b));
-
+                Assert.That(sprint.transform.Find("Badge/DoneMark").GetComponent<Image>().color,
+                    Is.EqualTo(HomeMenuStyle.Gold));
             }
-            finally
-            {
-                Object.DestroyImmediate(root);
-            }
+            finally { Object.DestroyImmediate(root); }
         }
 
         [Test]
@@ -942,7 +893,7 @@ namespace KMA.Tests.Presentation
                 var firstScreen = firstRoot.AddComponent<MapScreen>();
                 MapPresentationBuilder.Build(firstScreen, new GameSession());
                 Image firstIcon = firstScreen.Nodes.Single(node => node.SubjectId == SubjectId.Sprint)
-                    .transform.Find("CardHeader/SportIcon/IconGlyph").GetComponent<Image>();
+                    .transform.Find("Badge/IconGlyph").GetComponent<Image>();
                 Sprite destroyedSprite = firstIcon.sprite;
                 Texture2D destroyedTexture = destroyedSprite.texture;
                 Object.DestroyImmediate(firstRoot);
@@ -952,7 +903,7 @@ namespace KMA.Tests.Presentation
                 var secondScreen = secondRoot.AddComponent<MapScreen>();
                 MapPresentationBuilder.Build(secondScreen, new GameSession());
                 Sprite rebuiltSprite = secondScreen.Nodes.Single(node => node.SubjectId == SubjectId.Sprint)
-                    .transform.Find("CardHeader/SportIcon/IconGlyph").GetComponent<Image>().sprite;
+                    .transform.Find("Badge/IconGlyph").GetComponent<Image>().sprite;
 
                 Assert.That(rebuiltSprite, Is.Not.Null);
                 Assert.That(rebuiltSprite.name, Is.EqualTo("SportIcon_Sprint"));

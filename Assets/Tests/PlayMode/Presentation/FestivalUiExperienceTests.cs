@@ -114,7 +114,7 @@ namespace KMA.Tests.Presentation
             Assert.That(root, Is.Not.Null);
             Assert.That(root.Find("Content/Header/BackButton"), Is.Not.Null);
             RectTransform header = root.Find("Content/Header").GetComponent<RectTransform>();
-            Assert.That(header.rect.height, Is.InRange(108f, 124f));
+            Assert.That(header.rect.height, Is.InRange(76f, 92f));
 
             Transform hearts = root.Find("Content/Header/LivesPanel/HeartBar");
             Assert.That(hearts, Is.Not.Null);
@@ -136,9 +136,7 @@ namespace KMA.Tests.Presentation
                     $"{label.name} must remain readable inside the rendered chapter card.");
             Assert.That(nodes.Select(node => node.SubjectId), Is.EqualTo(new[]
                 { SubjectId.Sprint, SubjectId.Volleyball, SubjectId.Football }));
-            Assert.That(grid.GetComponentsInChildren<Image>().Count(image => image.name.StartsWith("PathTrack")), Is.EqualTo(2));
-            Assert.That(grid.Find("SprintNode/ActionHint").GetComponent<TMP_Text>().text,
-                Is.EqualTo("THI"));
+            Assert.That(grid.Cast<Transform>().Count(child => child.name.StartsWith("PathTrack")), Is.EqualTo(2));
         }
 
         [UnityTest]

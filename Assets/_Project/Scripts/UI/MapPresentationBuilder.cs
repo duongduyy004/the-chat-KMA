@@ -87,7 +87,7 @@ namespace KMA.Gameplay.UI
             Stretch(content, new Vector2(64, 40), new Vector2(-64, -40));
 
             HeartBar hearts = Header(content, session, border);
-            PinToTop((RectTransform)hearts.transform.parent.parent, 116f);
+            PinToTop((RectTransform)hearts.transform.parent.parent, 84f);
             RectTransform grid = Rect(content, "SelectionGrid");
             Anchor(grid, new Vector2(0f, .37f), new Vector2(1f, .84f));
             GridLayoutGroup gridLayout = grid.gameObject.AddComponent<GridLayoutGroup>();
@@ -189,12 +189,12 @@ namespace KMA.Gameplay.UI
             headerSurface.color = MinigameUiTheme.WithAlpha(UITheme.Shared.Surface, 178f / 255f);
             headerSurface.raycastTarget = false;
             HorizontalLayoutGroup layout = header.gameObject.AddComponent<HorizontalLayoutGroup>();
-            layout.padding = new RectOffset(14, 16, 10, 12);
-            layout.spacing = 18; layout.childAlignment = TextAnchor.MiddleCenter; layout.childControlWidth = true;
+            layout.padding = new RectOffset(14, 16, 8, 10);
+            layout.spacing = 16; layout.childAlignment = TextAnchor.MiddleCenter; layout.childControlWidth = true;
             layout.childControlHeight = true; layout.childForceExpandWidth = false;
             LayoutElement headerElement = header.gameObject.AddComponent<LayoutElement>();
-            headerElement.minHeight = 116;
-            headerElement.preferredHeight = 116;
+            headerElement.minHeight = 84;
+            headerElement.preferredHeight = 84;
             headerElement.flexibleHeight = 0;
             Button back = HeaderButton(header, "BackButton", "‹", border);
             back.onClick.AddListener(() => KMA.Gameplay.Core.SceneRouter.Instance?.RouteToMenu());
@@ -205,12 +205,9 @@ namespace KMA.Gameplay.UI
             headingLayout.childControlWidth = true;
             headingLayout.childControlHeight = true;
             headingLayout.childForceExpandHeight = false;
-            TMP_Text title = LayoutLabel(heading, "Title", "CHỌN MÔN THI", 56,
-                Color.white, TextAnchor.LowerLeft);
-            title.transform.parent.gameObject.AddComponent<LayoutElement>().preferredHeight = 62;
-            TMP_Text subtitle = LayoutLabel(heading, "Subtitle", "Chọn một môn để bắt đầu", 26,
-                UITheme.Shared.MapHint, TextAnchor.UpperLeft);
-            subtitle.transform.parent.gameObject.AddComponent<LayoutElement>().preferredHeight = 34;
+            TMP_Text title = LayoutLabel(heading, "Title", "CHỌN MÔN THI", 40,
+                Color.white, TextAnchor.MiddleLeft);
+            title.transform.parent.gameObject.AddComponent<LayoutElement>().preferredHeight = 52;
             RectTransform livesPanel = Rect(header, "LivesPanel");
             Image livesSurface = livesPanel.gameObject.AddComponent<Image>();
             livesSurface.color = UITheme.Shared.MapLivesSurface;
@@ -219,7 +216,7 @@ namespace KMA.Gameplay.UI
             livesOutline.effectColor = MinigameUiTheme.WithAlpha(UITheme.Shared.Accent, 210f / 255f);
             livesOutline.effectDistance = new Vector2(UITheme.Shared.BorderWidth * .5f, -UITheme.Shared.BorderWidth * .5f);
             HorizontalLayoutGroup livesLayout = livesPanel.gameObject.AddComponent<HorizontalLayoutGroup>();
-            livesLayout.padding = new RectOffset(16, 16, 10, 10);
+            livesLayout.padding = new RectOffset(14, 14, 6, 6);
             livesLayout.spacing = 12;
             livesLayout.childAlignment = TextAnchor.MiddleCenter;
             livesLayout.childControlWidth = true;
@@ -228,7 +225,7 @@ namespace KMA.Gameplay.UI
             livesLayout.childForceExpandHeight = false;
             LayoutElement livesElement = livesPanel.gameObject.AddComponent<LayoutElement>();
             livesElement.preferredWidth = 430;
-            livesElement.preferredHeight = 80;
+            livesElement.preferredHeight = 60;
             RectTransform bar = Rect(livesPanel, "HeartBar");
             HorizontalLayoutGroup heartLayout = bar.gameObject.AddComponent<HorizontalLayoutGroup>();
             heartLayout.spacing = 6; heartLayout.childAlignment = TextAnchor.MiddleCenter;
@@ -279,9 +276,9 @@ namespace KMA.Gameplay.UI
             button.targetGraphic = image;
             button.colors = ButtonColors();
             LayoutElement element = root.gameObject.AddComponent<LayoutElement>();
-            element.preferredWidth = 84f;
-            element.preferredHeight = 84f;
-            TextTmp(root, "Label", label, 56, UITheme.Shared.Surface, TextAnchor.MiddleCenter);
+            element.preferredWidth = 60f;
+            element.preferredHeight = 60f;
+            TextTmp(root, "Label", label, 40, UITheme.Shared.Surface, TextAnchor.MiddleCenter);
             return button;
         }
 
