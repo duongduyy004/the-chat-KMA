@@ -24,7 +24,7 @@ namespace KMA.Gameplay.UI
             Anchor(accent.rectTransform, new Vector2(.025f, .982f), new Vector2(.975f, .989f));
 
             Image emblem = Shape(panel, "CourseIcon", Theme.LessonJourney.sprint, true);
-            Place(emblem.rectTransform, new Vector2(.025f, .885f), new Vector2(52f, 52f), new Vector2(0f, .5f));
+            Place(emblem.rectTransform, new Vector2(.025f, .90f), new Vector2(52f, 52f), new Vector2(0f, .5f));
             SubjectId[] subjects = { SubjectId.Sprint, SubjectId.Volleyball, SubjectId.Football };
             foreach (SubjectId subject in subjects)
             {
@@ -36,21 +36,22 @@ namespace KMA.Gameplay.UI
                 sport.gameObject.SetActive(subject == SubjectId.Sprint);
             }
 
-            TMP_Text heading = Label(panel, "CourseTitle", Style.headingSize, Theme.TextPrimary, FontStyles.Bold);
-            Anchor(heading.rectTransform, new Vector2(.025f, .80f), new Vector2(.30f, .97f));
+            TMP_Text heading = Label(panel, "CourseTitle", Style.headingSize, Theme.TextPrimary, FontStyles.Bold,
+                VietFontRole.Hud);
+            Anchor(heading.rectTransform, new Vector2(.025f, .83f), new Vector2(.30f, .97f));
             heading.rectTransform.offsetMin = new Vector2(70f, 0f);
             TMP_Text progress = Label(panel, "CourseProgress", Style.bodySize, Theme.MapHint);
-            Anchor(progress.rectTransform, new Vector2(.31f, .80f), new Vector2(.66f, .97f));
+            Anchor(progress.rectTransform, new Vector2(.31f, .83f), new Vector2(.66f, .97f));
 
             Button continueButton = ActionButton(panel, "ContinueCheckpoint", "TIẾP TỤC BÀI HỌC  ›");
-            Anchor((RectTransform)continueButton.transform, new Vector2(.69f, .81f), new Vector2(.975f, .96f));
+            Anchor((RectTransform)continueButton.transform, new Vector2(.69f, .84f), new Vector2(.975f, .96f));
 
             for (int index = 0; index < 2; index++) CreateConnector(panel, index);
             for (int index = 0; index < 3; index++) CreateCard(panel, index);
 
-            TMP_Text hint = Label(panel, "JourneyHint", Style.captionSize, Theme.MapHint);
+            TMP_Text hint = Label(panel, "JourneyHint", Style.captionSize - 2f, Theme.MapHint);
             hint.alignment = TextAlignmentOptions.Center;
-            Anchor(hint.rectTransform, new Vector2(.025f, .68f), new Vector2(.975f, .78f));
+            Anchor(hint.rectTransform, new Vector2(.025f, Style.cardTop + .02f), new Vector2(.975f, .82f));
             return panel;
         }
 
@@ -119,9 +120,14 @@ namespace KMA.Gameplay.UI
                 new Vector2(textLeft, -headerBottom), new Vector2(-pad, -pad - Style.cardStepHeight));
 
             // Body: the objective fills the space between header and action, centred both ways.
-            TMP_Text objective = Label(rect, "Objective", Style.objectiveSize, Theme.Surface);
+            TMP_Text objective = Label(rect, "Objective", Style.objectiveSize, Theme.Surface,
+                FontStyles.Normal, VietFontRole.Body);
             objective.alignment = TextAlignmentOptions.Center;
             objective.enableWordWrapping = true;
+            objective.lineSpacing = 0f;
+            objective.enableAutoSizing = true;
+            objective.fontSizeMax = Style.objectiveSize;
+            objective.fontSizeMin = Style.captionSize - 4f;
             Inset(objective.rectTransform, Vector2.zero, Vector2.one,
                 new Vector2(pad, actionTop + gap), new Vector2(-pad, -headerBottom - gap));
 
@@ -138,9 +144,10 @@ namespace KMA.Gameplay.UI
         {
             float left = Style.cardLeft + Style.cardWidth + index * (Style.cardWidth + Style.cardGap);
             Image track = Shape(panel, $"LessonConnector{index + 1}", Theme.MapLockedBorder);
-            Anchor(track.rectTransform, new Vector2(left, .355f), new Vector2(left + Style.cardGap, .367f));
+            float middle = (Style.cardBottom + Style.cardTop) * .5f;
+            Anchor(track.rectTransform, new Vector2(left, middle - .006f), new Vector2(left + Style.cardGap, middle + .006f));
             Image arrow = Shape(panel, $"LessonArrow{index + 1}", Theme.MapLockedBorder, true);
-            Place(arrow.rectTransform, new Vector2(left + Style.cardGap * .5f, .361f), new Vector2(38f, 38f));
+            Place(arrow.rectTransform, new Vector2(left + Style.cardGap * .5f, middle), new Vector2(38f, 38f));
             TMP_Text mark = Label(arrow.transform, "Label", Style.bodySize, Theme.Surface, FontStyles.Bold);
             mark.text = "›";
             mark.alignment = TextAlignmentOptions.Center;
@@ -219,7 +226,7 @@ namespace KMA.Gameplay.UI
         }
 
         static TMP_Text Label(Transform parent, string name, float size, Color color,
-            FontStyles style = FontStyles.Normal)
+            FontStyles style = FontStyles.Normal, VietFontRole? role = null)
         {
             RectTransform rect = Rect(parent, name);
             TMP_Text label = rect.gameObject.AddComponent<TextMeshProUGUI>();
@@ -229,7 +236,8 @@ namespace KMA.Gameplay.UI
             label.alignment = TextAlignmentOptions.MidlineLeft;
             label.enableWordWrapping = false;
             label.raycastTarget = false;
-            VietTypography.Apply(label);
+            if (role.HasValue) VietTypography.Apply(label, role.Value);
+            else VietTypography.Apply(label);
             return label;
         }
 

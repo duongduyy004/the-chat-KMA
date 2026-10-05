@@ -61,18 +61,18 @@ MonoBehaviour:
     cardWidth: 0.28
     cardGap: 0.055
     cardBottom: 0.04
-    cardTop: 0.66
+    cardTop: 0.72
     borderWidth: 3
-    headingSize: 32
-    stageSize: 32
+    headingSize: 30
+    stageSize: 30
     bodySize: 24
-    captionSize: 20
-    objectiveSize: 20
+    captionSize: 22
+    objectiveSize: 22
     iconSize: 64
-    cardInset: 16
-    cardSpacing: 12
-    cardBadgeHeight: 28
-    cardStepHeight: 24
+    cardInset: 14
+    cardSpacing: 8
+    cardBadgeHeight: 30
+    cardStepHeight: 26
     cardActionHeight: 34
     revealDuration: 0.2
     revealStagger: 0.05
