@@ -19,6 +19,51 @@ namespace KMA.Tests.EditorTools
         public void ReleaseBuiltSceneAfterTest() => EditorSceneManager.NewScene(NewSceneSetup.EmptyScene, NewSceneMode.Single);
 
         [Test]
+        public void CourtSitsInTheSchoolyardWithTheCampusBehindIt()
+        {
+            VolleyballSceneConfigurator.BuildScene();
+            EditorSceneManager.OpenScene(VolleyballSceneConfigurator.ScenePath, OpenSceneMode.Single);
+            Assert.That(GameObject.Find("Sand"), Is.Null, "no beach");
+            var backdrop = Object.FindFirstObjectByType<KMA.Gameplay.CampusBackdropWorld>();
+            Assert.That(backdrop, Is.Not.Null);
+            // The backdrop's own child is named "Sky"; the old flat-colour quad must be gone.
+            Assert.That(GameObject.Find("Sky").transform.IsChildOf(backdrop.transform), Is.True, "the shared backdrop owns the sky");
+            Assert.That(backdrop.Ground.color, Is.EqualTo((Color)new Color32(0xcf, 0xc8, 0xb8, 0xff)));
+            Assert.That(GameObject.Find("Court").GetComponent<SpriteRenderer>().color,
+                Is.EqualTo((Color)new Color32(0x3f, 0x8f, 0xcf, 0xff)));
+            var net = GameObject.Find("Net").GetComponent<SpriteRenderer>();
+            Assert.That(AssetDatabase.GetAssetPath(net.sprite), Does.EndWith("/Campus/VolleyNet.png"));
+            Assert.That(net.sortingOrder, Is.EqualTo(VolleyAthleteView.NetSortingOrder));
+            Assert.That(backdrop.transform.parent, Is.Null);
+            Assert.That(GameObject.Find("GameCamera"), Is.Not.Null, "the assembler's camera survives; the backdrop is bound to it");
+        }
+
+        [Test]
+        public void FramingLeavesRoomForTheSkylineAboveTheFarSideline()
+        {
+            var cameraObject = new GameObject("Camera");
+            var camera = cameraObject.AddComponent<Camera>();
+            camera.orthographic = true;
+            VolleyballCameraFraming.Apply(camera);
+            Assert.That(camera.orthographicSize, Is.EqualTo(VolleyballCameraFraming.Size).Within(1e-3f));
+            Assert.That(camera.transform.position, Is.EqualTo(new Vector3(0f, VolleyballCameraFraming.Y, -10f)));
+            float top = VolleyballCameraFraming.Y + VolleyballCameraFraming.Size;
+            float bottom = VolleyballCameraFraming.Y - VolleyballCameraFraming.Size;
+            Assert.That(top - 4.97f, Is.GreaterThanOrEqualTo(2.1f), "skyline band fits between horizon and view top");
+            Assert.That(CourtSpace.ToWorld(new Vector2(0f, -CourtSpace.HalfWidth), 0f).y, Is.GreaterThan(bottom + .5f),
+                "the near sideline stays on screen");
+            Object.DestroyImmediate(cameraObject);
+        }
+
+        [Test]
+        public void VolleyballNoLongerUsesBeachAudio()
+        {
+            AudioAssetConfigurator.Configure();
+            var library = AssetDatabase.LoadAssetAtPath<KMA.Gameplay.Core.GameAudioLibrary>("Assets/_Project/Resources/GameAudioLibrary.asset");
+            Assert.That(library.volleyball.name, Is.EqualTo("Monkeys Spinning Monkeys"));
+        }
+
+        [Test]
         public void HeroFacesAnUntintedPackOpponent()
         {
             VolleyballSceneConfigurator.BuildScene();

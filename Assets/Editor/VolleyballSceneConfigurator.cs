@@ -32,12 +32,11 @@ namespace KMA.EditorTools
         // Tuned by eye in the visual QA task; see the plan's Task 13.
         const float HorizonWorldY = 4.97f;
         const int HudSortingOrder = 500;
-        // The net is a flat-colour band, drawn the same way as the Sky/Sand quads.
         const float NetWidth = .5f;
-        static readonly Color SkyColor = new Color32(91, 200, 224, 255);
-        static readonly Color SandColor = new Color32(236, 194, 150, 255);
-        static readonly Color CourtColor = new Color32(246, 214, 172, 255);
-        static readonly Color NetColor = new Color(.95f, .95f, .95f, .9f);
+        static readonly Color GroundColor = new Color32(0xcf, 0xc8, 0xb8, 0xff); // schoolyard concrete
+        static readonly Color CourtColor = new Color32(0x3f, 0x8f, 0xcf, 0xff);  // painted court
+        static readonly Color LineColor = new Color32(0xff, 0xfb, 0xea, 0xff);
+        const float SkylineHeight = 2.1f;
         static readonly Color ShadowTint = new Color(1f, 1f, 1f, .8f);
         static readonly Color ContactTint = new Color(1f, .9f, .2f, .85f);
         static readonly Color AimTint = new Color(1f, .25f, .2f, .85f);
@@ -184,26 +183,25 @@ namespace KMA.EditorTools
             Sprite pixel = Single(PixelPath);
             Sprite shadowSprite = Single(ShadowPath);
 
-            Quad("Sky", pixel, SkyColor, new Vector3(0f, HorizonWorldY + 10f, 0f), new Vector2(60f, 20f));
-            Quad("Sand", pixel, SandColor, new Vector3(0f, HorizonWorldY - 20f, 0f), new Vector2(60f, 40f));
             // CourtSpace.ToWorld scales the y (court-width) axis by PixelsPerMetreY /
             // BackgroundPixelsPerUnit (not 1:1), so the court's on-screen height isn't simply
             // HalfWidth * 2 world units - measure it via ToWorld so the band reaches both sidelines.
             float netWorldHeight = CourtSpace.ToWorld(new Vector2(0f, CourtSpace.HalfWidth), 0f).y -
                                     CourtSpace.ToWorld(new Vector2(0f, -CourtSpace.HalfWidth), 0f).y;
-            Quad("Net", pixel, NetColor, CourtSpace.ToWorld(Vector2.zero, 0f),
-                new Vector2(NetWidth, netWorldHeight), VolleyAthleteView.NetSortingOrder);
+            Sprite netSprite = CampusBackdropAuthoring.Load("VolleyNet");
+            SpriteRenderer net = Renderer("Net", netSprite, CourtSpace.ToWorld(Vector2.zero, 0f), VolleyAthleteView.NetSortingOrder);
+            net.transform.localScale = new Vector3(NetWidth / netSprite.bounds.size.x, netWorldHeight / netSprite.bounds.size.y, 1f);
             float courtX = CourtSpace.ToWorld(new Vector2(CourtSpace.HalfLength, 0f), 0f).x;
             float courtY = CourtSpace.ToWorld(new Vector2(0f, CourtSpace.HalfWidth), 0f).y;
             Quad("Court", pixel, CourtColor, Vector3.zero, new Vector2(courtX * 2f, courtY * 2f), -20);
             float attackX = CourtSpace.ToWorld(new Vector2(AttackLineMetres, 0f), 0f).x;
             for (int side = -1; side <= 1; side += 2)
             {
-                Quad(side < 0 ? "NearAttackLine" : "FarAttackLine", pixel, Color.white,
+                Quad(side < 0 ? "NearAttackLine" : "FarAttackLine", pixel, LineColor,
                     new Vector3(side * attackX, 0f, 0f), new Vector2(.09f, courtY * 2f), -9);
-                Quad(side < 0 ? "NearBaseline" : "FarBaseline", pixel, Color.white,
+                Quad(side < 0 ? "NearBaseline" : "FarBaseline", pixel, LineColor,
                     new Vector3(side * courtX, 0f, 0f), new Vector2(.09f, courtY * 2f), -9);
-                Quad(side < 0 ? "NearSideline" : "FarSideline", pixel, Color.white,
+                Quad(side < 0 ? "NearSideline" : "FarSideline", pixel, LineColor,
                     new Vector3(0f, side * courtY, 0f), new Vector2(courtX * 2f, .09f), -9);
             }
 
@@ -295,7 +293,10 @@ namespace KMA.EditorTools
             // not represent volleyball, so hide only its prefab children in this scene.
             foreach (Transform child in parent)
                 child.gameObject.SetActive(false);
-            Camera.main.orthographicSize = 5.45f;
+            Camera camera = Camera.main; // the assembler's root GameCamera
+            VolleyballCameraFraming.Apply(camera);
+            // The ground override paints the schoolyard concrete instead of the default campus grass.
+            CampusBackdropAuthoring.AddWorld(scene, camera, HorizonWorldY, SkylineHeight, true, GroundColor);
 
             RectTransform controls = UiRect("VolleyballControls", parent, Vector2.zero, Vector2.one);
             controls.SetAsFirstSibling();

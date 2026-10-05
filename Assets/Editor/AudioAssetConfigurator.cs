@@ -32,7 +32,7 @@ namespace KMA.EditorTools
             library.sfxGroup = mixer.FindMatchingGroups("SFX").Single();
             library.menu = Music("Move Forward");
             library.sprint = Music("Cipher2");
-            library.volleyball = Music("Beachfront Celebration");
+            library.volleyball = Music("Monkeys Spinning Monkeys");
             library.football = Music("Winner Winner");
             library.cues = new[]
             {

@@ -13,6 +13,14 @@ namespace KMA.Tests.Gameplay.Volleyball
     public sealed class VolleyballSceneTests
     {
         [UnityTest]
+        public IEnumerator RuntimeFramingSurvivesTheAssemblerCameraReset()
+        {
+            yield return SceneManager.LoadSceneAsync("MG_Volleyball", LoadSceneMode.Single);
+            yield return null;
+            Assert.That(Camera.main.orthographicSize, Is.EqualTo(VolleyballCameraFraming.Size).Within(1e-3f));
+        }
+
+        [UnityTest]
         public IEnumerator SceneIsFullyWired()
         {
             yield return SceneManager.LoadSceneAsync("MG_Volleyball", LoadSceneMode.Single);

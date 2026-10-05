@@ -14,7 +14,8 @@
         "KMA.Gameplay",
         "KMA.Gameplay.Volleyball",
         "KMA.Gameplay.Sprint",
-        "KMA.Gameplay.FrogJump"
+        "KMA.Gameplay.FrogJump",
+        "KMA.Gameplay.Core"
     ],
     "includePlatforms": [
         "Editor"

@@ -44,6 +44,7 @@ namespace KMA.Gameplay.Volleyball
         protected override void Awake()
         {
             base.Awake();
+            VolleyballCameraFraming.Apply(Camera.main);
             Match = new VolleyballMatch();
             SubscribeMatch(Match);
             PhaseChanged += OnPhaseChanged;
@@ -138,7 +139,7 @@ namespace KMA.Gameplay.Volleyball
             if (stepDistance >= .85f)
             {
                 stepDistance %= .85f;
-                GameAudio.Play(GameSound.SandStep);
+                GameAudio.Play(GameSound.RunStep);
             }
         }
 
