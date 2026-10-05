@@ -29,5 +29,8 @@ EditorBuildSettings:
   - enabled: 1
     path: Assets/_Project/Scenes/MG_Volleyball.unity
     guid: 642a106fb439243489441e57b6e43844
+  - enabled: 1
+    path: Assets/_Project/Scenes/MG_FrogJump.unity
+    guid: 317cf060c5c729346860299f9e3014d0
   m_configObjects: {}
   m_UseUCBPForAssetBundles: 0

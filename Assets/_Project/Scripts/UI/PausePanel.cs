@@ -17,6 +17,7 @@ namespace KMA.Gameplay.UI
         [SerializeField] Button restartButton;
         [SerializeField] Button exitButton;
         Transform menuCard;
+        bool leaveOptionsVisible = true;
 
         public event Action RestartRequested;
         public event Action ExitToMapRequested;
@@ -62,14 +63,28 @@ namespace KMA.Gameplay.UI
 
         public void Restart()
         {
+            if (!leaveOptionsVisible)
+                return;
             Resume();
             RestartRequested?.Invoke();
         }
 
         public void ExitToMap()
         {
+            if (!leaveOptionsVisible)
+                return;
             Resume();
             ExitToMapRequested?.Invoke();
+        }
+
+        /// The frog jump is mandatory: its pause menu only resumes.
+        public void SetLeaveOptionsVisible(bool visible)
+        {
+            leaveOptionsVisible = visible;
+            if (restartButton != null)
+                restartButton.gameObject.SetActive(visible);
+            if (exitButton != null)
+                exitButton.gameObject.SetActive(visible);
         }
 
         void WireButtons()
@@ -137,6 +152,9 @@ namespace KMA.Gameplay.UI
                     menuRoot.transform.SetAsLastSibling();
                 menuRoot.SetActive(visible);
             }
+
+            if (visible)
+                SetLeaveOptionsVisible(leaveOptionsVisible);
         }
     }
 }

@@ -19,6 +19,7 @@
         "Unity.TextMeshPro",
         "UnityEngine.UI",
         "KMA.Gameplay.Football",
+        "KMA.Gameplay.FrogJump",
         "KMA.Text"
     ],
     "includePlatforms": [
