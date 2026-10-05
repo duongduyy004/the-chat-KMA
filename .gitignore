@@ -114,3 +114,8 @@ InitTestScene*.unity*
 /[Aa]ssets/[Ss]ceneDependencyCache*
 
 .superpowers/brainstorm/
+
+# Chess puzzle authoring (Stockfish binary and Lichess cache stay local)
+tools/chess/stockfish/
+tools/chess/cache/
+tools/chess/*.zip

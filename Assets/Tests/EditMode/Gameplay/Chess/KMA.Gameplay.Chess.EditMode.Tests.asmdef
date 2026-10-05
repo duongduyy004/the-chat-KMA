@@ -4,7 +4,10 @@
     "references": [
         "UnityEngine.TestRunner",
         "UnityEditor.TestRunner",
-        "KMA.Gameplay.Chess.Core"
+        "KMA.Gameplay.Chess.Core",
+        "KMA.Gameplay",
+        "KMA.Gameplay.Chess",
+        "KMA.Gameplay.Progression"
     ],
     "includePlatforms": ["Editor"],
     "excludePlatforms": [],

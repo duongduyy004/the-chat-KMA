@@ -1,0 +1,24 @@
+{
+    "name": "KMA.Gameplay.Chess",
+    "rootNamespace": "KMA.Gameplay.Chess",
+    "references": [
+        "KMA.Gameplay.Chess.Core",
+        "KMA.Gameplay",
+        "KMA.Gameplay.Progression",
+        "KMA.Gameplay.Core",
+        "KMA.Gameplay.UI",
+        "Unity.TextMeshPro",
+        "UnityEngine.UI",
+        "Unity.InputSystem",
+        "KMA.Text"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}
