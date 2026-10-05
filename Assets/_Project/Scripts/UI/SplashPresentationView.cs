@@ -21,7 +21,6 @@ namespace KMA.Gameplay.UI
         UITheme.SplashStyle style;
         float introElapsed;
         Sprite gradient;
-        RectTransform academyFooter;
         RectTransform versionFooter;
 
         public static SplashPresentationView Build(Transform root)
@@ -43,7 +42,6 @@ namespace KMA.Gameplay.UI
                 existing.Percent = existing.transform.Find("ProgressPercent")?.GetComponent<TMP_Text>();
                 existing.LoadingBar = existing.GetComponentInChildren<Slider>(true);
                 existing.fill = existing.transform.Find("LoadingBar/FillMask/Fill") as RectTransform;
-                existing.academyFooter = existing.safeArea.Find("AcademyFooter") as RectTransform;
                 existing.versionFooter = existing.safeArea.Find("VersionFooter") as RectTransform;
                 existing.SetDisplayedProgress(0f);
                 return existing;
@@ -133,7 +131,6 @@ namespace KMA.Gameplay.UI
                 new Vector2(style.trackSize.x * .25f, style.statusHeight));
             view.Percent.alignment = TextAlignmentOptions.Right;
             view.CreateTrack();
-            view.academyFooter = Footer(safe, "AcademyFooter", "Học viện Kỹ thuật Mật mã", false, style);
             view.versionFooter = Footer(safe, "VersionFooter", "v" + Application.version, true, style);
             view.Resize();
             view.SetDisplayedProgress(0f);
@@ -220,7 +217,6 @@ namespace KMA.Gameplay.UI
             titleTop.fontSize = HomeMenuStyle.TitleTopSize * titleScale;
             titleKma.fontSize = HomeMenuStyle.TitleKmaSize * titleScale;
             float footerWidth = Mathf.Max(0f, Mathf.Min(style.footerSize.x, safeArea.rect.width * .5f - style.footerInset.x * 2f));
-            if (academyFooter != null) academyFooter.sizeDelta = new Vector2(footerWidth, style.footerSize.y);
             if (versionFooter != null) versionFooter.sizeDelta = new Vector2(footerWidth, style.footerSize.y);
         }
 

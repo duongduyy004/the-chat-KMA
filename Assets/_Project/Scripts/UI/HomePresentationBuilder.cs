@@ -102,8 +102,6 @@ namespace KMA.Gameplay.UI
                 line.localRotation = Quaternion.Euler(0f, 0f, UITheme.Shared.Menu.titleAngle);
                 line.gameObject.AddComponent<Image>().color = HomeMenuStyle.Gold;
             }
-            var subtitle = Label(parent, "AcademySubtitle", "Học viện Kỹ thuật Mật mã", 20, HomeMenuStyle.White);
-            Place(subtitle.rectTransform, new Vector2(265f, 91f), new Vector2(410f, 40f));
         }
 
         static void StyleTitle(TMP_Text text)
