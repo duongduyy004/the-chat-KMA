@@ -1,0 +1,11 @@
+Icons from Google Material Symbols (Rounded, filled, 48px)
+https://github.com/google/material-design-icons
+Licensed under the Apache License, Version 2.0: https://www.apache.org/licenses/LICENSE-2.0
+
+Rendered to 256px white PNGs in Assets/_Project/Resources/Icons:
+  sprint.svg            -> SportIcon_Sprint.png
+  sports_volleyball.svg -> SportIcon_Volleyball.png
+  sports_soccer.svg     -> SportIcon_Football.png
+  menu_book.svg         -> StageIcon_Learn.png
+  target.svg            -> StageIcon_Practice.png
+  emoji_events.svg      -> StageIcon_Exam.png

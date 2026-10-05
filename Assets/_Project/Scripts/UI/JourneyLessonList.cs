@@ -190,9 +190,7 @@ namespace KMA.Gameplay.UI
                 : index == 1 ? "Hoàn thành HỌC để mở" : "Hoàn thành LUYỆN để mở");
             card.Glow.gameObject.SetActive(checkpoint);
             card.Glow.color = MinigameUiTheme.WithAlpha(theme.Accent, theme.LessonJourney.glowAlpha.x);
-            Transform glyph = card.StageAccent.transform.Find("Glyph");
-            foreach (Image stroke in glyph.GetComponentsInChildren<Image>(true))
-                stroke.color = stroke.name.StartsWith("Line") ? card.StageAccent.color : theme.Surface;
+            card.StageAccent.transform.Find("Glyph").GetComponent<Image>().color = theme.Surface;
         }
 
         void PlayReveal()

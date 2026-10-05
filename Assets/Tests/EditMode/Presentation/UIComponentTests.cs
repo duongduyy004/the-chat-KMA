@@ -1018,36 +1018,30 @@ namespace KMA.Tests.Presentation
         }
 
         [Test]
-        public void MapRebuildRecreatesDestroyedProceduralSportSprites()
+        public void MapAndLessonCardsUseImportedIconSprites()
         {
-            var firstRoot = new GameObject("first-map", typeof(RectTransform));
-            var secondRoot = new GameObject("second-map", typeof(RectTransform));
+            var root = new GameObject("icon-map", typeof(RectTransform));
             try
             {
-                var firstScreen = firstRoot.AddComponent<MapScreen>();
-                MapPresentationBuilder.Build(firstScreen, new GameSession());
-                Image firstIcon = firstScreen.Nodes.Single(node => node.SubjectId == SubjectId.Sprint)
-                    .transform.Find("Badge/IconGlyph").GetComponent<Image>();
-                Sprite destroyedSprite = firstIcon.sprite;
-                Texture2D destroyedTexture = destroyedSprite.texture;
-                Object.DestroyImmediate(firstRoot);
-                Object.DestroyImmediate(destroyedSprite);
-                Object.DestroyImmediate(destroyedTexture);
+                var screen = root.AddComponent<MapScreen>();
+                MapPresentationBuilder.Build(screen, new GameSession());
+                foreach (MapNodeView node in screen.Nodes)
+                {
+                    Sprite sprite = node.transform.Find("Badge/IconGlyph").GetComponent<Image>().sprite;
+                    Assert.That(sprite, Is.EqualTo(Resources.Load<Sprite>("Icons/SportIcon_" + node.SubjectId)),
+                        node.name);
+                }
 
-                var secondScreen = secondRoot.AddComponent<MapScreen>();
-                MapPresentationBuilder.Build(secondScreen, new GameSession());
-                Sprite rebuiltSprite = secondScreen.Nodes.Single(node => node.SubjectId == SubjectId.Sprint)
-                    .transform.Find("Badge/IconGlyph").GetComponent<Image>().sprite;
-
-                Assert.That(rebuiltSprite, Is.Not.Null);
-                Assert.That(rebuiltSprite.name, Is.EqualTo("SportIcon_Sprint"));
+                string[] stages = { "StageIcon_Learn", "StageIcon_Practice", "StageIcon_Exam" };
+                for (int i = 0; i < stages.Length; i++)
+                {
+                    Sprite expected = Resources.Load<Sprite>("Icons/" + stages[i]);
+                    Assert.That(expected, Is.Not.Null, stages[i]);
+                    Assert.That(screen.LessonList.transform.Find($"Lesson{i + 1}/StageIcon/Glyph")
+                        .GetComponent<Image>().sprite, Is.EqualTo(expected), stages[i]);
+                }
             }
-            finally
-            {
-                if (firstRoot != null)
-                    Object.DestroyImmediate(firstRoot);
-                Object.DestroyImmediate(secondRoot);
-            }
+            finally { Object.DestroyImmediate(root); }
         }
 
         static GameSession CompleteSprintJourney()

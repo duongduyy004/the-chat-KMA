@@ -12,7 +12,6 @@ namespace KMA.Gameplay.UI
         static Sprite heartSprite;
         static Sprite roundedRectSprite;
         static Sprite lockSprite;
-        static readonly Dictionary<SubjectId, Sprite> SportSprites = new Dictionary<SubjectId, Sprite>();
 
         readonly struct Entry
         {
@@ -332,53 +331,9 @@ namespace KMA.Gameplay.UI
             return colors;
         }
 
-        internal static Sprite SportIconSprite(SubjectId subject)
-        {
-            if (SportSprites.TryGetValue(subject, out Sprite cached) && cached != null)
-                return cached;
-            SportSprites.Remove(subject);
-
-            const int size = 96;
-            var texture = new Texture2D(size, size, TextureFormat.RGBA32, false)
-            {
-                name = "SportIcon_" + subject,
-                filterMode = FilterMode.Bilinear,
-                wrapMode = TextureWrapMode.Clamp,
-                hideFlags = HideFlags.HideAndDontSave
-            };
-            var pixels = new Color32[size * size];
-            switch (subject)
-            {
-                case SubjectId.Sprint:
-                    DrawLine(pixels, size, 62, 80, 36, 52, 8);
-                    DrawLine(pixels, size, 36, 52, 61, 51, 8);
-                    DrawLine(pixels, size, 61, 51, 31, 15, 8);
-                    DrawLine(pixels, size, 24, 34, 45, 34, 6);
-                    break;
-                case SubjectId.Football:
-                    DrawRing(pixels, size, 48, 48, 34, 6);
-                    DrawCircle(pixels, size, 48, 48, 11);
-                    DrawLine(pixels, size, 48, 37, 48, 14, 5);
-                    DrawLine(pixels, size, 39, 54, 19, 66, 5);
-                    DrawLine(pixels, size, 57, 54, 77, 66, 5);
-                    DrawLine(pixels, size, 42, 41, 25, 25, 5);
-                    DrawLine(pixels, size, 54, 41, 70, 25, 5);
-                    break;
-                case SubjectId.Volleyball:
-                    DrawRing(pixels, size, 48, 48, 34, 6);
-                    DrawLine(pixels, size, 48, 48, 48, 82, 5);
-                    DrawLine(pixels, size, 48, 48, 19, 31, 5);
-                    DrawLine(pixels, size, 48, 48, 77, 31, 5);
-                    break;
-            }
-            texture.SetPixels32(pixels);
-            texture.Apply(false, false);
-            Sprite sprite = Sprite.Create(texture, new Rect(0, 0, size, size), new Vector2(.5f, .5f), size);
-            sprite.name = "SportIcon_" + subject;
-            sprite.hideFlags = HideFlags.HideAndDontSave;
-            SportSprites[subject] = sprite;
-            return sprite;
-        }
+        // Material Symbols glyphs (Apache 2.0), imported from Resources/Icons; see Art/Icons/Source~.
+        internal static Sprite SportIconSprite(SubjectId subject) =>
+            Resources.Load<Sprite>("Icons/SportIcon_" + subject);
 
         internal static void UseRoundedSurface(Image image)
         {

@@ -10,6 +10,7 @@ namespace KMA.Gameplay.UI
     {
         static UITheme Theme => UITheme.Shared;
         static UITheme.LessonJourneyStyle Style => Theme.LessonJourney;
+        static readonly string[] StageIcons = { "StageIcon_Learn", "StageIcon_Practice", "StageIcon_Exam" };
 
         public static RectTransform Create(Transform parent)
         {
@@ -95,9 +96,11 @@ namespace KMA.Gameplay.UI
             Image glow = Shape(disc.transform, "Glow", Theme.Accent, true);
             glow.sprite = UiKitAssets.Load().Ring;
             Anchor(glow.rectTransform, Vector2.one * -.10f, Vector2.one * 1.10f);
-            RectTransform glyph = Rect(disc.transform, "Glyph");
-            Anchor(glyph, Vector2.one * .20f, Vector2.one * .80f);
-            CreateStageGlyph(glyph, index);
+            Image glyph = Shape(disc.transform, "Glyph", Theme.Surface);
+            glyph.sprite = Resources.Load<Sprite>("Icons/" + StageIcons[index]);
+            glyph.type = Image.Type.Simple;
+            glyph.preserveAspect = true;
+            Anchor(glyph.rectTransform, Vector2.one * .18f, Vector2.one * .82f);
 
             TMP_Text title = Label(rect, "StageTitle", Style.stageSize, Theme.Surface, FontStyles.Bold);
             title.alignment = TextAlignmentOptions.MidlineLeft;
@@ -126,58 +129,6 @@ namespace KMA.Gameplay.UI
             mark.text = "›";
             mark.alignment = TextAlignmentOptions.Center;
             Anchor(mark.rectTransform, Vector2.zero, Vector2.one);
-        }
-
-        static void CreateStageGlyph(RectTransform root, int index)
-        {
-            if (index == 0)
-            {
-                // Open book, with a spine and two readable page strokes.
-                Box(root, "LeftPage", .05f, .12f, .46f, .85f);
-                Box(root, "RightPage", .54f, .12f, .95f, .85f);
-                Box(root, "Spine", .46f, .02f, .54f, .82f);
-                PageStroke(root, "LineLeft1", .14f, .62f, .36f);
-                PageStroke(root, "LineLeft2", .14f, .40f, .36f);
-                PageStroke(root, "LineRight1", .64f, .62f, .86f);
-                PageStroke(root, "LineRight2", .64f, .40f, .86f);
-            }
-            else if (index == 1)
-            {
-                Image outer = Shape(root, "OuterTarget", Theme.Surface, true);
-                outer.sprite = UiKitAssets.Load().Ring;
-                Anchor(outer.rectTransform, Vector2.zero, Vector2.one);
-                Image inner = Shape(root, "InnerTarget", Theme.Surface, true);
-                inner.sprite = UiKitAssets.Load().Ring;
-                Anchor(inner.rectTransform, Vector2.one * .23f, Vector2.one * .77f);
-                Image center = Shape(root, "Bullseye", Theme.Surface, true);
-                Anchor(center.rectTransform, Vector2.one * .43f, Vector2.one * .57f);
-            }
-            else
-            {
-                Image left = Shape(root, "LeftHandle", Theme.Surface, true);
-                left.sprite = UiKitAssets.Load().Ring;
-                Anchor(left.rectTransform, new Vector2(0f, .44f), new Vector2(.45f, .86f));
-                Image right = Shape(root, "RightHandle", Theme.Surface, true);
-                right.sprite = UiKitAssets.Load().Ring;
-                Anchor(right.rectTransform, new Vector2(.55f, .44f), new Vector2(1f, .86f));
-                Box(root, "Cup", .22f, .38f, .78f, .96f);
-                Box(root, "Stem", .43f, .13f, .57f, .45f);
-                Box(root, "Base", .24f, .03f, .76f, .15f);
-            }
-        }
-
-        static void PageStroke(Transform root, string name, float xMin, float y, float xMax)
-        {
-            Image line = Shape(root, name, Theme.Accent);
-            line.sprite = null;
-            Anchor(line.rectTransform, new Vector2(xMin, y), new Vector2(xMax, y + .045f));
-        }
-
-        static void Box(Transform root, string name, float xMin, float yMin, float xMax, float yMax)
-        {
-            Image image = Shape(root, name, Theme.Surface);
-            image.sprite = null;
-            Anchor(image.rectTransform, new Vector2(xMin, yMin), new Vector2(xMax, yMax));
         }
 
         static void CreateCourtPattern(Transform panel)
