@@ -33,5 +33,14 @@ namespace KMA.Tests.Gameplay.Progression
                     $"{sceneName} needs a visible gameplay presentation.");
             }
         }
+
+        [UnityTest]
+        public IEnumerator AuthoredCameraKeepsItsSkyColour()
+        {
+            yield return UnityEngine.SceneManagement.SceneManager.LoadSceneAsync("MG_Football");
+            yield return null;
+            Assert.That(Camera.main.backgroundColor, Is.EqualTo((Color)new Color32(120, 207, 235, 255)),
+                "GameplayPresentation must not repaint an authored camera");
+        }
     }
 }

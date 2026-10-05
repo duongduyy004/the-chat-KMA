@@ -81,12 +81,14 @@ namespace KMA.Gameplay.Core
         static Camera EnsureCamera()
         {
             var camera = Camera.main ?? FindFirstObjectByType<Camera>();
-            if (camera == null)
+            if (camera != null)
             {
-                var cameraObject = new GameObject("GameplayCamera");
-                camera = cameraObject.AddComponent<Camera>();
+                camera.tag = "MainCamera";
+                return camera;
             }
 
+            // Only a scene with no camera at all gets the fallback; authored cameras keep their sky.
+            camera = new GameObject("GameplayCamera").AddComponent<Camera>();
             camera.tag = "MainCamera";
             camera.orthographic = true;
             camera.transform.position = new Vector3(0f, 0f, -10f);
