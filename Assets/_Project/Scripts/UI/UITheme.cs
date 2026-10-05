@@ -120,6 +120,20 @@ namespace KMA.Gameplay.UI
             public float revealScale = .94f;
             public float glowSpeed = 2.4f;
             public Vector2 glowAlpha = new Vector2(.12f, .32f);
+            // Journey map: the map zone sits between the compact header and the lesson panel.
+            public Vector2 mapAnchorMin = new Vector2(0f, .35f);
+            public Vector2 mapAnchorMax = new Vector2(1f, .915f);
+            // Fixed-size stop: tag + badge area + name + star/status pill.
+            public Vector2 stopSize = new Vector2(320f, 400f);
+            public float stopBadgeSize = 170f;
+            public float stopCurrentScale = 1.3f;
+            public float stopTagHeight = 52f;
+            // Badge-centre positions inside the map zone (x of width, y of height).
+            public float[] stopX = { .17f, .5f, .83f };
+            public float[] stopY = { .45f, .70f, .45f };
+            public float roadOutlineWidth = 30f;
+            public float roadFillWidth = 16f;
+            public float roadDotSize = 12f;
         }
 
         [Serializable]

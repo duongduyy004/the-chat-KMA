@@ -20,6 +20,14 @@ namespace KMA.Gameplay.UI
         [SerializeField] Image iconPlate;
         [SerializeField] Outline cardOutline;
         [SerializeField] GameObject detailVisibilityRoot;
+        [SerializeField] Image badgeImage;
+        [SerializeField] Image[] starImages = new Image[0];
+        [SerializeField] GameObject lockIcon;
+        [SerializeField] GameObject doneMark;
+        [SerializeField] GameObject currentTag;
+        [SerializeField] Image selectionRing;
+        [SerializeField] RectTransform badgeRect;
+        [SerializeField] RectTransform labelGroup;
 
         [SerializeField] Color subjectColor = Color.white;
 
@@ -39,6 +47,11 @@ namespace KMA.Gameplay.UI
         public int Stars { get; private set; }
         public Rank BestRank { get; private set; }
         public int Lives { get; private set; }
+        public bool IsCompleted => completed;
+        public bool IsLocked { get; private set; }
+        public bool IsCurrent { get; private set; }
+        public bool IsSelected { get; private set; }
+        public string StatusText => statusLabel == null ? string.Empty : statusLabel.text;
 
         bool completed;
 
@@ -110,6 +123,47 @@ namespace KMA.Gameplay.UI
             subjectColor = accent;
         }
 
+        public void BindJourneyStop(Image badge, Image[] stars, GameObject lockPictogram,
+            GameObject completedMark, GameObject currentMarker, Image ring,
+            RectTransform badgeTransform, RectTransform labels)
+        {
+            badgeImage = badge;
+            starImages = stars ?? new Image[0];
+            lockIcon = lockPictogram;
+            doneMark = completedMark;
+            currentTag = currentMarker;
+            selectionRing = ring;
+            badgeRect = badgeTransform;
+            labelGroup = labels;
+            SetJourneyMarkers(false, false);
+        }
+
+        public void SetJourneyMarkers(bool current, bool selected)
+        {
+            IsCurrent = current;
+            IsSelected = selected;
+            if (currentTag != null) currentTag.SetActive(current);
+            if (selectionRing != null) selectionRing.gameObject.SetActive(selected || current);
+            if (badgeRect != null)
+                badgeRect.localScale = Vector3.one * (current ? UITheme.Shared.LessonJourney.stopCurrentScale : 1f);
+            if (labelGroup != null)
+            {
+                // Names sit 22px under a normal badge and 26px + the extra radius under the current one.
+                float badge = UITheme.Shared.LessonJourney.stopBadgeSize;
+                float extra = current ? badge * (UITheme.Shared.LessonJourney.stopCurrentScale - 1f) * .5f : 0f;
+                labelGroup.anchoredPosition = new Vector2(0f, -extra);
+            }
+            if (selectionRing != null) selectionRing.color = HomeMenuStyle.Gold;
+        }
+
+        void Update()
+        {
+            if (!IsCurrent || selectionRing == null) return;
+            float pulse = (Mathf.Sin(Time.unscaledTime * UITheme.Shared.LessonJourney.glowSpeed) + 1f) * .5f;
+            Color gold = HomeMenuStyle.Gold;
+            selectionRing.color = new Color(gold.r, gold.g, gold.b, Mathf.Lerp(.55f, 1f, pulse));
+        }
+
         public void SetAvailability(bool selectable, string unavailableLabel)
         {
             RenderAvailability(selectable && !comingSoon, unavailableLabel);
@@ -151,6 +205,14 @@ namespace KMA.Gameplay.UI
                 statusLabel.color = locked
                     ? UITheme.Shared.MapLockedText
                     : completed ? CompleteBorder : UITheme.Shared.MapReadyText;
+            IsLocked = locked;
+            if (lockIcon != null) lockIcon.SetActive(locked);
+            if (doneMark != null) doneMark.SetActive(completed && !locked);
+            if (badgeImage != null) badgeImage.color = locked ? LockedCard : subjectColor;
+            for (int i = 0; i < starImages.Length; i++)
+                if (starImages[i] != null)
+                    starImages[i].color = i < Stars && !locked
+                        ? UITheme.Shared.Menu.gold : UITheme.Shared.MapLockedIcon;
         }
     }
 }

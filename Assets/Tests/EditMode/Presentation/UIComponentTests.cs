@@ -549,6 +549,72 @@ namespace KMA.Tests.Presentation
         }
 
         [Test]
+        public void MapNodeJourneyStop_ShowsLockStarsAndMarkersFromState()
+        {
+            var node = new GameObject("Stop", typeof(RectTransform)).AddComponent<MapNodeView>();
+            try
+            {
+                var badge = new GameObject("Badge", typeof(RectTransform), typeof(Image))
+                    .GetComponent<Image>();
+                badge.transform.SetParent(node.transform, false);
+                var stars = new Image[3];
+                for (int i = 0; i < 3; i++)
+                {
+                    stars[i] = new GameObject("Star" + i, typeof(RectTransform), typeof(Image))
+                        .GetComponent<Image>();
+                    stars[i].transform.SetParent(node.transform, false);
+                }
+                var lockIcon = new GameObject("LockIcon", typeof(RectTransform));
+                var doneMark = new GameObject("DoneMark", typeof(RectTransform));
+                var tag = new GameObject("CurrentTag", typeof(RectTransform));
+                var ring = new GameObject("SelectionRing", typeof(RectTransform), typeof(Image))
+                    .GetComponent<Image>();
+                var labelGroup = new GameObject("LabelGroup", typeof(RectTransform)).GetComponent<RectTransform>();
+                foreach (GameObject part in new[] { lockIcon, doneMark, tag, ring.gameObject, labelGroup.gameObject })
+                    part.transform.SetParent(node.transform, false);
+                node.BindJourneyStop(badge, stars, lockIcon, doneMark, tag, ring,
+                    badge.rectTransform, labelGroup);
+                var status = new GameObject("Status", typeof(RectTransform), typeof(TextMeshProUGUI))
+                    .GetComponent<TextMeshProUGUI>();
+                status.transform.SetParent(node.transform, false);
+                node.BindStatusLabel(status);
+
+                node.ConfigureJourneyState(SubjectId.Volleyball, "Bóng chuyền", false, false, null);
+                Assert.That(node.IsLocked, Is.True);
+                Assert.That(lockIcon.activeSelf, Is.True);
+                Assert.That(doneMark.activeSelf, Is.False);
+                Assert.That(node.StatusText, Is.EqualTo("CHƯA MỞ KHÓA"));
+                Assert.That(stars.Count(star => star.color == UITheme.Shared.Menu.gold), Is.Zero);
+
+                var record = new SubjectRecord();
+                record.Accept(new MinigameResult(true, 0f, Rank.C));
+                node.ConfigureJourneyState(SubjectId.Volleyball, "Bóng chuyền", true, true, record);
+                Assert.That(node.IsLocked, Is.False);
+                Assert.That(node.IsCompleted, Is.True);
+                Assert.That(lockIcon.activeSelf, Is.False);
+                Assert.That(doneMark.activeSelf, Is.True);
+                Assert.That(node.StatusText, Is.EqualTo("HOÀN THÀNH"));
+                int filled = stars.Count(star => star.color == UITheme.Shared.Menu.gold);
+                Assert.That(filled, Is.EqualTo(node.Stars), "Filled stars must equal Stars, not always 3.");
+                Assert.That(node.Stars, Is.LessThan(3));
+
+                node.SetJourneyMarkers(true, true);
+                Assert.That(node.IsCurrent, Is.True);
+                Assert.That(tag.activeSelf, Is.True);
+                Assert.That(ring.gameObject.activeSelf, Is.True);
+                Assert.That(ring.color.a, Is.EqualTo(1f).Within(.001f));
+                Assert.That(badge.rectTransform.localScale.x,
+                    Is.EqualTo(UITheme.Shared.LessonJourney.stopCurrentScale).Within(.001f));
+
+                node.SetJourneyMarkers(false, false);
+                Assert.That(tag.activeSelf, Is.False);
+                Assert.That(ring.gameObject.activeSelf, Is.False);
+                Assert.That(badge.rectTransform.localScale.x, Is.EqualTo(1f).Within(.001f));
+            }
+            finally { Object.DestroyImmediate(node.gameObject); }
+        }
+
+        [Test]
         public void MapNodeAvailabilityTransitionsKeepInteractionAndVisualStateSynchronized()
         {
             var root = new GameObject("map", typeof(RectTransform));
