@@ -8,6 +8,9 @@ namespace KMA.Gameplay.FrogJump
 {
     public sealed class FrogJumpController : MinigameBase
     {
+        /// The tutorial copy lives in the hint chip above the power bar, not the shared card.
+        public override bool UsesSharedTutorial => false;
+
         [SerializeField] FrogJumpBalanceConfig balance;
         [SerializeField] FrogJumpView view;
         [SerializeField] FrogJumpPowerBar powerBar;

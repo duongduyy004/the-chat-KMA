@@ -42,6 +42,7 @@ namespace KMA.EditorTools
         const string KeyOpenSettings = "KMA_PMS_OpenSettings";
         const string KeyOpenDialogue = "KMA_PMS_OpenDialogue";
         const string KeyDialogueTaps = "KMA_PMS_DialogueTaps";
+        const string KeyQaState = "KMA_PMS_QaState";
 
         [Serializable]
         class Request
@@ -62,6 +63,8 @@ namespace KMA.EditorTools
             // QA-only: open a journey dialogue node on the loaded scene and tap it N times.
             public string openDialogue = "";
             public int dialogueTaps;
+            // QA-only: named frog-jump-penalty state, see PlayModeScreenshotQaStates.
+            public string qaState = "";
         }
 
         static PlayModeScreenshot()
@@ -148,6 +151,7 @@ namespace KMA.EditorTools
             SessionState.SetBool(KeyOpenSettings, req.openSettings);
             SessionState.SetString(KeyOpenDialogue, req.openDialogue ?? "");
             SessionState.SetInt(KeyDialogueTaps, req.dialogueTaps);
+            SessionState.SetString(KeyQaState, req.qaState ?? "");
             SessionState.SetBool(KeyActive, true);
 
             EditorApplication.isPlaying = true;
@@ -157,6 +161,10 @@ namespace KMA.EditorTools
         {
             if (state != PlayModeStateChange.EnteredPlayMode)
                 return;
+
+            // Keep the Game view in front so the background Editor keeps rendering it.
+            if (SessionState.GetBool(KeyActive, false))
+                EditorApplication.ExecuteMenuItem("Window/General/Game");
 
             if (SessionState.GetBool(KeyHoldSprintTutorial, false))
             {
@@ -229,6 +237,8 @@ namespace KMA.EditorTools
         {
             if (!EditorApplication.isPlaying) return;
 
+            // A background Editor does not always repaint the Game view; capture would grab a stale frame.
+            UnityEditorInternal.InternalEditorUtility.RepaintAllViews();
             int phase = SessionState.GetInt(KeyPhase, 0);
             if (phase == 0)
             {
@@ -240,7 +250,18 @@ namespace KMA.EditorTools
                     var menu = UnityEngine.Object.FindFirstObjectByType<KMA.Gameplay.UI.MainMenuScreen>();
                     if (menu != null) menu.OpenSettings();
                 }
-                if (EditorApplication.timeSinceStartup < SessionState.GetFloat(KeyCaptureAt, 0)) return;
+                float untilCapture = SessionState.GetFloat(KeyCaptureAt, 0) - (float)EditorApplication.timeSinceStartup;
+                string qaState = SessionState.GetString(KeyQaState, "");
+                if (qaState != "" && PlayModeScreenshotQaStates.Apply(qaState, untilCapture))
+                {
+                    SessionState.SetString(KeyQaState, "");
+                    qaState = "";
+                    // Game time can lag wall time in a background Editor, so capture shortly after the state lands.
+                    if (PlayModeScreenshotQaStates.CaptureSoonAfterApply)
+                        SessionState.SetFloat(KeyCaptureAt, (float)EditorApplication.timeSinceStartup + .5f);
+                }
+                // A pending QA state holds the capture (up to a minute past the requested wait).
+                if (qaState != "" ? untilCapture > -60f : untilCapture > 0f) return;
                 string output = SessionState.GetString(KeyOutput, null);
                 ScreenCapture.CaptureScreenshot(output);
                 Debug.Log("[KMA] PlayModeScreenshot captured: " + output);

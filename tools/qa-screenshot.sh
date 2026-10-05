@@ -2,7 +2,7 @@
 # Send a screenshot request to an already-running Unity Editor (see
 # Assets/Editor/PlayModeScreenshot.cs) and wait for it to finish.
 #
-# Usage: tools/qa-screenshot.sh <output.png> [scene.unity] [waitSeconds] [holdSprintTutorial] [forceSprintDistance] [forceSprintResult] [openPause] [openDialogue] [dialogueTaps] [openSettings]
+# Usage: tools/qa-screenshot.sh <output.png> [scene.unity] [waitSeconds] [holdSprintTutorial] [forceSprintDistance] [forceSprintResult] [openPause] [openDialogue] [dialogueTaps] [openSettings] [qaState]
 # forceSprintDistance/forceSprintResult drive SprintController/ResultPanel through their
 # existing public test seams (AdvanceToDistance/Show) so a screenshot can show a late-race
 # or result state without simulating real taps; leave blank to play out naturally.
@@ -18,6 +18,7 @@ OPEN_PAUSE="${7:-false}"
 OPEN_DIALOGUE="${8:-}"
 DIALOGUE_TAPS="${9:-0}"
 OPEN_SETTINGS="${10:-false}"
+QA_STATE="${11:-}"
 
 REQ_DIR="Builds/Screenshots"
 REQ="$REQ_DIR/request.json"
@@ -48,7 +49,7 @@ case "$FORCE_SPRINT_RESULT" in
 esac
 
 cat > "$REQ.tmp" <<EOF
-{"id":"$ID","scene":"$SCENE","output":"$OUTPUT","waitSeconds":$WAIT,"holdSprintTutorial":$HOLD_SPRINT_TUTORIAL,"forceSprintDistance":$FORCE_SPRINT_DISTANCE,"forceSprintResult":"$FORCE_SPRINT_RESULT","openPause":$OPEN_PAUSE,"openDialogue":"$OPEN_DIALOGUE","dialogueTaps":$DIALOGUE_TAPS,"openSettings":$OPEN_SETTINGS}
+{"id":"$ID","scene":"$SCENE","output":"$OUTPUT","waitSeconds":$WAIT,"holdSprintTutorial":$HOLD_SPRINT_TUTORIAL,"forceSprintDistance":$FORCE_SPRINT_DISTANCE,"forceSprintResult":"$FORCE_SPRINT_RESULT","openPause":$OPEN_PAUSE,"openDialogue":"$OPEN_DIALOGUE","dialogueTaps":$DIALOGUE_TAPS,"openSettings":$OPEN_SETTINGS,"qaState":"$QA_STATE"}
 EOF
 mv "$REQ.tmp" "$REQ"
 

@@ -25,6 +25,13 @@ namespace KMA.Tests.EditorTools
         }
 
         [Test]
+        public void SharedTutorialCardIsNotUsed()
+        {
+            EditorSceneManager.OpenScene(FrogJumpSceneConfigurator.ScenePath);
+            Assert.That(Object.FindFirstObjectByType<FrogJumpController>().UsesSharedTutorial, Is.False);
+        }
+
+        [Test]
         public void TapsAreIgnoredWhilePausedOrOver()
         {
             Assert.That(FrogJumpController.CanAcceptTap(MinigamePhase.Play, false, 1f), Is.True);
