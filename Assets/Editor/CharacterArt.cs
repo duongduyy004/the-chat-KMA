@@ -28,6 +28,15 @@ namespace KMA.EditorTools
             "climb0", "climb1", "hurt", "duck", "hold", "jump", "attack1", "slide", "fall"
         };
 
+        public const string Boss = "BossPE";
+
+        /// BossPE has the 18 shared poses plus 12 of its own.
+        public static readonly string[] BossPoses = Poses.Concat(new[]
+        {
+            "idleBoss", "whistle0", "whistle1", "command", "ready", "taunt",
+            "chessThink", "chessMove", "strictLook", "penalty0", "penalty1", "count"
+        }).ToArray();
+
         public static string PosePath(string character, string pose) =>
             Root + character + "/" + character + "_" + pose + ".png";
 
@@ -40,6 +49,8 @@ namespace KMA.EditorTools
             foreach (string character in Characters)
                 foreach (string pose in Poses)
                     Import(PosePath(character, pose));
+            foreach (string pose in BossPoses)
+                Import(PosePath(Boss, pose));
         }
 
         public static Sprite Load(string character, string pose)

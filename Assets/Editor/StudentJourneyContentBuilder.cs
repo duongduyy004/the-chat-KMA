@@ -276,7 +276,7 @@ namespace KMA.EditorTools
                 Character(TanThu, "Tân Thủ", "#FFC928", true, "MalePerson"),
                 Character(Mai, "Mai Toang", "#FF8FB1", false, "FemalePerson"),
                 Character(AnhKhoaTren, "Anh Khoá Trên", "#7FD1FF", false, "MaleAdventurer"),
-                Character(Co, "Cô Thể Chất", "#B9F27C", false, "FemaleAdventurer")
+                Character(Co, "Cô Thể Chất", "#B9F27C", false, "BossPE")
             };
             JourneyDialogueNode[] nodes =
             {

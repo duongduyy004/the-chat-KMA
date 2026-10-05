@@ -64,15 +64,15 @@ MonoBehaviour:
     isPlayer: 0
     poses:
     - pose: 0
-      sprite: {fileID: 21300000, guid: 563fdfbb68d44144f9a3de4233d5de4e, type: 3}
+      sprite: {fileID: 21300000, guid: 2dbaad571ffb3e7418d6c60b3580ed78, type: 3}
     - pose: 1
-      sprite: {fileID: 21300000, guid: 9064347d014e7e243bbbcbd45ae4cbf0, type: 3}
+      sprite: {fileID: 21300000, guid: 9037908765443ac48af2f1b799fcf6aa, type: 3}
     - pose: 2
-      sprite: {fileID: 21300000, guid: 8ea6cdc92cc12cc44ade1f2571c28d63, type: 3}
+      sprite: {fileID: 21300000, guid: b626cf5567586aa499beb3091c12f8fc, type: 3}
     - pose: 3
-      sprite: {fileID: 21300000, guid: 0df3d4f85977b5d46b1282d88dc38383, type: 3}
+      sprite: {fileID: 21300000, guid: 2cac69f5d4bb12d4fa0d43541c61e098, type: 3}
     - pose: 4
-      sprite: {fileID: 21300000, guid: 89dde1b251d945a4491e37eeba11c695, type: 3}
+      sprite: {fileID: 21300000, guid: 7a4e7f3567345214686a249239be355d, type: 3}
   nodes:
   - id: opening
     lines:
