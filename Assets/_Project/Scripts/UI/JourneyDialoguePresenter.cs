@@ -394,8 +394,10 @@ namespace KMA.Gameplay.UI
             UiKit.Stretch(body.rectTransform, new Vector2(56f, 58f), new Vector2(-56f, -44f));
             body.spriteAsset = Resources.Load<TMP_SpriteAsset>(EmojiResource);
 
-            errorText = MakeText(boxRect, "SaveError", 22f, HomeMenuStyle.GoldLight, TextAlignmentOptions.Right);
-            UiKit.Place(errorText.rectTransform, Vector2.one, Vector2.one, new Vector2(-40f, -10f), new Vector2(760f, 34f));
+            // Bottom row (between the progress dots and the hint) so it never sits under the name tag,
+            // which hangs on the top edge on either side.
+            errorText = MakeText(boxRect, "SaveError", 22f, HomeMenuStyle.GoldLight, TextAlignmentOptions.Left);
+            UiKit.Place(errorText.rectTransform, Vector2.zero, Vector2.zero, new Vector2(260f, 12f), new Vector2(640f, 34f));
             hint = MakeText(boxRect, "Hint", 22f, HomeMenuStyle.Gold, TextAlignmentOptions.Right);
             UiKit.Place(hint.rectTransform, new Vector2(1f, 0f), new Vector2(1f, 0f), new Vector2(-32f, 12f), new Vector2(360f, 34f));
             dotsRoot = UiKit.Rect(boxRect, "ProgressDots");

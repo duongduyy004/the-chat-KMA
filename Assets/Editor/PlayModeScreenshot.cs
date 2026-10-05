@@ -189,8 +189,7 @@ namespace KMA.EditorTools
                     pausePanel.Open();
             }
 
-            string dialogueNode = SessionState.GetString(KeyOpenDialogue, "");
-            if (!string.IsNullOrEmpty(dialogueNode))
+            if (TryConsumeDialogueRequest(out string dialogueNode, out int dialogueTaps))
             {
                 Canvas canvas = UnityEngine.Object.FindFirstObjectByType<Canvas>();
                 if (canvas != null)
@@ -202,9 +201,24 @@ namespace KMA.EditorTools
                     presenter.Configure(KMA.Gameplay.JourneyDialogueLibrary.LoadDefault(), _ => true,
                         shell != null ? shell.MainMenuBackground : null);
                     presenter.Show(dialogueNode, null);
-                    for (int i = 0; i < SessionState.GetInt(KeyDialogueTaps, 0); i++) presenter.Advance();
+                    for (int i = 0; i < dialogueTaps; i++) presenter.Advance();
                 }
             }
+        }
+
+        /// Returns the dialogue node a capture asked to open, once. A request is honoured only while a
+        /// capture is active and is cleared either way, so it cannot revive on a later manual Play.
+        public static bool TryConsumeDialogueRequest(out string node, out int taps)
+        {
+            node = SessionState.GetString(KeyOpenDialogue, "");
+            taps = SessionState.GetInt(KeyDialogueTaps, 0);
+            bool active = SessionState.GetBool(KeyActive, false);
+            SessionState.SetString(KeyOpenDialogue, "");
+            SessionState.SetInt(KeyDialogueTaps, 0);
+            if (active && !string.IsNullOrEmpty(node)) return true;
+            node = null;
+            taps = 0;
+            return false;
         }
 
         static void RunActiveCapture()

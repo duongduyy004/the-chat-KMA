@@ -160,6 +160,32 @@ namespace KMA.Tests.Presentation
             Assert.That(sticker.gameObject.activeSelf, Is.False);
         }
 
+        [UnityTest]
+        public IEnumerator SaveErrorStaysClearOfTheNameTagWhenThePlayerSpeaksLast()
+        {
+            Open("sprint_exam");
+            allowSave = false;
+            yield return null;
+            TapToLine(1);
+            Tap();
+            Tap();
+            yield return null;
+            RectTransform error = Find<TMP_Text>("SaveError").rectTransform;
+            RectTransform tag = Find<RectTransform>("NameTag");
+            Assert.That(Find<TMP_Text>("SaveError").text, Is.Not.Empty);
+            Assert.That(Find<TMP_Text>("Name").text, Is.EqualTo("Tân Thủ"));
+            Assert.That(Overlaps(error, tag), Is.False, "The retry hint must stay readable.");
+        }
+
+        static bool Overlaps(RectTransform a, RectTransform b)
+        {
+            var ca = new Vector3[4];
+            var cb = new Vector3[4];
+            a.GetWorldCorners(ca);
+            b.GetWorldCorners(cb);
+            return ca[0].x < cb[2].x && cb[0].x < ca[2].x && ca[0].y < cb[2].y && cb[0].y < ca[2].y;
+        }
+
         [UnityTearDown]
         public IEnumerator TearDown()
         {
