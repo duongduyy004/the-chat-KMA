@@ -16,23 +16,21 @@ assets.
 - Source: `/usr/share/fonts/truetype/noto/NotoSans-Bold.ttf` (available locally)
 - License: SIL Open Font License 1.1
 
-## Toon character sprites
+## Character sprites
 
-Every character in Sprint, Football and Volleyball comes from Kenney's Toon Characters
-pack. `MaleAdventurer` is the player in every minigame and is never tinted.
+Every character in Sprint, Football and Volleyball is a project-generated flat cartoon
+sprite in PE uniform (white T-shirt, navy track pants, sneakers), made with image
+generation from the "Chạy trốn thể chất" art brief and cut to 192 × 256 RGBA PNGs on
+2026-10-05. They replace the Kenney Toon Characters poses under the same file names, so
+folder names and pose names are kept from that pack. `MaleAdventurer` is the player in
+every minigame and is never tinted.
 
-- Source: `https://kenney.nl/assets/toon-characters`
-- Pack: Kenney Toon Characters, version 1.0 (2019)
-- License: Creative Commons Zero (CC0 1.0)
-- Retrieved: 2026-09-29 (HD poses)
-- Changes: `PNG/Poses HD/character_<name>_<pose>.png` renamed to `<Folder>_<pose>.png`; pixels unchanged
-
-| Project folder | Pack character | Roles |
+| Project folder | Character | Roles |
 | --- | --- | --- |
-| `Characters/MaleAdventurer/` | `Male adventurer` | Player in Sprint, Football and Volleyball |
-| `Characters/MalePerson/` | `Male person` | Sprint rival (lane 1), Football goalkeeper |
-| `Characters/FemalePerson/` | `Female person` | Sprint rival (lane 3) |
-| `Characters/FemaleAdventurer/` | `Female adventurer` | Sprint rival (lane 4), Volleyball opponent |
+| `Characters/MaleAdventurer/` | Anh Khoá Trên (main hero) | Player in Sprint, Football and Volleyball |
+| `Characters/MalePerson/` | Tân Thủ | Sprint rival (lane 1), Football goalkeeper |
+| `Characters/FemalePerson/` | Mai Toang | Sprint rival (lane 3) |
+| `Characters/FemaleAdventurer/` | Cô Thể Chất (PE teacher) | Sprint rival (lane 4), Volleyball opponent |
 
 Each folder holds the same poses: `idle run0 run1 run2 hit cheer0 cheer1 fallDown back
 climb0 climb1 hurt duck hold jump attack1 slide fall`.
@@ -42,7 +40,7 @@ climb0 climb1 hurt duck hold jump attack1 slide fall`.
 The court, net, court lines, ball and ball/marker shadow in `MG_Volleyball` are flat shapes
 authored by this project: the scene configurator draws the court from coloured quads and
 generates `Art/Environments/Volleyball/{Ball,Shadow,Pixel}.png` procedurally. No third-party
-art is used there; the athletes are Kenney Toon Characters (see above).
+art is used there; the athletes are the project character sprites (see above).
 
 ## Project-generated report demo art
 
