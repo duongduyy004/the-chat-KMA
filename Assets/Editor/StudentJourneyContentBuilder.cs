@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using UnityEditor;
 using UnityEngine;
 using KMA.Gameplay;
@@ -12,20 +13,6 @@ namespace KMA.EditorTools
         const string CatalogPath = ResourcesFolder + "/ChallengeCatalog.asset";
         const string SprintBalancePath = ResourcesFolder + "/SprintBalance.asset";
         const string DialoguePath = ResourcesFolder + "/JourneyDialogues.asset";
-
-        readonly struct DialogueLineSpec
-        {
-            public readonly string Speaker, Text, Portrait;
-            public DialogueLineSpec(string speaker, string text, string portrait)
-            { Speaker = speaker; Text = text; Portrait = portrait; }
-        }
-
-        readonly struct DialogueSpec
-        {
-            public readonly string Id;
-            public readonly DialogueLineSpec[] Lines;
-            public DialogueSpec(string id, params DialogueLineSpec[] lines) { Id = id; Lines = lines; }
-        }
 
         readonly struct ChallengeSpec
         {
@@ -173,6 +160,15 @@ namespace KMA.EditorTools
             AssetDatabase.SaveAssets();
         }
 
+        const string CharacterArtFolder = "Assets/_Project/Art/Characters";
+        const string TanThu = "tan_thu", Mai = "mai_toang", AnhKhoaTren = "anh_khoa_tren", Co = "co_the_chat";
+
+        static readonly (DialoguePose Pose, string Suffix)[] PoseFiles =
+        {
+            (DialoguePose.Idle, "idle"), (DialoguePose.Cheer, "cheer0"), (DialoguePose.Hurt, "hurt"),
+            (DialoguePose.Jump, "jump"), (DialoguePose.Duck, "duck")
+        };
+
         [MenuItem("KMA/Journey/Build Dialogue Library")]
         public static void BuildDialogues()
         {
@@ -184,66 +180,89 @@ namespace KMA.EditorTools
                 AssetDatabase.CreateAsset(library, DialoguePath);
             }
 
-            string male = "Assets/_Project/Art/Characters/MalePerson/MalePerson_idle.png";
-            string female = "Assets/_Project/Art/Characters/FemalePerson/FemalePerson_idle.png";
-            string senior = "Assets/_Project/Art/Characters/MaleAdventurer/MaleAdventurer_idle.png";
-            DialogueSpec[] specs =
+            JourneyCharacter[] cast =
             {
-                new DialogueSpec("opening", new DialogueLineSpec("Anh/chị khóa trên", "Muốn biết sân trường dài bao nhiêu, cứ đợi buổi thể chất đầu tiên.", senior),
-                    new DialogueLineSpec("Bạn cùng lớp", "Nghe dọa đủ rồi. Ra sân tập thử đã.", female),
-                    new DialogueLineSpec("Tân sinh viên", "Qua môn trước. Ngầu tính sau.", male),
-                    new DialogueLineSpec("Giảng viên", "Học lần lượt: chạy nước rút, bóng chuyền, rồi bóng đá. Đạt môn trước mới học môn sau.", senior)),
-                new DialogueSpec("sprint_intro", new DialogueLineSpec("Giảng viên", "Bắt đầu bằng nhịp chân. Trái, phải luân phiên và giữ nhịp.", senior),
-                    new DialogueLineSpec("Bạn cùng lớp", "Mười hai lần đúng liên tiếp. Sai thì bình tĩnh làm lại nhé.", female)),
-                new DialogueSpec("sprint_exam", new DialogueLineSpec("Giảng viên", "Bài thi: hoàn thành 100 mét trong 14 giây.", senior),
-                    new DialogueLineSpec("Tân sinh viên", "Mình đã tập rồi. Vào thi thôi!", male)),
-                new DialogueSpec("sprint_pass", new DialogueLineSpec("Giảng viên", "Đạt. Nhịp chân của em đã ổn định hơn.", senior),
-                    new DialogueLineSpec("Bạn cùng lớp", "Sân trường vẫn dài, nhưng giờ mình biết cách chạy rồi.", female)),
-                new DialogueSpec("volleyball_intro", new DialogueLineSpec("Bạn cùng lớp", "Hai chân trước, đỡ bóng đúng tầm rồi mới tính đường chuyền.", female),
-                    new DialogueLineSpec("Giảng viên", "Hãy giữ bóng trong pha của đội và phối hợp đủ ba chạm.", senior)),
-                new DialogueSpec("volleyball_exam", new DialogueLineSpec("Giảng viên", "Thi đấu đến năm điểm trước đối thủ, giới hạn 120 giây.", senior),
-                    new DialogueLineSpec("Bạn cùng lớp", "Mình sẽ đỡ thật đẹp. Cậu lo cú đập nhé!", female)),
-                new DialogueSpec("volleyball_pass", new DialogueLineSpec("Giảng viên", "Đạt. Em đã phối hợp tốt giữa các chạm bóng.", senior),
-                    new DialogueLineSpec("Tân sinh viên", "Cảm ơn đồng đội. Sang môn tiếp theo thôi!", male)),
-                new DialogueSpec("soccer_intro", new DialogueLineSpec("Bạn cùng lớp", "Hai môn rồi. Giờ bình tĩnh, bóng không có deadline đâu.", female),
-                    new DialogueLineSpec("Giảng viên", "Tập hướng và lực sút; khi thi, em có đúng năm cú.", senior)),
-                new DialogueSpec("soccer_exam", new DialogueLineSpec("Giảng viên", "Thi đủ năm cú sút. Cần ít nhất ba bàn để đạt.", senior),
-                    new DialogueLineSpec("Tân sinh viên", "Nhắm chắc, giữ lực vừa đủ. Mình sẵn sàng.", male)),
-                new DialogueSpec("soccer_pass", new DialogueLineSpec("Giảng viên", "Đạt học phần. Em đã hoàn thành đủ ba môn.", senior),
-                    new DialogueLineSpec("Bạn cùng lớp", "Qua rồi! Lần sau nhớ kể nhẹ tay cho khóa dưới nhé.", female)),
-                new DialogueSpec("supplementary", new DialogueLineSpec("Giảng viên", "Ôn lại bài luyện, rồi vào thi tiếp. Các phần đã đạt vẫn được ghi nhận.", senior),
-                    new DialogueLineSpec("Bạn cùng lớp", "Mình tập đúng phần còn vướng rồi thử lại nhé.", female)),
-                new DialogueSpec("course_complete", new DialogueLineSpec("Giảng viên", "Chúc mừng. Học phần Thể chất đã hoàn tất.", senior),
-                    new DialogueLineSpec("Tân sinh viên", "Từ hơi lo đến tự tin ra sân. Đáng nhớ thật.", male),
-                    new DialogueLineSpec("Bạn cùng lớp", "Qua rồi! Lần sau nhớ kể nhẹ tay cho khóa dưới nhé.", female))
+                Character(TanThu, "Tân Thủ", "#FFC928", true, "MalePerson"),
+                Character(Mai, "Mai Toang", "#FF8FB1", false, "FemalePerson"),
+                Character(AnhKhoaTren, "Anh Khoá Trên", "#7FD1FF", false, "MaleAdventurer"),
+                Character(Co, "Cô Thể Chất", "#B9F27C", false, "FemaleAdventurer")
+            };
+            JourneyDialogueNode[] nodes =
+            {
+                Node("opening",
+                    Line(AnhKhoaTren, DialoguePose.Cheer, "Chào tân binh :eyes: Sân trường dài bao nhiêu hả? Đợi buổi thể chất đầu tiên là biết liền :skull:"),
+                    Line(Mai, DialoguePose.Hurt, "Ổng dọa tụi mình kìa :sob: Mới nhập học mà đã thấy mùi toang rồi đó.", "ÉT O ÉT!"),
+                    Line(TanThu, DialoguePose.Idle, "Bình tĩnh. Qua môn trước, flex tính sau :sunglasses:"),
+                    Line(Co, DialoguePose.Idle, "Lộ trình: chạy nước rút, rồi bóng chuyền, rồi bóng đá. Qua môn trước mới mở khóa môn sau nha các em :salute:")),
+                Node("sprint_intro",
+                    Line(Co, DialoguePose.Idle, "Khởi động bằng nhịp chân. Trái, phải, trái, phải. Đều như nhịp tim crush lúc nhắn \"seen\" :eyes:"),
+                    Line(Mai, DialoguePose.Hurt, "Ét o ét :sob: 12 nhịp liền mạch, sai một phát là làm lại từ đầu đó bà con ơi!", "TOANG?!"),
+                    Line(TanThu, DialoguePose.Idle, "Chân trái, chân phải thôi mà. Chạy như chưa từng được chạy :runner::dash:")),
+                Node("sprint_exam",
+                    Line(Co, DialoguePose.Idle, "Bài thi: 100 mét trong 14 giây. Giữ sức, đừng bung hết từ vạch xuất phát nha :fire:", "14 GIÂY"),
+                    Line(TanThu, DialoguePose.Jump, "Tập rồi, giờ thi thôi. Đường đua ơi, chờ anh :100:")),
+                Node("sprint_pass",
+                    Line(Co, DialoguePose.Cheer, "Đạt! Nhịp chân ổn áp rồi đó. Cô công nhận em hơi bị đỉnh nóc :fire:", "ĐẠT!"),
+                    Line(Mai, DialoguePose.Cheer, "Sân trường vẫn dài, nhưng giờ mình chạy hết nổi rồi :sob::tada:")),
+                Node("volleyball_intro",
+                    Line(Mai, DialoguePose.Cheer, "Bóng chuyền nè! Đỡ bóng đúng tầm trước, chuyền đẹp tính sau :volleyball:"),
+                    Line(Co, DialoguePose.Idle, "Đỡ, chuyền, đập, đủ ba chạm. Bóng rơi xuống sân mình là mất điểm, không có chuyện \"chưa sẵn sàng\" đâu :eyes:"),
+                    Line(TanThu, DialoguePose.Duck, "Ba đường bóng liền :scream: Thôi được, tay em đây, cứ phát bóng đi!", "CỨU!")),
+                Node("volleyball_exam",
+                    Line(Co, DialoguePose.Idle, "Thi đấu: ghi đủ 5 điểm trước đối thủ, trong 120 giây :fire:", "120 GIÂY"),
+                    Line(Mai, DialoguePose.Jump, "Tui đỡ thật đẹp, ông lo cú đập nha. Đừng để tui phải ét o ét :sob:"),
+                    Line(TanThu, DialoguePose.Cheer, "Combo đỡ, chuyền, đập, nhận về 5 điểm :100:")),
+                Node("volleyball_pass",
+                    Line(Co, DialoguePose.Cheer, "Đạt! Phối hợp mượt như wifi thư viện lúc 6 giờ sáng :volleyball:", "ĐẠT!"),
+                    Line(TanThu, DialoguePose.Jump, "Cảm ơn đồng đội :salute: Hai môn rồi, môn cuối đâu, ra đây!")),
+                Node("soccer_intro",
+                    Line(Mai, DialoguePose.Idle, "Còn môn cuối thôi. Bình tĩnh, quả bóng không có deadline đâu :soccer:"),
+                    Line(AnhKhoaTren, DialoguePose.Cheer, "Hồi anh thi, thủ môn cao hai mét, sân dốc lên trời :skull: Em giờ sướng chán.", "HỒI ĐÓ…"),
+                    Line(Co, DialoguePose.Idle, "Đừng nghe ổng chém :clown: Tập hướng sút và lực sút trước. Lúc thi em có đúng 5 cú.")),
+                Node("soccer_exam",
+                    Line(Co, DialoguePose.Idle, "Thi: 5 cú sút, vào ít nhất 3 bàn là qua. Thủ môn hôm nay không nương tay đâu :eyes:", "5 CÚ"),
+                    Line(TanThu, DialoguePose.Idle, "Nhắm chắc, lực vừa đủ, sút là vào. Chân này đã được khai quang :fire:")),
+                Node("soccer_pass",
+                    Line(Co, DialoguePose.Cheer, "Đạt học phần! Ba môn, ba lần qua. Cô hơi bị tự hào đó :tada:", "ĐẠT!"),
+                    Line(Mai, DialoguePose.Cheer, "QUA RỒI :sob::sob: Từ \"toang\" lên \"đỉnh nóc\" trong một học kỳ!")),
+                Node("supplementary",
+                    Line(Co, DialoguePose.Idle, "Chưa qua thì ôn lại bài luyện rồi thi tiếp. Phần đã đạt vẫn được giữ nguyên, không mất gì đâu :salute:"),
+                    Line(Mai, DialoguePose.Hurt, "Toang nhẹ thôi, chưa toang hẳn :clown: Luyện đúng chỗ còn vướng rồi quẩy lại nha!", "HỒI SINH!")),
+                Node("course_complete",
+                    Line(Co, DialoguePose.Cheer, "Chúc mừng! Học phần Thể chất chính thức hoàn tất :tada:", "HOÀN THÀNH!"),
+                    Line(TanThu, DialoguePose.Jump, "Từ tân binh run run thành tuyển thủ cấp trường. Flex được rồi đúng không? :sunglasses:"),
+                    Line(AnhKhoaTren, DialoguePose.Cheer, "Được! Nhưng năm sau nhớ dọa khóa dưới y như anh nha :skull:"),
+                    Line(Mai, DialoguePose.Cheer, "Hội qua môn Thể chất, điểm danh :100::tada: :muscle:"))
             };
 
-            SerializedObject serialized = new SerializedObject(library);
-            SerializedProperty nodes = serialized.FindProperty("nodes");
-            nodes.arraySize = specs.Length;
-            for (int i = 0; i < specs.Length; i++)
-            {
-                SerializedProperty node = nodes.GetArrayElementAtIndex(i);
-                node.FindPropertyRelative("id").stringValue = specs[i].Id;
-                SerializedProperty lines = node.FindPropertyRelative("lines");
-                lines.arraySize = specs[i].Lines.Length;
-                for (int lineIndex = 0; lineIndex < specs[i].Lines.Length; lineIndex++)
-                {
-                    DialogueLineSpec line = specs[i].Lines[lineIndex];
-                    SerializedProperty serializedLine = lines.GetArrayElementAtIndex(lineIndex);
-                    serializedLine.FindPropertyRelative("speakerRole").stringValue = line.Speaker;
-                    serializedLine.FindPropertyRelative("text").stringValue = line.Text;
-                    serializedLine.FindPropertyRelative("portrait").objectReferenceValue =
-                        AssetDatabase.LoadAssetAtPath<Sprite>(line.Portrait);
-                }
-            }
-            serialized.ApplyModifiedPropertiesWithoutUndo();
+            library.SetContent(cast, nodes);
             if (!library.Validate(out string error))
                 throw new InvalidOperationException("Generated journey dialogue library is invalid: " + error);
             EditorUtility.SetDirty(library);
             AssetDatabase.SaveAssets();
             Debug.Log("[KMA] Student journey dialogue library built.");
         }
+
+        static JourneyCharacter Character(string id, string displayName, string hex, bool isPlayer, string spriteSet)
+        {
+            if (!ColorUtility.TryParseHtmlString(hex, out Color color))
+                throw new InvalidOperationException("Invalid tag color " + hex);
+            var poses = new List<JourneyPoseSprite>();
+            foreach ((DialoguePose pose, string suffix) in PoseFiles)
+            {
+                string path = $"{CharacterArtFolder}/{spriteSet}/{spriteSet}_{suffix}.png";
+                Sprite sprite = AssetDatabase.LoadAssetAtPath<Sprite>(path);
+                if (sprite == null) throw new InvalidOperationException("Missing dialogue sprite: " + path);
+                poses.Add(new JourneyPoseSprite(pose, sprite));
+            }
+            return new JourneyCharacter(id, displayName, color, isPlayer, poses);
+        }
+
+        static JourneyDialogueNode Node(string id, params JourneyDialogueLine[] lines) =>
+            new JourneyDialogueNode(id, new List<JourneyDialogueLine>(lines));
+
+        static JourneyDialogueLine Line(string characterId, DialoguePose pose, string text, string sticker = "") =>
+            new JourneyDialogueLine(characterId, pose, text, sticker);
 
         [MenuItem("KMA/Journey/Build All Journey Content")]
         public static void BuildAll()

@@ -17,7 +17,6 @@ namespace KMA.Gameplay.Shell
         [SerializeField] SettingsScreen settings;
         [SerializeField] CalibrateScreen calibrate;
         [SerializeField] Sprite mainMenuBackground;
-        [SerializeField] Sprite instructorPortrait;
         GameObject confirmationRoot;
 
         public Sprite MainMenuBackground => mainMenuBackground;
@@ -62,7 +61,7 @@ namespace KMA.Gameplay.Shell
                 JourneyDialoguePresenter dialogues = map.GetComponent<JourneyDialoguePresenter>();
                 if (dialogues == null) dialogues = map.gameObject.AddComponent<JourneyDialoguePresenter>();
                 if (router != null && router.Session != null && GameManager.Instance != null)
-                    dialogues.ShowJourney(router.Session, GameManager.Instance, mainMenuBackground, instructorPortrait);
+                    dialogues.ShowJourney(router.Session, GameManager.Instance, mainMenuBackground);
                 map.SubjectRequested += SelectMapSubject;
                 map.ChallengeRequested += StartChallenge;
             }

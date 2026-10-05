@@ -19,7 +19,6 @@ namespace KMA.Gameplay.UI
 
         JourneyDialogueLibrary library;
         Func<string, bool> persistSeen;
-        Sprite instructorPortrait;
         readonly Queue<DialogueRequest> pending = new Queue<DialogueRequest>();
         RectTransform overlay;
         Image backgroundImage;
@@ -35,11 +34,10 @@ namespace KMA.Gameplay.UI
         public int CurrentLineIndex => lineIndex;
 
         public void Configure(JourneyDialogueLibrary dialogueLibrary, Func<string, bool> saveSeen,
-            Sprite sharedBackground = null, Sprite femaleInstructorPortrait = null)
+            Sprite sharedBackground = null)
         {
             library = dialogueLibrary;
             persistSeen = saveSeen;
-            if (femaleInstructorPortrait != null) instructorPortrait = femaleInstructorPortrait;
             EnsureView();
             if (backgroundImage != null && sharedBackground != null)
                 backgroundImage.sprite = sharedBackground;
@@ -50,12 +48,11 @@ namespace KMA.Gameplay.UI
             Show(nodeId, nodeId, onClosed);
         }
 
-        public void ShowJourney(GameSession session, GameManager manager, Sprite sharedBackground = null,
-            Sprite femaleInstructorPortrait = null)
+        public void ShowJourney(GameSession session, GameManager manager, Sprite sharedBackground = null)
         {
             if (session == null || manager == null) return;
             Configure(JourneyDialogueLibrary.LoadDefault(), key => manager.TryMarkJourneyDialogueSeen(key, out _),
-                sharedBackground, femaleInstructorPortrait);
+                sharedBackground);
             pending.Clear();
             JourneyProgress journey = session.Journey;
             void Add(string node, string key = null)
@@ -172,10 +169,10 @@ namespace KMA.Gameplay.UI
         void RenderLine()
         {
             JourneyDialogueLine line = activeLines[lineIndex];
-            speaker.text = VietText.Fix(line.SpeakerRole);
+            JourneyCharacter character = library.GetCharacter(line.CharacterId);
+            speaker.text = VietText.Fix(character.DisplayName);
             body.text = VietText.Fix(line.Text);
-            portrait.sprite = line.SpeakerRole == "Giảng viên" && instructorPortrait != null
-                ? instructorPortrait : line.Portrait;
+            portrait.sprite = character.GetPose(line.Pose);
             portrait.enabled = portrait.sprite != null;
             continueLabel.text = VietText.Fix(lineIndex + 1 >= activeLines.Count ? "ĐÓNG" : "TIẾP");
         }

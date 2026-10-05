@@ -12,133 +12,255 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 9511e7562f1393783a0a8fbd97719e22, type: 3}
   m_Name: JourneyDialogues
   m_EditorClassIdentifier: KMA.Gameplay.Progression::KMA.Gameplay.JourneyDialogueLibrary
+  cast:
+  - id: tan_thu
+    displayName: "T\xE2n Th\u1EE7"
+    tagColor: {r: 1, g: 0.7882353, b: 0.15686275, a: 1}
+    isPlayer: 1
+    poses:
+    - pose: 0
+      sprite: {fileID: 21300000, guid: 8dd0011b70903b440a7000345141466b, type: 3}
+    - pose: 1
+      sprite: {fileID: 21300000, guid: 90413955dd19cbb4eb4f37c6d8aaabe8, type: 3}
+    - pose: 2
+      sprite: {fileID: 21300000, guid: 0b1ab150db6c08643abaeb71a47eed1c, type: 3}
+    - pose: 3
+      sprite: {fileID: 21300000, guid: 32b500e429a4e8745b1259d36acfb38c, type: 3}
+    - pose: 4
+      sprite: {fileID: 21300000, guid: 91a9dd8e391325c479813fe2fb66fe94, type: 3}
+  - id: mai_toang
+    displayName: Mai Toang
+    tagColor: {r: 1, g: 0.56078434, b: 0.69411767, a: 1}
+    isPlayer: 0
+    poses:
+    - pose: 0
+      sprite: {fileID: 21300000, guid: f9454fc9a0d1d2b42b2225bf913749cb, type: 3}
+    - pose: 1
+      sprite: {fileID: 21300000, guid: 3c472b66dc0cc954d85e8e6bb2b16ca8, type: 3}
+    - pose: 2
+      sprite: {fileID: 21300000, guid: 09774ee14599c2b47aa3d3f4325f8b3a, type: 3}
+    - pose: 3
+      sprite: {fileID: 21300000, guid: dec6ff3a004a5644894c63a38dc2f100, type: 3}
+    - pose: 4
+      sprite: {fileID: 21300000, guid: 7e02c7d8e71b8d246be70dbbf28396de, type: 3}
+  - id: anh_khoa_tren
+    displayName: "Anh Kho\xE1 Tr\xEAn"
+    tagColor: {r: 0.49803922, g: 0.81960785, b: 1, a: 1}
+    isPlayer: 0
+    poses:
+    - pose: 0
+      sprite: {fileID: 21300000, guid: c37e96d0bfc36f9409920ee17ba47754, type: 3}
+    - pose: 1
+      sprite: {fileID: 21300000, guid: b819380933de41a499fbf0b79b017295, type: 3}
+    - pose: 2
+      sprite: {fileID: 21300000, guid: 6a1d60edaf60eaf478c6a59c2e02e02b, type: 3}
+    - pose: 3
+      sprite: {fileID: 21300000, guid: 4282f9c2978bff04a8ce0fe16cf1b032, type: 3}
+    - pose: 4
+      sprite: {fileID: 21300000, guid: 017efce9921c16a4e8d43474503d9dac, type: 3}
+  - id: co_the_chat
+    displayName: "C\xF4 Th\u1EC3 Ch\u1EA5t"
+    tagColor: {r: 0.7254902, g: 0.9490196, b: 0.4862745, a: 1}
+    isPlayer: 0
+    poses:
+    - pose: 0
+      sprite: {fileID: 21300000, guid: 563fdfbb68d44144f9a3de4233d5de4e, type: 3}
+    - pose: 1
+      sprite: {fileID: 21300000, guid: 9064347d014e7e243bbbcbd45ae4cbf0, type: 3}
+    - pose: 2
+      sprite: {fileID: 21300000, guid: 8ea6cdc92cc12cc44ade1f2571c28d63, type: 3}
+    - pose: 3
+      sprite: {fileID: 21300000, guid: 0df3d4f85977b5d46b1282d88dc38383, type: 3}
+    - pose: 4
+      sprite: {fileID: 21300000, guid: 89dde1b251d945a4491e37eeba11c695, type: 3}
   nodes:
   - id: opening
     lines:
-    - speakerRole: "Anh/ch\u1ECB kh\xF3a tr\xEAn"
-      text: "Mu\u1ED1n bi\u1EBFt s\xE2n tr\u01B0\u1EDDng d\xE0i bao nhi\xEAu, c\u1EE9
-        \u0111\u1EE3i bu\u1ED5i th\u1EC3 ch\u1EA5t \u0111\u1EA7u ti\xEAn."
-      portrait: {fileID: 21300000, guid: c37e96d0bfc36f9409920ee17ba47754, type: 3}
-    - speakerRole: "B\u1EA1n c\xF9ng l\u1EDBp"
-      text: "Nghe d\u1ECDa \u0111\u1EE7 r\u1ED3i. Ra s\xE2n t\u1EADp th\u1EED \u0111\xE3."
-      portrait: {fileID: 21300000, guid: f9454fc9a0d1d2b42b2225bf913749cb, type: 3}
-    - speakerRole: "T\xE2n sinh vi\xEAn"
-      text: "Qua m\xF4n tr\u01B0\u1EDBc. Ng\u1EA7u t\xEDnh sau."
-      portrait: {fileID: 21300000, guid: 8dd0011b70903b440a7000345141466b, type: 3}
-    - speakerRole: "Gi\u1EA3ng vi\xEAn"
-      text: "H\u1ECDc l\u1EA7n l\u01B0\u1EE3t: ch\u1EA1y n\u01B0\u1EDBc r\xFAt, b\xF3ng
-        chuy\u1EC1n, r\u1ED3i b\xF3ng \u0111\xE1. \u0110\u1EA1t m\xF4n tr\u01B0\u1EDBc
-        m\u1EDBi h\u1ECDc m\xF4n sau."
-      portrait: {fileID: 21300000, guid: c37e96d0bfc36f9409920ee17ba47754, type: 3}
+    - characterId: anh_khoa_tren
+      pose: 1
+      text: "Ch\xE0o t\xE2n binh :eyes: S\xE2n tr\u01B0\u1EDDng d\xE0i bao nhi\xEAu
+        h\u1EA3? \u0110\u1EE3i bu\u1ED5i th\u1EC3 ch\u1EA5t \u0111\u1EA7u ti\xEAn
+        l\xE0 bi\u1EBFt li\u1EC1n :skull:"
+      sticker: 
+    - characterId: mai_toang
+      pose: 2
+      text: "\u1ED4ng d\u1ECDa t\u1EE5i m\xECnh k\xECa :sob: M\u1EDBi nh\u1EADp h\u1ECDc
+        m\xE0 \u0111\xE3 th\u1EA5y m\xF9i toang r\u1ED3i \u0111\xF3."
+      sticker: "\xC9T O \xC9T!"
+    - characterId: tan_thu
+      pose: 0
+      text: "B\xECnh t\u0129nh. Qua m\xF4n tr\u01B0\u1EDBc, flex t\xEDnh sau :sunglasses:"
+      sticker: 
+    - characterId: co_the_chat
+      pose: 0
+      text: "L\u1ED9 tr\xECnh: ch\u1EA1y n\u01B0\u1EDBc r\xFAt, r\u1ED3i b\xF3ng
+        chuy\u1EC1n, r\u1ED3i b\xF3ng \u0111\xE1. Qua m\xF4n tr\u01B0\u1EDBc m\u1EDBi
+        m\u1EDF kh\xF3a m\xF4n sau nha c\xE1c em :salute:"
+      sticker: 
   - id: sprint_intro
     lines:
-    - speakerRole: "Gi\u1EA3ng vi\xEAn"
-      text: "B\u1EAFt \u0111\u1EA7u b\u1EB1ng nh\u1ECBp ch\xE2n. Tr\xE1i, ph\u1EA3i
-        lu\xE2n phi\xEAn v\xE0 gi\u1EEF nh\u1ECBp."
-      portrait: {fileID: 21300000, guid: c37e96d0bfc36f9409920ee17ba47754, type: 3}
-    - speakerRole: "B\u1EA1n c\xF9ng l\u1EDBp"
-      text: "M\u01B0\u1EDDi hai l\u1EA7n \u0111\xFAng li\xEAn ti\u1EBFp. Sai th\xEC
-        b\xECnh t\u0129nh l\xE0m l\u1EA1i nh\xE9."
-      portrait: {fileID: 21300000, guid: f9454fc9a0d1d2b42b2225bf913749cb, type: 3}
+    - characterId: co_the_chat
+      pose: 0
+      text: "Kh\u1EDFi \u0111\u1ED9ng b\u1EB1ng nh\u1ECBp ch\xE2n. Tr\xE1i, ph\u1EA3i,
+        tr\xE1i, ph\u1EA3i. \u0110\u1EC1u nh\u01B0 nh\u1ECBp tim crush l\xFAc nh\u1EAFn
+        \"seen\" :eyes:"
+      sticker: 
+    - characterId: mai_toang
+      pose: 2
+      text: "\xC9t o \xE9t :sob: 12 nh\u1ECBp li\u1EC1n m\u1EA1ch, sai m\u1ED9t ph\xE1t
+        l\xE0 l\xE0m l\u1EA1i t\u1EEB \u0111\u1EA7u \u0111\xF3 b\xE0 con \u01A1i!"
+      sticker: TOANG?!
+    - characterId: tan_thu
+      pose: 0
+      text: "Ch\xE2n tr\xE1i, ch\xE2n ph\u1EA3i th\xF4i m\xE0. Ch\u1EA1y nh\u01B0
+        ch\u01B0a t\u1EEBng \u0111\u01B0\u1EE3c ch\u1EA1y :runner::dash:"
+      sticker: 
   - id: sprint_exam
     lines:
-    - speakerRole: "Gi\u1EA3ng vi\xEAn"
-      text: "B\xE0i thi: ho\xE0n th\xE0nh 100 m\xE9t trong 14 gi\xE2y."
-      portrait: {fileID: 21300000, guid: c37e96d0bfc36f9409920ee17ba47754, type: 3}
-    - speakerRole: "T\xE2n sinh vi\xEAn"
-      text: "M\xECnh \u0111\xE3 t\u1EADp r\u1ED3i. V\xE0o thi th\xF4i!"
-      portrait: {fileID: 21300000, guid: 8dd0011b70903b440a7000345141466b, type: 3}
+    - characterId: co_the_chat
+      pose: 0
+      text: "B\xE0i thi: 100 m\xE9t trong 14 gi\xE2y. Gi\u1EEF s\u1EE9c, \u0111\u1EEBng
+        bung h\u1EBFt t\u1EEB v\u1EA1ch xu\u1EA5t ph\xE1t nha :fire:"
+      sticker: "14 GI\xC2Y"
+    - characterId: tan_thu
+      pose: 3
+      text: "T\u1EADp r\u1ED3i, gi\u1EDD thi th\xF4i. \u0110\u01B0\u1EDDng \u0111ua
+        \u01A1i, ch\u1EDD anh :100:"
+      sticker: 
   - id: sprint_pass
     lines:
-    - speakerRole: "Gi\u1EA3ng vi\xEAn"
-      text: "\u0110\u1EA1t. Nh\u1ECBp ch\xE2n c\u1EE7a em \u0111\xE3 \u1ED5n \u0111\u1ECBnh
-        h\u01A1n."
-      portrait: {fileID: 21300000, guid: c37e96d0bfc36f9409920ee17ba47754, type: 3}
-    - speakerRole: "B\u1EA1n c\xF9ng l\u1EDBp"
+    - characterId: co_the_chat
+      pose: 1
+      text: "\u0110\u1EA1t! Nh\u1ECBp ch\xE2n \u1ED5n \xE1p r\u1ED3i \u0111\xF3.
+        C\xF4 c\xF4ng nh\u1EADn em h\u01A1i b\u1ECB \u0111\u1EC9nh n\xF3c :fire:"
+      sticker: "\u0110\u1EA0T!"
+    - characterId: mai_toang
+      pose: 1
       text: "S\xE2n tr\u01B0\u1EDDng v\u1EABn d\xE0i, nh\u01B0ng gi\u1EDD m\xECnh
-        bi\u1EBFt c\xE1ch ch\u1EA1y r\u1ED3i."
-      portrait: {fileID: 21300000, guid: f9454fc9a0d1d2b42b2225bf913749cb, type: 3}
+        ch\u1EA1y h\u1EBFt n\u1ED5i r\u1ED3i :sob::tada:"
+      sticker: 
   - id: volleyball_intro
     lines:
-    - speakerRole: "B\u1EA1n c\xF9ng l\u1EDBp"
-      text: "Hai ch\xE2n tr\u01B0\u1EDBc, \u0111\u1EE1 b\xF3ng \u0111\xFAng t\u1EA7m
-        r\u1ED3i m\u1EDBi t\xEDnh \u0111\u01B0\u1EDDng chuy\u1EC1n."
-      portrait: {fileID: 21300000, guid: f9454fc9a0d1d2b42b2225bf913749cb, type: 3}
-    - speakerRole: "Gi\u1EA3ng vi\xEAn"
-      text: "H\xE3y gi\u1EEF b\xF3ng trong pha c\u1EE7a \u0111\u1ED9i v\xE0 ph\u1ED1i
-        h\u1EE3p \u0111\u1EE7 ba ch\u1EA1m."
-      portrait: {fileID: 21300000, guid: c37e96d0bfc36f9409920ee17ba47754, type: 3}
+    - characterId: mai_toang
+      pose: 1
+      text: "B\xF3ng chuy\u1EC1n n\xE8! \u0110\u1EE1 b\xF3ng \u0111\xFAng t\u1EA7m
+        tr\u01B0\u1EDBc, chuy\u1EC1n \u0111\u1EB9p t\xEDnh sau :volleyball:"
+      sticker: 
+    - characterId: co_the_chat
+      pose: 0
+      text: "\u0110\u1EE1, chuy\u1EC1n, \u0111\u1EADp, \u0111\u1EE7 ba ch\u1EA1m.
+        B\xF3ng r\u01A1i xu\u1ED1ng s\xE2n m\xECnh l\xE0 m\u1EA5t \u0111i\u1EC3m,
+        kh\xF4ng c\xF3 chuy\u1EC7n \"ch\u01B0a s\u1EB5n s\xE0ng\" \u0111\xE2u :eyes:"
+      sticker: 
+    - characterId: tan_thu
+      pose: 4
+      text: "Ba \u0111\u01B0\u1EDDng b\xF3ng li\u1EC1n :scream: Th\xF4i \u0111\u01B0\u1EE3c,
+        tay em \u0111\xE2y, c\u1EE9 ph\xE1t b\xF3ng \u0111i!"
+      sticker: "C\u1EE8U!"
   - id: volleyball_exam
     lines:
-    - speakerRole: "Gi\u1EA3ng vi\xEAn"
-      text: "Thi \u0111\u1EA5u \u0111\u1EBFn n\u0103m \u0111i\u1EC3m tr\u01B0\u1EDBc
-        \u0111\u1ED1i th\u1EE7, gi\u1EDBi h\u1EA1n 120 gi\xE2y."
-      portrait: {fileID: 21300000, guid: c37e96d0bfc36f9409920ee17ba47754, type: 3}
-    - speakerRole: "B\u1EA1n c\xF9ng l\u1EDBp"
-      text: "M\xECnh s\u1EBD \u0111\u1EE1 th\u1EADt \u0111\u1EB9p. C\u1EADu lo c\xFA
-        \u0111\u1EADp nh\xE9!"
-      portrait: {fileID: 21300000, guid: f9454fc9a0d1d2b42b2225bf913749cb, type: 3}
+    - characterId: co_the_chat
+      pose: 0
+      text: "Thi \u0111\u1EA5u: ghi \u0111\u1EE7 5 \u0111i\u1EC3m tr\u01B0\u1EDBc
+        \u0111\u1ED1i th\u1EE7, trong 120 gi\xE2y :fire:"
+      sticker: "120 GI\xC2Y"
+    - characterId: mai_toang
+      pose: 3
+      text: "Tui \u0111\u1EE1 th\u1EADt \u0111\u1EB9p, \xF4ng lo c\xFA \u0111\u1EADp
+        nha. \u0110\u1EEBng \u0111\u1EC3 tui ph\u1EA3i \xE9t o \xE9t :sob:"
+      sticker: 
+    - characterId: tan_thu
+      pose: 1
+      text: "Combo \u0111\u1EE1, chuy\u1EC1n, \u0111\u1EADp, nh\u1EADn v\u1EC1 5
+        \u0111i\u1EC3m :100:"
+      sticker: 
   - id: volleyball_pass
     lines:
-    - speakerRole: "Gi\u1EA3ng vi\xEAn"
-      text: "\u0110\u1EA1t. Em \u0111\xE3 ph\u1ED1i h\u1EE3p t\u1ED1t gi\u1EEFa c\xE1c
-        ch\u1EA1m b\xF3ng."
-      portrait: {fileID: 21300000, guid: c37e96d0bfc36f9409920ee17ba47754, type: 3}
-    - speakerRole: "T\xE2n sinh vi\xEAn"
-      text: "C\u1EA3m \u01A1n \u0111\u1ED3ng \u0111\u1ED9i. Sang m\xF4n ti\u1EBFp
-        theo th\xF4i!"
-      portrait: {fileID: 21300000, guid: 8dd0011b70903b440a7000345141466b, type: 3}
+    - characterId: co_the_chat
+      pose: 1
+      text: "\u0110\u1EA1t! Ph\u1ED1i h\u1EE3p m\u01B0\u1EE3t nh\u01B0 wifi th\u01B0
+        vi\u1EC7n l\xFAc 6 gi\u1EDD s\xE1ng :volleyball:"
+      sticker: "\u0110\u1EA0T!"
+    - characterId: tan_thu
+      pose: 3
+      text: "C\u1EA3m \u01A1n \u0111\u1ED3ng \u0111\u1ED9i :salute: Hai m\xF4n r\u1ED3i,
+        m\xF4n cu\u1ED1i \u0111\xE2u, ra \u0111\xE2y!"
+      sticker: 
   - id: soccer_intro
     lines:
-    - speakerRole: "B\u1EA1n c\xF9ng l\u1EDBp"
-      text: "Hai m\xF4n r\u1ED3i. Gi\u1EDD b\xECnh t\u0129nh, b\xF3ng kh\xF4ng c\xF3
-        deadline \u0111\xE2u."
-      portrait: {fileID: 21300000, guid: f9454fc9a0d1d2b42b2225bf913749cb, type: 3}
-    - speakerRole: "Gi\u1EA3ng vi\xEAn"
-      text: "T\u1EADp h\u01B0\u1EDBng v\xE0 l\u1EF1c s\xFAt; khi thi, em c\xF3 \u0111\xFAng
-        n\u0103m c\xFA."
-      portrait: {fileID: 21300000, guid: c37e96d0bfc36f9409920ee17ba47754, type: 3}
+    - characterId: mai_toang
+      pose: 0
+      text: "C\xF2n m\xF4n cu\u1ED1i th\xF4i. B\xECnh t\u0129nh, qu\u1EA3 b\xF3ng
+        kh\xF4ng c\xF3 deadline \u0111\xE2u :soccer:"
+      sticker: 
+    - characterId: anh_khoa_tren
+      pose: 1
+      text: "H\u1ED3i anh thi, th\u1EE7 m\xF4n cao hai m\xE9t, s\xE2n d\u1ED1c l\xEAn
+        tr\u1EDDi :skull: Em gi\u1EDD s\u01B0\u1EDBng ch\xE1n."
+      sticker: "H\u1ED2I \u0110\xD3\u2026"
+    - characterId: co_the_chat
+      pose: 0
+      text: "\u0110\u1EEBng nghe \u1ED5ng ch\xE9m :clown: T\u1EADp h\u01B0\u1EDBng
+        s\xFAt v\xE0 l\u1EF1c s\xFAt tr\u01B0\u1EDBc. L\xFAc thi em c\xF3 \u0111\xFAng
+        5 c\xFA."
+      sticker: 
   - id: soccer_exam
     lines:
-    - speakerRole: "Gi\u1EA3ng vi\xEAn"
-      text: "Thi \u0111\u1EE7 n\u0103m c\xFA s\xFAt. C\u1EA7n \xEDt nh\u1EA5t ba
-        b\xE0n \u0111\u1EC3 \u0111\u1EA1t."
-      portrait: {fileID: 21300000, guid: c37e96d0bfc36f9409920ee17ba47754, type: 3}
-    - speakerRole: "T\xE2n sinh vi\xEAn"
-      text: "Nh\u1EAFm ch\u1EAFc, gi\u1EEF l\u1EF1c v\u1EEBa \u0111\u1EE7. M\xECnh
-        s\u1EB5n s\xE0ng."
-      portrait: {fileID: 21300000, guid: 8dd0011b70903b440a7000345141466b, type: 3}
+    - characterId: co_the_chat
+      pose: 0
+      text: "Thi: 5 c\xFA s\xFAt, v\xE0o \xEDt nh\u1EA5t 3 b\xE0n l\xE0 qua. Th\u1EE7
+        m\xF4n h\xF4m nay kh\xF4ng n\u01B0\u01A1ng tay \u0111\xE2u :eyes:"
+      sticker: "5 C\xDA"
+    - characterId: tan_thu
+      pose: 0
+      text: "Nh\u1EAFm ch\u1EAFc, l\u1EF1c v\u1EEBa \u0111\u1EE7, s\xFAt l\xE0 v\xE0o.
+        Ch\xE2n n\xE0y \u0111\xE3 \u0111\u01B0\u1EE3c khai quang :fire:"
+      sticker: 
   - id: soccer_pass
     lines:
-    - speakerRole: "Gi\u1EA3ng vi\xEAn"
-      text: "\u0110\u1EA1t h\u1ECDc ph\u1EA7n. Em \u0111\xE3 ho\xE0n th\xE0nh \u0111\u1EE7
-        ba m\xF4n."
-      portrait: {fileID: 21300000, guid: c37e96d0bfc36f9409920ee17ba47754, type: 3}
-    - speakerRole: "B\u1EA1n c\xF9ng l\u1EDBp"
-      text: "Qua r\u1ED3i! L\u1EA7n sau nh\u1EDB k\u1EC3 nh\u1EB9 tay cho kh\xF3a
-        d\u01B0\u1EDBi nh\xE9."
-      portrait: {fileID: 21300000, guid: f9454fc9a0d1d2b42b2225bf913749cb, type: 3}
+    - characterId: co_the_chat
+      pose: 1
+      text: "\u0110\u1EA1t h\u1ECDc ph\u1EA7n! Ba m\xF4n, ba l\u1EA7n qua. C\xF4
+        h\u01A1i b\u1ECB t\u1EF1 h\xE0o \u0111\xF3 :tada:"
+      sticker: "\u0110\u1EA0T!"
+    - characterId: mai_toang
+      pose: 1
+      text: "QUA R\u1ED2I :sob::sob: T\u1EEB \"toang\" l\xEAn \"\u0111\u1EC9nh n\xF3c\"
+        trong m\u1ED9t h\u1ECDc k\u1EF3!"
+      sticker: 
   - id: supplementary
     lines:
-    - speakerRole: "Gi\u1EA3ng vi\xEAn"
-      text: "\xD4n l\u1EA1i b\xE0i luy\u1EC7n, r\u1ED3i v\xE0o thi ti\u1EBFp. C\xE1c
-        ph\u1EA7n \u0111\xE3 \u0111\u1EA1t v\u1EABn \u0111\u01B0\u1EE3c ghi nh\u1EADn."
-      portrait: {fileID: 21300000, guid: c37e96d0bfc36f9409920ee17ba47754, type: 3}
-    - speakerRole: "B\u1EA1n c\xF9ng l\u1EDBp"
-      text: "M\xECnh t\u1EADp \u0111\xFAng ph\u1EA7n c\xF2n v\u01B0\u1EDBng r\u1ED3i
-        th\u1EED l\u1EA1i nh\xE9."
-      portrait: {fileID: 21300000, guid: f9454fc9a0d1d2b42b2225bf913749cb, type: 3}
+    - characterId: co_the_chat
+      pose: 0
+      text: "Ch\u01B0a qua th\xEC \xF4n l\u1EA1i b\xE0i luy\u1EC7n r\u1ED3i thi ti\u1EBFp.
+        Ph\u1EA7n \u0111\xE3 \u0111\u1EA1t v\u1EABn \u0111\u01B0\u1EE3c gi\u1EEF
+        nguy\xEAn, kh\xF4ng m\u1EA5t g\xEC \u0111\xE2u :salute:"
+      sticker: 
+    - characterId: mai_toang
+      pose: 2
+      text: "Toang nh\u1EB9 th\xF4i, ch\u01B0a toang h\u1EB3n :clown: Luy\u1EC7n
+        \u0111\xFAng ch\u1ED7 c\xF2n v\u01B0\u1EDBng r\u1ED3i qu\u1EA9y l\u1EA1i
+        nha!"
+      sticker: "H\u1ED2I SINH!"
   - id: course_complete
     lines:
-    - speakerRole: "Gi\u1EA3ng vi\xEAn"
-      text: "Ch\xFAc m\u1EEBng. H\u1ECDc ph\u1EA7n Th\u1EC3 ch\u1EA5t \u0111\xE3
-        ho\xE0n t\u1EA5t."
-      portrait: {fileID: 21300000, guid: c37e96d0bfc36f9409920ee17ba47754, type: 3}
-    - speakerRole: "T\xE2n sinh vi\xEAn"
-      text: "T\u1EEB h\u01A1i lo \u0111\u1EBFn t\u1EF1 tin ra s\xE2n. \u0110\xE1ng
-        nh\u1EDB th\u1EADt."
-      portrait: {fileID: 21300000, guid: 8dd0011b70903b440a7000345141466b, type: 3}
-    - speakerRole: "B\u1EA1n c\xF9ng l\u1EDBp"
-      text: "Qua r\u1ED3i! L\u1EA7n sau nh\u1EDB k\u1EC3 nh\u1EB9 tay cho kh\xF3a
-        d\u01B0\u1EDBi nh\xE9."
-      portrait: {fileID: 21300000, guid: f9454fc9a0d1d2b42b2225bf913749cb, type: 3}
+    - characterId: co_the_chat
+      pose: 1
+      text: "Ch\xFAc m\u1EEBng! H\u1ECDc ph\u1EA7n Th\u1EC3 ch\u1EA5t ch\xEDnh th\u1EE9c
+        ho\xE0n t\u1EA5t :tada:"
+      sticker: "HO\xC0N TH\xC0NH!"
+    - characterId: tan_thu
+      pose: 3
+      text: "T\u1EEB t\xE2n binh run run th\xE0nh tuy\u1EC3n th\u1EE7 c\u1EA5p tr\u01B0\u1EDDng.
+        Flex \u0111\u01B0\u1EE3c r\u1ED3i \u0111\xFAng kh\xF4ng? :sunglasses:"
+      sticker: 
+    - characterId: anh_khoa_tren
+      pose: 1
+      text: "\u0110\u01B0\u1EE3c! Nh\u01B0ng n\u0103m sau nh\u1EDB d\u1ECDa kh\xF3a
+        d\u01B0\u1EDBi y nh\u01B0 anh nha :skull:"
+      sticker: 
+    - characterId: mai_toang
+      pose: 1
+      text: "H\u1ED9i qua m\xF4n Th\u1EC3 ch\u1EA5t, \u0111i\u1EC3m danh :100::tada:
+        :muscle:"
+      sticker: 
