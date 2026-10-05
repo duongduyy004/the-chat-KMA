@@ -106,7 +106,20 @@ namespace KMA.Gameplay.UI
                     else if (child.name.StartsWith("Fill")) leg.Fill.Add(childRect);
                     else if (child.name.StartsWith("Dot")) leg.Dots.Add(childRect);
                 }
-                return leg;
+                if (leg.Outline.Count == SegmentsPerLeg && leg.Fill.Count == SegmentsPerLeg &&
+                    leg.Dots.Count == DotsPerLeg)
+                    return leg;
+                // A road from an older scene or a different piece count: rebuild it instead of indexing past the pool.
+                leg.Outline.Clear();
+                leg.Fill.Clear();
+                leg.Dots.Clear();
+                for (int i = rect.childCount - 1; i >= 0; i--)
+                {
+                    GameObject stale = rect.GetChild(i).gameObject;
+                    stale.name = "Stale";
+                    if (Application.isPlaying) Destroy(stale);
+                    else DestroyImmediate(stale);
+                }
             }
             for (int i = 0; i < SegmentsPerLeg; i++)
                 leg.Outline.Add(Piece(rect, "Outline" + (i + 1), HomeMenuStyle.Navy, null));

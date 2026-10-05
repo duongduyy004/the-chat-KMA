@@ -150,6 +150,9 @@ namespace KMA.Gameplay.UI
             if (selectionRing != null) selectionRing.gameObject.SetActive(selected || current);
             if (badgeRect != null)
                 badgeRect.localScale = Vector3.one * (current ? UITheme.Shared.LessonJourney.stopCurrentScale : 1f);
+            // The ring grows with the badge, otherwise the enlarged badge would hide it (and its glow).
+            if (selectionRing != null && badgeRect != null)
+                selectionRing.rectTransform.localScale = badgeRect.localScale;
             if (labelGroup != null)
             {
                 // Names sit 22px under a normal badge and 26px + the extra radius under the current one.

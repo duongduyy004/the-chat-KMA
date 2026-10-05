@@ -832,6 +832,48 @@ namespace KMA.Tests.Presentation
             finally { Object.DestroyImmediate(root); }
         }
 
+        [Test]
+        public void MapStops_GoldRingIsVisibleAroundTheEnlargedCurrentBadge()
+        {
+            var root = new GameObject("ring", typeof(RectTransform));
+            try
+            {
+                var screen = root.AddComponent<MapScreen>();
+                MapPresentationBuilder.Build(screen, new GameSession());
+                MapNodeView current = screen.Nodes[0];
+                Rect badge = WorldRect((RectTransform)current.transform.Find("Badge"));
+                Rect ring = WorldRect((RectTransform)current.transform.Find("SelectionRing"));
+                Assert.That(current.IsCurrent, Is.True);
+                Assert.That(ring.width, Is.GreaterThan(badge.width + 10f),
+                    "The ring must stay visible outside the scaled current badge.");
+                Assert.That(ring.Contains(badge.min) && ring.Contains(badge.max), Is.True);
+            }
+            finally { Object.DestroyImmediate(root); }
+        }
+
+        [Test]
+        public void JourneyRoad_RebuildsAStalePathTrackInsteadOfThrowing()
+        {
+            var root = new GameObject("stale", typeof(RectTransform));
+            var gridObject = new GameObject("Grid", typeof(RectTransform));
+            try
+            {
+                var screen = root.AddComponent<MapScreen>();
+                MapPresentationBuilder.Build(screen, new GameSession());
+                var grid = (RectTransform)gridObject.transform;
+                grid.sizeDelta = new Vector2(1920f, 565f);
+                // The pre-journey scene had a childless PathTrack1 (a single Image).
+                var stale = new GameObject("PathTrack1", typeof(RectTransform), typeof(Image));
+                stale.transform.SetParent(grid, false);
+                var layout = gridObject.AddComponent<MapJourneyPathLayout>();
+                Assert.DoesNotThrow(() => layout.Configure(screen.Nodes));
+                Assert.That(grid.Find("PathTrack1").Cast<Transform>().Count(c => c.name.StartsWith("Outline")),
+                    Is.EqualTo(36));
+                Assert.That(grid.Find("PathTrack2"), Is.Not.Null);
+            }
+            finally { Object.DestroyImmediate(root); Object.DestroyImmediate(gridObject); }
+        }
+
         static (MapScreen screen, RectTransform grid) BuildMapAt(GameObject root, Vector2 size, GameSession session)
         {
             ((RectTransform)root.transform).sizeDelta = size;

@@ -10,12 +10,12 @@ Spec: `docs/superpowers/specs/2026-10-05-journey-map-subject-menu-design.md`. Pl
 
 | Check | Passed | Failed | Ignored | Evidence |
 | --- | ---: | ---: | ---: | --- |
-| Full EditMode | 660 | 0 | 3 | `Builds/TestResults/fit-full.xml` |
-| Full PlayMode | 259 | 0 | 0 | `Builds/TestResults/final-play2.xml` |
+| Full EditMode | 662 | 0 | 3 | `Builds/TestResults/rev-full.xml` |
+| Full PlayMode | 259 | 0 | 0 | `Builds/TestResults/rev-play.xml` |
 
 The EditMode XML root reports `Skipped:Ignored` because of the three existing ignored `ChallengeSequenceTests`; `tools/run-unity-tests.sh` therefore exits 1 even though every case passed or was ignored. `ShellSceneAuthoring.Validate` was run after the final re-author (`Validated Map: 386 objects, no transient sprites`).
 
-New geometry coverage: stops stay inside the map zone and clear of the lesson panel at 1280, 1440, 1728, 1920 and 2400 px wide (EditMode, 1080 high) and clear of header and panel in the authored scene at 1280×720, 1440×1080, 1728×1080, 1920×1080 and 2400×1080 (PlayMode); no stop label is truncated; stars never overlap the status text; status text and sport icons keep readable contrast; the road is built once, is dotted at zero progress and gold only on passed legs.
+New geometry coverage: stops stay inside the map zone and clear of the lesson panel at 1280, 1440, 1728, 1920 and 2400 px wide (EditMode, canvas 1080 high — this is the real aspect-ratio coverage). The PlayMode scene tests call `Screen.SetResolution`, which does not resize the Editor Game view, so they check the authored scene only at the Editor's default Game-view size, not at five sizes. No stop label is truncated; stars never overlap the status text; status text and sport icons keep readable contrast; the road is built once, is dotted at zero progress and gold only on passed legs.
 
 ## Visual evidence
 
@@ -32,7 +32,7 @@ Two states were captured mid-way through the lesson-card reveal animation, so on
 
 ## Not verified
 
-- 1920×1080 and 4:3 screenshots: the Game view used for capture was 1082×533. Layout at the other sizes is covered by the geometry tests above, not by images.
+- 1920×1080 and 4:3 screenshots: the Game view used for capture was 1082×533, so the 1280-wide and other EditMode cases have no image. Layout at the other sizes is covered by the EditMode geometry tests above, not by images.
 - Physical touch, Android safe areas and GPU behaviour, and APK export.
 - The preview HTML showed all three subjects open at the start; the game really starts with two locked, so the real fresh state differs from that preview by design.
 - Locked lesson-card colours were left as they were (`LockedLessonCardsStayReadable` passes at contrast ≥ 4.5).
