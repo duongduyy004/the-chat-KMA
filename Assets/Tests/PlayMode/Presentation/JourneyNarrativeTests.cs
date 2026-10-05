@@ -3,6 +3,7 @@ using System.Linq;
 using KMA.Gameplay;
 using KMA.Gameplay.UI;
 using NUnit.Framework;
+using TMPro;
 using UnityEngine;
 using UnityEngine.TestTools;
 using UnityEngine.UI;
@@ -12,35 +13,151 @@ namespace KMA.Tests.Presentation
     public sealed class JourneyNarrativeTests
     {
         GameObject root;
+        JourneyDialoguePresenter presenter;
+        JourneyDialogueLibrary library;
+        bool allowSave;
+        string savedKey;
+        int closed;
+
+        void Open(string node)
+        {
+            root = new GameObject("JourneyNarrativeCanvas", typeof(RectTransform), typeof(Canvas),
+                typeof(CanvasScaler), typeof(GraphicRaycaster));
+            presenter = root.AddComponent<JourneyDialoguePresenter>();
+            library = JourneyDialogueLibrary.LoadDefault();
+            allowSave = true;
+            savedKey = null;
+            closed = 0;
+            presenter.Configure(library, key => { savedKey = key; return allowSave; });
+            presenter.Show(node, () => closed++);
+        }
+
+        T Find<T>(string name) where T : Component =>
+            root.GetComponentsInChildren<T>(true).First(component => component.name == name);
+
+        void Tap() => Find<Button>("TapArea").onClick.Invoke();
+
+        void TapToLine(int index)
+        {
+            while (presenter.CurrentLineIndex < index) Tap();
+        }
 
         [UnityTest]
         public IEnumerator SkipCanRetryAfterSaveFailureAndPersistsBeforeClosing()
         {
-            root = new GameObject("JourneyNarrativeCanvas", typeof(RectTransform), typeof(Canvas),
-                typeof(CanvasScaler), typeof(GraphicRaycaster));
-            JourneyDialoguePresenter presenter = root.AddComponent<JourneyDialoguePresenter>();
-            bool allowSave = false;
-            string savedKey = null;
-            presenter.Configure(JourneyDialogueLibrary.LoadDefault(), key =>
-            {
-                savedKey = key;
-                return allowSave;
-            });
-            int closed = 0;
-            presenter.Show("opening", () => closed++);
+            Open("opening");
+            allowSave = false;
             yield return null;
-            Button skip = root.GetComponentsInChildren<Button>(true).First(button => button.name == "BỎ QUA");
-
+            Button skip = Find<Button>("BỎ QUA");
             skip.onClick.Invoke();
             Assert.That(presenter.IsShowing, Is.True);
             Assert.That(savedKey, Is.EqualTo("opening"));
             Assert.That(closed, Is.Zero);
-
             allowSave = true;
             skip.onClick.Invoke();
             Assert.That(presenter.IsShowing, Is.False);
             Assert.That(closed, Is.EqualTo(1));
+        }
+
+        [UnityTest]
+        public IEnumerator FirstTapRevealsWholeLineSecondTapAdvances()
+        {
+            Open("opening");
             yield return null;
+            TMP_Text body = Find<TMP_Text>("Dialogue");
+            Assert.That(presenter.IsLineFullyShown, Is.False);
+            Tap();
+            Assert.That(presenter.IsLineFullyShown, Is.True);
+            Assert.That(presenter.CurrentLineIndex, Is.Zero);
+            Assert.That(body.maxVisibleCharacters, Is.GreaterThanOrEqualTo(body.textInfo.characterCount));
+            Tap();
+            Assert.That(presenter.CurrentLineIndex, Is.EqualTo(1));
+            Assert.That(presenter.IsLineFullyShown, Is.False);
+        }
+
+        [UnityTest]
+        public IEnumerator LastLineFirstTapRevealsSecondTapClosesAndSaves()
+        {
+            Open("sprint_exam");
+            yield return null;
+            TapToLine(1);
+            Assert.That(presenter.IsLineFullyShown, Is.False);
+            Tap();
+            Assert.That(presenter.IsShowing, Is.True);
+            Assert.That(savedKey, Is.Null);
+            Assert.That(Find<TMP_Text>("Hint").text, Does.Contain("ĐÓNG"));
+            Tap();
+            Assert.That(presenter.IsShowing, Is.False);
+            Assert.That(savedKey, Is.EqualTo("sprint_exam"));
+            Assert.That(closed, Is.EqualTo(1));
+        }
+
+        [UnityTest]
+        public IEnumerator SaveFailureKeepsOverlayAndRetryClosesExactlyOnce()
+        {
+            Open("sprint_exam");
+            allowSave = false;
+            yield return null;
+            TapToLine(1);
+            Tap();
+            Tap();
+            Assert.That(presenter.IsShowing, Is.True);
+            Assert.That(Find<TMP_Text>("SaveError").text, Is.Not.Empty);
+            Assert.That(closed, Is.Zero);
+            allowSave = true;
+            Tap();
+            Assert.That(presenter.IsShowing, Is.False);
+            presenter.Advance();
+            Assert.That(closed, Is.EqualTo(1));
+        }
+
+        [UnityTest]
+        public IEnumerator PlayerStaysRightAsListenerWhenSilent()
+        {
+            Open("sprint_pass");
+            yield return new WaitForSecondsRealtime(.4f);
+            Image right = Find<Image>("RightActor");
+            Image left = Find<Image>("LeftActor");
+            JourneyCharacter co = library.GetCharacter("co_the_chat");
+            Assert.That(right.enabled, Is.True);
+            Assert.That(right.sprite, Is.SameAs(library.Player.GetPose(DialoguePose.Idle)));
+            Assert.That(right.color, Is.EqualTo(JourneyDialoguePresenter.ListenerTint));
+            Assert.That(left.sprite, Is.SameAs(co.GetPose(DialoguePose.Cheer)));
+            Assert.That(left.color, Is.EqualTo(Color.white));
+            Assert.That(Find<TMP_Text>("Name").text, Is.EqualTo("Cô Thể Chất"));
+        }
+
+        [UnityTest]
+        public IEnumerator LeftSlotSwapsToEachNewSpeaker()
+        {
+            Open("soccer_intro");
+            yield return null;
+            TapToLine(1);
+            yield return new WaitForSecondsRealtime(.5f);
+            Image left = Find<Image>("LeftActor");
+            Assert.That(left.sprite, Is.SameAs(library.GetCharacter("anh_khoa_tren").GetPose(DialoguePose.Cheer)));
+            TapToLine(2);
+            yield return new WaitForSecondsRealtime(.5f);
+            Assert.That(left.sprite, Is.SameAs(library.GetCharacter("co_the_chat").GetPose(DialoguePose.Idle)));
+            Assert.That(left.rectTransform.anchoredPosition.x, Is.LessThan(0f));
+        }
+
+        [UnityTest]
+        public IEnumerator EmojiRenderThroughTheSpriteAssetAndStickersFollowTheLine()
+        {
+            Open("opening");
+            yield return null;
+            TMP_Text body = Find<TMP_Text>("Dialogue");
+            Assert.That(body.text, Does.Contain("<sprite name=\"eyes\">"));
+            Assert.That(body.spriteAsset, Is.Not.Null);
+            Assert.That(body.spriteAsset.name, Is.EqualTo("JourneyEmoji"));
+            RectTransform sticker = Find<RectTransform>("Sticker");
+            Assert.That(sticker.gameObject.activeSelf, Is.False);
+            TapToLine(1);
+            Assert.That(sticker.gameObject.activeSelf, Is.True);
+            Assert.That(sticker.GetComponentInChildren<TMP_Text>(true).text, Is.EqualTo("ÉT O ÉT!"));
+            TapToLine(2);
+            Assert.That(sticker.gameObject.activeSelf, Is.False);
         }
 
         [UnityTearDown]
