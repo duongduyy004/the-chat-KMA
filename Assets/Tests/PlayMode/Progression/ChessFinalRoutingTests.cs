@@ -1,0 +1,82 @@
+#if KMA_CHESS_ROUTING_READY
+using System.Collections.Generic;
+using System.Linq;
+using KMA.Gameplay;
+using KMA.Gameplay.Core;
+using KMA.Gameplay.UI;
+using NUnit.Framework;
+
+namespace KMA.Tests.Gameplay.Progression
+{
+    public sealed class ChessFinalRoutingTests
+    {
+        readonly List<SceneRouteTransition> routes = new List<SceneRouteTransition>();
+        SceneRouter router;
+        ResultPanel panel;
+
+        [SetUp]
+        public void SetUp()
+        {
+            routes.Clear();
+            router = JourneyRoutingFixture.CreateRouter(routes);
+            panel = JourneyRoutingFixture.CreateResultPanel();
+        }
+
+        [TearDown]
+        public void TearDown() => JourneyRoutingFixture.Destroy(router, panel);
+
+        [Test]
+        public void TheChessFinalLoadsItsScene()
+        {
+            JourneyRoutingFixture.CompleteThrough(router.Session, "soccer_exam");
+            Assert.That(router.TryStartChallenge("chess_final"), Is.True);
+            Assert.That(routes.Last().SceneName, Is.EqualTo("MG_ChessFinal"));
+        }
+
+        [Test]
+        public void FailedFinalOffersReplayEvenAtZeroLivesAndNeverTheFrogJump()
+        {
+            JourneyRoutingFixture.CompleteThrough(router.Session, "soccer_exam");
+            router.Session.Journey.SetAttemptsRemaining(0);
+            JourneyRoutingFixture.FailActive(router, panel, "chess_final");
+
+            Assert.That(router.Session.PendingFrogJump, Is.Null);
+            Assert.That(panel.RetryAvailable, Is.True);
+            Assert.That(panel.ContinueLabel, Is.EqualTo(VietText.Fix("TIẾP TỤC")));
+            panel.Retry();
+            Assert.That(routes.Last().Route, Is.EqualTo(SessionRoute.Subject));
+            Assert.That(router.Session.Journey.ActiveAttempt.ChallengeId, Is.EqualTo("chess_final"));
+        }
+
+        [Test]
+        public void FirstWinRoutesToTheCelebrationOnce()
+        {
+            JourneyRoutingFixture.CompleteThrough(router.Session, "soccer_exam");
+            JourneyRoutingFixture.PassActive(router, panel, "chess_final");
+            panel.Continue();
+            panel.Continue();
+            Assert.That(routes.Count(r => r.Route == SessionRoute.Celebration), Is.EqualTo(1));
+            Assert.That(routes.Last().SceneName, Is.EqualTo("Celebration"));
+        }
+
+        [Test]
+        public void WinAfterTheCelebrationWasSeenGoesToTheMap()
+        {
+            JourneyRoutingFixture.CompleteThrough(router.Session, "chess_final");
+            Assert.That(router.Session.Journey.MarkCelebrationSeen(), Is.True);
+            JourneyRoutingFixture.PassActive(router, panel, "chess_final", ChallengeAttemptMode.FreePlay);
+            panel.Continue();
+            Assert.That(routes.Last().Route, Is.EqualTo(SessionRoute.Map));
+        }
+
+        [Test]
+        public void CelebrationRouteIsRefusedBeforeTheCourseIsComplete()
+        {
+            JourneyRoutingFixture.CompleteThrough(router.Session, "soccer_exam");
+            Assert.That(router.RouteToCelebration(), Is.False);
+            JourneyRoutingFixture.CompleteThrough(router.Session, "chess_final");
+            Assert.That(router.RouteToCelebration(), Is.True);
+        }
+    }
+}
+#endif

@@ -183,8 +183,11 @@ namespace KMA.Gameplay.Core
             }
             else
             {
-                // Running out of lives no longer ends the run: lives regenerate on the map.
-                bool routed = Route(SessionRoute.Map);
+                // The first win of the final opens the celebration; later wins go back to the map.
+                bool celebrate = displayedResult.Pass && displayedOutcome.HasValue &&
+                    displayedOutcome.Value.FinalChallenge && displayedOutcome.Value.CourseComplete &&
+                    !session.Journey.CelebrationSeen;
+                bool routed = Route(celebrate ? SessionRoute.Celebration : SessionRoute.Map);
                 if (!routed)
                     challengePanel?.ShowChallenge(displayedChallenge, displayedResult, displayedOutcome,
                         lastRouteError ?? "Không thể chuyển cảnh. Hãy thử lại.");

@@ -442,6 +442,7 @@ namespace KMA.Gameplay.Core
                 SessionRoute.Map => mapScene,
                 SessionRoute.GameOver => gameOverScene,
                 SessionRoute.FrogJump => frogJumpScene,
+                SessionRoute.Celebration => celebrationScene,
                 SessionRoute.Subject or SessionRoute.RetrySubject => SceneFor(subject),
                 _ => null
             };
@@ -518,6 +519,7 @@ namespace KMA.Gameplay.Core
                 case SessionRoute.Map:
                 case SessionRoute.GameOver:
                 case SessionRoute.FrogJump:
+                case SessionRoute.Celebration:
                     activeSubject = null;
                     awaitingSubjectScene = false;
                     break;
@@ -675,7 +677,8 @@ namespace KMA.Gameplay.Core
         {
             new SubjectScene { Subject = SubjectId.Sprint, SceneName = "MG_Sprint" },
             new SubjectScene { Subject = SubjectId.Volleyball, SceneName = "MG_Volleyball" },
-            new SubjectScene { Subject = SubjectId.Football, SceneName = "MG_Football" }
+            new SubjectScene { Subject = SubjectId.Football, SceneName = "MG_Football" },
+            new SubjectScene { Subject = SubjectId.Chess, SceneName = "MG_ChessFinal" }
         };
     }
 }

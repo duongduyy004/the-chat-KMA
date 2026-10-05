@@ -12,7 +12,8 @@ namespace KMA.Gameplay.Core
         {
             new SceneRouter.SubjectScene { Subject = SubjectId.Sprint, SceneName = "MG_Sprint" },
             new SceneRouter.SubjectScene { Subject = SubjectId.Volleyball, SceneName = "MG_Volleyball" },
-            new SceneRouter.SubjectScene { Subject = SubjectId.Football, SceneName = "MG_Football" }
+            new SceneRouter.SubjectScene { Subject = SubjectId.Football, SceneName = "MG_Football" },
+            new SceneRouter.SubjectScene { Subject = SubjectId.Chess, SceneName = "MG_ChessFinal" }
         };
 
         static readonly FieldInfo SubjectScenes = typeof(SceneRouter).GetField(

@@ -223,7 +223,10 @@ namespace KMA.Gameplay.UI
                 rankLabel.gameObject.SetActive(result.ExamResult != null);
             }
             bool frogJump = outcome.HasValue && outcome.Value.FrogJumpRequired;
-            SetDetail(saveError ?? (context.Mode == ChallengeAttemptMode.Journey
+            bool final = outcome.HasValue && outcome.Value.FinalChallenge;
+            SetDetail(saveError == null && final && !string.IsNullOrEmpty(result.Metrics.Detail)
+                ? result.Metrics.Detail
+                : saveError ?? (context.Mode == ChallengeAttemptMode.Journey
                 ? outcome.HasValue
                     ? frogJump
                         ? outcome.Value.FrogJumpSavesLife
@@ -236,17 +239,17 @@ namespace KMA.Gameplay.UI
             SetButtonLabel(actionButton, saveError == null ? frogJump ? "BẬT CÓC" : "TIẾP TỤC"
                 : outcome.HasValue ? "THỬ LẠI" : "LƯU LẠI");
             retryAvailable = result.ExamResult != null && !result.Pass && outcome.HasValue &&
-                outcome.Value.AttemptsRemaining > 0 && !frogJump;
+                (final || outcome.Value.AttemptsRemaining > 0) && !frogJump;
             if (retryButton != null)
             {
                 retryButton.gameObject.SetActive(retryAvailable);
-                SetButtonLabel(retryButton, "THI LẠI");
+                SetButtonLabel(retryButton, final ? "CHƠI LẠI" : "THI LẠI");
             }
             if (livesLabel != null)
             {
                 int attemptsRemaining = outcome.HasValue ? outcome.Value.AttemptsRemaining : 0;
                 livesLabel.text = VietText.Fix($"LƯỢT THI: {attemptsRemaining}/{GameSession.MaxLives}");
-                livesLabel.gameObject.SetActive(result.ExamResult != null || frogJump);
+                livesLabel.gameObject.SetActive(!final && (result.ExamResult != null || frogJump));
             }
             RefreshButtons();
             Reveal(result.ExamResult == null ? result.Metrics.CompletedTargets : result.ExamResult.Score);

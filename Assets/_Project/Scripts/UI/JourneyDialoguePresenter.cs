@@ -84,7 +84,6 @@ namespace KMA.Gameplay.UI
             Add("opening");
             if (journey.CourseComplete)
             {
-                Add("soccer_pass");
                 Add("course_complete");
             }
             else

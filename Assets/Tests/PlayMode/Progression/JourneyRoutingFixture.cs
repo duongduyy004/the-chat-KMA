@@ -81,5 +81,16 @@ namespace KMA.Tests.Gameplay.Progression
                     ? new MinigameResult(false, 0f, Rank.F) : null));
             Assert.That(panel.CurrentResult, Is.Not.Null, "The fixture panel must show the failed result.");
         }
+
+        public static void PassActive(SceneRouter router, ResultPanel panel, string id, ChallengeAttemptMode mode =
+            ChallengeAttemptMode.Journey)
+        {
+            ChallengeDefinition definition = router.Session.Journey.Catalog.Get(id);
+            Assert.That(router.TryStartChallenge(id, mode, definition.Difficulty), Is.True, id);
+            router.ReportChallengeResultForTests(new ChallengeAttemptResult(router.Session.Journey.ActiveAttempt,
+                true, new ChallengeMetrics(elapsed: 40f, completedTargets: definition.TargetCount),
+                ChallengeDefinition.IsScored(definition.Kind) ? new MinigameResult(true, 8f, Rank.A) : null));
+            Assert.That(panel.CurrentResult, Is.Not.Null);
+        }
     }
 }

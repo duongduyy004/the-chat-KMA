@@ -11,7 +11,8 @@ namespace KMA.Gameplay
         RetrySubject,
         Map,
         GameOver,
-        FrogJump
+        FrogJump,
+        Celebration
     }
 
     public interface IResultPreviewPanel
