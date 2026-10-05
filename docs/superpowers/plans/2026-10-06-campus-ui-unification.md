@@ -126,7 +126,7 @@ Expected: each call prints `"status":"ok"`. Close the Editor afterwards. These f
 | PNG | Size | Content |
 |---|---|---|
 | `CampusSky.png` | 1024×512 | Flat sky `#2e9be6`, 4 outlined clouds kept between 30 % and 60 % of the height (top 25 % stays clear for the HUD); left and right edges match so it tiles |
-| `CampusSkyline.png` | 2048×320 | Transparent background. Bottom 24 px: hedge strip with ink top edge. Above it, left to right: tree clump, bleacher stand with floodlight, **KMA main building** (5-storey cream block `#fbf4e2`, brick `#d9614c` frame, glass `#5fb8e8` window grid, central glass atrium, flag pole with yellow flag), trees, sports hall (arched roof), tree clump, bleacher stand with floodlight. First and last 64 px are hedge/tree only so tiles join without a seam |
+| `CampusSkyline.png` | 1983 wide × the source's opaque height | **Reused art (user decision 2026-10-06):** `Environments/Sprint/Campus.png` cropped by the generator to its opaque (alpha > 0) bounding box, keeping the existing Sprint campus illustration pixel-for-pixel. Transparent outside the buildings |
 | `CampusPixel.png` | 8×8 | Solid white, used for tinted ground and court quads |
 | `SprintTrack.png` | 1983×875 | Same geometry as `Environments/Sprint/Track.png`: transparent above row 460; track `#e0604a` from row 460 to 875; cream `#fffbea` lane lines 12 px tall with 2 px ink edges centred on rows 471.5, 553.5, 639, 722, 798; **no chevron strip** (rows 798–875 plain track) |
 | `VolleyNet.png` | 64×512 | Vertical net: ink posts (top and bottom 40 px, 20 px wide, centred), white mesh (`stroke-opacity .7`, 10 px cells) between them, ink outline |
@@ -1329,7 +1329,7 @@ The PLAYER plate and chevron already identify the player without relying on colo
                     renderer.drawMode = SpriteDrawMode.Simple;
                     renderer.sharedMaterial = SpriteMaterial();
                     renderer.color = Color.white;
-                    renderer.flipX = false; // the campus art tiles without mirroring
+                    renderer.flipX = field == "second"; // the mirrored second tile hides the raster seam, as before
                     renderer.sortingOrder = -30 + i * 10;
                     float parentScaleY = tile.parent == null ? 1f : tile.parent.lossyScale.y;
                     float scaleX = 25.6f / sprite.bounds.size.x;
@@ -1772,14 +1772,14 @@ and resize it to `new Vector2(640f, 320f)` with the text rect `new Vector2(580f,
 
 - [ ] **Step 5: Rebuild both scenes, run tests, expect PASS** (new tests, `KMA.Tests.Gameplay.Chess`, `KMA.Tests.Gameplay.Celebration` EditMode + PlayMode, `ChessFinalRoutingTests`). Screenshots: `MG_ChessFinal` (6 s and `qaState` `chess-select`), `Celebration` (`celebration-cheer`).
 
-- [ ] **Step 6: Delete the old Sprint backdrop art.** After Tasks 7 and 11, `Environments/Sprint/{Sky,Campus,Track}.png` should have no users (on 2026-10-06 they were referenced only by `MG_Sprint`, `MG_ChessFinal` and `Celebration`). Verify by GUID, then delete:
+- [ ] **Step 6: Delete the old Sprint backdrop art.** After Tasks 7 and 11, `Environments/Sprint/{Sky,Track}.png` should have no users (`Campus.png` stays: the generator crops `CampusSkyline.png` from it) (on 2026-10-06 they were referenced only by `MG_Sprint`, `MG_ChessFinal` and `Celebration`). Verify by GUID, then delete:
 
 ```bash
-for f in Sky Campus Track; do g=$(grep -o "guid: [a-f0-9]*" Assets/_Project/Art/Environments/Sprint/$f.png.meta | cut -d' ' -f2); echo "$f: $(grep -rl "$g" Assets --include=*.unity --include=*.prefab --include=*.asset | tr '\n' ' ')"; done
+for f in Sky Track; do g=$(grep -o "guid: [a-f0-9]*" Assets/_Project/Art/Environments/Sprint/$f.png.meta | cut -d' ' -f2); echo "$f: $(grep -rl "$g" Assets --include=*.unity --include=*.prefab --include=*.asset | tr '\n' ' ')"; done
 grep -rn "Environments/Sprint/" Assets --include=*.cs
 ```
 
-Expected: no files after each name and no code paths. Then `git rm` the three PNGs and their `.meta`. Update the comments in `SprintTrackLayout.cs` and `SprintTrackLayoutTests.cs:44` that say "Track.png" to "SprintTrack.png" (same geometry). If anything still references them, leave the files and note it in the QA report.
+Expected: no files after each name and no code paths. Then `git rm` the two PNGs and their `.meta`. Update the comments in `SprintTrackLayout.cs` and `SprintTrackLayoutTests.cs:44` that say "Track.png" to "SprintTrack.png" (same geometry). If anything still references them, leave the files and note it in the QA report.
 
 - [ ] **Step 7: Commit**
 
