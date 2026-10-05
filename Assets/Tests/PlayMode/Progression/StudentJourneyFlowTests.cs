@@ -19,7 +19,7 @@ namespace KMA.Tests.Gameplay.Progression
         int originalFrameRate, originalVsync;
 
         [UnityTest]
-        public IEnumerator BootstrapToSummaryUsesAllNineRealControllersAndPersistsCompletion()
+        public IEnumerator BootstrapToSummaryUsesTheRealControllersAndPersistsCompletion()
         {
             yield return StartRuntime();
             foreach (string id in new[] { "sprint_learn", "sprint_practice", "sprint_exam",
@@ -31,8 +31,15 @@ namespace KMA.Tests.Gameplay.Progression
                 if (id == "sprint_practice")
                     Assert.That(router.Session.Journey.IsSubjectUnlocked(SubjectId.Volleyball), Is.False);
             }
+            // The chess scene is not routable yet, so the final is committed through the session.
+            Assert.That(router.Session.Journey.CheckpointChallengeId, Is.EqualTo("chess_final"));
+            Assert.That(router.Session.Journey.CourseComplete, Is.False);
+            Assert.That(JourneyGameplayDriver.CompleteActiveChallenge(router.Session).CourseComplete, Is.True);
+            saved = JsonUtility.FromJson<SaveData>(JsonUtility.ToJson(router.Session.ToSaveData()));
+            Assert.That(router.Route(SessionRoute.Map), Is.True);
+            yield return JourneyRuntimeDriver.WaitForScene(router, "Map");
             Assert.That(router.Session.Journey.CourseComplete, Is.True);
-            Assert.That(router.Session.Records.Values.Count(record => record.Passed), Is.EqualTo(3));
+            Assert.That(router.Session.Records.Values.Count(record => record.Passed), Is.EqualTo(4));
             var reloaded = new GameSession();
             reloaded.Restore(saved);
             Assert.That(reloaded.Journey.CourseComplete, Is.True);
@@ -209,7 +216,7 @@ namespace KMA.Tests.Gameplay.Progression
             var menu = Object.FindFirstObjectByType<MainMenuScreen>();
             menu.NewGame();
             yield return JourneyRuntimeDriver.WaitForScene(router, "Map");
-            Assert.That(ChallengeCatalog.LoadDefault().Ordered.Count, Is.EqualTo(9));
+            Assert.That(ChallengeCatalog.LoadDefault().Ordered.Count, Is.EqualTo(10));
             Assert.That(JourneyDialogueLibrary.LoadDefault(), Is.Not.Null);
             var emoji = Resources.Load<TMPro.TMP_SpriteAsset>("Journey/JourneyEmoji");
             Assert.That(emoji, Is.Not.Null);

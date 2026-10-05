@@ -6,6 +6,8 @@ namespace KMA.Gameplay
         Football = 6,
         // 7, not a reused number: saves from before the content cut hold ids 1-5 for retired
         // subjects, and none of that progress may surface as Volleyball.
-        Volleyball = 7
+        Volleyball = 7,
+        // The final exam: a chess puzzle against Cô Thể Chất. Kept last; never renumber.
+        Chess = 8
     }
 }

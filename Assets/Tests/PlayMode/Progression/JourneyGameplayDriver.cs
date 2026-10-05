@@ -15,7 +15,7 @@ namespace KMA.Tests.Gameplay.Progression
                 return new JourneyCommitOutcome(false, id, session.Lives, session.PendingFrogJump != null,
                     session.PendingFrogJump?.SavesLife ?? false, session.Journey.CourseComplete);
 
-            MinigameResult exam = definition.Kind == ChallengeKind.Exam
+            MinigameResult exam = ChallengeDefinition.IsScored(definition.Kind)
                 ? new MinigameResult(pass, pass ? score : 0f, pass ? ScoreUtil.ToRank(score) : Rank.F)
                 : null;
             return session.SubmitChallengeResult(new ChallengeAttemptResult(context, pass,

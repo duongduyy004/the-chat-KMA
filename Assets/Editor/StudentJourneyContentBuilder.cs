@@ -83,7 +83,10 @@ namespace KMA.EditorTools
                     "Ghi hai bàn trước thủ môn Normal trong tối đa 6 cú sút.", 6),
                 new ChallengeSpec("soccer_exam", SubjectId.Football, ChallengeKind.Exam,
                     0f, 0f, 3, true, ChallengeDifficulty.Normal, false,
-                    "Ghi ít nhất ba bàn sau đủ năm cú sút trước thủ môn Normal.")
+                    "Ghi ít nhất ba bàn sau đủ năm cú sút trước thủ môn Normal."),
+                new ChallengeSpec("chess_final", SubjectId.Chess, ChallengeKind.Final,
+                    0f, 90f, 2, false, ChallengeDifficulty.Normal, false,
+                    "Chiếu hết trong 2 nước, tối đa 90 giây.")
             };
 
             var definitions = new ChallengeDefinition[specs.Length];
@@ -311,8 +314,12 @@ namespace KMA.EditorTools
                     Line(Co, DialoguePose.Idle, "Thi: 5 cú sút, vào ít nhất 3 bàn là qua. Thủ môn hôm nay không nương tay đâu :eyes:", "5 CÚ"),
                     Line(TanThu, DialoguePose.Idle, "Nhắm chắc, lực vừa đủ, sút là vào. Chân này đã được khai quang :fire:")),
                 Node("soccer_pass",
-                    Line(Co, DialoguePose.Cheer, "Đạt học phần! Ba môn, ba lần qua. Cô hơi bị tự hào đó :tada:", "ĐẠT!"),
-                    Line(Mai, DialoguePose.Cheer, "QUA RỒI :sob::sob: Từ \"toang\" lên \"đỉnh nóc\" trong một học kỳ!")),
+                    Line(Co, DialoguePose.Cheer, "Đạt ba môn! Còn đúng một bài kiểm tra cuối với cô nữa thôi :eyes:", "ĐẠT!"),
+                    Line(Mai, DialoguePose.Cheer, "QUA RỒI :sob::sob: Còn bài cuối, ông ráng nốt nha!")),
+                Node("chess_intro",
+                    Line(Co, DialoguePose.Idle, "Bài cuối không chạy, không nhảy. Cô đặt một thế cờ, em chiếu hết trong hai nước :eyes:", "BÀI CUỐI"),
+                    Line(TanThu, DialoguePose.Hurt, "Thể chất mà thi cờ vua ạ? Em tưởng cô chỉ biết thổi còi :sob:"),
+                    Line(Co, DialoguePose.Idle, "Còi vẫn mang theo đây. Đi sai là cô thổi. Em có 90 giây, sai tối đa hai lần :fire:", "90 GIÂY")),
                 Node("supplementary",
                     Line(Co, DialoguePose.Idle, "Chưa qua thì ôn lại bài luyện rồi thi tiếp. Phần đã đạt vẫn được giữ nguyên, không mất gì đâu :salute:"),
                     Line(Mai, DialoguePose.Hurt, "Toang nhẹ thôi, chưa toang hẳn :clown: Luyện đúng chỗ còn vướng rồi quẩy lại nha!", "HỒI SINH!")),

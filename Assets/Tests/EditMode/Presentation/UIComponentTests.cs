@@ -269,7 +269,7 @@ namespace KMA.Tests.Presentation
                         definition.Difficulty, out ChallengeAttemptContext attempt), Is.True);
                     session.SubmitChallengeResult(new ChallengeAttemptResult(attempt, true,
                         new ChallengeMetrics(completedTargets: definition.TargetCount),
-                        definition.Kind == ChallengeKind.Exam ? new MinigameResult(true, 8f, Rank.A) : null));
+                        ChallengeDefinition.IsScored(definition.Kind) ? new MinigameResult(true, 8f, Rank.A) : null));
                 }
                 MapPresentationBuilder.Build(screen, session);
                 Canvas.ForceUpdateCanvases();
@@ -319,7 +319,7 @@ namespace KMA.Tests.Presentation
                         definition.Difficulty, out ChallengeAttemptContext attempt), Is.True);
                     session.SubmitChallengeResult(new ChallengeAttemptResult(attempt, true,
                         new ChallengeMetrics(completedTargets: definition.TargetCount),
-                        definition.Kind == ChallengeKind.Exam ? new MinigameResult(true, 8f, Rank.A) : null));
+                        ChallengeDefinition.IsScored(definition.Kind) ? new MinigameResult(true, 8f, Rank.A) : null));
                 }
                 var screen = root.AddComponent<MapScreen>();
                 MapPresentationBuilder.Build(screen, session);
@@ -1060,7 +1060,7 @@ namespace KMA.Tests.Presentation
                 out ChallengeAttemptContext context), Is.True);
             session.SubmitChallengeResult(new ChallengeAttemptResult(context, true,
                 new ChallengeMetrics(completedTargets: definition.TargetCount),
-                definition.Kind == ChallengeKind.Exam ? new MinigameResult(true, 8f, Rank.A) : null));
+                ChallengeDefinition.IsScored(definition.Kind) ? new MinigameResult(true, 8f, Rank.A) : null));
         }
 
         private static void SetPrivateField(object target, string fieldName, object value)

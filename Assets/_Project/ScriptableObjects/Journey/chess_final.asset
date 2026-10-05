@@ -1,0 +1,25 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 2ee23bd58ad94412ae0a96014fe7dc5d, type: 3}
+  m_Name: chess_final
+  m_EditorClassIdentifier: KMA.Gameplay.Progression::KMA.Gameplay.ChallengeDefinition
+  id: chess_final
+  subject: 8
+  kind: 3
+  distance: 0
+  timeLimit: 90
+  targetCount: 2
+  attemptLimit: 0
+  keeperEnabled: 0
+  difficulty: 1
+  timingHelp: 0
+  objective: "Chi\u1EBFu h\u1EBFt trong 2 n\u01B0\u1EDBc, t\u1ED1i \u0111a 90 gi\xE2y."

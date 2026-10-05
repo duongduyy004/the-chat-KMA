@@ -149,7 +149,7 @@ namespace KMA.Tests.Gameplay.Progression
                     definition.Difficulty, out ChallengeAttemptContext context);
                 var result = new ChallengeAttemptResult(context, true,
                     new ChallengeMetrics(completedTargets: definition.TargetCount),
-                    definition.Kind == ChallengeKind.Exam ? new MinigameResult(true, 8f, Rank.A) : null);
+                    ChallengeDefinition.IsScored(definition.Kind) ? new MinigameResult(true, 8f, Rank.A) : null);
                 session.SubmitChallengeResult(result);
                 if (definition.Id == target) return;
             }

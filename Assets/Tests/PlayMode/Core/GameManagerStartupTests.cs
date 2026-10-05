@@ -66,7 +66,8 @@ namespace KMA.Tests.Gameplay.Core
                     {
                         SubjectId.Sprint,
                         SubjectId.Volleyball,
-                        SubjectId.Football
+                        SubjectId.Football,
+                        SubjectId.Chess
                     }));
                     menuLoads++;
                 });

@@ -9,22 +9,22 @@ namespace KMA.Tests.Gameplay.Progression
     public sealed class JourneyCatalogTests
     {
         [Test]
-        public void DefaultCatalog_HasNineChallengesInCourseOrderWithSpecifiedRules()
+        public void DefaultCatalog_HasTenChallengesInCourseOrderWithSpecifiedRules()
         {
             ChallengeCatalog catalog = ChallengeCatalog.LoadDefault();
 
             Assert.That(catalog, Is.Not.Null);
             Assert.That(catalog.Validate(out string error), Is.True, error);
-            Assert.That(catalog.Ordered.Select(x => x.Id).Distinct().Count(), Is.EqualTo(9));
+            Assert.That(catalog.Ordered.Select(x => x.Id).Distinct().Count(), Is.EqualTo(10));
             Assert.That(catalog.Ordered.Select(x => x.Id), Is.EqualTo(new[]
             {
                 "sprint_learn", "sprint_practice", "sprint_exam",
                 "volleyball_learn", "volleyball_practice", "volleyball_exam",
-                "soccer_learn", "soccer_practice", "soccer_exam"
+                "soccer_learn", "soccer_practice", "soccer_exam", "chess_final"
             }));
             Assert.That(catalog.Ordered.Select(x => x.Subject).Distinct(), Is.EqualTo(new[]
             {
-                SubjectId.Sprint, SubjectId.Volleyball, SubjectId.Football
+                SubjectId.Sprint, SubjectId.Volleyball, SubjectId.Football, SubjectId.Chess
             }));
             Assert.That(catalog.Get("sprint_learn").TargetCount, Is.EqualTo(12));
             Assert.That(catalog.Get("sprint_practice").Distance, Is.EqualTo(100f));

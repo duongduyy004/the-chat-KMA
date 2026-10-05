@@ -27,9 +27,11 @@ namespace KMA.Gameplay
         public bool FrogJumpRequired { get; }
         public bool FrogJumpSavesLife { get; }
         public bool CourseComplete { get; }
+        /// The committed challenge was the course final: it never costs a life or a frog jump.
+        public bool FinalChallenge { get; }
 
         public JourneyCommitOutcome(bool accepted, string nextChallengeId, int attemptsRemaining,
-            bool frogJumpRequired, bool frogJumpSavesLife, bool courseComplete)
+            bool frogJumpRequired, bool frogJumpSavesLife, bool courseComplete, bool finalChallenge = false)
         {
             Accepted = accepted;
             NextChallengeId = nextChallengeId;
@@ -37,6 +39,7 @@ namespace KMA.Gameplay
             FrogJumpRequired = frogJumpRequired;
             FrogJumpSavesLife = frogJumpSavesLife;
             CourseComplete = courseComplete;
+            FinalChallenge = finalChallenge;
         }
     }
 
@@ -45,6 +48,12 @@ namespace KMA.Gameplay
         SubjectId Subject { get; }
         event Action<ChallengeAttemptResult> ChallengeCompleted;
         void ConfigureChallenge(ChallengeDefinition definition, ChallengeAttemptContext context);
+    }
+
+    /// A minigame that reports richer metrics than its MinigameResult (read by JourneyControllerAdapter).
+    public interface IChallengeMetricsSource
+    {
+        ChallengeMetrics BuildMetrics(ChallengeDefinition definition, MinigameResult result);
     }
 
     public enum JourneyResultAction

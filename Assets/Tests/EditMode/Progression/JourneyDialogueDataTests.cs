@@ -8,7 +8,7 @@ namespace KMA.Tests.Gameplay.Progression
     {
         static readonly string[] NodeIds = { "opening", "sprint_intro", "sprint_exam", "sprint_pass",
             "volleyball_intro", "volleyball_exam", "volleyball_pass", "soccer_intro", "soccer_exam",
-            "soccer_pass", "supplementary", "course_complete" };
+            "soccer_pass", "chess_intro", "supplementary", "course_complete" };
 
         [Test]
         public void DefaultDialogueLibraryContainsShortNodesForEveryMilestone()

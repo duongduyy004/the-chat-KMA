@@ -65,13 +65,13 @@ namespace KMA.Tests.Gameplay.Progression
             harness.StartChallenge("sprint_exam");
             harness.CompleteChallenge(true, 6f);
             foreach (string id in new[] { "volleyball_learn", "volleyball_practice", "volleyball_exam",
-                         "soccer_learn", "soccer_practice", "soccer_exam" })
+                         "soccer_learn", "soccer_practice", "soccer_exam", "chess_final" })
             {
                 harness.StartChallenge(id);
                 harness.CompleteChallenge(true, 6f);
             }
 
-            Assert.That(harness.Session.Records, Has.Count.EqualTo(3));
+            Assert.That(harness.Session.Records, Has.Count.EqualTo(4));
             Assert.That(harness.Session.Journey.CourseComplete, Is.True);
             Assert.That(harness.Session.Journey.CheckpointChallengeId, Is.Null);
             Assert.That(harness.Session.Lives, Is.EqualTo(3));
@@ -390,7 +390,7 @@ namespace KMA.Tests.Gameplay.Progression
             public void CompleteChallenge(bool pass, float score)
             {
                 ChallengeDefinition definition = Session.Journey.Catalog.Get(activeChallenge.ChallengeId);
-                MinigameResult examResult = definition.Kind == ChallengeKind.Exam
+                MinigameResult examResult = ChallengeDefinition.IsScored(definition.Kind)
                     ? new MinigameResult(pass, pass ? score : 0f,
                         pass ? ScoreUtil.ToRank(score) : Rank.F)
                     : null;

@@ -51,7 +51,7 @@ namespace KMA.Tests.Gameplay.Progression
         [Test]
         public void LegacySubjectOrder_IsSprintVolleyballFootballDespiteEnumValues()
         {
-            Assert.That(catalog.Ordered.Where((_, index) => index % 3 == 0).Select(x => (int)x.Subject),
+            Assert.That(catalog.Ordered.Take(9).Where((_, index) => index % 3 == 0).Select(x => (int)x.Subject),
                 Is.EqualTo(new[] { 0, 7, 6 }));
         }
 

@@ -97,6 +97,7 @@ namespace KMA.Gameplay.UI
                     case "volleyball_exam": Add("volleyball_exam"); break;
                     case "soccer_learn": Add("volleyball_pass"); Add("soccer_intro"); break;
                     case "soccer_exam": Add("soccer_exam"); break;
+                    case "chess_final": Add("soccer_pass"); Add("chess_intro"); break;
                 }
             }
             ShowNext();

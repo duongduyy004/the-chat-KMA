@@ -100,7 +100,7 @@ namespace KMA.Gameplay
             RefreshLives();
 
             ChallengeDefinition definition = catalog.Get(result.Context.ChallengeId);
-            if (definition.Kind == ChallengeKind.Exam && result.ExamResult != null &&
+            if (ChallengeDefinition.IsScored(definition.Kind) && result.ExamResult != null &&
                 result.Context.Difficulty == ChallengeDifficulty.Normal)
             {
                 if (result.Pass && result.ExamResult.Pass)
@@ -265,7 +265,7 @@ namespace KMA.Gameplay
             ChallengeDefinition definition = catalog.Get(activeChallenge.ChallengeId);
             var attemptResult = new ChallengeAttemptResult(activeChallenge, result.Pass,
                 new ChallengeMetrics(completedTargets: definition.TargetCount),
-                definition.Kind == ChallengeKind.Exam ? result : null);
+                ChallengeDefinition.IsScored(definition.Kind) ? result : null);
             JourneyCommitOutcome outcome = SubmitChallengeResult(attemptResult);
             if (!outcome.Accepted)
                 throw new InvalidOperationException("The challenge result did not match its active attempt.");
@@ -285,6 +285,7 @@ namespace KMA.Gameplay
             SubjectId.Sprint => "sprint_exam",
             SubjectId.Volleyball => "volleyball_exam",
             SubjectId.Football => "soccer_exam",
+            SubjectId.Chess => ChallengeCatalog.FinalChallengeId,
             _ => throw new ArgumentOutOfRangeException(nameof(subject))
         };
 

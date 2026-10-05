@@ -34,7 +34,7 @@ namespace KMA.Tests.Gameplay.Progression
             var result = new ChallengeAttemptResult(context, pass,
                 new ChallengeMetrics(distance: definition.Distance, elapsed: definition.TimeLimit,
                     completedTargets: definition.TargetCount),
-                definition.Kind == ChallengeKind.Exam
+                ChallengeDefinition.IsScored(definition.Kind)
                     ? new MinigameResult(pass, pass ? 8f : 0f, pass ? Rank.A : Rank.F)
                     : null);
             return session.SubmitChallengeResult(result);

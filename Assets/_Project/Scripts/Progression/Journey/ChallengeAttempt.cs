@@ -33,9 +33,14 @@ namespace KMA.Gameplay
         public int Kicks { get; }
         public float Stamina { get; }
         public int Placement { get; }
+        public int Mistakes { get; }
+        public bool HintUsed { get; }
+        /// Short Vietnamese result line a controller wants shown, or null.
+        public string Detail { get; }
 
         public ChallengeMetrics(float distance = 0f, float elapsed = 0f, int completedTargets = 0,
-            int kicks = 0, float stamina = 0f, int placement = 0)
+            int kicks = 0, float stamina = 0f, int placement = 0, int mistakes = 0, bool hintUsed = false,
+            string detail = null)
         {
             Distance = distance;
             Elapsed = elapsed;
@@ -43,6 +48,9 @@ namespace KMA.Gameplay
             Kicks = kicks;
             Stamina = stamina;
             Placement = placement;
+            Mistakes = mistakes;
+            HintUsed = hintUsed;
+            Detail = detail;
         }
     }
 

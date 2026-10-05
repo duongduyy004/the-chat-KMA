@@ -6,9 +6,14 @@ namespace KMA.Gameplay
 {
     public static class JourneySaveMigration
     {
-        static readonly SubjectId[] CourseSubjects =
+        static readonly SubjectId[] LegacyCourseSubjects =
         {
             SubjectId.Sprint, SubjectId.Volleyball, SubjectId.Football
+        };
+
+        static readonly SubjectId[] CourseSubjects =
+        {
+            SubjectId.Sprint, SubjectId.Volleyball, SubjectId.Football, SubjectId.Chess
         };
 
         public static SaveData MigrateLegacy(SaveData source, ChallengeCatalog catalog)
@@ -22,7 +27,7 @@ namespace KMA.Gameplay
             int passedPrefix = 0;
             if (!result.settingsOnly)
             {
-                foreach (SubjectId subject in CourseSubjects)
+                foreach (SubjectId subject in LegacyCourseSubjects)
                 {
                     if (!FindSubject(result.subjects, subject).passed)
                         break;
@@ -34,8 +39,8 @@ namespace KMA.Gameplay
             for (int i = 0; i < passedPrefix * 3; i++)
                 result.journey.completedChallengeIds.Add(catalog.Ordered[i].Id);
 
-            for (int i = 0; i < CourseSubjects.Length; i++)
-                FindSubject(result.subjects, CourseSubjects[i]).passed = i < passedPrefix;
+            for (int i = 0; i < LegacyCourseSubjects.Length; i++)
+                FindSubject(result.subjects, LegacyCourseSubjects[i]).passed = i < passedPrefix;
 
             result.version = SaveData.CurrentVersion;
             result.hasActiveSubject = false;
@@ -79,7 +84,7 @@ namespace KMA.Gameplay
                     ? catalog.Ordered[journey.completedChallengeIds.Count].Id : null;
                 journey.pendingFrogJump = pending != null && checkpoint != null &&
                     pending.FailedChallengeId == checkpoint &&
-                    catalog.Get(checkpoint).Kind != ChallengeKind.Learn
+                    JourneyProgress.IsPenalizedKind(catalog.Get(checkpoint).Kind)
                         ? JourneyFrogJumpData.FromPending(pending) : null;
 
                 if (journey.lastCommittedResult != null &&
@@ -181,7 +186,7 @@ namespace KMA.Gameplay
         {
             foreach (SubjectId subject in CourseSubjects)
             {
-                string examId = catalog.Ordered.First(x => x.Subject == subject && x.Kind == ChallengeKind.Exam).Id;
+                string examId = catalog.Ordered.First(x => x.Subject == subject && ChallengeDefinition.IsScored(x.Kind)).Id;
                 FindSubject(records, subject).passed = completed.Contains(examId);
             }
         }
@@ -198,7 +203,7 @@ namespace KMA.Gameplay
             foreach (JourneyFailCountData entry in source)
             {
                 if (entry == null || entry.count <= 0 || !seen.Add(entry.challengeId ?? string.Empty) ||
-                    !catalog.Ordered.Any(x => x.Id == entry.challengeId && x.Kind != ChallengeKind.Learn))
+                    !catalog.Ordered.Any(x => x.Id == entry.challengeId && JourneyProgress.IsPenalizedKind(x.Kind)))
                     continue;
                 result.Add(new JourneyFailCountData { challengeId = entry.challengeId, count = entry.count });
             }

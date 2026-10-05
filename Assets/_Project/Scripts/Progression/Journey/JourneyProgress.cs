@@ -93,6 +93,8 @@ namespace KMA.Gameplay
                     return IsChallengeComplete("sprint_exam");
                 case SubjectId.Football:
                     return IsChallengeComplete("volleyball_exam");
+                case SubjectId.Chess:
+                    return IsChallengeComplete("soccer_exam");
                 default:
                     return false;
             }
@@ -122,7 +124,7 @@ namespace KMA.Gameplay
             bool allowed = mode switch
             {
                 ChallengeAttemptMode.Journey => id == CheckpointChallengeId &&
-                    (definition.Kind == ChallengeKind.Learn || attemptsRemaining > 0),
+                    (!IsPenalizedKind(definition.Kind) || attemptsRemaining > 0),
                 ChallengeAttemptMode.Review => IsChallengeComplete(id) && IsSubjectUnlocked(definition.Subject),
                 ChallengeAttemptMode.FreePlay => CourseComplete,
                 _ => false
@@ -130,7 +132,7 @@ namespace KMA.Gameplay
             if (!allowed)
                 return false;
 
-            if (definition.Subject == SubjectId.Football)
+            if (definition.Subject == SubjectId.Football || definition.Kind == ChallengeKind.Final)
                 difficulty = ChallengeDifficulty.Normal;
 
             if (mode == ChallengeAttemptMode.Journey && difficulty != definition.Difficulty) return false;
@@ -157,7 +159,7 @@ namespace KMA.Gameplay
                     completedChallengeIds.Add(definition.Id);
                     failCounts.Remove(definition.Id);
                 }
-                else if (definition.Kind != ChallengeKind.Learn)
+                else if (IsPenalizedKind(definition.Kind))
                 {
                     int count = FailCount(definition.Id) + 1;
                     failCounts[definition.Id] = count;
@@ -171,7 +173,7 @@ namespace KMA.Gameplay
             lastCommittedAttemptId = activeAttempt.AttemptId;
             lastCommittedResult = JourneyResultData.FromResult(result);
             activeAttempt = null;
-            return Outcome(true);
+            return Outcome(true, definition.Kind == ChallengeKind.Final);
         }
 
         public void AbandonAttempt() => activeAttempt = null;
@@ -233,12 +235,15 @@ namespace KMA.Gameplay
             }
         }
 
-        JourneyCommitOutcome Outcome(bool accepted) => new JourneyCommitOutcome(accepted,
+        JourneyCommitOutcome Outcome(bool accepted, bool finalChallenge = false) => new JourneyCommitOutcome(accepted,
             CheckpointChallengeId, attemptsRemaining, pendingFrogJump != null,
-            pendingFrogJump?.SavesLife ?? false, CourseComplete);
+            pendingFrogJump?.SavesLife ?? false, CourseComplete, finalChallenge);
+
+        public static bool IsPenalizedKind(ChallengeKind kind) =>
+            kind == ChallengeKind.Practice || kind == ChallengeKind.Exam;
 
         bool IsPenalized(string id) => !string.IsNullOrEmpty(id) &&
-            catalog.Ordered.Any(x => x.Id == id && x.Kind != ChallengeKind.Learn);
+            catalog.Ordered.Any(x => x.Id == id && IsPenalizedKind(x.Kind));
 
         static bool SameContext(ChallengeAttemptContext left, ChallengeAttemptContext right) =>
             left != null && right != null && left.AttemptId == right.AttemptId &&

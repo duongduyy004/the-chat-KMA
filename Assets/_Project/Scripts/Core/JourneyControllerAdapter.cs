@@ -33,12 +33,15 @@ namespace KMA.Gameplay.Core
         void OnCompleted(MinigameResult result)
         {
             if (context == null || definition == null || result == null) return;
-            ChallengeMetrics metrics = definition.Kind == ChallengeKind.Exam
-                ? new ChallengeMetrics(completedTargets: definition.TargetCount)
-                : new ChallengeMetrics(elapsed: Mathf.Max(0f, result.Score),
-                    completedTargets: definition.TargetCount);
+            bool scored = ChallengeDefinition.IsScored(definition.Kind);
+            ChallengeMetrics metrics = source is IChallengeMetricsSource rich
+                ? rich.BuildMetrics(definition, result)
+                : scored
+                    ? new ChallengeMetrics(completedTargets: definition.TargetCount)
+                    : new ChallengeMetrics(elapsed: Mathf.Max(0f, result.Score),
+                        completedTargets: definition.TargetCount);
             ChallengeCompleted?.Invoke(new ChallengeAttemptResult(context, result.Pass, metrics,
-                definition.Kind == ChallengeKind.Exam ? result : null));
+                scored ? result : null));
         }
     }
 }

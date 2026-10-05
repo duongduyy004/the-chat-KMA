@@ -155,7 +155,7 @@ namespace KMA.Tests.Presentation
                 definition.Difficulty, out ChallengeAttemptContext context), Is.True);
             session.SubmitChallengeResult(new ChallengeAttemptResult(context, pass,
                 new ChallengeMetrics(completedTargets: definition.TargetCount),
-                definition.Kind == ChallengeKind.Exam
+                ChallengeDefinition.IsScored(definition.Kind)
                     ? new MinigameResult(pass, pass ? 8f : 0f, pass ? Rank.A : Rank.F) : null));
         }
     }

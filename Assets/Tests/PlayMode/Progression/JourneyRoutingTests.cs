@@ -47,7 +47,7 @@ namespace KMA.Tests.Gameplay.Progression
         }
 
         [TestCase(1, ChallengeAttemptMode.Review)]
-        [TestCase(9, ChallengeAttemptMode.FreePlay)]
+        [TestCase(10, ChallengeAttemptMode.FreePlay)]
         public void RestartPreservesChallengeAndModeAwayFromCheckpoint(int completed, ChallengeAttemptMode mode)
         {
             for (int i = 0; i < completed; i++) JourneyGameplayDriver.CompleteActiveChallenge(router.Session);

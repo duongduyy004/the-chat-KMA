@@ -19,7 +19,7 @@ namespace KMA.Tests.Gameplay.Progression
                 out ChallengeAttemptContext review), Is.True);
             Assert.That(review.Difficulty, Is.EqualTo(ChallengeDifficulty.Normal));
             session.AbandonActiveChallenge();
-            JourneyTestData.CompleteThrough(session, "soccer_exam");
+            JourneyTestData.CompleteThrough(session, "chess_final");
             Assert.That(session.TryStartChallenge("soccer_exam", ChallengeAttemptMode.FreePlay, legacyDifficulty,
                 out ChallengeAttemptContext replay), Is.True);
             Assert.That(replay.Difficulty, Is.EqualTo(ChallengeDifficulty.Normal));
@@ -124,7 +124,7 @@ namespace KMA.Tests.Gameplay.Progression
         public void CompletingAllChallenges_AllowsReplayThatOnlyImprovesBestExamScore()
         {
             var session = new GameSession();
-            JourneyTestData.CompleteThrough(session, "soccer_exam");
+            JourneyTestData.CompleteThrough(session, "chess_final");
 
             Assert.That(session.Journey.CourseComplete, Is.True);
             Assert.That(session.Journey.CheckpointChallengeId, Is.Null);

@@ -9,11 +9,14 @@ namespace KMA.Gameplay
     public sealed class ChallengeCatalog : ScriptableObject
     {
         const string DefaultResourcePath = "Journey/ChallengeCatalog";
+        public const string FinalChallengeId = "chess_final";
+        const int SubjectChallengeCount = 9;
         static readonly string[] ExpectedIds =
         {
             "sprint_learn", "sprint_practice", "sprint_exam",
             "volleyball_learn", "volleyball_practice", "volleyball_exam",
-            "soccer_learn", "soccer_practice", "soccer_exam"
+            "soccer_learn", "soccer_practice", "soccer_exam",
+            FinalChallengeId
         };
 
         [SerializeField] ChallengeDefinition[] challenges = Array.Empty<ChallengeDefinition>();
@@ -108,7 +111,7 @@ namespace KMA.Gameplay
                 return false;
             }
 
-            for (int i = 0; i < ExpectedIds.Length; i++)
+            for (int i = 0; i < SubjectChallengeCount; i++)
             {
                 ChallengeKind expectedKind = i % 3 == 0
                     ? ChallengeKind.Learn
@@ -119,6 +122,13 @@ namespace KMA.Gameplay
                     error = $"Challenge '{challenges[i].Id}' is out of course order.";
                     return false;
                 }
+            }
+
+            ChallengeDefinition final = challenges[SubjectChallengeCount];
+            if (final.Subject != SubjectId.Chess || final.Kind != ChallengeKind.Final)
+            {
+                error = "The last challenge must be the chess final.";
+                return false;
             }
 
             if (challenges[1].TimeLimit <= challenges[2].TimeLimit)

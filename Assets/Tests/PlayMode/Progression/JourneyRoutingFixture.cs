@@ -77,7 +77,7 @@ namespace KMA.Tests.Gameplay.Progression
                 Assert.That(router.TryStartChallenge(id, ChallengeAttemptMode.Journey, definition.Difficulty),
                     Is.True, id);
             router.ReportChallengeResultForTests(new ChallengeAttemptResult(router.Session.Journey.ActiveAttempt,
-                false, new ChallengeMetrics(), definition.Kind == ChallengeKind.Exam
+                false, new ChallengeMetrics(), ChallengeDefinition.IsScored(definition.Kind)
                     ? new MinigameResult(false, 0f, Rank.F) : null));
             Assert.That(panel.CurrentResult, Is.Not.Null, "The fixture panel must show the failed result.");
         }

@@ -6,7 +6,9 @@ namespace KMA.Gameplay
     {
         Learn,
         Practice,
-        Exam
+        Exam,
+        // The course's last challenge. It is scored like an exam but never costs a life.
+        Final
     }
 
     public enum ChallengeDifficulty
@@ -42,5 +44,8 @@ namespace KMA.Gameplay
         public ChallengeDifficulty Difficulty => difficulty;
         public bool TimingHelp => timingHelp;
         public string Objective => objective;
+
+        /// Kinds that carry a MinigameResult and update the subject record.
+        public static bool IsScored(ChallengeKind kind) => kind == ChallengeKind.Exam || kind == ChallengeKind.Final;
     }
 }

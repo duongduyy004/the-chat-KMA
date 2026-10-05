@@ -193,7 +193,9 @@ namespace KMA.Tests.Gameplay.Progression
                 }
             }
 
-            Assert.That(playableIds, Is.EquivalentTo((SubjectId[])Enum.GetValues(typeof(SubjectId))));
+            // Chess is the journey final, played in its own scene, not a map subject with a config.
+            Assert.That(playableIds, Is.EquivalentTo(((SubjectId[])Enum.GetValues(typeof(SubjectId)))
+                .Where(id => id != SubjectId.Chess)));
             Assert.That(comingSoonNames, Is.EquivalentTo(new[] { "Hít đất" }));
 
             Type configType = RequireAssemblyCSharpType("KMA.Gameplay.SubjectConfig");
