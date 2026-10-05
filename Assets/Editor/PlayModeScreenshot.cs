@@ -39,6 +39,7 @@ namespace KMA.EditorTools
         const string KeyForceSprintDistance = "KMA_PMS_ForceSprintDistance";
         const string KeyForceSprintResult = "KMA_PMS_ForceSprintResult";
         const string KeyOpenPause = "KMA_PMS_OpenPause";
+        const string KeyOpenSettings = "KMA_PMS_OpenSettings";
         const string KeyOpenDialogue = "KMA_PMS_OpenDialogue";
         const string KeyDialogueTaps = "KMA_PMS_DialogueTaps";
 
@@ -56,6 +57,8 @@ namespace KMA.EditorTools
             public float forceSprintDistance = -1f;
             public string forceSprintResult = "";
             public bool openPause;
+            // QA-only: open Settings from the main menu shortly before the capture.
+            public bool openSettings;
             // QA-only: open a journey dialogue node on the loaded scene and tap it N times.
             public string openDialogue = "";
             public int dialogueTaps;
@@ -142,6 +145,7 @@ namespace KMA.EditorTools
             SessionState.SetFloat(KeyForceSprintDistance, req.forceSprintDistance);
             SessionState.SetString(KeyForceSprintResult, req.forceSprintResult ?? "");
             SessionState.SetBool(KeyOpenPause, req.openPause);
+            SessionState.SetBool(KeyOpenSettings, req.openSettings);
             SessionState.SetString(KeyOpenDialogue, req.openDialogue ?? "");
             SessionState.SetInt(KeyDialogueTaps, req.dialogueTaps);
             SessionState.SetBool(KeyActive, true);
@@ -228,6 +232,14 @@ namespace KMA.EditorTools
             int phase = SessionState.GetInt(KeyPhase, 0);
             if (phase == 0)
             {
+                // The shell builds Settings in Start, so open it late rather than on EnteredPlayMode.
+                if (SessionState.GetBool(KeyOpenSettings, false) &&
+                    EditorApplication.timeSinceStartup >= SessionState.GetFloat(KeyCaptureAt, 0) - 1.5f)
+                {
+                    SessionState.SetBool(KeyOpenSettings, false);
+                    var menu = UnityEngine.Object.FindFirstObjectByType<KMA.Gameplay.UI.MainMenuScreen>();
+                    if (menu != null) menu.OpenSettings();
+                }
                 if (EditorApplication.timeSinceStartup < SessionState.GetFloat(KeyCaptureAt, 0)) return;
                 string output = SessionState.GetString(KeyOutput, null);
                 ScreenCapture.CaptureScreenshot(output);

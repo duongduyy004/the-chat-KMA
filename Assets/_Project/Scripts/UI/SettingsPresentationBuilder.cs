@@ -1,4 +1,3 @@
-using KMA.UI.Kit;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
@@ -9,6 +8,14 @@ namespace KMA.Gameplay.UI
     {
         static Color Navy => UITheme.Shared.Surface;
         static Color Gold => UITheme.Shared.Accent;
+
+        // Same scale as the map screen: header title, labels/controls, hint.
+        const int TitleSize = 40;
+        const int LabelSize = 28;
+        const int HintSize = 20;
+        const TextAlignmentOptions Left = TextAlignmentOptions.MidlineLeft;
+        const TextAlignmentOptions Right = TextAlignmentOptions.MidlineRight;
+        const TextAlignmentOptions Center = TextAlignmentOptions.Center;
 
         public static void Build(SettingsScreen screen)
         {
@@ -21,11 +28,13 @@ namespace KMA.Gameplay.UI
 
             var panel = Rect(root, "SettingsPanel", new Vector2(.22f, .14f), new Vector2(.78f, .86f));
             panel.gameObject.AddComponent<Image>().color = Navy;
-            Label(panel, "Title", "CÀI ĐẶT", new Vector2(.08f, .82f), new Vector2(.92f, .96f), 42, Gold);
+            Label(panel, "Title", "CÀI ĐẶT", new Vector2(.08f, .82f), new Vector2(.92f, .96f), TitleSize, Gold,
+                VietFontRole.BodyBold, Center);
             var music = Volume(panel, "MusicSlider", "ÂM LƯỢNG NHẠC", .58f, out TMP_Text musicValue);
             var sfx = Volume(panel, "SfxSlider", "ÂM LƯỢNG HIỆU ỨNG", .36f, out TMP_Text sfxValue);
 
-            Label(panel, "VibrationLabel", "RUNG", new Vector2(.09f, .23f), new Vector2(.6f, .33f), 28, Color.white);
+            Label(panel, "VibrationLabel", "RUNG", new Vector2(.09f, .23f), new Vector2(.6f, .33f), LabelSize, Color.white,
+                VietFontRole.Hud, Left);
             var toggleRect = Rect(panel, "VibrationToggle", new Vector2(.67f, .23f), new Vector2(.91f, .33f));
             var toggleImage = toggleRect.gameObject.AddComponent<Image>();
             toggleImage.color = screen.Theme.Background;
@@ -34,7 +43,8 @@ namespace KMA.Gameplay.UI
             var check = Rect(toggleRect, "Checkmark", new Vector2(.08f, .3f), new Vector2(.2f, .7f));
             toggle.graphic = check.gameObject.AddComponent<Image>();
             toggle.graphic.color = Gold;
-            TMP_Text vibrationValue = Label(toggleRect, "Value", "BẬT", new Vector2(.25f, 0f), Vector2.one, 26, Color.white);
+            TMP_Text vibrationValue = Label(toggleRect, "Value", "BẬT", new Vector2(.25f, 0f), Vector2.one, LabelSize,
+                Color.white, VietFontRole.Hud, Center);
 
             var backRect = Rect(panel, "BackButton", new Vector2(.26f, .075f), new Vector2(.74f, .18f));
             var backImage = backRect.gameObject.AddComponent<Image>();
@@ -45,17 +55,20 @@ namespace KMA.Gameplay.UI
             colors.fadeDuration = UITheme.Shared.Motion.buttonFade;
             back.colors = colors;
             back.onClick.AddListener(screen.Back);
-            Label(backRect, "Label", "QUAY LẠI", Vector2.zero, Vector2.one, 28, Color.white);
-            Label(panel, "Hint", "Thay đổi được lưu tự động", new Vector2(.08f, .015f), new Vector2(.92f, .065f), 19,
-                UITheme.Shared.SettingsHint);
+            Label(backRect, "Label", "QUAY LẠI", Vector2.zero, Vector2.one, LabelSize, Color.white,
+                VietFontRole.ButtonSecondary, Center);
+            Label(panel, "Hint", "Thay đổi được lưu tự động", new Vector2(.08f, .015f), new Vector2(.92f, .065f), HintSize,
+                UITheme.Shared.SettingsHint, VietFontRole.Body, Center);
             screen.BindControls(music, sfx, toggle, musicValue, sfxValue, vibrationValue);
         }
 
         static Slider Volume(Transform parent, string name, string title, float bottom, out TMP_Text value)
         {
             var row = Rect(parent, name + "Row", new Vector2(.09f, bottom), new Vector2(.91f, bottom + .2f));
-            Label(row, "Title", title, new Vector2(0f, .55f), new Vector2(.78f, 1f), 26, Color.white);
-            value = Label(row, "Value", "100%", new Vector2(.78f, .55f), Vector2.one, 26, Gold);
+            Label(row, "Title", title, new Vector2(0f, .55f), new Vector2(.78f, 1f), LabelSize, Color.white,
+                VietFontRole.Hud, Left);
+            value = Label(row, "Value", "100%", new Vector2(.78f, .55f), Vector2.one, LabelSize, Gold,
+                VietFontRole.Hud, Right);
             var rect = Rect(row, name, new Vector2(0f, .08f), new Vector2(1f, .52f));
             var hitArea = rect.gameObject.AddComponent<Image>();
             hitArea.color = Color.clear;
@@ -77,15 +90,21 @@ namespace KMA.Gameplay.UI
             return slider;
         }
 
-        static TMP_Text Label(Transform parent, string name, string text, Vector2 min, Vector2 max, int size, Color color)
+        static TMP_Text Label(Transform parent, string name, string text, Vector2 min, Vector2 max, int size,
+            Color color, VietFontRole role, TextAlignmentOptions alignment)
         {
             var label = Rect(parent, name, min, max).gameObject.AddComponent<TextMeshProUGUI>();
-            UiKit.StyleLabel(label, size, color);
             label.text = VietText.Fix(text);
-            VietTypography.Apply(label);
-            label.enableWordWrapping = true;
-            label.alignment = TextAlignmentOptions.Center;
-            UiKit.FitLabel(label, size + 10f);
+            label.fontSize = size;
+            label.color = color;
+            label.raycastTarget = false;
+            VietTypography.Apply(label, role);
+            label.enableWordWrapping = false;
+            label.alignment = alignment;
+            // Shrink to fit a narrow panel, never grow past the shared scale.
+            label.enableAutoSizing = true;
+            label.fontSizeMax = size;
+            label.fontSizeMin = Mathf.Min(size, HintSize);
             return label;
         }
 

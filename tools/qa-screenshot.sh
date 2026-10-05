@@ -2,7 +2,7 @@
 # Send a screenshot request to an already-running Unity Editor (see
 # Assets/Editor/PlayModeScreenshot.cs) and wait for it to finish.
 #
-# Usage: tools/qa-screenshot.sh <output.png> [scene.unity] [waitSeconds] [holdSprintTutorial] [forceSprintDistance] [forceSprintResult] [openPause] [openDialogue] [dialogueTaps]
+# Usage: tools/qa-screenshot.sh <output.png> [scene.unity] [waitSeconds] [holdSprintTutorial] [forceSprintDistance] [forceSprintResult] [openPause] [openDialogue] [dialogueTaps] [openSettings]
 # forceSprintDistance/forceSprintResult drive SprintController/ResultPanel through their
 # existing public test seams (AdvanceToDistance/Show) so a screenshot can show a late-race
 # or result state without simulating real taps; leave blank to play out naturally.
@@ -17,6 +17,7 @@ FORCE_SPRINT_RESULT="${6:-}"
 OPEN_PAUSE="${7:-false}"
 OPEN_DIALOGUE="${8:-}"
 DIALOGUE_TAPS="${9:-0}"
+OPEN_SETTINGS="${10:-false}"
 
 REQ_DIR="Builds/Screenshots"
 REQ="$REQ_DIR/request.json"
@@ -36,13 +37,18 @@ case "$OPEN_PAUSE" in
   *) echo "openPause must be true or false" >&2; exit 2 ;;
 esac
 
+case "$OPEN_SETTINGS" in
+  true|false) ;;
+  *) echo "openSettings must be true or false" >&2; exit 2 ;;
+esac
+
 case "$FORCE_SPRINT_RESULT" in
   ""|pass|fail) ;;
   *) echo "forceSprintResult must be empty, pass, or fail" >&2; exit 2 ;;
 esac
 
 cat > "$REQ.tmp" <<EOF
-{"id":"$ID","scene":"$SCENE","output":"$OUTPUT","waitSeconds":$WAIT,"holdSprintTutorial":$HOLD_SPRINT_TUTORIAL,"forceSprintDistance":$FORCE_SPRINT_DISTANCE,"forceSprintResult":"$FORCE_SPRINT_RESULT","openPause":$OPEN_PAUSE,"openDialogue":"$OPEN_DIALOGUE","dialogueTaps":$DIALOGUE_TAPS}
+{"id":"$ID","scene":"$SCENE","output":"$OUTPUT","waitSeconds":$WAIT,"holdSprintTutorial":$HOLD_SPRINT_TUTORIAL,"forceSprintDistance":$FORCE_SPRINT_DISTANCE,"forceSprintResult":"$FORCE_SPRINT_RESULT","openPause":$OPEN_PAUSE,"openDialogue":"$OPEN_DIALOGUE","dialogueTaps":$DIALOGUE_TAPS,"openSettings":$OPEN_SETTINGS}
 EOF
 mv "$REQ.tmp" "$REQ"
 
