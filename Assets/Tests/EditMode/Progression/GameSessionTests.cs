@@ -37,28 +37,27 @@ namespace KMA.Tests.Gameplay.Progression
             session.StartSubject(SubjectId.Sprint);
 
             Assert.That(session.SubmitResult(SubjectId.Sprint, CreateFailureResult()), Is.EqualTo(SessionRoute.Map));
+            Assert.That(session.Lives, Is.EqualTo(5));
+            Assert.That(session.PendingFrogJump, Is.Not.Null);
+            Assert.That(session.TryApplyFrogJump(session.PendingFrogJump.Id, false), Is.True);
             Assert.That(session.Lives, Is.EqualTo(4));
             Assert.That(session.GetRecord(SubjectId.Sprint).FailedVisits, Is.EqualTo(1));
             Assert.That(session.Journey.CheckpointChallengeId, Is.EqualTo("sprint_exam"));
         }
 
         [Test]
-        public void LastExamAttemptOpensSupplementaryPracticeInsteadOfGameOver()
+        public void ExhaustedLivesReturnToMapAndBlockTheExam()
         {
             var session = new GameSession();
             JourneyTestData.CompleteThrough(session, "sprint_practice");
 
-            for (int attempt = 0; attempt < 5; attempt++)
-            {
-                Assert.That(session.StartSubject(SubjectId.Sprint), Is.EqualTo(SessionRoute.Subject));
-                Assert.That(session.SubmitResult(SubjectId.Sprint, CreateFailureResult()), Is.EqualTo(SessionRoute.Map));
-            }
+            session.Journey.SetAttemptsRemaining(1);
+            JourneyTestData.Play(session, "sprint_exam", false);
+            session.TryApplyFrogJump(session.PendingFrogJump.Id, false);
 
             Assert.That(session.Lives, Is.Zero);
-            Assert.That(session.AwaitingPunishment, Is.True);
-            Assert.That(session.PendingPunishmentSubject, Is.EqualTo(SubjectId.Sprint));
-            Assert.That(session.StartSubject(SubjectId.Sprint), Is.EqualTo(SessionRoute.Subject));
-            Assert.That(session.Journey.ActiveAttempt.Mode, Is.EqualTo(ChallengeAttemptMode.Supplementary));
+            Assert.That(session.StartSubject(SubjectId.Sprint), Is.EqualTo(SessionRoute.Map));
+            Assert.That(session.ActiveSubject, Is.Null);
         }
 
         [Test]

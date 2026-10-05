@@ -90,7 +90,7 @@ namespace KMA.Tests.Gameplay.Progression
         }
 
         [Test]
-        public void Normalize_ZeroBudgetCreatesSupplementaryCheckpointForCurrentSubject()
+        public void Normalize_ZeroLivesKeepsCheckpointAndStartsRegen()
         {
             SaveData data = SaveData.CreateDefault();
             data.journey.completedChallengeIds.AddRange(new[]
@@ -98,12 +98,12 @@ namespace KMA.Tests.Gameplay.Progression
             data.lives = 0;
 
             SaveData normalized = JourneySaveMigration.Normalize(data, catalog);
-            var restored = new GameSession();
+            var restored = new GameSession(null, new FakeClock());
             restored.Restore(normalized);
 
             Assert.That(restored.Lives, Is.Zero);
-            Assert.That(restored.Journey.AwaitingSupplementary, Is.True);
-            Assert.That(restored.Journey.CheckpointChallengeId, Is.EqualTo("volleyball_practice"));
+            Assert.That(restored.Journey.CheckpointChallengeId, Is.EqualTo("volleyball_learn"));
+            Assert.That(restored.TimeUntilNextLife, Is.EqualTo(TimeSpan.FromMinutes(5)));
             Assert.That(restored.Journey.IsSubjectUnlocked(SubjectId.Volleyball), Is.True);
             Assert.That(restored.Journey.IsSubjectUnlocked(SubjectId.Football), Is.False);
         }
@@ -134,41 +134,18 @@ namespace KMA.Tests.Gameplay.Progression
                 ChallengeDifficulty.Normal, out ChallengeAttemptContext context), Is.True);
             var failure = new ChallengeAttemptResult(context, false, new ChallengeMetrics(),
                 new MinigameResult(false, 0f, Rank.F));
-            Assert.That(original.SubmitChallengeResult(failure).AttemptsRemaining, Is.EqualTo(4));
+            Assert.That(original.SubmitChallengeResult(failure).AttemptsRemaining, Is.EqualTo(5));
             SaveData saved = JsonUtility.FromJson<SaveData>(JsonUtility.ToJson(original.ToSaveData()));
 
             var restored = new GameSession();
             restored.Restore(saved);
 
             Assert.That(restored.Lives, Is.EqualTo(4));
+            Assert.That(restored.ForfeitedFrogJumpOnRestore, Is.True);
             Assert.That(restored.Journey.CheckpointChallengeId, Is.EqualTo("sprint_exam"));
             Assert.That(restored.SubmitChallengeResult(failure).Accepted, Is.False);
             Assert.That(restored.Lives, Is.EqualTo(4));
             Assert.That(restored.GetRecord(SubjectId.Sprint).FailedVisits, Is.EqualTo(1));
-        }
-
-        [Test]
-        public void Restore_SupplementaryReceiptCannotResetAttemptsTwice()
-        {
-            var original = new GameSession();
-            JourneyTestData.CompleteThrough(original, "sprint_practice");
-            for (int i = 0; i < 5; i++)
-                JourneyTestData.Play(original, "sprint_exam", false);
-            Assert.That(original.TryStartChallenge("sprint_practice", ChallengeAttemptMode.Supplementary,
-                ChallengeDifficulty.Normal, out ChallengeAttemptContext context), Is.True);
-            var supplementary = new ChallengeAttemptResult(context, true,
-                new ChallengeMetrics(distance: 100f, elapsed: 18f));
-            original.SubmitChallengeResult(supplementary);
-            SaveData saved = JsonUtility.FromJson<SaveData>(JsonUtility.ToJson(original.ToSaveData()));
-
-            var restored = new GameSession();
-            restored.Restore(saved);
-
-            Assert.That(restored.Lives, Is.EqualTo(5));
-            Assert.That(restored.Journey.SupplementaryRounds, Is.EqualTo(1));
-            Assert.That(restored.SubmitChallengeResult(supplementary).Accepted, Is.False);
-            Assert.That(restored.Lives, Is.EqualTo(5));
-            Assert.That(restored.Journey.SupplementaryRounds, Is.EqualTo(1));
         }
 
         [Test]

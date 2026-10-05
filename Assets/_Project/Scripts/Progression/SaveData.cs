@@ -5,12 +5,14 @@ namespace KMA.Gameplay
     [Serializable]
     public sealed class SaveData
     {
-        public const int CurrentVersion = 7;
+        public const int CurrentVersion = 8;
 
         public int version;
         // Absent in legacy saves, which already represent a campaign.
         public bool settingsOnly;
         public int lives;
+        // UTC ticks when the next life arrives; 0 when lives are full.
+        public long nextLifeAtUtcTicks;
         public SubjectRecordData[] subjects;
         public bool hasActiveSubject;
         public SubjectId activeSubject;

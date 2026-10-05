@@ -6,11 +6,12 @@ namespace KMA.Gameplay
     public enum SessionRoute
     {
         Subject,
-        // Retained for old serialized route identifiers; the supplementary route uses Map.
+        // Retained for old serialized route identifiers.
         Punishment,
         RetrySubject,
         Map,
-        GameOver
+        GameOver,
+        FrogJump
     }
 
     public interface IResultPreviewPanel
@@ -26,12 +27,15 @@ namespace KMA.Gameplay
 
         readonly Dictionary<SubjectId, SubjectRecord> records = new Dictionary<SubjectId, SubjectRecord>();
         readonly ChallengeCatalog catalog;
+        readonly IClock clock;
+        long nextLifeAtUtcTicks;
         SubjectId? active;
         ChallengeAttemptContext activeChallenge;
 
-        public GameSession(ChallengeCatalog catalog = null)
+        public GameSession(ChallengeCatalog catalog = null, IClock clock = null)
         {
             this.catalog = catalog == null ? ChallengeCatalog.LoadDefault() : catalog;
+            this.clock = clock ?? SystemClock.Instance;
             Journey = new JourneyProgress(this.catalog);
             foreach (SubjectId id in Enum.GetValues(typeof(SubjectId)))
                 records.Add(id, new SubjectRecord());
@@ -42,12 +46,35 @@ namespace KMA.Gameplay
         public int Lives => Journey.AttemptsRemaining;
         public IReadOnlyDictionary<SubjectId, SubjectRecord> Records => records;
         public JourneyProgress Journey { get; private set; }
-        public SubjectId? PendingPunishmentSubject => Journey.AwaitingSupplementary
-            ? (SubjectId?)catalog.Get(Journey.CheckpointChallengeId).Subject
-            : null;
+        public SubjectId? PendingPunishmentSubject => null;
         public SubjectId? ActiveSubject => active;
         public int VisitAttempt => FirstVisit;
-        public bool AwaitingPunishment => Journey.AwaitingSupplementary;
+        public bool AwaitingPunishment => false;
+        public long NextLifeAtUtcTicks => nextLifeAtUtcTicks;
+        public TimeSpan? TimeUntilNextLife => LifeRegen.Remaining(Lives, nextLifeAtUtcTicks, clock.UtcNow, MaxLives);
+        public FrogJumpPending PendingFrogJump => Journey.PendingFrogJump;
+        public bool ForfeitedFrogJumpOnRestore { get; private set; }
+
+        public bool RefreshLives()
+        {
+            int lives = Lives;
+            long next = nextLifeAtUtcTicks;
+            LifeRegen.Advance(ref lives, ref next, clock.UtcNow, MaxLives);
+            bool changed = lives != Lives || next != nextLifeAtUtcTicks;
+            Journey.SetAttemptsRemaining(lives);
+            nextLifeAtUtcTicks = next;
+            return changed;
+        }
+
+        public bool TryApplyFrogJump(string frogJumpId, bool reachedFinish)
+        {
+            RefreshLives();
+            if (!Journey.TryApplyFrogJump(frogJumpId, reachedFinish))
+                return false;
+            RefreshLives();
+            NotifyJourneyChanged();
+            return true;
+        }
 
         public SubjectRecord GetRecord(SubjectId id) => records[id];
 
@@ -55,6 +82,7 @@ namespace KMA.Gameplay
             ChallengeDifficulty difficulty, out ChallengeAttemptContext context)
         {
             context = null;
+            RefreshLives();
             if (active.HasValue || !Journey.TryBegin(id, mode, difficulty, out context))
                 return false;
             activeChallenge = context;
@@ -65,9 +93,11 @@ namespace KMA.Gameplay
 
         public JourneyCommitOutcome SubmitChallengeResult(ChallengeAttemptResult result, bool notify = true)
         {
+            RefreshLives();
             JourneyCommitOutcome outcome = Journey.Apply(result);
             if (!outcome.Accepted)
                 return outcome;
+            RefreshLives();
 
             ChallengeDefinition definition = catalog.Get(result.Context.ChallengeId);
             if (definition.Kind == ChallengeKind.Exam && result.ExamResult != null &&
@@ -102,9 +132,7 @@ namespace KMA.Gameplay
         {
             if (active.HasValue)
                 return SessionRoute.Subject;
-            return Journey.AttemptsRemaining == 0 && !Journey.AwaitingSupplementary
-                ? SessionRoute.GameOver
-                : SessionRoute.Map;
+            return PendingFrogJump != null ? SessionRoute.FrogJump : SessionRoute.Map;
         }
 
         public void ResetCampaign()
@@ -112,6 +140,7 @@ namespace KMA.Gameplay
             foreach (SubjectId id in Enum.GetValues(typeof(SubjectId)))
                 records[id] = new SubjectRecord();
             Journey = new JourneyProgress(catalog);
+            nextLifeAtUtcTicks = 0;
             active = null;
             activeChallenge = null;
             NotifyJourneyChanged();
@@ -128,6 +157,7 @@ namespace KMA.Gameplay
         {
             var data = SaveData.CreateDefault();
             data.lives = Lives;
+            data.nextLifeAtUtcTicks = nextLifeAtUtcTicks;
             data.hasActiveSubject = active.HasValue;
             data.activeSubject = active ?? default;
             data.visitAttempt = FirstVisit;
@@ -178,21 +208,26 @@ namespace KMA.Gameplay
             Journey.Restore(normalized.journey, lives);
             activeChallenge = Journey.ActiveAttempt;
             active = activeChallenge == null ? null : (SubjectId?)catalog.Get(activeChallenge.ChallengeId).Subject;
+            nextLifeAtUtcTicks = Math.Max(0L, normalized.nextLifeAtUtcTicks);
+            ForfeitedFrogJumpOnRestore = false;
+            if (normalize)
+            {
+                RefreshLives();
+                ForfeitedFrogJumpOnRestore = Journey.ForfeitPendingFrogJump();
+                RefreshLives();
+            }
         }
 
         public SessionRoute StartSubject(SubjectId id)
         {
             if (active.HasValue)
                 throw new InvalidOperationException("A challenge attempt is already active.");
-            if (Lives <= 0 && !Journey.AwaitingSupplementary)
-                return SessionRoute.GameOver;
-
             string challengeId = Journey.CheckpointChallengeId;
             ChallengeAttemptMode mode;
             if (string.IsNullOrEmpty(challengeId))
             {
                 if (!Journey.CourseComplete)
-                    return SessionRoute.GameOver;
+                    return SessionRoute.Map;
                 challengeId = ExamId(id);
                 mode = ChallengeAttemptMode.FreePlay;
             }
@@ -201,20 +236,18 @@ namespace KMA.Gameplay
                 ChallengeDefinition current = catalog.Get(challengeId);
                 if (current.Subject != id)
                     throw new InvalidOperationException($"Subject {id} is locked by the course order.");
-                mode = Journey.AwaitingSupplementary
-                    ? ChallengeAttemptMode.Supplementary
-                    : ChallengeAttemptMode.Journey;
+                mode = ChallengeAttemptMode.Journey;
             }
 
             ChallengeDefinition definition = catalog.Get(challengeId);
             return TryStartChallenge(challengeId, mode, definition.Difficulty, out _)
                 ? SessionRoute.Subject
-                : Lives <= 0 ? SessionRoute.GameOver : SessionRoute.Map;
+                : SessionRoute.Map;
         }
 
         // Kept for old callers. The new course has no punishment-only scene.
         public SessionRoute CompletePunishment() => throw new InvalidOperationException(
-            "Supplementary exams are resumed from their required practice on the course map.");
+            "The punishment route was retired; failed challenges use the frog jump.");
 
         public SubjectId AbandonActiveSubject()
         {
@@ -239,10 +272,7 @@ namespace KMA.Gameplay
             return RouteForResult(result);
         }
 
-        SessionRoute RouteForResult(MinigameResult result) =>
-            !result.Pass && Lives == 0 && !Journey.AwaitingSupplementary
-                ? SessionRoute.GameOver
-                : SessionRoute.Map;
+        SessionRoute RouteForResult(MinigameResult result) => SessionRoute.Map;
 
         void RequireActive(SubjectId id)
         {

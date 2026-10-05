@@ -33,11 +33,14 @@ namespace KMA.Tests.Gameplay.Progression
 
             failSave = false;
             Assert.That(coordinator.TryCommit(result, out _, out _), Is.True);
-            Assert.That(session.Lives, Is.EqualTo(4));
+            Assert.That(session.Lives, Is.EqualTo(5));
+            Assert.That(session.PendingFrogJump, Is.Not.Null);
             Assert.That(notifications, Is.EqualTo(1));
             Assert.That(coordinator.TryCommit(result, out _, out _), Is.False);
-            Assert.That(session.Lives, Is.EqualTo(4));
+            Assert.That(session.Lives, Is.EqualTo(5));
             Assert.That(notifications, Is.EqualTo(1));
+            Assert.That(session.TryApplyFrogJump(session.PendingFrogJump.Id, false), Is.True);
+            Assert.That(session.Lives, Is.EqualTo(4));
         }
     }
 }

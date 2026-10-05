@@ -37,12 +37,6 @@ namespace KMA.Gameplay
             for (int i = 0; i < CourseSubjects.Length; i++)
                 FindSubject(result.subjects, CourseSubjects[i]).passed = i < passedPrefix;
 
-            if (!result.settingsOnly && result.lives == 0 && passedPrefix < CourseSubjects.Length)
-            {
-                ChallengeDefinition next = catalog.Ordered[passedPrefix * 3];
-                result.journey.awaitingSupplementaryChallengeId = PracticeId(next.Subject);
-            }
-
             result.version = SaveData.CurrentVersion;
             result.hasActiveSubject = false;
             result.activeSubject = default;
@@ -57,7 +51,7 @@ namespace KMA.Gameplay
                 throw new ArgumentNullException(nameof(catalog));
             if (data == null || data.version < 0 || data.version > SaveData.CurrentVersion)
                 return SaveData.CreateDefault();
-            if (data.version < SaveData.CurrentVersion)
+            if (data.version < 7)
                 return MigrateLegacy(data, catalog);
 
             SaveData normalized = CopySave(data, catalog);
@@ -78,11 +72,15 @@ namespace KMA.Gameplay
                 journey.lastCommittedAttemptId = source.lastCommittedAttemptId;
                 journey.lastCommittedResult = source.lastCommittedResult?.Copy();
 
-                if (normalized.lives == 0 && journey.completedChallengeIds.Count < catalog.Ordered.Count)
-                {
-                    ChallengeDefinition firstIncomplete = catalog.Ordered[journey.completedChallengeIds.Count];
-                    journey.awaitingSupplementaryChallengeId = PracticeId(firstIncomplete.Subject);
-                }
+                journey.failCounts = NormalizeFailCounts(source.failCounts, catalog);
+                journey.lastAppliedFrogJumpId = source.lastAppliedFrogJumpId;
+                FrogJumpPending pending = source.pendingFrogJump?.ToPending();
+                string checkpoint = journey.completedChallengeIds.Count < catalog.Ordered.Count
+                    ? catalog.Ordered[journey.completedChallengeIds.Count].Id : null;
+                journey.pendingFrogJump = pending != null && checkpoint != null &&
+                    pending.FailedChallengeId == checkpoint &&
+                    catalog.Get(checkpoint).Kind != ChallengeKind.Learn
+                        ? JourneyFrogJumpData.FromPending(pending) : null;
 
                 if (journey.lastCommittedResult != null &&
                     journey.lastCommittedResult.context != null &&
@@ -135,6 +133,7 @@ namespace KMA.Gameplay
                 version = source.version,
                 settingsOnly = source.settingsOnly,
                 lives = source.lives,
+                nextLifeAtUtcTicks = Math.Max(0L, source.nextLifeAtUtcTicks),
                 subjects = records,
                 hasActiveSubject = source.hasActiveSubject,
                 activeSubject = source.activeSubject,
@@ -190,12 +189,20 @@ namespace KMA.Gameplay
         static SubjectRecordData FindSubject(SubjectRecordData[] records, SubjectId subject) =>
             records.FirstOrDefault(x => x != null && x.id == subject) ?? new SubjectRecordData { id = subject };
 
-        static string PracticeId(SubjectId subject) => subject switch
+        static List<JourneyFailCountData> NormalizeFailCounts(List<JourneyFailCountData> source, ChallengeCatalog catalog)
         {
-            SubjectId.Sprint => "sprint_practice",
-            SubjectId.Volleyball => "volleyball_practice",
-            SubjectId.Football => "soccer_practice",
-            _ => null
-        };
+            var result = new List<JourneyFailCountData>();
+            if (source == null)
+                return result;
+            var seen = new HashSet<string>(StringComparer.Ordinal);
+            foreach (JourneyFailCountData entry in source)
+            {
+                if (entry == null || entry.count <= 0 || !seen.Add(entry.challengeId ?? string.Empty) ||
+                    !catalog.Ordered.Any(x => x.Id == entry.challengeId && x.Kind != ChallengeKind.Learn))
+                    continue;
+                result.Add(new JourneyFailCountData { challengeId = entry.challengeId, count = entry.count });
+            }
+            return result;
+        }
     }
 }

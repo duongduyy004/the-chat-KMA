@@ -198,6 +198,9 @@ namespace KMA.Gameplay.Core
             SubscribeToRouter();
             ApplySettings();
             initialized = true;
+            // The forfeited frog jump cost a life; write it now so a second kill cannot re-roll it.
+            if (session.ForfeitedFrogJumpOnRestore && HasSavedCampaign)
+                TryPersistSession(out _);
             loadScene(MenuScene);
         }
 

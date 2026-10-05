@@ -60,8 +60,10 @@ namespace KMA.Tests.Gameplay.Progression
             var original = new GameSession();
             JourneyTestData.CompleteThrough(original, "sprint_practice");
             JourneyTestData.Play(original, "sprint_exam", false);
+            original.TryApplyFrogJump(original.PendingFrogJump.Id, false);
             JourneyTestData.CompleteThrough(original, "volleyball_practice");
             JourneyTestData.Play(original, "volleyball_exam", false);
+            original.TryApplyFrogJump(original.PendingFrogJump.Id, false);
 
             GameSession restored = RoundTrip(original);
 
@@ -171,9 +173,9 @@ namespace KMA.Tests.Gameplay.Progression
             var session = new GameSession();
             session.Restore(data);
             Assert.That(session.ActiveSubject, Is.Null);
-            Assert.That(session.AwaitingPunishment, Is.True);
-            Assert.That(session.PendingPunishmentSubject, Is.EqualTo(SubjectId.Sprint));
-            Assert.That(session.Journey.CheckpointChallengeId, Is.EqualTo("sprint_practice"));
+            Assert.That(session.AwaitingPunishment, Is.False);
+            Assert.That(session.Lives, Is.Zero);
+            Assert.That(session.Journey.CheckpointChallengeId, Is.EqualTo("sprint_learn"));
             Assert.That(session.ResumeRoute(), Is.EqualTo(SessionRoute.Map));
         }
 
@@ -205,6 +207,7 @@ namespace KMA.Tests.Gameplay.Progression
             JourneyTestData.CompleteThrough(original, "volleyball_exam");
             JourneyTestData.CompleteThrough(original, "soccer_practice");
             JourneyTestData.Play(original, "soccer_exam", false);
+            original.TryApplyFrogJump(original.PendingFrogJump.Id, false);
 
             var data = original.ToSaveData();
             data.lives = 3;
@@ -380,7 +383,7 @@ namespace KMA.Tests.Gameplay.Progression
             Assert.That(session.ResumeRoute(), Is.EqualTo(SessionRoute.Map));
             Assert.That(session.ActiveSubject, Is.Null);
             Assert.That(session.Lives, Is.EqualTo(3));
-            Assert.That(session.Journey.AwaitingSupplementary, Is.False);
+            Assert.That(session.PendingFrogJump, Is.Null);
         }
 
         static MinigameResult Failed() => new MinigameResult(false, 0f, Rank.F);
