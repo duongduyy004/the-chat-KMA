@@ -47,6 +47,6 @@ namespace KMA.Gameplay.Shell
         }
 
         void Restart() => (router ?? SceneRouter.Instance)?.RestartActiveSubject();
-        void ExitToMap() => (router ?? SceneRouter.Instance)?.ExitActiveSubjectToMap();
+        void ExitToMap() => SceneRouter.EnsurePersistentInstance().ExitActiveSubjectToMap();
     }
 }
