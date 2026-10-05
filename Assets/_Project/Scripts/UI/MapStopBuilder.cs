@@ -116,7 +116,7 @@ namespace KMA.Gameplay.UI
             if (order == 3)
             {
                 RectTransform flag = MapPresentationBuilder.Rect(badge, "FinishFlag");
-                Place(flag, new Vector2(1f, 1f), Vector2.one * 56f, new Vector2(-2f, 18f));
+                Place(flag, new Vector2(1f, .72f), Vector2.one * 56f, new Vector2(26f, 0f));
                 Image flagImage = flag.gameObject.AddComponent<Image>();
                 flagImage.sprite = FlagSprite();
                 flagImage.preserveAspect = true;
@@ -146,7 +146,7 @@ namespace KMA.Gameplay.UI
             RectTransform pill = MapPresentationBuilder.Rect(labelGroup, "MetaPill");
             pill.anchorMin = pill.anchorMax = new Vector2(.5f, 1f);
             pill.pivot = new Vector2(.5f, 1f);
-            pill.sizeDelta = new Vector2(Style.stopSize.x - 20f, 44f);
+            pill.sizeDelta = new Vector2(Style.stopSize.x - 4f, 44f);
             pill.anchoredPosition = new Vector2(0f, -54f);
             Image pillImage = pill.gameObject.AddComponent<Image>();
             pillImage.sprite = UiKitAssets.Load().RoundRect20;
@@ -156,7 +156,7 @@ namespace KMA.Gameplay.UI
 
             RectTransform starsRoot = MapPresentationBuilder.Rect(pill, "Stars");
             starsRoot.anchorMin = new Vector2(0f, 0f);
-            starsRoot.anchorMax = new Vector2(.34f, 1f);
+            starsRoot.anchorMax = new Vector2(.32f, 1f);
             starsRoot.offsetMin = new Vector2(12f, 4f);
             starsRoot.offsetMax = new Vector2(0f, -4f);
             var row = starsRoot.gameObject.AddComponent<HorizontalLayoutGroup>();
@@ -173,13 +173,13 @@ namespace KMA.Gameplay.UI
                 stars[i].preserveAspect = true;
                 stars[i].raycastTarget = false;
                 var element = star.gameObject.AddComponent<LayoutElement>();
-                element.preferredWidth = element.preferredHeight = 30f;
+                element.preferredWidth = element.preferredHeight = 26f;
             }
 
             TMP_Text status = MapPresentationBuilder.LayoutLabel(pill, "Status", string.Empty, 20,
                 HomeMenuStyle.GoldLight, TextAnchor.MiddleRight);
             RectTransform statusBox = (RectTransform)status.transform.parent;
-            statusBox.anchorMin = new Vector2(.34f, 0f);
+            statusBox.anchorMin = new Vector2(.32f, 0f);
             statusBox.anchorMax = Vector2.one;
             statusBox.offsetMin = new Vector2(0f, 2f);
             statusBox.offsetMax = new Vector2(-14f, -2f);
@@ -188,9 +188,9 @@ namespace KMA.Gameplay.UI
 
             MapNodeView node = root.gameObject.AddComponent<MapNodeView>();
             node.Bind(button, title, null);
-            node.BindPresentation(status, null, badgeImage, glyphImage, border, accent);
+            node.BindPresentation(status, null, null, null, border, accent);
             node.BindJourneyStop(badgeImage, stars, lockRect.gameObject, done.gameObject,
-                tag.gameObject, ringImage, badge, labelGroup);
+                tag.gameObject, ringImage, badge, labelGroup, glyphImage);
             node.Configure(subject, label, false, null, 5);
             button.onClick.AddListener(() => screen.SelectSubject(subject));
             return node;

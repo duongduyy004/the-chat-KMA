@@ -740,6 +740,98 @@ namespace KMA.Tests.Presentation
             finally { Object.DestroyImmediate(root); }
         }
 
+        [Test]
+        public void MapNodeJourneyStop_KeepsLabelOffsetBelowTheBadge()
+        {
+            var node = new GameObject("Stop", typeof(RectTransform)).AddComponent<MapNodeView>();
+            try
+            {
+                var badge = new GameObject("Badge", typeof(RectTransform), typeof(Image)).GetComponent<Image>();
+                badge.transform.SetParent(node.transform, false);
+                var labelGroup = new GameObject("LabelGroup", typeof(RectTransform)).GetComponent<RectTransform>();
+                labelGroup.SetParent(node.transform, false);
+                labelGroup.anchoredPosition = new Vector2(0f, -270f);
+                node.BindJourneyStop(badge, new Image[0], null, null, null, null, badge.rectTransform, labelGroup);
+
+                node.SetJourneyMarkers(true, true);
+                Assert.That(labelGroup.anchoredPosition.y, Is.LessThan(-270f),
+                    "The current badge is larger, so its labels move further down.");
+                node.SetJourneyMarkers(false, false);
+                Assert.That(labelGroup.anchoredPosition.y, Is.EqualTo(-270f).Within(.001f),
+                    "Markers must offset the authored label position, never replace it.");
+            }
+            finally { Object.DestroyImmediate(node.gameObject); }
+        }
+
+        [Test]
+        public void MapStops_StatusTextAndIconsAreReadableOnTheirSurfaces()
+        {
+            var root = new GameObject("map", typeof(RectTransform));
+            try
+            {
+                var screen = root.AddComponent<MapScreen>();
+                // Sprint completed, Volleyball ready, Football locked: every status colour is exercised.
+                MapPresentationBuilder.Build(screen, CompleteSprintJourney());
+                foreach (MapNodeView node in screen.Nodes)
+                {
+                    Color pill = HomeMenuStyle.Navy;
+                    Color status = node.transform.Find("LabelGroup/MetaPill/StatusContainer/Status")
+                        .GetComponent<TMP_Text>().color;
+                    Assert.That(ContrastRatio(status, pill), Is.GreaterThanOrEqualTo(4.5f),
+                        node.name + " status text on the navy pill");
+                    Color badge = node.transform.Find("Badge").GetComponent<Image>().color;
+                    Color glyph = node.transform.Find("Badge/IconGlyph").GetComponent<Image>().color;
+                    Assert.That(ContrastRatio(glyph, badge), Is.GreaterThanOrEqualTo(2f),
+                        node.name + " sport icon must stand out from its badge");
+                }
+            }
+            finally { Object.DestroyImmediate(root); }
+        }
+
+        [Test]
+        public void MapStops_StarsAndStatusDoNotShareSpaceAndTheFlagClearsTheCurrentTag()
+        {
+            var root = new GameObject("map", typeof(RectTransform));
+            try
+            {
+                var screen = root.AddComponent<MapScreen>();
+                MapPresentationBuilder.Build(screen, new GameSession());
+                foreach (MapNodeView node in screen.Nodes)
+                {
+                    var stars = (RectTransform)node.transform.Find("LabelGroup/MetaPill/Stars");
+                    var status = (RectTransform)node.transform.Find("LabelGroup/MetaPill/StatusContainer");
+                    float pillWidth = ((RectTransform)node.transform.Find("LabelGroup/MetaPill")).sizeDelta.x;
+                    float starsRight = stars.anchorMin.x * pillWidth + stars.offsetMin.x + 3 * 26f + 2 * 2f;
+                    float statusLeft = status.anchorMin.x * pillWidth + status.offsetMin.x;
+                    Assert.That(starsRight, Is.LessThanOrEqualTo(statusLeft), node.name);
+                }
+                var flag = (RectTransform)screen.Nodes[2].transform.Find("Badge/FinishFlag");
+                Assert.That(flag.anchorMin.y, Is.LessThanOrEqualTo(.8f),
+                    "The flag must sit below the badge top so the current-stop tag never covers it.");
+            }
+            finally { Object.DestroyImmediate(root); }
+        }
+
+        [Test]
+        public void MapStops_StatusTextFitsBesideTheStars()
+        {
+            var root = new GameObject("map", typeof(RectTransform));
+            try
+            {
+                var screen = root.AddComponent<MapScreen>();
+                MapPresentationBuilder.Build(screen, new GameSession());   // Volleyball/Football show the longest status
+                foreach (MapNodeView node in screen.Nodes)
+                {
+                    TMP_Text status = node.transform.Find("LabelGroup/MetaPill/StatusContainer/Status")
+                        .GetComponent<TMP_Text>();
+                    status.ForceMeshUpdate(true);
+                    Assert.That(status.preferredWidth, Is.LessThanOrEqualTo(status.rectTransform.rect.width),
+                        node.name + " status text must not spill over the stars.");
+                }
+            }
+            finally { Object.DestroyImmediate(root); }
+        }
+
         static (MapScreen screen, RectTransform grid) BuildMapAt(GameObject root, Vector2 size, GameSession session)
         {
             ((RectTransform)root.transform).sizeDelta = size;

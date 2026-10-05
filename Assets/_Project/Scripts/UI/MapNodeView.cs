@@ -28,6 +28,8 @@ namespace KMA.Gameplay.UI
         [SerializeField] Image selectionRing;
         [SerializeField] RectTransform badgeRect;
         [SerializeField] RectTransform labelGroup;
+        [SerializeField] Image glyphImage;
+        [SerializeField] float labelBaseY;
 
         [SerializeField] Color subjectColor = Color.white;
 
@@ -125,7 +127,7 @@ namespace KMA.Gameplay.UI
 
         public void BindJourneyStop(Image badge, Image[] stars, GameObject lockPictogram,
             GameObject completedMark, GameObject currentMarker, Image ring,
-            RectTransform badgeTransform, RectTransform labels)
+            RectTransform badgeTransform, RectTransform labels, Image glyph = null)
         {
             badgeImage = badge;
             starImages = stars ?? new Image[0];
@@ -135,6 +137,8 @@ namespace KMA.Gameplay.UI
             selectionRing = ring;
             badgeRect = badgeTransform;
             labelGroup = labels;
+            glyphImage = glyph;
+            labelBaseY = labels != null ? labels.anchoredPosition.y : 0f;
             SetJourneyMarkers(false, false);
         }
 
@@ -151,7 +155,7 @@ namespace KMA.Gameplay.UI
                 // Names sit 22px under a normal badge and 26px + the extra radius under the current one.
                 float badge = UITheme.Shared.LessonJourney.stopBadgeSize;
                 float extra = current ? badge * (UITheme.Shared.LessonJourney.stopCurrentScale - 1f) * .5f : 0f;
-                labelGroup.anchoredPosition = new Vector2(0f, -extra);
+                labelGroup.anchoredPosition = new Vector2(labelGroup.anchoredPosition.x, labelBaseY - extra);
             }
             if (selectionRing != null) selectionRing.color = HomeMenuStyle.Gold;
         }
@@ -209,6 +213,10 @@ namespace KMA.Gameplay.UI
             if (lockIcon != null) lockIcon.SetActive(locked);
             if (doneMark != null) doneMark.SetActive(completed && !locked);
             if (badgeImage != null) badgeImage.color = locked ? LockedCard : subjectColor;
+            if (glyphImage != null) glyphImage.color = locked ? UITheme.Shared.MapLockedText : UITheme.Shared.Surface;
+            if (badgeImage != null && statusLabel != null)
+                statusLabel.color = locked ? UITheme.Shared.MapHint
+                    : completed ? HomeMenuStyle.Gold : HomeMenuStyle.GoldLight;
             for (int i = 0; i < starImages.Length; i++)
                 if (starImages[i] != null)
                     starImages[i].color = i < Stars && !locked

@@ -224,7 +224,7 @@ namespace KMA.Gameplay.UI
             livesLayout.childForceExpandWidth = false;
             livesLayout.childForceExpandHeight = false;
             LayoutElement livesElement = livesPanel.gameObject.AddComponent<LayoutElement>();
-            livesElement.preferredWidth = 430;
+            livesElement.preferredWidth = 470;
             livesElement.preferredHeight = 60;
             RectTransform bar = Rect(livesPanel, "HeartBar");
             HorizontalLayoutGroup heartLayout = bar.gameObject.AddComponent<HorizontalLayoutGroup>();
@@ -249,7 +249,7 @@ namespace KMA.Gameplay.UI
                 Color.white, TextAnchor.MiddleRight);
             lives.enableWordWrapping = false;
             LayoutElement livesLabelLayout = lives.transform.parent.gameObject.AddComponent<LayoutElement>();
-            livesLabelLayout.preferredWidth = 160;
+            livesLabelLayout.preferredWidth = 200;
             livesLabelLayout.preferredHeight = 44;
             RectTransform divider = Rect(header, "Divider");
             LayoutElement dividerLayout = divider.gameObject.AddComponent<LayoutElement>();
