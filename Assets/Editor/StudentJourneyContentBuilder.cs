@@ -29,10 +29,11 @@ namespace KMA.EditorTools
             public readonly ChallengeDifficulty Difficulty;
             public readonly bool TimingHelp;
             public readonly string Objective;
+            public readonly int AttemptLimit;
 
             public ChallengeSpec(string id, SubjectId subject, ChallengeKind kind, float distance,
                 float timeLimit, int targetCount, bool keeperEnabled, ChallengeDifficulty difficulty,
-                bool timingHelp, string objective)
+                bool timingHelp, string objective, int attemptLimit = 0)
             {
                 Id = id;
                 Subject = subject;
@@ -44,6 +45,7 @@ namespace KMA.EditorTools
                 Difficulty = difficulty;
                 TimingHelp = timingHelp;
                 Objective = objective;
+                AttemptLimit = attemptLimit;
             }
         }
 
@@ -68,8 +70,8 @@ namespace KMA.EditorTools
                     0f, 0f, 3, false, ChallengeDifficulty.Easy, true,
                     "Đỡ thành công ba đường bóng trong một lượt."),
                 new ChallengeSpec("volleyball_practice", SubjectId.Volleyball, ChallengeKind.Practice,
-                    0f, 0f, 2, false, ChallengeDifficulty.Easy, true,
-                    "Ghi hai điểm bằng chuỗi đỡ, đỡ rồi đập trong cùng pha bóng."),
+                    0f, 120f, 2, false, ChallengeDifficulty.Easy, true,
+                    "Ghi hai điểm bằng chuỗi đỡ, chuyền rồi đập trong tối đa 120 giây."),
                 new ChallengeSpec("volleyball_exam", SubjectId.Volleyball, ChallengeKind.Exam,
                     0f, 120f, 5, false, ChallengeDifficulty.Normal, false,
                     "Đạt năm điểm trước đối thủ trong tối đa 120 giây."),
@@ -78,7 +80,7 @@ namespace KMA.EditorTools
                     "Ghi ba bàn; thủ môn tắt và số cú sút không giới hạn."),
                 new ChallengeSpec("soccer_practice", SubjectId.Football, ChallengeKind.Practice,
                     0f, 0f, 2, true, ChallengeDifficulty.Normal, true,
-                    "Ghi hai bàn trước thủ môn Normal; số cú sút không giới hạn."),
+                    "Ghi hai bàn trước thủ môn Normal trong tối đa 6 cú sút.", 6),
                 new ChallengeSpec("soccer_exam", SubjectId.Football, ChallengeKind.Exam,
                     0f, 0f, 3, true, ChallengeDifficulty.Normal, false,
                     "Ghi ít nhất ba bàn sau đủ năm cú sút trước thủ môn Normal.")
@@ -368,6 +370,7 @@ namespace KMA.EditorTools
             serialized.FindProperty("distance").floatValue = spec.Distance;
             serialized.FindProperty("timeLimit").floatValue = spec.TimeLimit;
             serialized.FindProperty("targetCount").intValue = spec.TargetCount;
+            serialized.FindProperty("attemptLimit").intValue = spec.AttemptLimit;
             serialized.FindProperty("keeperEnabled").boolValue = spec.KeeperEnabled;
             serialized.FindProperty("difficulty").intValue = (int)spec.Difficulty;
             serialized.FindProperty("timingHelp").boolValue = spec.TimingHelp;

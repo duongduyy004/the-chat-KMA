@@ -45,7 +45,7 @@ namespace KMA.Tests.Gameplay.Progression
             Assert.That(catalog.Get("soccer_exam").Difficulty, Is.EqualTo(ChallengeDifficulty.Normal));
             Assert.That(catalog.Get("sprint_learn").TimeLimit, Is.Zero);
             Assert.That(catalog.Get("volleyball_learn").TimeLimit, Is.Zero);
-            Assert.That(catalog.Get("volleyball_practice").TimeLimit, Is.Zero);
+            Assert.That(catalog.Get("volleyball_practice").TimeLimit, Is.EqualTo(120f));
             Assert.That(catalog.Get("soccer_learn").TimeLimit, Is.Zero);
             Assert.That(catalog.Get("soccer_practice").TimeLimit, Is.Zero);
             Assert.That(catalog.Get("soccer_exam").TimeLimit, Is.Zero);

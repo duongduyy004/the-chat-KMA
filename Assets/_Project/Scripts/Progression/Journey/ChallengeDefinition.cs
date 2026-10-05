@@ -25,6 +25,7 @@ namespace KMA.Gameplay
         [SerializeField, Min(0f)] float distance;
         [SerializeField, Min(0f)] float timeLimit;
         [SerializeField, Min(0)] int targetCount;
+        [SerializeField, Min(0)] int attemptLimit;
         [SerializeField] bool keeperEnabled;
         [SerializeField] ChallengeDifficulty difficulty;
         [SerializeField] bool timingHelp;
@@ -36,6 +37,7 @@ namespace KMA.Gameplay
         public float Distance => distance;
         public float TimeLimit => timeLimit;
         public int TargetCount => targetCount;
+        public int AttemptLimit => attemptLimit;
         public bool KeeperEnabled => keeperEnabled;
         public ChallengeDifficulty Difficulty => difficulty;
         public bool TimingHelp => timingHelp;

@@ -289,7 +289,9 @@ namespace KMA.Gameplay
         static FootballMatchOptions OptionsFor(ChallengeDefinition definition) => definition.Kind switch
         {
             ChallengeKind.Learn => new FootballMatchOptions(null, 3, false),
-            ChallengeKind.Practice => new FootballMatchOptions(null, 2, true),
+            ChallengeKind.Practice => new FootballMatchOptions(
+                definition.AttemptLimit > 0 ? definition.AttemptLimit : (int?)null, definition.TargetCount, true,
+                stopAtRequiredGoals: true),
             _ => new FootballMatchOptions(5, 3, true)
         };
 

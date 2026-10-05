@@ -46,5 +46,52 @@ namespace KMA.Tests.Gameplay.Football
             Assert.That(rules.Goals, Is.GreaterThanOrEqualTo(3));
             Assert.That(rules.BuildChallengeResult(context).Pass, Is.True);
         }
+
+        [Test]
+        public void PracticeStopsAsSoonAsTwoGoalsAreScored()
+        {
+            var rules = new FootballRules(Tuning, new FootballMatchOptions(6, 2, true, stopAtRequiredGoals: true));
+            rules.Start();
+            for (int i = 0; i < 2; i++)
+            {
+                rules.SetAim(.55f);
+                rules.BeginCharge();
+                rules.Tick(1f);
+                rules.ReleaseShot();
+                rules.Tick(20f);
+            }
+            Assert.That(rules.State, Is.EqualTo(FootballState.MatchResult));
+            Assert.That(rules.Kicks, Is.EqualTo(2));
+            var context = new ChallengeAttemptContext("attempt", "soccer_practice",
+                ChallengeAttemptMode.Journey, ChallengeDifficulty.Normal);
+            Assert.That(rules.BuildChallengeResult(context).Pass, Is.True);
+            Assert.That(rules.BuildChallengeResult(context).ExamResult, Is.Null);
+        }
+
+        [Test]
+        public void PracticeFailsAfterSixKicksWithoutTwoGoals()
+        {
+            var rules = new FootballRules(Tuning, new FootballMatchOptions(6, 2, true, stopAtRequiredGoals: true));
+            rules.Start();
+            for (int i = 0; i < 6; i++)
+            {
+                Assert.That(rules.State, Is.Not.EqualTo(FootballState.MatchResult));
+                rules.SetAim(.55f);
+                rules.BeginCharge();
+                rules.ReleaseShot();
+                rules.Tick(20f);
+            }
+            Assert.That(rules.State, Is.EqualTo(FootballState.MatchResult));
+            Assert.That(rules.Kicks, Is.EqualTo(6));
+            Assert.That(rules.Goals, Is.LessThan(2));
+            Assert.That(rules.BuildChallengeResult(new ChallengeAttemptContext("attempt", "soccer_practice",
+                ChallengeAttemptMode.Journey, ChallengeDifficulty.Normal)).Pass, Is.False);
+        }
+
+        [Test]
+        public void CatalogGivesSoccerPracticeSixKicks()
+        {
+            Assert.That(ChallengeCatalog.LoadDefault().Get("soccer_practice").AttemptLimit, Is.EqualTo(6));
+        }
     }
 }

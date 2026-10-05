@@ -17,13 +17,17 @@ namespace KMA.Tests.Gameplay.Volleyball
         }
 
         [Test]
-        public void PracticeRequiresReceiveReceiveSmashSequenceForPoint()
+        public void PracticeRunsOnA120SecondClockAndFailsWhenItExpires()
         {
             var definition = ChallengeCatalog.LoadDefault().Get("volleyball_practice");
             var rules = new VolleyballChallengeRules(definition);
             Assert.That(rules.Match.WinningPoints, Is.EqualTo(0));
-            Assert.That(rules.Match.ClockLimit, Is.EqualTo(0f));
+            Assert.That(rules.Match.ClockLimit, Is.EqualTo(120f));
             Assert.That(rules.IsComplete, Is.False);
+            rules.Tick(120.5f);
+            Assert.That(rules.IsComplete, Is.True);
+            Assert.That(rules.BuildResult(new ChallengeAttemptContext("attempt", "volleyball_practice",
+                ChallengeAttemptMode.Journey, ChallengeDifficulty.Easy)).Pass, Is.False);
         }
 
         [Test]

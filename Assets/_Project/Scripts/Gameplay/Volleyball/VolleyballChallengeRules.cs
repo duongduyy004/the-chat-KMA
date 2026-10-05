@@ -13,7 +13,7 @@ namespace KMA.Gameplay.Volleyball
         public bool IsComplete => definition.Kind == ChallengeKind.Learn
             ? completedTargets >= definition.TargetCount
             : definition.Kind == ChallengeKind.Practice
-                ? completedTargets >= definition.TargetCount : Match.IsOver;
+                ? completedTargets >= definition.TargetCount || Match.IsOver : Match.IsOver;
 
         public VolleyballChallengeRules(ChallengeDefinition definition)
         {
@@ -21,7 +21,7 @@ namespace KMA.Gameplay.Volleyball
             VolleyballMatchOptions options = definition.Kind switch
             {
                 ChallengeKind.Learn => new VolleyballMatchOptions(0, 0f, true),
-                ChallengeKind.Practice => new VolleyballMatchOptions(0, 0f, true),
+                ChallengeKind.Practice => new VolleyballMatchOptions(0, definition.TimeLimit, true),
                 _ => new VolleyballMatchOptions(VolleyballMatch.PointsToWin, definition.TimeLimit,
                     requirePointsToWin: true)
             };

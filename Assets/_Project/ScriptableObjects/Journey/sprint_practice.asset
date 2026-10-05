@@ -18,6 +18,7 @@ MonoBehaviour:
   distance: 100
   timeLimit: 20
   targetCount: 0
+  attemptLimit: 0
   keeperEnabled: 0
   difficulty: 1
   timingHelp: 1

@@ -16,9 +16,11 @@ MonoBehaviour:
   subject: 7
   kind: 1
   distance: 0
-  timeLimit: 0
+  timeLimit: 120
   targetCount: 2
+  attemptLimit: 0
   keeperEnabled: 0
   difficulty: 0
   timingHelp: 1
-  objective: "Ghi hai điểm bằng chuỗi đỡ, đỡ rồi đập trong cùng pha bóng."
+  objective: "Ghi hai \u0111i\u1EC3m b\u1EB1ng chu\u1ED7i \u0111\u1EE1, chuy\u1EC1n
+    r\u1ED3i \u0111\u1EADp trong t\u1ED1i \u0111a 120 gi\xE2y."

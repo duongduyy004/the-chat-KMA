@@ -18,8 +18,9 @@ MonoBehaviour:
   distance: 0
   timeLimit: 0
   targetCount: 2
+  attemptLimit: 6
   keeperEnabled: 1
   difficulty: 1
   timingHelp: 1
-  objective: "Ghi hai b\xE0n tr\u01B0\u1EDBc th\u1EE7 m\xF4n Normal; s\u1ED1 c\xFA
-    s\xFAt kh\xF4ng gi\u1EDBi h\u1EA1n."
+  objective: "Ghi hai b\xE0n tr\u01B0\u1EDBc th\u1EE7 m\xF4n Normal trong t\u1ED1i
+    \u0111a 6 c\xFA s\xFAt."

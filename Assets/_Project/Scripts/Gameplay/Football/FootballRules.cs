@@ -118,7 +118,8 @@ namespace KMA.Gameplay
                             outcomes.Add(LastOutcome.Value);
                             Kicks++;
                             if (LastOutcome == FootballOutcome.Goal) Goals++;
-                            if (!options.MaxKicks.HasValue && Goals >= options.RequiredGoals)
+                            if ((!options.MaxKicks.HasValue || options.StopAtRequiredGoals) &&
+                                Goals >= options.RequiredGoals)
                             {
                                 ChangeState(FootballState.MatchResult);
                                 break;
