@@ -43,7 +43,7 @@ Mỗi nhân vật có ảnh cho 5 tư thế lấy từ sprite sẵn có: `Idle` 
   - `IReadOnlyCollection<string> KnownNames`.
   - `string Expand(string text)`: đổi `:name:` có trong `KnownNames` thành `<sprite name="name">`; mã không biết giữ nguyên chữ.
   - `IEnumerable<string> FindCodes(string text)`: dùng cho `Validate`.
-- Credit "Twemoji © Twitter, Inc. and other contributors, CC-BY 4.0" ghi trong `README.md`.
+- Credit "Twemoji © Twitter, Inc. and other contributors, CC-BY 4.0" ghi trong `Assets/_Project/CREDITS.md` (README đã trỏ tới file này).
 
 ### 3.3 UI (`Assets/_Project/Scripts/UI/`)
 
@@ -57,14 +57,14 @@ Mỗi nhân vật có ảnh cho 5 tư thế lấy từ sprite sẵn có: `Idle` 
 Canvas tham chiếu 1920×1080 ngang. Mockup: `.superpowers/brainstorm/764-1791173143/content/vn-detail.html`.
 
 - **Nền:** ảnh menu dùng chung (như hiện tại) + lớp navy 36%.
-- **Nhân vật:** hai slot, cao khoảng 68% màn hình, đáy ở 24% chiều cao. Slot phải luôn là nhân vật `isPlayer` (lật ngang để nhìn vào giữa). Slot trái là người nói gần nhất không phải người chơi; khi người đó đổi, nhân vật cũ trượt ra trái và nhân vật mới trượt vào (0,25 giây). Node chưa có ai ở slot trái thì slot trái ẩn.
+- **Nhân vật:** hai slot, cao khoảng 68% màn hình, đáy ở 24% chiều cao. Slot phải luôn là nhân vật `isPlayer` (lật ngang để nhìn vào giữa). Slot trái là người nói gần nhất không phải người chơi; khi người đó đổi, nhân vật cũ trượt ra trái và nhân vật mới trượt vào (0,25 giây). Đầu mỗi node, slot trái hiện sẵn (tư thế Idle) người không phải người chơi nói đầu tiên trong node; node không có ai như vậy thì slot trái ẩn.
 - **Người nói / người nghe:** người nói màu gốc, nảy lên 6% một nhịp (0,3 giây); người nghe tối (nhân màu 0,4), lún xuống 4%.
 - **Tư thế:** sprite của người nói đổi theo `pose`; người nghe giữ tư thế gần nhất.
 - **Khung thoại:** đáy màn hình, cách lề 3,5%, cao 29%, nền navy 93%, viền gold 3 px, bo góc. Tag tên dạng viên thuốc nghiêng ±3°, màu theo nhân vật, nằm cùng phía với người nói.
 - **Chữ chạy:** 45 ký tự/giây; emoji tính là một ký tự. Chạm bất kỳ đâu trên overlay (trừ BỎ QUA) gọi `Advance()`: chưa hiện hết thì hiện hết; hiện hết rồi thì sang câu tiếp; ở câu cuối thì đóng node (lưu "đã xem").
-- **Gợi ý:** góc phải dưới khung hiện "chạm để hiện hết" khi đang chạy chữ, "▼ TIẾP" khi xong, "▼ ĐÓNG" ở câu cuối.
+- **Gợi ý:** góc phải dưới khung hiện "chạm để hiện hết" khi đang chạy chữ, "TIẾP »" khi xong, "ĐÓNG »" ở câu cuối.
 - **Chấm tiến độ:** góc trái dưới khung thoại, mỗi câu một chấm, chấm đã qua tô gold.
-- **Sticker:** nếu `sticker` không rỗng, hiện thẻ trắng viền navy, chữ đỏ `#E2553D`, phía trên người nói, phóng 0→1,15→1 trong 0,25 giây, nghiêng ngẫu nhiên ±8°; mờ đi khi sang câu.
+- **Sticker:** nếu `sticker` không rỗng, hiện thẻ trắng viền navy, chữ đỏ `#E2553D`, phía trên người nói, phóng 0→1,15→1 trong 0,25 giây, nghiêng ngẫu nhiên ±8°; ẩn khi sang câu không có sticker.
 - **BỎ QUA:** viên thuốc góc trên phải, GameObject vẫn tên `"BỎ QUA"`; đóng ngay node hiện tại như hiện nay.
 - **Lỗi lưu:** dòng chữ `GoldLight` trong khung thoại, nội dung như hiện tại; overlay vẫn mở để thử lại.
 
