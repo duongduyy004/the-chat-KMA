@@ -86,3 +86,9 @@ Prepared cue offsets and hashes: Assets/_Project/Audio/Prepared/provenance.json.
 Journey dialogue emoji (15 glyphs) are drawn for this project in the shared flat cartoon
 style by `tools/render-journey-emoji.js` and packed into a 360x216 atlas
 (Assets/_Project/Art/Emoji/JourneyEmojiAtlas.png).
+
+## Project-generated campus backdrop
+
+`Art/Environments/Campus/` (sky, skyline with the KMA main building, track, volleyball net and a
+white pixel for tinted quads) is drawn by `tools/render-campus-art.js` as SVG and rasterised with
+`@resvg/resvg-js` on 2026-10-06. Same palette and ink outline as the Football GoalView art.
