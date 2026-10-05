@@ -84,6 +84,9 @@ namespace KMA.Tests.Gameplay.Progression
             yield return JourneyRuntimeDriver.WaitForScene(router, "Map");
             Assert.That(ChallengeCatalog.LoadDefault().Ordered.Count, Is.EqualTo(9));
             Assert.That(JourneyDialogueLibrary.LoadDefault(), Is.Not.Null);
+            var emoji = Resources.Load<TMPro.TMP_SpriteAsset>("Journey/JourneyEmoji");
+            Assert.That(emoji, Is.Not.Null);
+            Assert.That(emoji.spriteCharacterTable.Count, Is.EqualTo(DialogueEmoji.KnownNames.Count));
             Assert.That(SprintBalanceConfig.LoadDefault(), Is.Not.Null);
         }
 

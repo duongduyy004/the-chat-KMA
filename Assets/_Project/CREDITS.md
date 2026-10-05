@@ -84,3 +84,8 @@ SoccerBallKick - purchasing102: https://freesound.org/people/purchasing102/sound
 
 Source files and licenses are retained in Assets/_Project/Audio/ThirdParty.
 Prepared cue offsets and hashes: Assets/_Project/Audio/Prepared/provenance.json.
+
+Twemoji graphics (15 emoji used in journey dialogue) © Twitter, Inc. and other contributors,
+maintained at https://github.com/jdecked/twemoji, licensed under CC BY 4.0:
+https://creativecommons.org/licenses/by/4.0/
+Edits: packed into a 360x216 atlas (Assets/_Project/Art/Emoji/JourneyEmojiAtlas.png).

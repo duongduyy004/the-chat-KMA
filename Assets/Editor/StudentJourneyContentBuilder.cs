@@ -1,7 +1,10 @@
 using System;
 using System.Collections.Generic;
+using System.IO;
+using TMPro;
 using UnityEditor;
 using UnityEngine;
+using UnityEngine.TextCore;
 using KMA.Gameplay;
 
 namespace KMA.EditorTools
@@ -169,10 +172,93 @@ namespace KMA.EditorTools
             (DialoguePose.Jump, "jump"), (DialoguePose.Duck, "duck")
         };
 
+        const string EmojiSourceFolder = "Assets/_Project/Art/Emoji/Source~";
+        const string EmojiFolder = "Assets/_Project/Art/Emoji";
+        const string EmojiAtlasPath = EmojiFolder + "/JourneyEmojiAtlas.png";
+        const string EmojiAssetPath = ResourcesFolder + "/JourneyEmoji.asset";
+        const int EmojiCell = 72;
+        const int EmojiColumns = 5;
+
+        [MenuItem("KMA/Journey/Build Emoji Sprites")]
+        public static void BuildEmojiSpriteAsset()
+        {
+            EnsureFolder(EmojiFolder);
+            EnsureFolder(ResourcesFolder);
+            IReadOnlyList<string> names = DialogueEmoji.KnownNames;
+            int rows = (names.Count + EmojiColumns - 1) / EmojiColumns;
+            var atlas = new Texture2D(EmojiColumns * EmojiCell, rows * EmojiCell, TextureFormat.RGBA32, false);
+            atlas.SetPixels32(new Color32[atlas.width * atlas.height]);
+            var rects = new RectInt[names.Count];
+            for (int i = 0; i < names.Count; i++)
+            {
+                string source = $"{EmojiSourceFolder}/{names[i]}.png";
+                if (!File.Exists(source)) throw new InvalidOperationException("Missing emoji source: " + source);
+                var image = new Texture2D(2, 2, TextureFormat.RGBA32, false);
+                if (!image.LoadImage(File.ReadAllBytes(source)) || image.width != EmojiCell || image.height != EmojiCell)
+                    throw new InvalidOperationException($"Emoji source must be a {EmojiCell}x{EmojiCell} PNG: {source}");
+                int x = i % EmojiColumns * EmojiCell;
+                int y = atlas.height - (i / EmojiColumns + 1) * EmojiCell;
+                atlas.SetPixels32(x, y, EmojiCell, EmojiCell, image.GetPixels32());
+                rects[i] = new RectInt(x, y, EmojiCell, EmojiCell);
+                UnityEngine.Object.DestroyImmediate(image);
+            }
+            File.WriteAllBytes(EmojiAtlasPath, atlas.EncodeToPNG());
+            UnityEngine.Object.DestroyImmediate(atlas);
+
+            AssetDatabase.ImportAsset(EmojiAtlasPath, ImportAssetOptions.ForceSynchronousImport);
+            var importer = (TextureImporter)AssetImporter.GetAtPath(EmojiAtlasPath);
+            importer.textureType = TextureImporterType.Default;
+            importer.alphaIsTransparency = true;
+            importer.mipmapEnabled = false;
+            importer.npotScale = TextureImporterNPOTScale.None;
+            importer.textureCompression = TextureImporterCompression.Uncompressed;
+            importer.filterMode = FilterMode.Bilinear;
+            importer.isReadable = false;
+            importer.SaveAndReimport();
+            Texture2D sheet = AssetDatabase.LoadAssetAtPath<Texture2D>(EmojiAtlasPath);
+
+            TMP_SpriteAsset asset = AssetDatabase.LoadAssetAtPath<TMP_SpriteAsset>(EmojiAssetPath);
+            if (asset == null)
+            {
+                asset = ScriptableObject.CreateInstance<TMP_SpriteAsset>();
+                AssetDatabase.CreateAsset(asset, EmojiAssetPath);
+            }
+            asset.spriteSheet = sheet;
+            if (asset.material == null)
+            {
+                var material = new Material(Shader.Find("TextMeshPro/Sprite")) { name = "JourneyEmoji Material" };
+                AssetDatabase.AddObjectToAsset(material, asset);
+                asset.material = material;
+            }
+            asset.material.SetTexture(ShaderUtilities.ID_MainTex, sheet);
+
+            // TMP treats an empty version as a legacy asset and rebuilds (empties) the tables on first
+            // access, and throws while doing so. Stamp the version before touching any table.
+            var serialized = new SerializedObject(asset);
+            serialized.FindProperty("m_Version").stringValue = "1.1.0";
+            serialized.ApplyModifiedPropertiesWithoutUndo();
+
+            asset.spriteGlyphTable.Clear();
+            asset.spriteCharacterTable.Clear();
+            for (int i = 0; i < names.Count; i++)
+            {
+                var glyph = new TMP_SpriteGlyph((uint)i,
+                    new GlyphMetrics(EmojiCell, EmojiCell, 0f, EmojiCell * .8f, EmojiCell),
+                    new GlyphRect(rects[i].x, rects[i].y, EmojiCell, EmojiCell), 1f, 0);
+                asset.spriteGlyphTable.Add(glyph);
+                asset.spriteCharacterTable.Add(new TMP_SpriteCharacter(0xFFFE, glyph) { name = names[i] });
+            }
+            asset.UpdateLookupTables();
+            EditorUtility.SetDirty(asset);
+            AssetDatabase.SaveAssets();
+            Debug.Log("[KMA] Journey emoji sprite asset built.");
+        }
+
         [MenuItem("KMA/Journey/Build Dialogue Library")]
         public static void BuildDialogues()
         {
             EnsureFolder(ResourcesFolder);
+            BuildEmojiSpriteAsset();
             JourneyDialogueLibrary library = AssetDatabase.LoadAssetAtPath<JourneyDialogueLibrary>(DialoguePath);
             if (library == null)
             {
