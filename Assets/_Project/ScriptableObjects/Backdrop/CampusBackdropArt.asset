@@ -1,0 +1,19 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4ad76cffb2e69bd499498715eec2d04f, type: 3}
+  m_Name: CampusBackdropArt
+  m_EditorClassIdentifier: KMA.Gameplay::KMA.Gameplay.CampusBackdropArt
+  sky: {fileID: 21300000, guid: 5513fc900583ad34eb614fbb32ba9b87, type: 3}
+  skyline: {fileID: 21300000, guid: 579f8af592934154c96c395b55cd0071, type: 3}
+  pixel: {fileID: 21300000, guid: a7447cf467604aa4b8a662c9ddc3a695, type: 3}
+  skyColor: {r: 0.18039216, g: 0.60784316, b: 0.9019608, a: 1}
+  groundColor: {r: 0.38431373, g: 0.70980394, b: 0.2901961, a: 1}
