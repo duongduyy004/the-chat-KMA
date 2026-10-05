@@ -1,4 +1,3 @@
-#if KMA_CHESS_ROUTING_READY
 using System.Collections.Generic;
 using System.Linq;
 using KMA.Gameplay;
@@ -79,4 +78,3 @@ namespace KMA.Tests.Gameplay.Progression
         }
     }
 }
-#endif

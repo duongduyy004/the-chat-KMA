@@ -1,4 +1,5 @@
 using KMA.Gameplay;
+using KMA.Gameplay.Celebration;
 using KMA.Gameplay.Chess;
 using KMA.Gameplay.FrogJump;
 using KMA.Gameplay.UI;
@@ -17,13 +18,17 @@ namespace KMA.EditorTools
     ///   map-lives-3        Map with 3 lives (regen countdown running)
     ///   map-lives-0        Map with 0 lives
     ///   chess-select       MG_ChessFinal: start the attempt and select the first main-line piece
+    ///   celebration-cheer  Celebration: wait until the timeline reaches 3 s (cheer beat)
+    ///   celebration-teacher Celebration: wait until the timeline reaches 6 s (teacher and bubble)
+    ///   celebration-skip   Celebration: press Skip and wait for the summary to fade in
     public static class PlayModeScreenshotQaStates
     {
         public static bool CaptureSoonAfterApply { get; private set; }
 
         public static bool IsKnown(string state) => state == "" || state == "frog-fall" ||
             state == "frog-win-keep" || state == "frog-lose-zero" || state == "exam-fail-1" ||
-            state == "exam-fail-2" || state == "map-lives-3" || state == "map-lives-0" || state == "chess-select";
+            state == "exam-fail-2" || state == "map-lives-3" || state == "map-lives-0" || state == "chess-select" ||
+            state == "celebration-cheer" || state == "celebration-teacher" || state == "celebration-skip";
 
         /// Called every editor tick while a capture is active. Returns true once the state is applied.
         public static bool Apply(string state, float secondsToCapture)
@@ -39,6 +44,9 @@ namespace KMA.EditorTools
                 case "map-lives-3": return SetMapLives(3);
                 case "map-lives-0": return SetMapLives(0);
                 case "chess-select": return CaptureSoonAfterApply = ChessSelect();
+                case "celebration-cheer": return CaptureSoonAfterApply = CelebrationAt(3f);
+                case "celebration-teacher": return CaptureSoonAfterApply = CelebrationAt(6f);
+                case "celebration-skip": return CaptureSoonAfterApply = CelebrationSkip();
                 default: return true;
             }
         }
@@ -63,6 +71,21 @@ namespace KMA.EditorTools
             ChessMove.TryParseUci(controller.Machine.Puzzle.nodes[0].moves[0].uci, out ChessMove move);
             board.ClickSquare(move.From);
             return board.SelectedSquare == move.From;
+        }
+
+        // Game time lags wall time in a background Editor, so the beats are reached on the timeline clock.
+        static bool CelebrationAt(float seconds)
+        {
+            var controller = Object.FindFirstObjectByType<CelebrationSceneController>();
+            return controller != null && controller.Timeline.Time >= seconds;
+        }
+
+        static bool CelebrationSkip()
+        {
+            var controller = Object.FindFirstObjectByType<CelebrationSceneController>();
+            if (controller == null || controller.Summary == null) return false;
+            controller.Skip();
+            return controller.SummaryVisible;
         }
 
         static bool ShowFrog(FrogJumpResultView view)

@@ -18,7 +18,10 @@
         "KMA.Gameplay.FrogJump",
         "UnityEngine.UI",
         "Unity.TextMeshPro",
-        "KMA.Text"
+        "KMA.Text",
+        "KMA.Gameplay.Chess",
+        "KMA.Gameplay.Chess.Core",
+        "KMA.Gameplay.Celebration"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],

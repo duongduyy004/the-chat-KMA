@@ -1,6 +1,8 @@
 using System.Collections;
 using System.Linq;
 using KMA.Gameplay;
+using KMA.Gameplay.Celebration;
+using KMA.Gameplay.Chess;
 using KMA.Gameplay.Core;
 using KMA.Gameplay.UI;
 using NUnit.Framework;
@@ -31,12 +33,23 @@ namespace KMA.Tests.Gameplay.Progression
                 if (id == "sprint_practice")
                     Assert.That(router.Session.Journey.IsSubjectUnlocked(SubjectId.Volleyball), Is.False);
             }
-            // The chess scene is not routable yet, so the final is committed through the session.
             Assert.That(router.Session.Journey.CheckpointChallengeId, Is.EqualTo("chess_final"));
             Assert.That(router.Session.Journey.CourseComplete, Is.False);
-            Assert.That(JourneyGameplayDriver.CompleteActiveChallenge(router.Session).CourseComplete, Is.True);
-            saved = JsonUtility.FromJson<SaveData>(JsonUtility.ToJson(router.Session.ToSaveData()));
-            Assert.That(router.Route(SessionRoute.Map), Is.True);
+            yield return PlayChessFinal();
+            Assert.That(saved.journey.completedChallengeIds, Does.Contain("chess_final"),
+                "The final commit must autosave before navigation.");
+            Assert.That(saved.journey.chessBest.recorded, Is.True);
+            Assert.That(saved.journey.celebrationSeen, Is.False);
+
+            // The first win of the final continues into the celebration, which saves only its seen flag.
+            Object.FindFirstObjectByType<ResultPanel>(FindObjectsInactive.Include).Continue();
+            yield return JourneyRuntimeDriver.WaitForScene(router, "Celebration");
+            var celebration = Object.FindFirstObjectByType<CelebrationSceneController>();
+            Assert.That(celebration.Summary.IsSample, Is.False);
+            Assert.That(celebration.Summary.ChessRecorded, Is.True);
+            Assert.That(saved.journey.celebrationSeen, Is.True);
+            celebration.Skip();
+            celebration.GoToMap();
             yield return JourneyRuntimeDriver.WaitForScene(router, "Map");
             Assert.That(router.Session.Journey.CourseComplete, Is.True);
             Assert.That(router.Session.Records.Values.Count(record => record.Passed), Is.EqualTo(4));
@@ -232,8 +245,49 @@ namespace KMA.Tests.Gameplay.Progression
             Assert.That(router.TryStartChallenge(id, ChallengeAttemptMode.Journey, challenge.Difficulty), Is.True, id);
             yield return JourneyRuntimeDriver.WaitForScene(router, challenge.Subject switch
             {
-                SubjectId.Sprint => "MG_Sprint", SubjectId.Volleyball => "MG_Volleyball", _ => "MG_Football"
+                SubjectId.Sprint => "MG_Sprint", SubjectId.Volleyball => "MG_Volleyball",
+                SubjectId.Chess => "MG_ChessFinal", _ => "MG_Football"
             });
+        }
+
+        /// Plays the puzzle main line on the real board, like ChessFinalSceneTests, and waits for the
+        /// committed result on the real result panel.
+        IEnumerator PlayChessFinal()
+        {
+            yield return StartCheckpoint();
+            var controller = Object.FindFirstObjectByType<ChessFinalController>();
+            var board = Object.FindFirstObjectByType<ChessBoardView>();
+            controller.BeginAttempt();
+            yield return null;
+            yield return null;
+            PuzzleDefinition puzzle = controller.Machine.Puzzle;
+            yield return PlayChessMove(board, puzzle.nodes[0].moves[0].uci);
+            float deadline = Time.realtimeSinceStartup + 10f;
+            while (controller.Machine.Phase != ChessFinalPhase.Completed)
+            {
+                Assert.That(Time.realtimeSinceStartup, Is.LessThan(deadline), "The boss reply did not arrive.");
+                if (controller.Machine.Phase == ChessFinalPhase.PlayerTurn)
+                    yield return PlayChessMove(board, puzzle.nodes[controller.Machine.Node].moves[0].uci);
+                else yield return null;
+            }
+            ResultPanel panel = null;
+            deadline = Time.realtimeSinceStartup + 10f;
+            while (panel == null || panel.CurrentResult == null)
+            {
+                Assert.That(Time.realtimeSinceStartup, Is.LessThan(deadline), "The final result was not shown.");
+                panel = Object.FindFirstObjectByType<ResultPanel>(FindObjectsInactive.Include);
+                yield return null;
+            }
+            Assert.That(panel.CurrentResult.Pass, Is.True);
+            Assert.That(router.Session.Journey.CourseComplete, Is.True);
+        }
+
+        static IEnumerator PlayChessMove(ChessBoardView board, string uci)
+        {
+            Assert.That(ChessMove.TryParseUci(uci, out ChessMove move), Is.True, uci);
+            board.ClickSquare(move.From);
+            board.ClickSquare(move.To);
+            yield return null;
         }
 
         IEnumerator PlayCheckpoint(bool pass = true)

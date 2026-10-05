@@ -35,5 +35,8 @@ EditorBuildSettings:
   - enabled: 1
     path: Assets/_Project/Scenes/MG_ChessFinal.unity
     guid: 19a171a8c9aa35c4c843455cfba579cd
+  - enabled: 1
+    path: Assets/_Project/Scenes/Celebration.unity
+    guid: 8a93710890137cb4d9e337b41ada781c
   m_configObjects: {}
   m_UseUCBPForAssetBundles: 0

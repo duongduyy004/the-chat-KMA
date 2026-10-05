@@ -1,0 +1,22 @@
+{
+    "name": "KMA.Gameplay.Celebration",
+    "rootNamespace": "KMA.Gameplay.Celebration",
+    "references": [
+        "KMA.Gameplay",
+        "KMA.Gameplay.Progression",
+        "KMA.Gameplay.Core",
+        "KMA.Gameplay.UI",
+        "Unity.TextMeshPro",
+        "UnityEngine.UI",
+        "KMA.Text"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}
