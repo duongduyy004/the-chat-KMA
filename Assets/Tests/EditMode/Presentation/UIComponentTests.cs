@@ -700,6 +700,98 @@ namespace KMA.Tests.Presentation
             finally { Object.DestroyImmediate(root); }
         }
 
+        static (MapScreen screen, RectTransform grid) BuildMapAt(GameObject root, Vector2 size, GameSession session)
+        {
+            ((RectTransform)root.transform).sizeDelta = size;
+            var screen = root.AddComponent<MapScreen>();
+            MapPresentationBuilder.Build(screen, session);
+            Canvas.ForceUpdateCanvases();
+            LayoutRebuilder.ForceRebuildLayoutImmediate((RectTransform)root.transform);
+            var grid = (RectTransform)root.transform.Find("S5MapPresentation/Content/SelectionGrid");
+            grid.GetComponent<MapJourneyPathLayout>().Refresh();
+            return (screen, grid);
+        }
+
+        static UITheme.LessonJourneyStyle Style() => UITheme.Shared.LessonJourney;
+
+        static Rect WorldRect(RectTransform rect)
+        {
+            var corners = new Vector3[4];
+            rect.GetWorldCorners(corners);
+            return new Rect(corners[0], corners[2] - corners[0]);
+        }
+
+        [Test]
+        public void JourneyRoad_PassesThroughBadgeCentresAndIsBuiltOnce([Values(1280f, 1920f, 2400f)] float width)
+        {
+            var root = new GameObject("road", typeof(RectTransform));
+            try
+            {
+                var (screen, grid) = BuildMapAt(root, new Vector2(width, 1080f), new GameSession());
+                MapPresentationBuilder.Build(screen, new GameSession());   // second build must not duplicate
+                var layout = grid.GetComponent<MapJourneyPathLayout>();
+                Assert.That(grid.Cast<Transform>().Count(child => child.name.StartsWith("PathTrack")), Is.EqualTo(2));
+                Assert.That(grid.Find("PathTrack1").childCount, Is.GreaterThan(30));
+                Vector2 first = layout.StopCenter(0), second = layout.StopCenter(1), third = layout.StopCenter(2);
+                Assert.That(second.y, Is.GreaterThan(first.y), "Middle stop sits higher than the outer stops.");
+                Assert.That(third.y, Is.EqualTo(first.y).Within(.5f));
+                Assert.That(first.x, Is.LessThan(second.x));
+                Assert.That(second.x, Is.LessThan(third.x));
+                Image firstOutline = grid.Find("PathTrack1/Outline1").GetComponent<Image>();
+                Assert.That(Vector2.Distance(firstOutline.rectTransform.anchoredPosition, first),
+                    Is.LessThan(Style().stopBadgeSize), "Road starts under the first badge.");
+            }
+            finally { Object.DestroyImmediate(root); }
+        }
+
+        [Test]
+        public void JourneyStops_StayInsideMapZoneAboveTheLessonPanel(
+            [Values(1280f, 1440f, 1728f, 1920f, 2400f)] float width)
+        {
+            var root = new GameObject("zone", typeof(RectTransform));
+            try
+            {
+                var (screen, grid) = BuildMapAt(root, new Vector2(width, 1080f), new GameSession());
+                var panel = (RectTransform)screen.LessonList.transform;
+                Rect gridRect = WorldRect(grid), panelRect = WorldRect(panel);
+                Assert.That(gridRect.Overlaps(panelRect), Is.False);
+                foreach (MapNodeView node in screen.Nodes)
+                {
+                    Rect stop = WorldRect((RectTransform)node.transform);
+                    Assert.That(stop.xMin, Is.GreaterThanOrEqualTo(gridRect.xMin - 1f), node.name);
+                    Assert.That(stop.xMax, Is.LessThanOrEqualTo(gridRect.xMax + 1f), node.name);
+                    Assert.That(stop.yMin, Is.GreaterThanOrEqualTo(gridRect.yMin - 1f), node.name);
+                    Assert.That(stop.yMax, Is.LessThanOrEqualTo(gridRect.yMax + 1f), node.name);
+                    Assert.That(stop.Overlaps(panelRect), Is.False, node.name);
+                }
+            }
+            finally { Object.DestroyImmediate(root); }
+        }
+
+        [Test]
+        public void JourneyRoad_FillsOnlyThePassedSegments()
+        {
+            var root = new GameObject("progress", typeof(RectTransform));
+            var doneRoot = new GameObject("progress-done", typeof(RectTransform));
+            try
+            {
+                var (_, grid) = BuildMapAt(root, new Vector2(1920f, 1080f), new GameSession());
+                Assert.That(grid.Find("PathTrack1/Fill1").gameObject.activeSelf, Is.False,
+                    "Fresh game: no gold segment, and no stray dot at the start.");
+                Assert.That(grid.Find("PathTrack1/Dot1").gameObject.activeSelf, Is.True);
+
+                var (_, doneGrid) = BuildMapAt(doneRoot, new Vector2(1920f, 1080f), CompleteSprintJourney());
+                Assert.That(doneGrid.Find("PathTrack1/Fill1").gameObject.activeSelf, Is.True);
+                Assert.That(doneGrid.Find("PathTrack1/Dot1").gameObject.activeSelf, Is.False);
+                Assert.That(doneGrid.Find("PathTrack2/Fill1").gameObject.activeSelf, Is.False);
+            }
+            finally
+            {
+                Object.DestroyImmediate(root);
+                Object.DestroyImmediate(doneRoot);
+            }
+        }
+
         [Test]
         public void MapNodeAvailabilityTransitionsKeepInteractionAndVisualStateSynchronized()
         {

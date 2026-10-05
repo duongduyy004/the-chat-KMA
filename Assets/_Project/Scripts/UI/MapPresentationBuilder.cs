@@ -137,8 +137,8 @@ namespace KMA.Gameplay.UI
         static void ConfigureJourneyPath(Transform selectionGrid, MapNodeView[] nodes)
         {
             if (selectionGrid == null) return;
-            Anchor((RectTransform)selectionGrid, UITheme.Shared.LessonJourney.courseAnchorMin,
-                UITheme.Shared.LessonJourney.courseAnchorMax);
+            Anchor((RectTransform)selectionGrid, UITheme.Shared.LessonJourney.mapAnchorMin,
+                UITheme.Shared.LessonJourney.mapAnchorMax);
             GridLayoutGroup grid = selectionGrid.GetComponent<GridLayoutGroup>();
             if (grid != null) grid.enabled = false;
             ResponsiveGridLayout responsive = selectionGrid.GetComponent<ResponsiveGridLayout>();

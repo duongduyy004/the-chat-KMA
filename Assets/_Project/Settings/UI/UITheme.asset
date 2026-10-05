@@ -51,12 +51,12 @@ MonoBehaviour:
     volleyball: {r: 0.9607843, g: 0.61960787, b: 0.18039216, a: 1}
     football: {r: 0.20784314, g: 0.6627451, b: 0.35686275, a: 1}
     completedSurface: {r: 0.88235295, g: 0.95686275, b: 0.87058824, a: 1}
-    panelAnchorMin: {x: 0.02, y: 0.015}
-    panelAnchorMax: {x: 0.98, y: 0.56}
-    courseAnchorMin: {x: 0, y: 0.58}
-    courseAnchorMax: {x: 1, y: 0.84}
-    summaryAnchorMin: {x: 0.025, y: 0.562}
-    summaryAnchorMax: {x: 0.975, y: 0.619}
+    panelAnchorMin: {x: 0.02, y: 0.005}
+    panelAnchorMax: {x: 0.98, y: 0.34}
+    courseAnchorMin: {x: 0, y: 0.35}
+    courseAnchorMax: {x: 1, y: 0.915}
+    summaryAnchorMin: {x: 0.18, y: 0.855}
+    summaryAnchorMax: {x: 0.82, y: 0.915}
     cardLeft: 0.025
     cardWidth: 0.28
     cardGap: 0.055
