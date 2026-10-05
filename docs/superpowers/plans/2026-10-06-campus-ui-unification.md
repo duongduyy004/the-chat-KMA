@@ -21,6 +21,8 @@
 - Two button families: **Slanted** (`HomeMenuButton`) only on Menu and GameOver; **Kit** (`UiKit`) everywhere else. Shadow offset token is one value for both kit buttons and journey cards: `(0, -4)`.
 - UI copy is Vietnamese, every TMP string goes through `VietText.Fix`, no English on screen.
 - Scenes are only changed by running their configurator (`KMA/*/Build Scene` methods) or a scripted editor method; never hand-edit `.unity` YAML. `KMA/Volleyball/Build Scene` and `KMA/Frog Jump/Build Scene` rebuild their scene from empty: all changes must live in the configurator.
+- `MinigameUIAssembler.AssembleScenePath` (run by every minigame `BuildScene`, and again by `MinigameUIAssembler.AssembleTask5Presentation`/`MinigamePrefabStyler` for Sprint, Football, Volleyball, GameOver) **destroys every camera that is not the root `GameCamera`** and resets `GameCamera` to position `(0,0,-10)`, ortho size `5.4`. Therefore: never create a camera in a configurator; add world backdrops **after** the assembler ran, bound to `Camera.main`; and any non-default framing must be applied at runtime (like `FootballCameraFit`), not only at edit time.
+- EditMode tests that call a `BuildScene` re-serialize scenes, prefabs and TMP font assets as a side effect. After each test run, `git status` and restore (`git checkout -- <path>`) every scene/prefab/font file the current task did not intend to change; never commit `Assets/Fonts/TMP/*.asset` churn.
 - Old saves must keep loading: `SaveData.awaitingPunishment` stays in the schema (always written `false`), and the numeric values of `SessionRoute` do not change.
 - Commit directly to `master`. Commit messages carry **no** `Co-Authored-By` trailer (user memory rule). Always `git add` explicit paths.
 - Unity must be closed for batch runs (check `tasklist //FI "IMAGENAME eq Unity.exe"`; never kill an Editor you did not start).
@@ -31,10 +33,10 @@
 
 ## Review Focus
 
-1. **Wide phones (20:9) and safe-area insets.** The backdrop must cover the whole screen, including the area outside `SafeAreaRoot`, with no dark camera colour showing at either edge. Pinned in Task 2 (`Band_CoversA20By9View`), Task 4 (`UiBackdropIsOutsideTheSafeArea`) and Task 17 (20:9 captures).
+1. **Wide phones (20:9) and safe-area insets.** The backdrop must cover the whole screen, including the area outside `SafeAreaRoot`, with no dark camera colour showing at either edge. Pinned in Task 2 (`Band_CoversA20By9View`), Task 11 (`ChessUsesTheCanvasBackdropOutsideTheSafeArea`) and Task 17 (20:9 captures).
 2. **Screen size changing at runtime** (rotation lock off, split screen, Editor Game view resize). The backdrops must re-fit without leaving gaps. Pinned in Task 3 (`RefitsWhenTheCameraAspectChanges`) and Task 4 (`RefitsWhenTheRectChanges`).
 3. **A disabled kit button must stay readable.** Today it fades to 45 % alpha and the label disappears into the background (Football "GIỮ ĐỂ SÚT", Chess "Gợi ý"). Pinned in Task 13 (`DisabledButtonsUseTheDisabledTokensAtFullOpacity`).
-4. **A save written while the Punishment route existed** (`awaitingPunishment = true`, any version) must load straight to a playable state, never to a missing scene. Pinned in Task 16 (`Load_LegacyAwaitingPunishment_RestoresWithoutPunishment` and `RouterHasNoSceneForTheRetiredRoute`).
+4. **A save written while the Punishment route existed** (`awaitingPunishment = true`, any version) must load straight to a playable state, never to a missing scene. Pinned in Task 16 (existing `Restore_LegacyPunishmentSave_NeverResumesIntoPunishment` kept green, plus new `RouterHasNoSceneForTheRetiredRoute` and `PunishmentSceneIsGoneFromTheProjectAndTheBuild`).
 5. **Rebuilding a scene twice** (configurators are re-run often) must not stack duplicate backdrop layers. Pinned in Task 5 (`AddWorldTwiceKeepsOneBackdrop`).
 
 ---
@@ -76,7 +78,7 @@
 git status --short
 ```
 
-Expected: no modified or untracked files under `Assets/` or `ProjectSettings/`. If the chess-final/celebration work (`Assets/Editor/CelebrationSceneConfigurator.cs`, `Assets/_Project/Scenes/Celebration.unity`, `Assets/_Project/Scripts/Gameplay/Celebration/`, `MG_Football.unity`, `MG_Volleyball.unity`, `HUD_Minigame.prefab`, `PhaseOverlay.prefab`, `ResultPanel.prefab`, `EditorBuildSettings.asset`) is still uncommitted, **stop and ask the user** to commit or stash it first: this plan rebuilds those exact files.
+Expected: no modified or untracked files under `Assets/` or `ProjectSettings/`. As of 2026-10-06 (after commit `1951e80`) the tree still shows `Assets/Fonts/TMP/BeVietnamPro-{Bold,Regular}.asset`, `HUD_Minigame.prefab`, `PhaseOverlay.prefab`, `ResultPanel.prefab`, `MG_Football.unity`, `MG_Volleyball.unity` as modified. These are re-serialization side effects of earlier test runs (component file IDs reshuffled, font atlas glyphs added), not authored work. **Ask the user** whether to discard them (`git checkout -- <paths>`) or commit them before starting; do not decide alone. Also leave the untracked `boss-final-level-assets.zip` alone.
 
 - [ ] **Step 2: Make sure no Unity instance holds the project**
 
@@ -1284,11 +1286,15 @@ Replace the type-name check near `:762` so it asserts no component named `Sprint
 
 (add `using System.Linq;` if missing).
 
+Also update `Assets/Tests/PlayMode/Presentation/RunnerVisualTests.cs:78`: the track renderer is now found by `renderer.sprite.name == "SprintTrack"` (was `"Track"`). Its other checks still hold: 6 parallax renderers, every texture wider than 1000 px (CampusSky 1024, CampusSkyline 2048, SprintTrack 1983), every tile 25.6 units wide.
+
 - [ ] **Step 2: Run, expect FAIL**
 
 ```bash
-tools/run-unity-tests.sh PlayMode "KMA.Tests.Presentation.SprintPresentationGateTests" t7-sprint
+tools/run-unity-tests.sh PlayMode "KMA.Tests.Presentation.SprintPresentationGateTests;KMA.Tests.Presentation.RunnerVisualTests" t7-sprint
 ```
+
+(Take the exact namespace of `RunnerVisualTests` from its `namespace` line.)
 
 - [ ] **Step 3: Remove the ghost.** In `SprintFestivalPresentation.EnsurePlayerIdentity` delete the block that adds `SprintPlayerIdentityOutline` (the `SpriteRenderer playerVisual = ...` lines through `identity.Bind(...)`), and delete the whole `SprintPlayerIdentityOutline` class. Before deleting, clean up instances in already-saved scenes by adding at the top of `EnsurePlayerIdentity` after `presentation` is resolved:
 
@@ -1349,7 +1355,7 @@ The PLAYER plate and chevron already identify the player without relying on colo
             }
 ```
 
-and call `CampusBackdropAuthoring.EnsureArt();` at the start of that method. `SprintTrack.png` keeps `TextureHeight = 875` and PPU 100, so `SprintTrackLayout` is unchanged. The skyline tile is 25.6 wide × 2.3 tall (aspect ≈ 11.1); `CampusSkyline.png` is 6.4:1, so it is stretched horizontally by 1.7×. If Step 6's screenshot shows the building visibly wide, set `SkylineHeight = 25.6f / 6.4f = 4f` instead and accept that the top of the skyline sits under the HUD rail; pick the version the user prefers in Task 17.
+and call `CampusBackdropAuthoring.EnsureArt();` at the start of that method. The scoreboard panel's underside sits at y = 3.13 (`SprintTrackLayout` test `EveryRunnerClearsTheScoreboard`), so the top of the skyline (1.93 + 2.3 = 4.23) is partly behind the top-left scoreboard; that is expected (the scoreboard is an opaque kit panel), the building in the middle stays fully visible. `SprintTrack.png` keeps `TextureHeight = 875` and PPU 100, so `SprintTrackLayout` is unchanged. The skyline tile is 25.6 wide × 2.3 tall (aspect ≈ 11.1); `CampusSkyline.png` is 6.4:1, so it is stretched horizontally by 1.7×. If Step 6's screenshot shows the building visibly wide, set `SkylineHeight = 25.6f / 6.4f = 4f` instead and accept that the top of the skyline sits under the HUD rail; pick the version the user prefers in Task 17.
 
 - [ ] **Step 5: Rebuild the scene** (find the public entry point that runs the parallax block, e.g. the `[MenuItem]` method in `DemoSprintArtConfigurator`, and run it):
 
@@ -1364,7 +1370,7 @@ grep -E "error|Exception" Builds/t7-sprint.log
 - [ ] **Step 7: Commit**
 
 ```bash
-git add Assets/Editor/DemoSprintArtConfigurator.cs Assets/_Project/Scripts/Gameplay/Sprint/SprintFestivalPresentation.cs Assets/Tests/PlayMode/Presentation/SprintPresentationGateTests.cs Assets/_Project/Scenes/MG_Sprint.unity
+git add Assets/Editor/DemoSprintArtConfigurator.cs Assets/_Project/Scripts/Gameplay/Sprint/SprintFestivalPresentation.cs Assets/Tests/PlayMode/Presentation/SprintPresentationGateTests.cs Assets/Tests/PlayMode/Presentation/RunnerVisualTests.cs Assets/_Project/Scenes/MG_Sprint.unity
 git commit -m "fix(sprint): show the campus above a clean track and drop the ghost player copy"
 ```
 
@@ -1381,7 +1387,8 @@ git commit -m "fix(sprint): show the campus above a clean track and drop the gho
 
 **Interfaces:**
 - Consumes: `CampusBackdropAuthoring.AddWorld`, `Load("VolleyNet")` (Task 5).
-- Constants (new, in the configurator): `CameraY = 1f`, `CameraSize = 6.2f`, `SkylineHeight = 2.1f`. With these the view spans y −5.2…7.2; the far sideline sits at `CourtSpace.ToWorld((0, 4), 0).y ≈ 4.47` and the horizon stays at `HorizonWorldY = 4.97`, so the skyline occupies 4.97…7.07.
+- Create: `Assets/_Project/Scripts/Gameplay/Volleyball/VolleyballCameraFraming.cs` — `public static class VolleyballCameraFraming { public const float Size = 6.2f, Y = 1f; public static void Apply(Camera camera) }` (sets `orthographicSize = Size`, position `(0, Y, -10)`). `VolleyballController.Awake` calls `VolleyballCameraFraming.Apply(Camera.main)` (null-safe), so the framing survives the assembler resetting `GameCamera` to `(0,0,-10)`/5.4.
+- Constants (new, in the configurator): `SkylineHeight = 2.1f` (camera values come from `VolleyballCameraFraming`). With these the view spans y −5.2…7.2; the far sideline sits at `CourtSpace.ToWorld((0, 4), 0).y ≈ 4.47` and the horizon stays at `HorizonWorldY = 4.97`, so the skyline occupies 4.97…7.07.
 - Colours: ground (schoolyard concrete) `#cfc8b8`, court paint `#3f8fcf`, court lines `#fffbea`.
 - Serve spots are intentionally behind the baseline (`VolleyballMatch.PlayerServeSpot = (-8.5, 0)`, half-length 8): the audit's "player outside the line" was a serve position, not a bug. Do not move it.
 
@@ -1403,9 +1410,25 @@ git commit -m "fix(sprint): show the campus above a clean track and drop the gho
             var net = GameObject.Find("Net").GetComponent<SpriteRenderer>();
             Assert.That(AssetDatabase.GetAssetPath(net.sprite), Does.EndWith("/Campus/VolleyNet.png"));
             Assert.That(net.sortingOrder, Is.EqualTo(VolleyAthleteView.NetSortingOrder));
-            var camera = Camera.main;
-            Assert.That(camera.orthographicSize, Is.EqualTo(6.2f).Within(1e-3f));
-            Assert.That(camera.transform.position.y, Is.EqualTo(1f).Within(1e-3f));
+            Assert.That(backdrop.transform.parent, Is.Null);
+            Assert.That(GameObject.Find("GameCamera"), Is.Not.Null, "the assembler's camera survives; the backdrop is bound to it");
+        }
+
+        [Test]
+        public void FramingLeavesRoomForTheSkylineAboveTheFarSideline()
+        {
+            var cameraObject = new GameObject("Camera");
+            var camera = cameraObject.AddComponent<Camera>();
+            camera.orthographic = true;
+            VolleyballCameraFraming.Apply(camera);
+            Assert.That(camera.orthographicSize, Is.EqualTo(VolleyballCameraFraming.Size).Within(1e-3f));
+            Assert.That(camera.transform.position, Is.EqualTo(new Vector3(0f, VolleyballCameraFraming.Y, -10f)));
+            float top = VolleyballCameraFraming.Y + VolleyballCameraFraming.Size;
+            float bottom = VolleyballCameraFraming.Y - VolleyballCameraFraming.Size;
+            Assert.That(top - 4.97f, Is.GreaterThanOrEqualTo(2.1f), "skyline band fits between horizon and view top");
+            Assert.That(CourtSpace.ToWorld(new Vector2(0f, -CourtSpace.HalfWidth), 0f).y, Is.GreaterThan(bottom + .5f),
+                "the near sideline stays on screen");
+            Object.DestroyImmediate(cameraObject);
         }
 
         [Test]
@@ -1417,7 +1440,7 @@ git commit -m "fix(sprint): show the campus above a clean track and drop the gho
         }
 ```
 
-(Check the real public method name in `AudioAssetConfigurator` with `grep -n "public static" Assets/Editor/AudioAssetConfigurator.cs` and the namespace of `GameAudioLibrary` with `grep -n namespace Assets/_Project/Scripts/Core/GameAudioLibrary.cs`; use those.)
+Add a PlayMode check in the existing Volleyball PlayMode scene test file (`grep -rln "MG_Volleyball" Assets/Tests/PlayMode`): after loading `MG_Volleyball` and one frame, `Assert.That(Camera.main.orthographicSize, Is.EqualTo(VolleyballCameraFraming.Size).Within(1e-3f));` — this pins the runtime framing that survives the assembler.
 
 - [ ] **Step 2: Run, expect FAIL**
 
@@ -1431,24 +1454,27 @@ tools/run-unity-tests.sh EditMode "KMA.Tests.EditorTools.VolleyballSceneConfigur
         static readonly Color GroundColor = new Color32(0xcf, 0xc8, 0xb8, 0xff); // schoolyard concrete
         static readonly Color CourtColor = new Color32(0x3f, 0x8f, 0xcf, 0xff);  // painted court
         static readonly Color LineColor = new Color32(0xff, 0xfb, 0xea, 0xff);
-        const float CameraY = 1f, CameraSize = 6.2f, SkylineHeight = 2.1f;
+        const float SkylineHeight = 2.1f;
 ```
 
-Delete `SkyColor`, `SandColor`, `NetColor`. In `BuildWorld` replace the `Sky`/`Sand` quads and the `Net` quad with (the ground override paints the schoolyard concrete instead of the default campus grass):
+Delete `SkyColor`, `SandColor`, `NetColor`. In `BuildWorld` delete the `Sky` and `Sand` quads (do **not** create a camera here: the assembler that runs next would destroy it) and replace the `Net` quad with:
 
 ```csharp
-            var camera = new GameObject("Main Camera", typeof(Camera)).GetComponent<Camera>();
-            camera.tag = "MainCamera";
-            camera.orthographic = true;
-            camera.orthographicSize = CameraSize;
-            camera.transform.position = new Vector3(0f, CameraY, -10f);
-            CampusBackdropAuthoring.AddWorld(scene, camera, HorizonWorldY, SkylineHeight, true, GroundColor);
             Sprite netSprite = CampusBackdropAuthoring.Load("VolleyNet");
             SpriteRenderer net = Renderer("Net", netSprite, CourtSpace.ToWorld(Vector2.zero, 0f), VolleyAthleteView.NetSortingOrder);
             net.transform.localScale = new Vector3(NetWidth / netSprite.bounds.size.x, netWorldHeight / netSprite.bounds.size.y, 1f);
 ```
 
-Line quads use `LineColor` instead of `Color.white`. In `AddControlsAndHud`, delete `Camera.main.orthographicSize = 5.45f;` (the camera is now authored in `BuildWorld`). `MinigameUIAssembler.AssembleScenePath` must keep this camera: check `EnsureSceneCamera` reuses an existing `MainCamera`-tagged camera (`grep -n "EnsureSceneCamera" -A25 Assets/_Project/Scripts/UI/MinigameUIAssembler.cs`); if it replaces it with the prefab, set `OwnsCameraBackground => true` on `VolleyballController` (same as Football/Chess) and re-apply size/position after `AssembleScenePath` in `BuildScene`.
+Line quads use `LineColor` instead of `Color.white`. In `AddControlsAndHud` (it runs after `MinigameUIAssembler.AssembleScenePath`, on the reopened scene), replace `Camera.main.orthographicSize = 5.45f;` with:
+
+```csharp
+            Camera camera = Camera.main; // the assembler's root GameCamera
+            VolleyballCameraFraming.Apply(camera);
+            // The ground override paints the schoolyard concrete instead of the default campus grass.
+            CampusBackdropAuthoring.AddWorld(scene, camera, HorizonWorldY, SkylineHeight, true, GroundColor);
+```
+
+Create `VolleyballCameraFraming.cs` (Interfaces above) and call it at the top of `VolleyballController.Awake` (`if (Camera.main != null) VolleyballCameraFraming.Apply(Camera.main);`; if `Awake` does not exist, add `void Awake()` — check the base class first with `grep -n "Awake" Assets/_Project/Scripts/Gameplay/Common/MinigameBase.cs Assets/_Project/Scripts/Gameplay/Volleyball/VolleyballController.cs`; if `MinigameBase.Awake` is `protected virtual`, override it and call `base.Awake()`). `CampusBackdropWorld` refits in `LateUpdate` when the camera's size/position changes, so the backdrop follows the runtime framing.
 
 - [ ] **Step 4: Audio.** `AudioAssetConfigurator.cs:35`: `library.volleyball = Music("Monkeys Spinning Monkeys");`. `VolleyballController.cs:141`: `GameAudio.Play(GameSound.RunStep);`. FrogJump keeps `SandStep` (its landing pit is sand). Re-run the audio configurator method in batch mode.
 
@@ -1459,7 +1485,7 @@ Line quads use `LineColor` instead of `Color.white`. In `AddControlsAndHud`, del
 - [ ] **Step 7: Commit**
 
 ```bash
-git add Assets/Editor/VolleyballSceneConfigurator.cs Assets/_Project/Scripts/Gameplay/Volleyball/VolleyballController.cs Assets/Editor/AudioAssetConfigurator.cs Assets/_Project/Resources/GameAudioLibrary.asset Assets/Tests/EditMode/EditorTools/VolleyballSceneConfiguratorTests.cs Assets/_Project/Scenes/MG_Volleyball.unity
+git add Assets/Editor/VolleyballSceneConfigurator.cs Assets/_Project/Scripts/Gameplay/Volleyball/VolleyballController.cs Assets/_Project/Scripts/Gameplay/Volleyball/VolleyballCameraFraming.cs Assets/_Project/Scripts/Gameplay/Volleyball/VolleyballCameraFraming.cs.meta Assets/Tests/PlayMode Assets/Editor/AudioAssetConfigurator.cs Assets/_Project/Resources/GameAudioLibrary.asset Assets/Tests/EditMode/EditorTools/VolleyballSceneConfiguratorTests.cs Assets/_Project/Scenes/MG_Volleyball.unity
 git commit -m "feat(volleyball): move the match from the beach to the school court"
 ```
 
@@ -1514,16 +1540,10 @@ git commit -m "feat(volleyball): move the match from the beach to the school cou
 tools/run-unity-tests.sh EditMode "KMA.Tests.EditorTools.FrogJumpSceneTests" t9-frog
 ```
 
-- [ ] **Step 3: Implement the world.** Delete `PixelPath`. In `BuildWorld`:
+- [ ] **Step 3: Implement the world.** Delete `PixelPath`. In `BuildWorld` delete the `Sky` and `Grass` quads (no camera here: the assembler runs next and would destroy it) and use the campus pixel for the rest:
 
 ```csharp
             Sprite pixel = CampusBackdropAuthoring.Load("CampusPixel");
-            var camera = new GameObject("Main Camera", typeof(Camera)).GetComponent<Camera>();
-            camera.tag = "MainCamera";
-            camera.orthographic = true;
-            camera.orthographicSize = 5.4f;
-            camera.transform.position = new Vector3(0f, 0f, -10f);
-            CampusBackdropAuthoring.AddWorld(scene, camera, GroundY, 3.2f, true);
             Quad("Track", pixel, new Color32(0xe0, 0x60, 0x4a, 0xff), new Vector3(0f, GroundY - .6f, 0f),
                 new Vector2(FinishX - StartX + 2f, 1.2f), -29);
             Quad("StartLine", pixel, new Color32(0xff, 0xfb, 0xea, 0xff), new Vector3(StartX, GroundY - .6f, 0f), new Vector2(.12f, 1.2f), -28);
@@ -1531,7 +1551,11 @@ tools/run-unity-tests.sh EditMode "KMA.Tests.EditorTools.FrogJumpSceneTests" t9-
             Quad("FinishFlag", pixel, MinigameUiTheme.Accent, new Vector3(FinishX + .3f, GroundY + .9f, 0f), new Vector2(.6f, .4f), -27);
 ```
 
-(Same camera caveat as Task 8 Step 3: make sure the assembler keeps this camera.)
+At the top of `AddControls` (it reopens the scene after `MinigameUIAssembler.AssembleScenePath`), bind the backdrop to the assembler's camera, which keeps the default framing (`(0,0,-10)`, size 5.4):
+
+```csharp
+            CampusBackdropAuthoring.AddWorld(scene, Camera.main, GroundY, 3.2f, true);
+```
 
 - [ ] **Step 4: Implement the HUD card.** Replace the body of `ConfigureSharedHud` with:
 
@@ -1568,18 +1592,7 @@ tools/run-unity-tests.sh EditMode "KMA.Tests.EditorTools.FrogJumpSceneTests" t9-
 
 Keep `Progress` height: if the progress bar uses `sizeDelta.y` for its thickness, set `rect.offsetMin/offsetMax` y to keep `MinigameUiTheme.BarHeight` (read `MinigamePrefabStyler.StyleFilledBar` before editing).
 
-Same margins as the other minigames: in `AddControls`, the pause placement `new Vector2(-22f, -18f)` becomes `new Vector2(-MinigameUiTheme.SpaceMd, -MinigameUiTheme.SpaceMd)` (Football and Volleyball use `SpaceMd`). Add to the Step 1 tests:
-
-```csharp
-        [Test]
-        public void PauseUsesTheSharedCornerMargin()
-        {
-            FrogJumpSceneConfigurator.BuildScene();
-            EditorSceneManager.OpenScene(FrogJumpSceneConfigurator.ScenePath, OpenSceneMode.Single);
-            var pause = (RectTransform)Object.FindFirstObjectByType<KMA.Gameplay.UI.PausePanel>(FindObjectsInactive.Include).transform;
-            Assert.That(pause.anchoredPosition, Is.EqualTo(new Vector2(-KMA.UI.Kit.MinigameUiTheme.SpaceMd, -KMA.UI.Kit.MinigameUiTheme.SpaceMd)));
-        }
-```
+(The pause button's corner margin is unified for all minigames in Task 13 Step 6.)
 
 - [ ] **Step 5: Run tests, expect PASS**, including `KMA.Tests.Gameplay.FrogJump` EditMode and the FrogJump PlayMode tests. Screenshot `MG_FrogJump` (3 s, and `qaState` `frog-fall`).
 
@@ -1759,10 +1772,19 @@ and resize it to `new Vector2(640f, 320f)` with the text rect `new Vector2(580f,
 
 - [ ] **Step 5: Rebuild both scenes, run tests, expect PASS** (new tests, `KMA.Tests.Gameplay.Chess`, `KMA.Tests.Gameplay.Celebration` EditMode + PlayMode, `ChessFinalRoutingTests`). Screenshots: `MG_ChessFinal` (6 s and `qaState` `chess-select`), `Celebration` (`celebration-cheer`).
 
-- [ ] **Step 6: Commit**
+- [ ] **Step 6: Delete the old Sprint backdrop art.** After Tasks 7 and 11, `Environments/Sprint/{Sky,Campus,Track}.png` should have no users (on 2026-10-06 they were referenced only by `MG_Sprint`, `MG_ChessFinal` and `Celebration`). Verify by GUID, then delete:
 
 ```bash
-git add Assets/Editor/ChessFinalSceneConfigurator.cs Assets/Editor/CelebrationSceneConfigurator.cs Assets/Tests/EditMode/EditorTools/ChessCelebrationBackdropTests.cs Assets/Tests/EditMode/EditorTools/ChessCelebrationBackdropTests.cs.meta Assets/_Project/Scenes/MG_ChessFinal.unity Assets/_Project/Scenes/Celebration.unity
+for f in Sky Campus Track; do g=$(grep -o "guid: [a-f0-9]*" Assets/_Project/Art/Environments/Sprint/$f.png.meta | cut -d' ' -f2); echo "$f: $(grep -rl "$g" Assets --include=*.unity --include=*.prefab --include=*.asset | tr '\n' ' ')"; done
+grep -rn "Environments/Sprint/" Assets --include=*.cs
+```
+
+Expected: no files after each name and no code paths. Then `git rm` the three PNGs and their `.meta`. Update the comments in `SprintTrackLayout.cs` and `SprintTrackLayoutTests.cs:44` that say "Track.png" to "SprintTrack.png" (same geometry). If anything still references them, leave the files and note it in the QA report.
+
+- [ ] **Step 7: Commit**
+
+```bash
+git add Assets/_Project/Art/Environments/Sprint Assets/_Project/Scripts/Gameplay/Sprint/SprintTrackLayout.cs Assets/Tests/EditMode/Presentation/SprintTrackLayoutTests.cs Assets/Editor/ChessFinalSceneConfigurator.cs Assets/Editor/CelebrationSceneConfigurator.cs Assets/Tests/EditMode/EditorTools/ChessCelebrationBackdropTests.cs Assets/Tests/EditMode/EditorTools/ChessCelebrationBackdropTests.cs.meta Assets/_Project/Scenes/MG_ChessFinal.unity Assets/_Project/Scenes/Celebration.unity
 git commit -m "feat(chess): share the campus backdrop with chess and the celebration"
 ```
 
@@ -1804,27 +1826,32 @@ If this test assembly cannot reference `UnityEditor` scene APIs, put these two t
 
 - [ ] **Step 2: Run, expect FAIL.**
 
-- [ ] **Step 3: Implement.** Add `[SerializeField] Sprite background; public Sprite Background => background; public void SetBackground(Sprite sprite) => background = sprite;` to `GameOverScreen`. In `GameOverPresentationBuilder`, where the navy background is created, use:
+- [ ] **Step 3: Implement.** Add `[SerializeField] Sprite background; public Sprite Background => background; public void SetBackground(Sprite sprite) => background = sprite;` to `GameOverScreen` (`Assets/_Project/Scripts/UI/GameOverScreen.cs`, currently events only). `GameOverPresentationBuilder.Build` (called at runtime by `S5ShellSceneController.cs:72`) creates an opaque navy `GameOverVeil` as the first sibling, once (it returns early when `LayoutName` already exists). Keep the veil as the opaque base and, when `screen.Background != null`, add the illustration and wash right after it:
 
 ```csharp
             if (screen.Background != null)
             {
-                Image art = /* the existing full-screen background Image */;
-                art.sprite = screen.Background;
-                art.color = Color.white;
-                art.preserveAspect = false;
-                var wash = new GameObject("Wash", typeof(RectTransform), typeof(Image)).GetComponent<Image>();
-                wash.transform.SetParent(art.transform.parent, false);
-                wash.transform.SetSiblingIndex(art.transform.GetSiblingIndex() + 1);
-                var washRect = wash.rectTransform;
-                washRect.anchorMin = Vector2.zero; washRect.anchorMax = Vector2.one;
-                washRect.offsetMin = washRect.offsetMax = Vector2.zero;
+                RectTransform artRect = Rect(veil, "Illustration");
+                Rect area = ((RectTransform)screen.transform).rect;
+                Sprite sprite = screen.Background;
+                Rect cover = CampusBackdropLayout.Cover(new Rect(-area.width * .5f, -area.height * .5f, area.width, area.height),
+                    sprite.rect.width / sprite.rect.height);
+                artRect.anchorMin = artRect.anchorMax = new Vector2(.5f, .5f);
+                artRect.sizeDelta = cover.size;
+                artRect.anchoredPosition = cover.center;
+                Image art = artRect.gameObject.AddComponent<Image>();
+                art.sprite = sprite;
+                art.raycastTarget = false;
+
+                RectTransform washRect = Rect(veil, "Wash");
+                Stretch(washRect);
+                Image wash = washRect.gameObject.AddComponent<Image>();
                 wash.color = MinigameUiTheme.WithAlpha(UITheme.Shared.MapBackgroundTint, .78f);
                 wash.raycastTarget = false;
             }
 ```
 
-Read the builder first (`grep -n "Image\|Background" Assets/_Project/Scripts/UI/GameOverPresentationBuilder.cs`) and attach to the real background object; keep the existing navy colour as the fallback when `Background` is null. Use an aspect-cover fit for the illustration: put the sprite on a child whose size comes from `CampusBackdropLayout.Cover(parentRect, sprite.rect.width / sprite.rect.height)` so it is never stretched.
+(`Rect` and `Stretch` are the builder's own helpers; `CampusBackdropLayout` is in `KMA.Gameplay`, already referenced by `KMA.Gameplay.UI`.) If the screen rect is still zero when `Build` runs (first frame), fall back to a 1920×1080 reference area, the canvas reference resolution used across the shell.
 
 Create `Assets/Editor/GameOverSceneAuthoring.cs`:
 
@@ -1984,12 +2011,37 @@ Delete the `CanvasGroup group` field and every `group` use. Make `SetRestColor` 
 
 - [ ] **Step 5: Control plates and map badge.** In `KitControlState`: `_ => WithAlpha(Surface, SurfaceSoft)` for `Fill`, `_ => WithAlpha(Accent, BorderHint)` for `Border`. Update `UiKitTests`/`SprintUiLayoutTests` expectations that hard-code the old rest alphas (`grep -rn "SurfaceControl\b\|BorderRest" Assets/Tests`). In `MapStopBuilder.cs:66-68` replace the hard-coded shadow with `UiKit.AddShadow(badgeImage)`-equivalent token values: `shadow.effectColor = MinigameUiTheme.ShadowColor; shadow.effectDistance = MinigameUiTheme.ShadowOffset;` (keep the white `Outline`: it is the badge rim, not a shadow).
 
-- [ ] **Step 6: Run** the Step 2 filter plus `KMA.Tests.Presentation` EditMode and the `FestivalUiExperienceTests`/`SprintPresentationGateTests` PlayMode tests; expect PASS. Screenshot `MG_Football` (disabled GIỮ ĐỂ SÚT under the start card is hidden; take the 9 s capture after the start card is dismissed via a test seam if available, else check via `MG_ChessFinal` "Gợi ý" which is disabled during the intro) and `MG_Sprint`.
+- [ ] **Step 6: One pause-button margin for every minigame.** Today Volleyball, Chess and FrogJump place the pause button at `(-22, -18)` (`VolleyballSceneConfigurator.cs:359`, `ChessFinalSceneConfigurator.cs:160`, `FrogJumpSceneConfigurator.cs:180`) and Football at `(-24, -24)`. Add to `UiKit`:
 
-- [ ] **Step 7: Commit**
+```csharp
+        /// Pins the shared pause button to the safe area's top-right corner with the kit margin.
+        public static void PlacePause(RectTransform pause) =>
+            Place(pause, Vector2.one, Vector2.one, new Vector2(-MinigameUiTheme.SpaceMd, -MinigameUiTheme.SpaceMd),
+                Vector2.one * MinigameUiTheme.ButtonHeight);
+```
+
+Test in `UiKitTests`:
+
+```csharp
+        [Test]
+        public void PlacePauseUsesTheKitCornerMargin()
+        {
+            var pause = (RectTransform)new GameObject("Pause", typeof(RectTransform)).transform;
+            UiKit.PlacePause(pause);
+            Assert.That(pause.anchoredPosition, Is.EqualTo(new Vector2(-MinigameUiTheme.SpaceMd, -MinigameUiTheme.SpaceMd)));
+            Assert.That(pause.sizeDelta, Is.EqualTo(Vector2.one * MinigameUiTheme.ButtonHeight));
+            Object.DestroyImmediate(pause.gameObject);
+        }
+```
+
+Replace the four `UiKit.Place(...pause...)` calls with `UiKit.PlacePause((RectTransform)pause.transform);`. Sprint keeps `SprintUiLayout.PauseRect` (it is laid out against its own scoreboard). Rebuild the four scenes (`KMA.EditorTools.VolleyballSceneConfigurator.BuildScene`, `ChessFinalSceneConfigurator.BuildScene`, `FrogJumpSceneConfigurator.BuildScene`, `FootballSceneConfigurator.BuildScene`) and add the four scene files and configurators to this task's commit.
+
+- [ ] **Step 7: Run** the Step 2 filter plus `KMA.Tests.Presentation` EditMode and the `FestivalUiExperienceTests`/`SprintPresentationGateTests` PlayMode tests; expect PASS. Screenshot `MG_Football` (disabled GIỮ ĐỂ SÚT under the start card is hidden; take the 9 s capture after the start card is dismissed via a test seam if available, else check via `MG_ChessFinal` "Gợi ý" which is disabled during the intro) and `MG_Sprint`.
+
+- [ ] **Step 8: Commit**
 
 ```bash
-git add Assets/_Project/Scripts/UI/UITheme.cs Assets/_Project/Settings/UI/UITheme.asset Assets/_Project/Scripts/UI/Kit Assets/_Project/Scripts/UI/MapStopBuilder.cs Assets/Editor/UiThemeMigration.cs Assets/Editor/UiThemeMigration.cs.meta Assets/Tests/EditMode/Presentation
+git add Assets/_Project/Scripts/UI/UITheme.cs Assets/_Project/Settings/UI/UITheme.asset Assets/_Project/Scripts/UI/Kit Assets/_Project/Scripts/UI/MapStopBuilder.cs Assets/Editor/UiThemeMigration.cs Assets/Editor/UiThemeMigration.cs.meta Assets/Tests/EditMode/Presentation Assets/Editor/VolleyballSceneConfigurator.cs Assets/Editor/ChessFinalSceneConfigurator.cs Assets/Editor/FrogJumpSceneConfigurator.cs Assets/Editor/FootballSceneConfigurator.cs Assets/_Project/Scenes/MG_Volleyball.unity Assets/_Project/Scenes/MG_ChessFinal.unity Assets/_Project/Scenes/MG_FrogJump.unity Assets/_Project/Scenes/MG_Football.unity
 git commit -m "fix(ui): one shadow token, readable disabled buttons and solid control plates"
 ```
 
@@ -2112,18 +2164,34 @@ Look at it. If "KẾT QUẢ", a "RESOLVE" chip and the result title are all visi
 
 - [ ] **Step 2: Failing test**
 
+The file's fixture builds `overlay` with `TutorialRoot/CountdownRoot/PlayRoot/ResolveRoot` children and sets private fields through `Set(field, value)`; minigames are `FlagMinigame` (`Advance(seconds)` ticks the lifecycle). Add to `FlagMinigame`:
+
+```csharp
+            public void Lose() => Finish(new MinigameResult(false, 0f, Rank.F));
+```
+
+and the test:
+
 ```csharp
         [Test]
         public void ResolveLeavesTheHeadlineToTheResultPanel()
         {
-            // Build the overlay the way the existing tests in this file do, then:
-            overlay.Show(MinigamePhase.Resolve);
-            Assert.That(resolveRoot.activeSelf, Is.False);
-            Assert.That(phaseLabel.text, Is.Empty);
+            var phaseLabel = new GameObject("PhaseLabel").AddComponent<TMPro.TextMeshPro>();
+            phaseLabel.transform.SetParent(root.transform, false);
+            Set("phaseLabel", phaseLabel);
+            FlagMinigame minigame = Minigame(sharedTutorial: true, sharedCountdown: true, ownsGate: false);
+            overlay.Bind(minigame);
+            for (int i = 0; i < 20 && minigame.PresentationPhase != MinigamePhase.Play; i++)
+                minigame.Advance(1f);
+            Assert.That(minigame.PresentationPhase, Is.EqualTo(MinigamePhase.Play));
+            minigame.Lose();
+            Assert.That(minigame.PresentationPhase, Is.EqualTo(MinigamePhase.Resolve));
+            Assert.That(resolveRoot.activeSelf, Is.False, "no RESOLVE chip on top of the result panel");
+            Assert.That(phaseLabel.text, Is.Empty, "no second headline above the result title");
         }
 ```
 
-Use the file's existing fixture names for `overlay`, `resolveRoot`, `phaseLabel` and its phase-setting method (`grep -n "public void\|resolveRoot\|phaseLabel" Assets/Tests/EditMode/Presentation/PhaseOverlayPresentationFlagsTests.cs`). Update any existing assertion that expects `resolveRoot` active or "KẾT QUẢ" at Resolve.
+(add `using KMA.Gameplay;` for `Rank`/`MinigameResult` if missing; take their namespace from `grep -rn "enum Rank\|struct MinigameResult\|class MinigameResult" Assets/_Project/Scripts`). Update any existing assertion that expects `resolveRoot` active or "KẾT QUẢ" at Resolve.
 
 - [ ] **Step 3: Run, expect FAIL.**
 
@@ -2167,24 +2235,9 @@ git commit -m "fix(ui): show a single headline on the result screen"
 - `GameplayInputRouter` loses `punishmentActionMapName`, `punishmentActionMap`, `PunishmentActionMapName`.
 - `ResultPanel.Show(result, "Punishment")` call sites in tests switch to `"Map"`.
 
-- [ ] **Step 1: Write the new guard tests first.** In `Assets/Tests/EditMode/Progression/SaveSystemTests.cs` add:
+- [ ] **Step 1: Write the new guard tests first.** Legacy saves are already pinned and must stay green: `SaveSystemTests.cs:218-234` (a saved `awaitingPunishment = true` loads as `false`) and `GameSessionPersistenceTests.Restore_LegacyPunishmentSave_NeverResumesIntoPunishment` (`:367`; restores to `ResumeRoute() == SessionRoute.Map`, lives kept). In that test replace the two lines on `AwaitingPunishment`/`PendingPunishmentSubject` with `Assert.That(session.ToSaveData().awaitingPunishment, Is.False);`. In the helper `AssertNoActiveAttempt` (`:392`) delete the `exhausted` variable and its two assertions (the properties are removed). This is the Review Focus #4 pin.
 
-```csharp
-        [Test]
-        public void Load_LegacyAwaitingPunishment_RestoresWithoutPunishment()
-        {
-            // Build a current-version save the way the neighbouring tests do, then:
-            current.awaitingPunishment = true;
-            // ...write it with the file's helper, load it back...
-            Assert.That(actual.awaitingPunishment, Is.False);
-            var session = GameSession.Restore(actual); // use the restore API the neighbouring tests use
-            Assert.That(session.Lives, Is.GreaterThanOrEqualTo(0));
-        }
-```
-
-(Follow the exact helper names in the surrounding tests, e.g. the block around `SaveSystemTests.cs:225-234`, which already writes `awaitingPunishment = true`; this test may be a near copy of it with the extra `Restore` check.)
-
-In `Assets/Tests/EditMode/Progression/` (or the router test file that already constructs a `SceneRouter`; find it with `grep -rln "TryGetSceneName" Assets/Tests`) add:
+In `Assets/Tests/EditMode/Progression/SceneRouterSessionTests.cs` (fixture field `router`, created in `SetUp` at `:17`) add:
 
 ```csharp
         [Test]
@@ -2192,12 +2245,29 @@ In `Assets/Tests/EditMode/Progression/` (or the router test file that already co
         {
             Assert.That(router.TryGetSceneName(SessionRoute.RetiredPunishment, SubjectId.Sprint, out string scene), Is.False);
             Assert.That(scene, Is.Null.Or.Empty);
-            Assert.That(System.IO.File.Exists("Assets/_Project/Scenes/Punishment.unity"), Is.False);
-            Assert.That(UnityEditor.EditorBuildSettings.scenes.Any(s => s.path.EndsWith("/Punishment.unity")), Is.False);
         }
 ```
 
-(Put the `EditorBuildSettings` assertion in an EditMode test assembly that can reference `UnityEditor`, e.g. `KMA.EditorTools.EditMode.Tests`.)
+In `Assets/Tests/EditMode/EditorTools/` (assembly references `UnityEditor`) add `RetiredSceneTests.cs`:
+
+```csharp
+using System.Linq;
+using NUnit.Framework;
+using UnityEditor;
+
+namespace KMA.Tests.EditorTools
+{
+    public sealed class RetiredSceneTests
+    {
+        [Test]
+        public void PunishmentSceneIsGoneFromTheProjectAndTheBuild()
+        {
+            Assert.That(System.IO.File.Exists("Assets/_Project/Scenes/Punishment.unity"), Is.False);
+            Assert.That(EditorBuildSettings.scenes.Any(s => s.path.EndsWith("/Punishment.unity")), Is.False);
+        }
+    }
+}
+```
 
 - [ ] **Step 2: Run, expect compile failure** (`RetiredPunishment` missing).
 
@@ -2296,7 +2366,7 @@ grep -o 'result="[A-Za-z]*" total="[0-9]*" passed="[0-9]*" failed="[0-9]*"' Buil
 
 Expected: no failures beyond the Task 0 baseline list.
 
-- [ ] **Step 2: "After" captures at 16:9 and 20:9.** GUI Editor running. Capture the Task 0 list into `Builds/Screenshots/campus-after/`, plus: `MG_Sprint` result (`false -1 pass`), `MG_FrogJump` `frog-fall`, `MG_ChessFinal` `chess-select`, `Celebration` `celebration-cheer`, `Map` `map-lives-3`, `Menu` settings, a pause capture (`openPause true`, 7th arg). Then set the Game view to 2400×1080 (20:9) in the Editor (Game view resolution dropdown, or temporarily change `PlayModeScreenshot` capture size if it exposes one) and repeat into `campus-after-20x9/`. Read every PNG.
+- [ ] **Step 2: "After" captures at 16:9 and 20:9.** GUI Editor running. Capture the Task 0 list into `Builds/Screenshots/campus-after/`, plus: `MG_Sprint` result (`false -1 pass`), `MG_FrogJump` `frog-fall`, `MG_ChessFinal` `chess-select` and `chess-hint` (disabled/enabled hint button), `Celebration` `celebration-cheer`, `Map` `map-lives-3` and `map-complete` (all four stops incl. "Bài kiểm tra cuối"), `Menu` settings, a pause capture (`openPause true`, 7th arg). The full qaState list is in `Assets/Editor/PlayModeScreenshotQaStates.cs:51-70`. Then set the Game view to 2400×1080 (20:9) in the Editor (Game view resolution dropdown, or temporarily change `PlayModeScreenshot` capture size if it exposes one) and repeat into `campus-after-20x9/`. Read every PNG.
 
 Check list per capture:
 - campus visible (sky + KMA skyline) in Sprint, Volleyball, FrogJump, Football, Chess, Celebration; no beach colours; no dark band at any edge;
