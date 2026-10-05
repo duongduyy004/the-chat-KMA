@@ -1,0 +1,14 @@
+{
+    "name": "KMA.Gameplay.Chess.Core",
+    "rootNamespace": "KMA.Gameplay.Chess",
+    "references": [],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": true
+}
