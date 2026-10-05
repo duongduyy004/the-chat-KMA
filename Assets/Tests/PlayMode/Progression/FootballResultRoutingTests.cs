@@ -72,9 +72,12 @@ namespace KMA.Tests.Gameplay.Progression
 
             controller.Complete(new MinigameResult(false, 0f, Rank.F));
 
-            Assert.That(router.Session.Lives, Is.EqualTo(4));
+            // A first exam failure costs nothing at commit: it owes a frog jump instead.
+            Assert.That(router.Session.Lives, Is.EqualTo(5));
+            Assert.That(router.Session.PendingFrogJump, Is.Not.Null);
             Assert.That(router.Session.Journey.ActiveAttempt, Is.Null);
-            Assert.That(lastSaved.lives, Is.EqualTo(4));
+            Assert.That(lastSaved.lives, Is.EqualTo(5));
+            Assert.That(lastSaved.journey.pendingFrogJump, Is.Not.Null);
             Assert.That(lastSaved.journey.lastCommittedAttemptId, Is.Not.Null.And.Not.Empty);
             Assert.That(notifications, Is.EqualTo(1));
             Assert.That(transitions, Is.Empty);
@@ -88,9 +91,9 @@ namespace KMA.Tests.Gameplay.Progression
 
             panel.Continue();
 
-            Assert.That(router.Session.Lives, Is.EqualTo(4));
+            Assert.That(router.Session.Lives, Is.EqualTo(5));
             Assert.That(transitions.Count, Is.EqualTo(1));
-            Assert.That(transitions[0].Route, Is.EqualTo(SessionRoute.Map));
+            Assert.That(transitions[0].Route, Is.EqualTo(SessionRoute.FrogJump));
         }
 
         [Test]
@@ -100,6 +103,8 @@ namespace KMA.Tests.Gameplay.Progression
             var reloaded = new GameSession();
             reloaded.Restore(lastSaved);
 
+            // The commit is not charged again; only the unfinished frog jump is forfeited (-1).
+            Assert.That(reloaded.ForfeitedFrogJumpOnRestore, Is.True);
             Assert.That(reloaded.Lives, Is.EqualTo(4));
             Assert.That(reloaded.Journey.CheckpointChallengeId, Is.EqualTo("soccer_exam"));
             Assert.That(reloaded.Journey.ActiveAttempt, Is.Null);
@@ -112,7 +117,8 @@ namespace KMA.Tests.Gameplay.Progression
             router.ConfigureRouteAcceptanceForTests((_, _) => false);
 
             panel.Continue();
-            Assert.That(router.Session.Lives, Is.EqualTo(4));
+            Assert.That(router.Session.Lives, Is.EqualTo(5));
+            Assert.That(router.Session.PendingFrogJump, Is.Not.Null);
             Assert.That(router.Session.Journey.CheckpointChallengeId, Is.EqualTo("soccer_exam"));
         }
 

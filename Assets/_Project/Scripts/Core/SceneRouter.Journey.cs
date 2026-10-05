@@ -103,13 +103,8 @@ namespace KMA.Gameplay.Core
             return transitioner.TryRoute(SessionRoute.Subject, session.ActiveSubject, sceneName);
         }
 
-        public bool PracticeCurrentSubject()
-        {
-            if (!session.Journey.AwaitingSupplementary)
-                return false;
-            ChallengeDefinition practice = session.Journey.Catalog.Get(session.Journey.CheckpointChallengeId);
-            return TryStartChallenge(practice.Id, ChallengeAttemptMode.Supplementary, practice.Difficulty);
-        }
+        internal void ReportChallengeResultForTests(ChallengeAttemptResult result) =>
+            PreviewChallengeResult(session.Journey.ActiveAttempt, result);
 
         void BindChallenge(IChallengeController controller)
         {
@@ -168,6 +163,9 @@ namespace KMA.Gameplay.Core
                     return;
                 }
                 displayedOutcome = retried;
+                // Once saved, a failure that owes a frog jump goes there instead of the map.
+                if (retried.FrogJumpRequired)
+                    action = JourneyResultAction.FrogJump;
             }
             else if (!displayedOutcome.HasValue)
                 return;
@@ -177,15 +175,14 @@ namespace KMA.Gameplay.Core
                 if (!TryStartChallenge(displayedChallenge.ChallengeId, displayedChallenge.Mode,
                     displayedChallenge.Difficulty)) RestoreChallengeActions();
             }
-            else if (action == JourneyResultAction.Practice)
+            else if (action == JourneyResultAction.FrogJump)
             {
-                if (!PracticeCurrentSubject()) RestoreChallengeActions();
+                if (!StartFrogJump()) RestoreChallengeActions();
             }
             else
             {
-                bool routed = Route(displayedOutcome.HasValue && displayedOutcome.Value.AttemptsRemaining == 0 &&
-                    !displayedOutcome.Value.AwaitingSupplementary && !displayedOutcome.Value.CourseComplete
-                    ? SessionRoute.GameOver : SessionRoute.Map);
+                // Running out of lives no longer ends the run: lives regenerate on the map.
+                bool routed = Route(SessionRoute.Map);
                 if (!routed)
                     challengePanel?.ShowChallenge(displayedChallenge, displayedResult, displayedOutcome,
                         lastRouteError ?? "Không thể chuyển cảnh. Hãy thử lại.");

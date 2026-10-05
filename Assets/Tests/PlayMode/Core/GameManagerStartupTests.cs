@@ -230,6 +230,11 @@ namespace KMA.Tests.Gameplay.Core
             int saves = 0;
             GameManager manager = CreateInitializedManager(router, _ => saves++);
             CompleteThroughSprintPractice(manager.Session);
+            // A first failure costs no life (it owes a frog jump); the second one costs a life at commit.
+            Assert.That(router.StartSubject(SubjectId.Sprint), Is.True);
+            router.SubmitSubjectResult(SubjectId.Sprint, new MinigameResult(false, 0f, Rank.F));
+            Assert.That(manager.Session.Lives, Is.EqualTo(5));
+            Assert.That(manager.Session.TryApplyFrogJump(manager.Session.PendingFrogJump.Id, true), Is.True);
             Assert.That(router.StartSubject(SubjectId.Sprint), Is.True);
             saves = 0;
             router.SubmitSubjectResult(SubjectId.Sprint, new MinigameResult(false, 0f, Rank.F));

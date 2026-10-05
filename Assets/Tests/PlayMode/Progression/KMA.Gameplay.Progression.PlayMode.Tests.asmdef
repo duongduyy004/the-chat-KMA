@@ -16,7 +16,8 @@
         "KMA.Gameplay.Football",
         "KMA.Gameplay.Volleyball",
         "UnityEngine.UI",
-        "Unity.TextMeshPro"
+        "Unity.TextMeshPro",
+        "KMA.Text"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],

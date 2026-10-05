@@ -49,7 +49,9 @@ namespace KMA.Tests.Gameplay.Progression
             Assert.That(SceneManager.GetActiveScene().name, Is.EqualTo("Map"));
             Assert.That(router.Session.PendingPunishmentSubject, Is.Null);
             Assert.That(router.Session.AwaitingPunishment, Is.False);
-            Assert.That(router.Session.Lives, Is.EqualTo(livesBefore - 1));
+            // A first failure costs no life at commit; it owes a frog jump instead.
+            Assert.That(router.Session.Lives, Is.EqualTo(livesBefore));
+            Assert.That(router.Session.PendingFrogJump, Is.Not.Null);
         }
 
         static IEnumerator WaitForScene(string sceneName)

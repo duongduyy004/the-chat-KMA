@@ -1,0 +1,152 @@
+using System;
+using UnityEngine;
+using UnityEngine.SceneManagement;
+
+namespace KMA.Gameplay.Core
+{
+    /// The mandatory frog jump after a failed journey practice/exam: route to its scene, apply its
+    /// result once, then retry the failed challenge (or return to the map with no lives left).
+    public sealed partial class SceneRouter
+    {
+        [SerializeField] string frogJumpScene = "MG_FrogJump";
+
+        MinigameBase boundFrogJump;
+        Action<MinigameResult> frogJumpHandler;
+        IFrogJumpResultPanel frogPanel;
+        FrogJumpResultView frogView;
+        string frogRetryChallengeId;
+        bool frogSavePending;
+        bool frogContinueUsed;
+
+        public string FrogJumpScene => frogJumpScene;
+
+        public bool StartFrogJump()
+        {
+            lastRouteError = null;
+            if (IsTransitioning || session.PendingFrogJump == null ||
+                !TryGetSceneName(SessionRoute.FrogJump, null, out string sceneName))
+                return false;
+            PrepareSceneBinding(SessionRoute.FrogJump, null);
+            if (!transitioner.TryRoute(SessionRoute.FrogJump, null, sceneName))
+                return false;
+            SessionChanged?.Invoke();
+            return true;
+        }
+
+        internal void CompleteFrogJumpForTests(bool reachedFinish)
+        {
+            if (session.PendingFrogJump != null)
+                OnFrogJumpCompleted(session.PendingFrogJump.Id, new MinigameResult(reachedFinish, 0f,
+                    reachedFinish ? Rank.C : Rank.F));
+        }
+
+        void BindFrogJump(Scene scene)
+        {
+            FrogJumpPending pending = session.PendingFrogJump;
+            if (pending == null || !string.Equals(scene.name, frogJumpScene, StringComparison.Ordinal))
+                return;
+            MinigameBase minigame = FindFirstObjectByType<MinigameBase>(FindObjectsInactive.Exclude);
+            if (minigame == null)
+                return;
+            string id = pending.Id;
+            boundFrogJump = minigame;
+            frogJumpHandler = result => OnFrogJumpCompleted(id, result);
+            minigame.Completed += frogJumpHandler;
+        }
+
+        void UnbindFrogJump()
+        {
+            if (boundFrogJump != null && frogJumpHandler != null)
+                boundFrogJump.Completed -= frogJumpHandler;
+            boundFrogJump = null;
+            frogJumpHandler = null;
+        }
+
+        void OnFrogJumpCompleted(string frogJumpId, MinigameResult result)
+        {
+            FrogJumpPending pending = session.PendingFrogJump;
+            if (pending == null || pending.Id != frogJumpId || result == null)
+                return;
+            string retryId = pending.FailedChallengeId;
+            bool savesLife = pending.SavesLife;
+            if (!session.TryApplyFrogJump(frogJumpId, result.Pass))
+                return;
+
+            frogRetryChallengeId = retryId;
+            frogContinueUsed = false;
+            frogSavePending = !TryPersistJourney(out string saveError);
+            SessionChanged?.Invoke();
+
+            UnbindFrogPanel();
+            frogPanel = FindFrogJumpPanel() ??
+                throw new InvalidOperationException("A frog jump result panel is required.");
+            frogPanel.FrogJumpContinueRequested += OnFrogJumpContinue;
+            frogView = new FrogJumpResultView(result.Pass, savesLife, session.Lives, saveError);
+            frogPanel.ShowFrogJump(frogView);
+        }
+
+        void OnFrogJumpContinue()
+        {
+            if (frogPanel == null || frogContinueUsed)
+                return;
+            if (frogSavePending)
+            {
+                if (!TryPersistJourney(out string saveError))
+                {
+                    ShowFrogError(saveError);
+                    return;
+                }
+                frogSavePending = false;
+            }
+
+            frogContinueUsed = true;
+            bool routed;
+            if (session.Lives > 0 && !string.IsNullOrEmpty(frogRetryChallengeId))
+            {
+                ChallengeDefinition definition = session.Journey.Catalog.Get(frogRetryChallengeId);
+                routed = TryStartChallenge(definition.Id, ChallengeAttemptMode.Journey, definition.Difficulty);
+            }
+            else
+                routed = Route(SessionRoute.Map);
+
+            if (routed)
+                UnbindFrogPanel();
+            else
+            {
+                frogContinueUsed = false;
+                ShowFrogError(lastRouteError ?? "Không thể chuyển cảnh. Hãy thử lại.");
+            }
+        }
+
+        void ShowFrogError(string error)
+        {
+            frogView = new FrogJumpResultView(frogView.ReachedFinish, frogView.SavesLife, session.Lives, error);
+            frogPanel?.ShowFrogJump(frogView);
+        }
+
+        bool TryPersistJourney(out string error)
+        {
+            error = null;
+            if (journeyPersist == null)
+                return true;
+            try { return journeyPersist(out error); }
+            catch (Exception exception) { error = exception.Message; return false; }
+        }
+
+        void UnbindFrogPanel()
+        {
+            if (frogPanel != null)
+                frogPanel.FrogJumpContinueRequested -= OnFrogJumpContinue;
+            frogPanel = null;
+        }
+
+        static IFrogJumpResultPanel FindFrogJumpPanel()
+        {
+            foreach (MonoBehaviour behaviour in FindObjectsByType<MonoBehaviour>(
+                FindObjectsInactive.Include, FindObjectsSortMode.None))
+                if (behaviour is IFrogJumpResultPanel panel)
+                    return panel;
+            return null;
+        }
+    }
+}

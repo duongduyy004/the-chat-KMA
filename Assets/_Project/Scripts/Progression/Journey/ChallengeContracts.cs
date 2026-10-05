@@ -71,4 +71,26 @@ namespace KMA.Gameplay
         void ShowChallenge(ChallengeAttemptContext context, ChallengeAttemptResult result,
             JourneyCommitOutcome? outcome, string saveError);
     }
+
+    public readonly struct FrogJumpResultView
+    {
+        public bool ReachedFinish { get; }
+        public bool SavesLife { get; }
+        public int LivesRemaining { get; }
+        public string Error { get; }
+
+        public FrogJumpResultView(bool reachedFinish, bool savesLife, int livesRemaining, string error)
+        {
+            ReachedFinish = reachedFinish;
+            SavesLife = savesLife;
+            LivesRemaining = livesRemaining;
+            Error = error;
+        }
+    }
+
+    public interface IFrogJumpResultPanel
+    {
+        event Action FrogJumpContinueRequested;
+        void ShowFrogJump(FrogJumpResultView view);
+    }
 }

@@ -158,8 +158,8 @@ namespace KMA.Gameplay.Core
             UnbindResultPanel();
             UnbindJourneyControllers();
             UnbindChallengePanel();
-            UnbindJourneyControllers();
-            UnbindChallengePanel();
+            UnbindFrogJump();
+            UnbindFrogPanel();
         }
 
         public bool StartSubject(SubjectId subject)
@@ -441,6 +441,7 @@ namespace KMA.Gameplay.Core
                 SessionRoute.Punishment => punishmentScene,
                 SessionRoute.Map => mapScene,
                 SessionRoute.GameOver => gameOverScene,
+                SessionRoute.FrogJump => frogJumpScene,
                 SessionRoute.Subject or SessionRoute.RetrySubject => SceneFor(subject),
                 _ => null
             };
@@ -473,6 +474,7 @@ namespace KMA.Gameplay.Core
 
         void OnSceneLoaded(Scene scene, LoadSceneMode mode)
         {
+            UnbindFrogJump();
             UnbindSubjects();
 
             if (session.Journey.ActiveAttempt == null && awaitingSubjectScene && activeSubject.HasValue &&
@@ -488,6 +490,7 @@ namespace KMA.Gameplay.Core
                 awaitingSubjectScene = !boundController;
             }
             BindJourneyControllers();
+            BindFrogJump(scene);
         }
 
         void EnsureRouteIsConfigured(SessionRoute route, SubjectId? subject)
@@ -514,6 +517,7 @@ namespace KMA.Gameplay.Core
                     break;
                 case SessionRoute.Map:
                 case SessionRoute.GameOver:
+                case SessionRoute.FrogJump:
                     activeSubject = null;
                     awaitingSubjectScene = false;
                     break;

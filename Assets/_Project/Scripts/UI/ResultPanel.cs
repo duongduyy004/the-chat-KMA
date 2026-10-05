@@ -11,7 +11,8 @@ namespace KMA.Gameplay.UI
 {
     /// The shared result screen of every minigame. Tiếp tục raises the preview route; Chơi lại
     /// (only when a retry is configured) raises ResultPanelActions.Retry.
-    public sealed class ResultPanel : MonoBehaviour, IRetryResultPreviewPanel, IChallengeResultPanel
+    public sealed class ResultPanel : MonoBehaviour, IRetryResultPreviewPanel, IChallengeResultPanel,
+        IFrogJumpResultPanel
     {
         static float ScrimDuration => Mathf.Max(0f, UITheme.Shared.Motion.resultScrim);
         static float ModalDuration => Mathf.Max(0f, UITheme.Shared.Motion.resultModal);
@@ -36,6 +37,7 @@ namespace KMA.Gameplay.UI
         bool retryAvailable;
         bool actionPending;
         bool listenersBound;
+        bool frogMode;
         string finalScoreText = string.Empty;
         ChallengeAttemptContext challengeContext;
         string challengeSaveError;
@@ -44,6 +46,7 @@ namespace KMA.Gameplay.UI
 
         public event Action<string> ActionRequested;
         public event Action<JourneyResultAction> JourneyActionRequested;
+        public event Action FrogJumpContinueRequested;
 
         public MinigameResult CurrentResult { get; private set; }
         public string PreviewRoute { get; private set; } = string.Empty;
@@ -53,6 +56,9 @@ namespace KMA.Gameplay.UI
         public bool IsVisible => contentRoot ? contentRoot.activeInHierarchy : gameObject.activeInHierarchy;
         public bool ContinueInteractable => actionButton && actionButton.interactable;
         public bool SupportsRetry => retryButton && detailLabel && livesLabel;
+        /// The main button's caption exactly as SetButtonLabel wrote it (VietText-normalized).
+        public string ContinueLabel => actionButton != null
+            ? actionButton.GetComponentInChildren<TMP_Text>(true)?.text : null;
 
         /// Wires a panel built in code; prefab instances are wired by MinigamePrefabStyler.
         public void Configure(GameObject content, TMP_Text status, TMP_Text detail, TMP_Text score, TMP_Text rank,
@@ -97,6 +103,7 @@ namespace KMA.Gameplay.UI
 
         public void Show(MinigameResult result, string previewRoute)
         {
+            frogMode = false;
             challengeContext = null;
             challengeSaveError = null;
             challengeOutcome = null;
@@ -141,12 +148,17 @@ namespace KMA.Gameplay.UI
             if (CurrentResult == null || HasContinued || actionPending)
                 return;
             HasContinued = true;
+            if (frogMode)
+            {
+                FrogJumpContinueRequested?.Invoke();
+                return;
+            }
             if (challengeContext != null)
             {
                 JourneyActionRequested?.Invoke(challengeSaveError != null && !challengeOutcome.HasValue
                     ? JourneyResultAction.RetrySave
-                    : challengeOutcome.HasValue && challengeOutcome.Value.AwaitingSupplementary
-                        ? JourneyResultAction.Practice : JourneyResultAction.Continue);
+                    : challengeOutcome.HasValue && challengeOutcome.Value.FrogJumpRequired
+                        ? JourneyResultAction.FrogJump : JourneyResultAction.Continue);
                 return;
             }
             ActionRequested?.Invoke(PreviewRoute);
@@ -168,6 +180,7 @@ namespace KMA.Gameplay.UI
         public void ShowChallenge(ChallengeAttemptContext context, ChallengeAttemptResult result,
             JourneyCommitOutcome? outcome, string saveError)
         {
+            frogMode = false;
             challengeContext = context;
             challengeSaveError = outcome.HasValue ? null : saveError;
             challengeOutcome = outcome;
@@ -206,17 +219,21 @@ namespace KMA.Gameplay.UI
                     : VietText.Fix($"XẾP HẠNG {result.ExamResult.Rank}");
                 rankLabel.gameObject.SetActive(result.ExamResult != null);
             }
+            bool frogJump = outcome.HasValue && outcome.Value.FrogJumpRequired;
             SetDetail(saveError ?? (context.Mode == ChallengeAttemptMode.Journey
-                ? outcome.HasValue ? outcome.Value.AwaitingSupplementary
-                    ? "Bạn đã hết lượt thi. Hãy ôn tập bài luyện hiện tại." : "Kết quả đã lưu"
+                ? outcome.HasValue
+                    ? frogJump
+                        ? outcome.Value.FrogJumpSavesLife
+                            ? "Về đích trong 60 s để giữ lượt thi"
+                            : "−1 lượt thi. Bật cóc xong mới được thi lại"
+                        : "Kết quả đã lưu"
                     : "Kết quả đang chờ lưu"
                 : $"Thời gian {result.Metrics.Elapsed:0.0}s"));
             if (errorLabel != null) errorLabel.text = VietText.Fix(saveError ?? string.Empty);
-            bool awaitingPractice = outcome.HasValue && outcome.Value.AwaitingSupplementary;
-            SetButtonLabel(actionButton, saveError == null ? awaitingPractice ? "ÔN BÀI" : "TIẾP TỤC"
+            SetButtonLabel(actionButton, saveError == null ? frogJump ? "BẬT CÓC" : "TIẾP TỤC"
                 : outcome.HasValue ? "THỬ LẠI" : "LƯU LẠI");
             retryAvailable = result.ExamResult != null && !result.Pass && outcome.HasValue &&
-                outcome.Value.AttemptsRemaining > 0 && !awaitingPractice;
+                outcome.Value.AttemptsRemaining > 0 && !frogJump;
             if (retryButton != null)
             {
                 retryButton.gameObject.SetActive(retryAvailable);
@@ -226,10 +243,49 @@ namespace KMA.Gameplay.UI
             {
                 int attemptsRemaining = outcome.HasValue ? outcome.Value.AttemptsRemaining : 0;
                 livesLabel.text = VietText.Fix($"LƯỢT THI: {attemptsRemaining}/{GameSession.MaxLives}");
-                livesLabel.gameObject.SetActive(result.ExamResult != null);
+                livesLabel.gameObject.SetActive(result.ExamResult != null || frogJump);
             }
             RefreshButtons();
             Reveal(result.ExamResult == null ? result.Metrics.CompletedTargets : result.ExamResult.Score);
+        }
+
+        public void ShowFrogJump(FrogJumpResultView view)
+        {
+            frogMode = true;
+            challengeContext = null;
+            challengeSaveError = null;
+            challengeOutcome = null;
+            challengeResult = null;
+            CurrentResult = new MinigameResult(view.ReachedFinish, 0f, view.ReachedFinish ? Rank.C : Rank.F);
+            PreviewRoute = string.Empty;
+            HasContinued = false;
+            actionPending = false;
+            gameObject.SetActive(true);
+            transform.SetAsLastSibling();
+            if (contentRoot != null) contentRoot.SetActive(true);
+            ApplyTheme();
+            if (statusLabel != null)
+            {
+                statusLabel.text = VietText.Fix(view.ReachedFinish ? "VỀ ĐÍCH!" : "HẾT GIỜ!");
+                statusLabel.color = view.ReachedFinish ? MinigameUiTheme.Success : MinigameUiTheme.Energy;
+            }
+            // The frog jump has no score: blank the score, hide the rank, and reveal without the
+            // count-up so no stray "0" is ever written.
+            finalScoreText = string.Empty;
+            if (scoreLabel != null) scoreLabel.text = string.Empty;
+            if (rankLabel != null) rankLabel.gameObject.SetActive(false);
+            SetDetail(!view.SavesLife ? "Lượt thi đã bị trừ khi trượt bài"
+                : view.ReachedFinish ? "Giữ được lượt thi" : "−1 lượt thi");
+            if (livesLabel != null)
+            {
+                livesLabel.text = VietText.Fix($"LƯỢT THI: {view.LivesRemaining}/{GameSession.MaxLives}");
+                livesLabel.gameObject.SetActive(true);
+            }
+            if (errorLabel != null) errorLabel.text = VietText.Fix(view.Error ?? string.Empty);
+            SetButtonLabel(actionButton, view.LivesRemaining > 0 ? "THI LẠI" : "VỀ BẢN ĐỒ");
+            retryAvailable = false;
+            RefreshButtons();
+            Reveal(0f, scoreless: true);
         }
 
         public void SetActionPending(bool pending, string error)
@@ -283,7 +339,12 @@ namespace KMA.Gameplay.UI
             if (errorLabel != null) errorLabel.color = MinigameUiTheme.Energy;
             TMP_Text caption = contentRoot != null
                 ? contentRoot.transform.Find("ScoreCaption")?.GetComponent<TMP_Text>() : null;
-            if (caption != null) caption.color = MinigameUiTheme.WithAlpha(MinigameUiTheme.TextPrimary, .7f);
+            if (caption != null)
+            {
+                caption.color = MinigameUiTheme.WithAlpha(MinigameUiTheme.TextPrimary, .7f);
+                // The frog jump card has no score, so its caption would float over nothing.
+                caption.gameObject.SetActive(!frogMode);
+            }
             if (actionButton != null) UiKit.StyleButton(actionButton, ButtonVariant.Primary);
             if (retryButton != null) UiKit.StyleButton(retryButton, ButtonVariant.Primary);
         }
@@ -316,7 +377,7 @@ namespace KMA.Gameplay.UI
                 label.text = VietText.Fix(value);
         }
 
-        void Reveal(float finalScore)
+        void Reveal(float finalScore, bool scoreless = false)
         {
             StopAllCoroutines();
             if (!Application.isPlaying || !isActiveAndEnabled)
@@ -324,12 +385,12 @@ namespace KMA.Gameplay.UI
                 SnapRevealed();
                 return;
             }
-            PrepareReveal();
-            StartCoroutine(AnimateReveal(finalScore));
+            PrepareReveal(scoreless);
+            StartCoroutine(AnimateReveal(finalScore, scoreless));
         }
 
         /// Puts every animated element in its pre-stage state so nothing shows before its turn.
-        void PrepareReveal()
+        void PrepareReveal(bool scoreless)
         {
             CanvasGroup scrim = ScrimGroup();
             if (scrim != null) scrim.alpha = 0f;
@@ -344,7 +405,7 @@ namespace KMA.Gameplay.UI
                 Color c = statusLabel.color;
                 statusLabel.color = new Color(c.r, c.g, c.b, 0f);
             }
-            if (scoreLabel != null) scoreLabel.text = VietText.Fix("0");
+            if (scoreLabel != null) scoreLabel.text = scoreless ? string.Empty : VietText.Fix("0");
             if (rankLabel != null) rankLabel.rectTransform.localScale = Vector3.one * .6f;
         }
 
@@ -371,11 +432,13 @@ namespace KMA.Gameplay.UI
             if (scoreLabel != null) scoreLabel.text = VietText.Fix(finalScoreText);
         }
 
-        IEnumerator AnimateReveal(float finalScore)
+        IEnumerator AnimateReveal(float finalScore, bool scoreless)
         {
             yield return FadeGroup(ScrimGroup(), ScrimDuration);
             yield return ScaleAndFadeModal();
             yield return FadeText(statusLabel, TitleDuration);
+            if (scoreless)
+                yield break;
             yield return CountUpScore(finalScore);
             yield return PopRank();
         }

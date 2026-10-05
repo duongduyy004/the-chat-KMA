@@ -40,24 +40,59 @@ namespace KMA.Tests.Gameplay.Progression
         }
 
         [UnityTest]
-        public IEnumerator VolleyballFiveFailuresRequireFreshPracticeAndKeepSprintPassed()
+        public IEnumerator VolleyballExamFailuresGoThroughTheFrogJumpAndKeepSprintPassed()
         {
             yield return StartRuntime();
             for (int i = 0; i < 5; i++) yield return PlayCheckpoint();
-            for (int i = 0; i < 5; i++)
-            {
-                yield return PlayCheckpoint(false);
-                Assert.That(router.Session.Lives, Is.EqualTo(4 - i));
-            }
-            Assert.That(router.Session.Journey.AwaitingSupplementary, Is.True);
-            Assert.That(router.Session.Journey.CheckpointChallengeId, Is.EqualTo("volleyball_practice"));
+            Assert.That(router.Session.Journey.CheckpointChallengeId, Is.EqualTo("volleyball_exam"));
+            ChallengeDefinition exam = router.Session.Journey.Catalog.Get("volleyball_exam");
+            yield return StartCheckpoint();
+
+            // Failure #1 costs nothing at commit; losing its frog jump costs one life.
+            yield return FailIntoFrogJump(exam);
+            Assert.That(router.Session.Lives, Is.EqualTo(5));
+            Assert.That(router.Session.PendingFrogJump.SavesLife, Is.True);
+            yield return FinishFrogJump(false, "MG_Volleyball");
+            Assert.That(router.Session.Lives, Is.EqualTo(4));
+            Assert.That(router.Session.Journey.ActiveAttempt.ChallengeId, Is.EqualTo("volleyball_exam"));
+
+            // Failure #2 costs a life at commit; its frog jump result cannot change lives.
+            yield return FailIntoFrogJump(exam);
+            Assert.That(router.Session.Lives, Is.EqualTo(3));
+            Assert.That(router.Session.PendingFrogJump.SavesLife, Is.False);
+            yield return FinishFrogJump(true, "MG_Volleyball");
+            Assert.That(router.Session.Lives, Is.EqualTo(3));
+
             Assert.That(router.Session.GetRecord(SubjectId.Sprint).Passed, Is.True);
             Assert.That(router.Session.Journey.IsSubjectUnlocked(SubjectId.Football), Is.False);
-            yield return PlayCheckpoint();
-            Assert.That(router.Session.Lives, Is.EqualTo(5));
-            Assert.That(router.Session.Journey.SupplementaryRounds, Is.EqualTo(1));
-            yield return PlayCheckpoint();
+            yield return JourneyRuntimeDriver.CompleteCurrent(exam, true);
             Assert.That(router.Session.GetRecord(SubjectId.Volleyball).Passed, Is.True);
+            Assert.That(router.Session.Journey.IsSubjectUnlocked(SubjectId.Football), Is.True);
+            Assert.That(router.Route(SessionRoute.Map), Is.True);
+            yield return JourneyRuntimeDriver.WaitForScene(router, "Map");
+        }
+
+        IEnumerator FailIntoFrogJump(ChallengeDefinition challenge)
+        {
+            yield return JourneyRuntimeDriver.CompleteCurrent(challenge, false);
+            ResultPanel panel = Object.FindFirstObjectByType<ResultPanel>(FindObjectsInactive.Include);
+            Assert.That(panel.CurrentResult.Pass, Is.False, challenge.Id);
+            Assert.That(panel.RetryAvailable, Is.False, "A failure that owes a frog jump offers no retry.");
+            Assert.That(panel.ContinueLabel, Is.EqualTo(VietText.Fix("BẬT CÓC")));
+            Assert.That(router.Session.PendingFrogJump, Is.Not.Null);
+            panel.Continue();
+            yield return JourneyRuntimeDriver.WaitForScene(router, "MG_FrogJump");
+        }
+
+        IEnumerator FinishFrogJump(bool reachedFinish, string retryScene)
+        {
+            router.CompleteFrogJumpForTests(reachedFinish);
+            Assert.That(router.Session.PendingFrogJump, Is.Null);
+            ResultPanel panel = Object.FindFirstObjectByType<ResultPanel>(FindObjectsInactive.Include);
+            Assert.That(panel.IsVisible, Is.True, "The frog jump scene shows its own result.");
+            Assert.That(panel.ContinueLabel, Is.EqualTo(VietText.Fix("THI LẠI")));
+            panel.Continue();
+            yield return JourneyRuntimeDriver.WaitForScene(router, retryScene);
         }
 
         IEnumerator StartRuntime()
@@ -90,18 +125,23 @@ namespace KMA.Tests.Gameplay.Progression
             Assert.That(SprintBalanceConfig.LoadDefault(), Is.Not.Null);
         }
 
-        IEnumerator PlayCheckpoint(bool pass = true)
+        IEnumerator StartCheckpoint()
         {
             yield return JourneyRuntimeDriver.SkipDialogues();
             string id = router.Session.Journey.CheckpointChallengeId;
             ChallengeDefinition challenge = router.Session.Journey.Catalog.Get(id);
-            ChallengeAttemptMode mode = router.Session.Journey.AwaitingSupplementary
-                ? ChallengeAttemptMode.Supplementary : ChallengeAttemptMode.Journey;
-            Assert.That(router.TryStartChallenge(id, mode, challenge.Difficulty), Is.True, id);
+            Assert.That(router.TryStartChallenge(id, ChallengeAttemptMode.Journey, challenge.Difficulty), Is.True, id);
             yield return JourneyRuntimeDriver.WaitForScene(router, challenge.Subject switch
             {
                 SubjectId.Sprint => "MG_Sprint", SubjectId.Volleyball => "MG_Volleyball", _ => "MG_Football"
             });
+        }
+
+        IEnumerator PlayCheckpoint(bool pass = true)
+        {
+            string id = router.Session.Journey.CheckpointChallengeId;
+            ChallengeDefinition challenge = router.Session.Journey.Catalog.Get(id);
+            yield return StartCheckpoint();
             if (challenge.Subject == SubjectId.Football)
             {
                 Assert.That(router.Session.Journey.ActiveAttempt.Difficulty, Is.EqualTo(ChallengeDifficulty.Normal));
@@ -158,29 +198,38 @@ namespace KMA.Tests.Gameplay.Progression
         }
 
         [Test]
-        public void FailedExam_CanBeRecoveredThroughSupplementaryPracticeAndRetry()
+        public void FailedExam_IsRecoveredThroughTheFrogJumpAndRetry()
         {
-            var session = new GameSession();
-            JourneyCommitOutcome learn = JourneyGameplayDriver.CompleteActiveChallenge(session);
-            JourneyCommitOutcome practice = JourneyGameplayDriver.CompleteActiveChallenge(session);
-            Assert.That(learn.Accepted && practice.Accepted, Is.True);
-
-            JourneyCommitOutcome failure = default;
-            for (int attempt = 0; attempt < GameSession.MaxLives; attempt++)
+            SceneRouter frogRouter = JourneyRoutingFixture.CreateRouter();
+            ResultPanel panel = JourneyRoutingFixture.CreateResultPanel();
+            try
             {
-                failure = JourneyGameplayDriver.CompleteActiveChallenge(session, false);
-                Assert.That(failure.Accepted, Is.True);
-            }
-            Assert.That(failure.AwaitingSupplementary, Is.True);
-            Assert.That(session.Lives, Is.Zero);
-            JourneyCommitOutcome recovery = JourneyGameplayDriver.CompleteActiveChallenge(session);
-            Assert.That(recovery.Accepted, Is.True);
-            Assert.That(session.Journey.CheckpointChallengeId, Is.EqualTo("sprint_exam"));
+                GameSession session = frogRouter.Session;
+                JourneyRoutingFixture.CompleteThrough(session, "sprint_practice");
 
-            JourneyCommitOutcome retry = JourneyGameplayDriver.CompleteActiveChallenge(session);
-            Assert.That(retry.Accepted, Is.True);
-            Assert.That(session.Journey.IsChallengeComplete("sprint_exam"), Is.True);
-            Assert.That(session.GetRecord(SubjectId.Sprint).Passed, Is.True);
+                JourneyCommitOutcome failure = JourneyGameplayDriver.CompleteActiveChallenge(session, false);
+                Assert.That(failure.Accepted, Is.True);
+                Assert.That(failure.FrogJumpRequired, Is.True);
+                Assert.That(failure.FrogJumpSavesLife, Is.True);
+                Assert.That(session.Lives, Is.EqualTo(5));
+                Assert.That(JourneyGameplayDriver.CompleteActiveChallenge(session).Accepted, Is.False,
+                    "The exam cannot be retried before the frog jump.");
+
+                frogRouter.CompleteFrogJumpForTests(true);
+                panel.Continue();
+                ChallengeAttemptContext retry = session.Journey.ActiveAttempt;
+                Assert.That(retry.ChallengeId, Is.EqualTo("sprint_exam"));
+                Assert.That(session.Lives, Is.EqualTo(5));
+
+                Assert.That(session.SubmitChallengeResult(new ChallengeAttemptResult(retry, true,
+                    new ChallengeMetrics(), new MinigameResult(true, 6f, ScoreUtil.ToRank(6f)))).Accepted, Is.True);
+                Assert.That(session.Journey.IsChallengeComplete("sprint_exam"), Is.True);
+                Assert.That(session.GetRecord(SubjectId.Sprint).Passed, Is.True);
+            }
+            finally
+            {
+                JourneyRoutingFixture.Destroy(frogRouter, panel);
+            }
         }
     }
 }

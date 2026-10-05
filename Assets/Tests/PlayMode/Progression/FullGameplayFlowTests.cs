@@ -51,10 +51,16 @@ namespace KMA.Tests.Gameplay.Progression
             }
             harness.StartChallenge("sprint_exam");
             harness.CompleteChallenge(false, 0f);
-            Assert.That(harness.Session.Lives, Is.EqualTo(4));
+            // Failure #1 costs nothing at commit; losing its frog jump costs the life.
+            Assert.That(harness.Session.Lives, Is.EqualTo(5));
             Assert.That(harness.Session.Journey.CheckpointChallengeId, Is.EqualTo("sprint_exam"));
+            harness.FrogJump(false);
+            Assert.That(harness.Session.Lives, Is.EqualTo(4));
             harness.StartChallenge("sprint_exam");
             harness.CompleteChallenge(false, 0f);
+            // Failure #2 costs the life at commit; its frog jump cannot change lives.
+            Assert.That(harness.Session.Lives, Is.EqualTo(3));
+            harness.FrogJump(true);
             Assert.That(harness.Session.Lives, Is.EqualTo(3));
             harness.StartChallenge("sprint_exam");
             harness.CompleteChallenge(true, 6f);
@@ -90,6 +96,7 @@ namespace KMA.Tests.Gameplay.Progression
             harness.CompleteChallenge(true, 0f);
             harness.StartChallenge("sprint_exam");
             harness.CompleteChallenge(false, 10f);
+            harness.FrogJump(true);
             harness.StartChallenge("sprint_exam");
             harness.CompleteChallenge(false, 10f);
 
@@ -127,6 +134,7 @@ namespace KMA.Tests.Gameplay.Progression
             AssertRoute(router, SessionRoute.Map, null);
             AssertRoute(router, SessionRoute.Map, SubjectId.Sprint);
             AssertRoute(router, SessionRoute.GameOver, null);
+            AssertRoute(router, SessionRoute.FrogJump, null);
             AssertRoute(router, SessionRoute.Subject, SubjectId.Sprint);
             AssertRoute(router, SessionRoute.Subject, SubjectId.Football);
         }
@@ -238,7 +246,9 @@ namespace KMA.Tests.Gameplay.Progression
             Assert.That(persisted.hasActiveSubject, Is.False);
             Assert.That(persisted.visitAttempt, Is.EqualTo(1));
             Assert.That(persisted.awaitingPunishment, Is.False);
-            Assert.That(persisted.lives, Is.EqualTo(4));
+            // A first failure costs no life at commit; it owes a frog jump instead.
+            Assert.That(persisted.lives, Is.EqualTo(5));
+            Assert.That(persisted.journey.pendingFrogJump, Is.Not.Null);
 
             DestroyAll<GameManager>();
             DestroyAll<SceneRouter>();
@@ -246,6 +256,8 @@ namespace KMA.Tests.Gameplay.Progression
 
             SceneRouter relaunched = SceneRouter.EnsurePersistentInstance();
             GameManager relaunchedManager = CreateManager(relaunched, () => persisted, data => persisted = data);
+            // Quitting before the frog jump forfeits it on relaunch, which costs the life.
+            Assert.That(relaunchedManager.Session.ForfeitedFrogJumpOnRestore, Is.True);
             Assert.That(relaunchedManager.Session.ResumeRoute(), Is.EqualTo(SessionRoute.Map));
 
             var transitions = new List<SceneRouteTransition>();
@@ -386,6 +398,17 @@ namespace KMA.Tests.Gameplay.Progression
                     new ChallengeMetrics(completedTargets: pass ? definition.TargetCount : 0), examResult);
                 Assert.That(Session.SubmitChallengeResult(lastChallenge).Accepted, Is.True);
                 activeChallenge = null;
+                RouteSession(SessionRoute.Map, null);
+            }
+
+            /// Plays the pending frog jump and returns to the map, as the router does.
+            public void FrogJump(bool reachedFinish)
+            {
+                FrogJumpPending pending = Session.PendingFrogJump;
+                Assert.That(pending, Is.Not.Null, "A failed practice/exam must owe a frog jump.");
+                RouteSession(SessionRoute.FrogJump, null);
+                Assert.That(Session.TryApplyFrogJump(pending.Id, reachedFinish), Is.True);
+                Assert.That(Session.TryApplyFrogJump(pending.Id, reachedFinish), Is.False);
                 RouteSession(SessionRoute.Map, null);
             }
 
