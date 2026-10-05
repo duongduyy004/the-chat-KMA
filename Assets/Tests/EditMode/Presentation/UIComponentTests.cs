@@ -615,6 +615,92 @@ namespace KMA.Tests.Presentation
         }
 
         [Test]
+        public void MapStops_FreshGameShowsOneReadyStopAndTwoLockedStopsEachWithStarsAndStatus()
+        {
+            var root = new GameObject("map", typeof(RectTransform));
+            try
+            {
+                var screen = root.AddComponent<MapScreen>();
+                MapPresentationBuilder.Build(screen, new GameSession());
+
+                foreach (MapNodeView node in screen.Nodes)
+                {
+                    Assert.That(node.transform.Find("Badge/IconGlyph").GetComponent<Image>().sprite, Is.Not.Null, node.name);
+                    Assert.That(node.transform.Find("Badge/OrderBadge"), Is.Not.Null, node.name);
+                    Assert.That(node.transform.Find("LabelGroup/TitleContainer/Title").GetComponent<TMP_Text>().text,
+                        Is.EqualTo(node.DisplayName), node.name);
+                    Transform pill = node.transform.Find("LabelGroup/MetaPill");
+                    Assert.That(pill, Is.Not.Null, node.name + " must always show stars and status");
+                    Assert.That(pill.Find("Stars").childCount, Is.EqualTo(3), node.name);
+                    Assert.That(pill.Find("StatusContainer/Status").GetComponent<TMP_Text>().text, Is.Not.Empty, node.name);
+                }
+
+                MapNodeView sprint = screen.Nodes[0], volley = screen.Nodes[1], football = screen.Nodes[2];
+                Assert.That(sprint.IsLocked, Is.False);
+                Assert.That(sprint.StatusText, Is.EqualTo("SẴN SÀNG"));
+                Assert.That(sprint.transform.Find("Badge/LockIcon").gameObject.activeSelf, Is.False);
+                foreach (MapNodeView locked in new[] { volley, football })
+                {
+                    Assert.That(locked.IsLocked, Is.True, locked.name);
+                    Assert.That(locked.StatusText, Is.EqualTo("CHƯA MỞ KHÓA"), locked.name);
+                    Assert.That(locked.transform.Find("Badge/LockIcon").gameObject.activeSelf, Is.True, locked.name);
+                    Assert.That(locked.GetComponent<Button>().interactable, Is.False, locked.name);
+                }
+            }
+            finally { Object.DestroyImmediate(root); }
+        }
+
+        [Test]
+        public void MapStops_UseCircularBadgesAndRuntimeSprites()
+        {
+            var root = new GameObject("map", typeof(RectTransform));
+            try
+            {
+                var screen = root.AddComponent<MapScreen>();
+                MapPresentationBuilder.Build(screen, new GameSession());
+                var stars = new System.Collections.Generic.HashSet<Sprite>();
+                foreach (MapNodeView node in screen.Nodes)
+                {
+                    Image badge = node.transform.Find("Badge").GetComponent<Image>();
+                    Assert.That(badge.sprite, Is.SameAs(KMA.UI.Kit.UiKitAssets.Load().Circle), node.name);
+                    Assert.That(badge.type, Is.EqualTo(Image.Type.Simple), node.name);
+                    Assert.That(badge.GetComponent<Shadow>(), Is.Not.Null, node.name);
+                    foreach (Image star in node.transform.Find("LabelGroup/MetaPill/Stars").GetComponentsInChildren<Image>())
+                    {
+                        Assert.That(star.sprite, Is.Not.Null, node.name);
+                        stars.Add(star.sprite);
+                    }
+                    Assert.That(((RectTransform)node.transform).sizeDelta,
+                        Is.EqualTo(UITheme.Shared.LessonJourney.stopSize), node.name);
+                }
+                Assert.That(stars, Has.Count.EqualTo(1), "All stars share one runtime sprite.");
+                Assert.That(screen.Nodes[2].transform.Find("Badge/FinishFlag"), Is.Not.Null);
+                Assert.That(screen.Nodes[0].transform.Find("Badge/FinishFlag"), Is.Null);
+                Assert.That(screen.Nodes[1].transform.Find("Badge/FinishFlag"), Is.Null);
+            }
+            finally { Object.DestroyImmediate(root); }
+        }
+
+        [Test]
+        public void MapStops_PassedSubjectShowsDoneMarkAndRankStars()
+        {
+            var root = new GameObject("map", typeof(RectTransform));
+            try
+            {
+                var screen = root.AddComponent<MapScreen>();
+                MapPresentationBuilder.Build(screen, CompleteSprintJourney());
+                MapNodeView sprint = screen.Nodes.Single(node => node.SubjectId == SubjectId.Sprint);
+                Assert.That(sprint.IsCompleted, Is.True);
+                Assert.That(sprint.StatusText, Is.EqualTo("HOÀN THÀNH"));
+                Assert.That(sprint.transform.Find("Badge/DoneMark").gameObject.activeSelf, Is.True);
+                int filled = sprint.transform.Find("LabelGroup/MetaPill/Stars").GetComponentsInChildren<Image>()
+                    .Count(star => star.color == UITheme.Shared.Menu.gold);
+                Assert.That(filled, Is.EqualTo(sprint.Stars));
+            }
+            finally { Object.DestroyImmediate(root); }
+        }
+
+        [Test]
         public void MapNodeAvailabilityTransitionsKeepInteractionAndVisualStateSynchronized()
         {
             var root = new GameObject("map", typeof(RectTransform));

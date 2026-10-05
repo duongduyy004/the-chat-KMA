@@ -72,9 +72,6 @@ namespace KMA.Gameplay.UI
             }
             foreach (Button button in screen.GetComponentsInChildren<Button>(true)) button.gameObject.SetActive(false);
             UITheme theme = screen.Theme;
-            Color card = theme.Card;
-            Color muted = theme.Muted;
-            Color mutedForeground = theme.MutedForeground;
             Color border = theme.Border;
             Color background = Color.Lerp(theme.Background,
                 UITheme.Shared.MapBackgroundTint, .46f);
@@ -102,7 +99,9 @@ namespace KMA.Gameplay.UI
             gridElement.flexibleWidth = 1; gridElement.preferredHeight = 392;
             grid.GetComponent<ResponsiveGridLayout>().Refresh();
             var nodes = new List<MapNodeView>();
-            foreach (Entry entry in Entries) nodes.Add(Card(grid, screen, entry, card, muted, mutedForeground, border));
+            for (int i = 0; i < Entries.Length; i++)
+                nodes.Add(MapStopBuilder.Build(grid, screen, Entries[i].Subject, Entries[i].Label,
+                    Entries[i].Color, i + 1));
             grid.GetComponent<ResponsiveGridLayout>().Refresh();
             JourneyLessonList lessons = JourneyLessonList.Create(content);
             EnsureCourseSummary(screen, content);
@@ -286,97 +285,6 @@ namespace KMA.Gameplay.UI
             return button;
         }
 
-        static MapNodeView Card(Transform parent, MapScreen screen, Entry entry, Color card, Color muted, Color foreground, Color border)
-        {
-            RectTransform root = Rect(parent, entry.Subject + "Node");
-            Image image = root.gameObject.AddComponent<Image>(); image.color = entry.Available ? card : muted;
-            UseRoundedSurface(image);
-            Outline outline = root.gameObject.AddComponent<Outline>();
-            outline.effectColor = entry.Available ? UITheme.Shared.Accent : UITheme.Shared.MapLockedBorder;
-            outline.effectDistance = new Vector2(UITheme.Shared.BorderWidth * .75f, -UITheme.Shared.BorderWidth * .75f);
-            Shadow shadow = root.gameObject.AddComponent<Shadow>(); shadow.effectColor = new Color(0f, 0f, 0f, .4f); shadow.effectDistance = new Vector2(7, -7);
-            Button button = null;
-            if (entry.Available)
-            {
-                button = root.gameObject.AddComponent<Button>();
-                button.targetGraphic = image;
-                button.colors = ButtonColors();
-                root.gameObject.AddComponent<BrutalButton>();
-            }
-            VerticalLayoutGroup layout = root.gameObject.AddComponent<VerticalLayoutGroup>();
-            layout.padding = new RectOffset(20, 20, 10, 10); layout.spacing = 4; layout.childControlWidth = true;
-            layout.childControlHeight = true; layout.childForceExpandWidth = true; layout.childForceExpandHeight = false;
-            RectTransform stripe = Rect(root, "HeaderStripe");
-            stripe.gameObject.AddComponent<Image>().color = entry.Color;
-            stripe.gameObject.AddComponent<LayoutElement>().preferredHeight = 4;
-            RectTransform cardHeader = Rect(root, "CardHeader");
-            HorizontalLayoutGroup cardHeaderLayout = cardHeader.gameObject.AddComponent<HorizontalLayoutGroup>();
-            cardHeaderLayout.spacing = 16; cardHeaderLayout.childAlignment = TextAnchor.MiddleLeft;
-            cardHeaderLayout.childControlWidth = true; cardHeaderLayout.childControlHeight = true;
-            cardHeaderLayout.childForceExpandWidth = false;
-            cardHeaderLayout.childForceExpandHeight = false;
-            cardHeader.gameObject.AddComponent<LayoutElement>().preferredHeight = 72;
-            RectTransform icon = Rect(cardHeader, "SportIcon");
-            Image iconPlate = icon.gameObject.AddComponent<Image>();
-            iconPlate.color = entry.Color;
-            UseRoundedSurface(iconPlate);
-            LayoutElement iconLayout = icon.gameObject.AddComponent<LayoutElement>();
-            iconLayout.preferredWidth = 60;
-            iconLayout.preferredHeight = 60;
-            RectTransform glyph = Rect(icon, "IconGlyph");
-            Stretch(glyph, new Vector2(12, 12), new Vector2(-12, -12));
-            Image glyphImage = glyph.gameObject.AddComponent<Image>();
-            glyphImage.sprite = SportIconSprite(entry.Subject);
-            glyphImage.color = UITheme.Shared.Surface;
-            glyphImage.preserveAspect = true;
-            glyphImage.raycastTarget = false;
-            TMP_Text title = LayoutLabel(cardHeader, "Title", entry.Label, 36, entry.Available ? UITheme.Shared.Surface : foreground, TextAnchor.MiddleLeft);
-            LayoutElement titleLayout = title.transform.parent.gameObject.AddComponent<LayoutElement>();
-            titleLayout.preferredHeight = 70;
-            titleLayout.flexibleWidth = 1;
-            TMP_Text status = LayoutLabel(root, "Status", string.Empty, 26, entry.Available ? UITheme.Shared.MapReadyText : foreground,
-                TextAnchor.MiddleLeft);
-            RectTransform statusContainer = status.transform.parent as RectTransform;
-            LayoutElement statusLayout = statusContainer.gameObject.AddComponent<LayoutElement>();
-            statusLayout.ignoreLayout = true;
-            statusContainer.anchorMin = Vector2.zero;
-            statusContainer.anchorMax = new Vector2(entry.Available ? .70f : 1f, 0f);
-            statusContainer.offsetMin = new Vector2(20f, 10f);
-            statusContainer.offsetMax = new Vector2(entry.Available ? -4f : -20f, 56f);
-            TMP_Text detail = LayoutLabel(root, "Detail", string.Empty, 26, foreground, TextAnchor.MiddleLeft);
-            RectTransform detailContainer = detail.transform.parent as RectTransform;
-            LayoutElement detailLayout = detailContainer.gameObject.AddComponent<LayoutElement>();
-            detailLayout.ignoreLayout = true;
-            detailContainer.anchorMin = Vector2.zero;
-            detailContainer.anchorMax = new Vector2(.74f, 0f);
-            detailContainer.offsetMin = new Vector2(20f, 58f);
-            detailContainer.offsetMax = new Vector2(-4f, 104f);
-            TMP_Text action = null;
-            if (entry.Available)
-            {
-                action = TextTmp(root, "ActionHint", "THI", 26,
-                    UITheme.Shared.MapActionText, TextAnchor.MiddleRight);
-                LayoutElement actionLayout = action.gameObject.AddComponent<LayoutElement>();
-                actionLayout.ignoreLayout = true;
-                RectTransform actionRect = action.rectTransform;
-                actionRect.anchorMin = new Vector2(.68f, 0f);
-                actionRect.anchorMax = new Vector2(1f, 0f);
-                actionRect.offsetMin = new Vector2(4f, 10f);
-                actionRect.offsetMax = new Vector2(-20f, 56f);
-            }
-            MapNodeView node = root.gameObject.AddComponent<MapNodeView>();
-            node.Bind(button, title, detail, detailContainer.gameObject);
-            node.BindPresentation(status, action, image, iconPlate, outline, entry.Color);
-            node.Configure(entry.Subject, entry.Label, !entry.Available, null, 5);
-            if (entry.Available) button.onClick.AddListener(() => screen.SelectSubject(entry.Subject));
-            else
-            {
-                node.SetAvailability(false, "ĐANG PHÁT TRIỂN");
-                AddCornerLockIcon(root, UITheme.Shared.MapLockIcon);
-            }
-            return node;
-        }
-
         static void FutureRow(Transform parent, Color muted, Color foreground, Color border)
         {
             RectTransform row = Rect(parent, "FutureRow");
@@ -414,7 +322,7 @@ namespace KMA.Gameplay.UI
             TextTmp(root, "Label", label, 22, foreground, TextAnchor.MiddleCenter);
         }
 
-        static ColorBlock ButtonColors()
+        internal static ColorBlock ButtonColors()
         {
             ColorBlock colors = ColorBlock.defaultColorBlock;
             colors.normalColor = Color.white;
@@ -475,7 +383,7 @@ namespace KMA.Gameplay.UI
             return sprite;
         }
 
-        static void UseRoundedSurface(Image image)
+        internal static void UseRoundedSurface(Image image)
         {
             float radius = UITheme.Shared.CornerRadius * (2f / 3f);
             image.sprite = radius > 0f ? RoundedRectSprite() : null;
@@ -520,24 +428,7 @@ namespace KMA.Gameplay.UI
             return roundedRectSprite;
         }
 
-        static void AddCornerLockIcon(Transform parent, Color color)
-        {
-            RectTransform icon = Rect(parent, "LockIcon");
-            LayoutElement layout = icon.gameObject.AddComponent<LayoutElement>();
-            layout.ignoreLayout = true;
-            icon.anchorMin = Vector2.one;
-            icon.anchorMax = Vector2.one;
-            icon.pivot = Vector2.one;
-            icon.anchoredPosition = new Vector2(-14f, -14f);
-            icon.sizeDelta = new Vector2(42f, 42f);
-            Image image = icon.gameObject.AddComponent<Image>();
-            image.sprite = LockSprite();
-            image.color = color;
-            image.preserveAspect = true;
-            image.raycastTarget = false;
-        }
-
-        static Sprite LockSprite()
+        internal static Sprite LockSprite()
         {
             if (lockSprite != null)
                 return lockSprite;
@@ -568,7 +459,7 @@ namespace KMA.Gameplay.UI
             return lockSprite;
         }
 
-        static void DrawCircle(Color32[] pixels, int size, int centerX, int centerY, int radius)
+        internal static void DrawCircle(Color32[] pixels, int size, int centerX, int centerY, int radius)
         {
             int radiusSquared = radius * radius;
             for (int y = centerY - radius; y <= centerY + radius; y++)
@@ -591,7 +482,7 @@ namespace KMA.Gameplay.UI
             }
         }
 
-        static void DrawLine(Color32[] pixels, int size, int startX, int startY, int endX, int endY, int thickness)
+        internal static void DrawLine(Color32[] pixels, int size, int startX, int startY, int endX, int endY, int thickness)
         {
             int steps = Mathf.Max(Mathf.Abs(endX - startX), Mathf.Abs(endY - startY));
             if (steps == 0)
@@ -609,7 +500,7 @@ namespace KMA.Gameplay.UI
             }
         }
 
-        static void SetIconPixel(Color32[] pixels, int size, int x, int y)
+        internal static void SetIconPixel(Color32[] pixels, int size, int x, int y)
         {
             if (x < 0 || x >= size || y < 0 || y >= size)
                 return;
@@ -650,13 +541,13 @@ namespace KMA.Gameplay.UI
             return heartSprite;
         }
 
-        static RectTransform Rect(Transform parent, string name)
+        internal static RectTransform Rect(Transform parent, string name)
         {
             var gameObject = new GameObject(name, typeof(RectTransform)); gameObject.transform.SetParent(parent, false);
             return gameObject.GetComponent<RectTransform>();
         }
 
-        static TMP_Text TextTmp(Transform parent, string name, string value, int size, Color color, TextAnchor alignment)
+        internal static TMP_Text TextTmp(Transform parent, string name, string value, int size, Color color, TextAnchor alignment)
         {
             RectTransform rect = Rect(parent, name); Stretch(rect, Vector2.zero, Vector2.zero);
             TextAlignmentOptions tmpAlignment = alignment switch
@@ -683,17 +574,17 @@ namespace KMA.Gameplay.UI
             return text;
         }
 
-        static TMP_Text LayoutLabel(Transform parent, string name, string value, int size, Color color, TextAnchor alignment)
+        internal static TMP_Text LayoutLabel(Transform parent, string name, string value, int size, Color color, TextAnchor alignment)
         {
             return TextTmp(Rect(parent, name + "Container"), name, value, size, color, alignment);
         }
 
-        static void Stretch(RectTransform rect, Vector2 min, Vector2 max)
+        internal static void Stretch(RectTransform rect, Vector2 min, Vector2 max)
         {
             rect.anchorMin = Vector2.zero; rect.anchorMax = Vector2.one; rect.offsetMin = min; rect.offsetMax = max;
         }
 
-        static void Anchor(RectTransform rect, Vector2 anchorMin, Vector2 anchorMax)
+        internal static void Anchor(RectTransform rect, Vector2 anchorMin, Vector2 anchorMax)
         {
             rect.anchorMin = anchorMin;
             rect.anchorMax = anchorMax;
