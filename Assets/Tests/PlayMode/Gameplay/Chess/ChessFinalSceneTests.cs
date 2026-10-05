@@ -101,6 +101,38 @@ namespace KMA.Tests.Gameplay.Chess
             Assert.That(controller.BuildMetrics(null, result).Detail, Is.EqualTo("Sai quá 2 lần"));
         }
 
+        [UnityTest]
+        public IEnumerator PauseDuringTheBossSlideStillPlaysTheBossMoveOnResume()
+        {
+            controller.BeginAttempt();
+            yield return null;
+            yield return null;
+            PuzzleDefinition puzzle = controller.Machine.Puzzle;
+            yield return Play(puzzle.nodes[0].moves[0].uci);
+            Assert.That(controller.Machine.Phase, Is.EqualTo(ChessFinalPhase.BossTurn));
+            ChessMove reply = controller.Machine.PendingBossReply.Value;
+            ChessPosition beforeReply = controller.Machine.Position;
+            yield return new WaitUntil(() => board.transform.Find("MovingPiece") != null);
+
+            // Pause lands while the slide is still running. The controller is disabled so its Update
+            // cannot auto-resume; its coroutines keep running, so the slide finishes while paused.
+            controller.enabled = false;
+            controller.Machine.Pause();
+            yield return new WaitForSeconds(1.5f);
+            Assert.That(controller.Machine.Phase, Is.EqualTo(ChessFinalPhase.Paused));
+            Assert.That(controller.Machine.Position.ToFen(), Is.EqualTo(beforeReply.ToFen()),
+                "the boss move is not applied while paused");
+
+            controller.Machine.Resume();
+            controller.enabled = true;
+            float until = Time.realtimeSinceStartup + 1f;
+            yield return new WaitUntil(() => controller.Machine.Phase == ChessFinalPhase.PlayerTurn ||
+                Time.realtimeSinceStartup > until);
+            Assert.That(controller.Machine.Phase, Is.EqualTo(ChessFinalPhase.PlayerTurn));
+            Assert.That(controller.Machine.Position.ToFen(), Is.EqualTo(beforeReply.Apply(reply).ToFen()));
+            Assert.That(board.Interactable, Is.True);
+        }
+
         IEnumerator Play(string uci)
         {
             ChessMove.TryParseUci(uci, out ChessMove move);

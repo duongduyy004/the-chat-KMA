@@ -130,8 +130,9 @@ namespace KMA.Gameplay.Chess
             // The chessMove pose holds a rook, so it is only shown for rook moves.
             cast.SetTeacher(Piece.TypeOf(before[reply.From]) == Piece.Rook ? "chessMove" : "chessThink");
             yield return board.AnimateMove(reply, before.Apply(reply), bossMoveSeconds);
-            Machine.CompleteBossMove();
-            cast.SetTeacher("strictLook");
+            // A pause can land on the frame the slide ends; the move is committed only after resume.
+            yield return new WaitUntil(() => Machine.Phase == ChessFinalPhase.BossTurn);
+            if (Machine.CompleteBossMove()) cast.SetTeacher("strictLook");
         }
 
         void OnPhaseChanged(ChessFinalPhase phase)
@@ -175,6 +176,7 @@ namespace KMA.Gameplay.Chess
 
         IEnumerator Resolve(bool solved)
         {
+            promotion.Close();
             board.SetInteractable(false, Machine.Puzzle.PlayerColor, null);
             if (solved)
             {
