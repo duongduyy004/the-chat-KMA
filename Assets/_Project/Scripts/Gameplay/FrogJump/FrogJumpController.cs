@@ -1,3 +1,4 @@
+using System.Globalization;
 using KMA.Gameplay.Core;
 using KMA.Gameplay.UI;
 using TMPro;
@@ -15,7 +16,10 @@ namespace KMA.Gameplay.FrogJump
 
         FrogJumpRules rules;
         float feedbackUntil;
+        static readonly CultureInfo Vi = CultureInfo.GetCultureInfo("vi-VN");
         bool finished;
+
+        static string Metres(float value) => value.ToString("0.0", Vi);
 
         public FrogJumpRules Rules => rules;
         public bool IsWired => view != null && powerBar != null && tapArea != null && feedback != null;
@@ -75,11 +79,15 @@ namespace KMA.Gameplay.FrogJump
         protected override MinigameHudState BuildHudState() => rules == null
             ? MinigameHudState.Empty
             : new MinigameHudState("PLAY", rules.TimeRemaining, rules.Progress01, 0f, rules.Distance,
-                VietText.Fix($"Còn {rules.Tuning.trackMetres - rules.Distance:0.0} m"));
+                VietText.Fix($"Còn {Metres(rules.Tuning.trackMetres - rules.Distance)} m"));
+
+        /// Taps are ignored while paused (timeScale 0), including the Space shortcut.
+        public static bool CanAcceptTap(MinigamePhase phase, bool isOver, float timeScale) =>
+            phase == MinigamePhase.Play && !isOver && timeScale > 0f;
 
         void OnTapped()
         {
-            if (PresentationPhase != MinigamePhase.Play || rules.IsOver) return;
+            if (!CanAcceptTap(PresentationPhase, rules.IsOver, Time.timeScale)) return;
             if (rules.Stop()) GameAudio.Play(GameSound.Click);
         }
 
@@ -90,7 +98,7 @@ namespace KMA.Gameplay.FrogJump
             if (haptics != null) { if (metres <= 0f) haptics.Fail(); else haptics.Light(); }
             if (feedback == null) return;
             feedback.text = VietText.Fix(metres <= 0f ? "NGÃ!"
-                : metres >= rules.Tuning.maxJumpMetres - .3f ? $"ĐẸP! {metres:0.0} m" : $"{metres:0.0} m");
+                : metres >= rules.Tuning.maxJumpMetres - .3f ? $"ĐẸP! {Metres(metres)} m" : $"{Metres(metres)} m");
             feedbackUntil = Time.time + .8f;
         }
     }
