@@ -58,7 +58,7 @@ namespace KMA.Tests.Presentation
         }
 
         [Test]
-        public void ReviewDoesNotMoveCheckpointAndExhaustedBudgetOffersCurrentSupplementaryPractice()
+        public void ReviewDoesNotMoveCheckpointAndZeroLivesLocksTheCurrentExam()
         {
             var session = new GameSession();
             Play(session, "sprint_learn", true);
@@ -74,14 +74,19 @@ namespace KMA.Tests.Presentation
 
             Play(session, "volleyball_learn", true);
             Play(session, "volleyball_practice", true);
-            for (int attempt = 0; attempt < GameSession.MaxLives; attempt++)
-                Play(session, "volleyball_exam", false);
+            session.Journey.SetAttemptsRemaining(0);
             screen.RefreshJourney(session);
 
-            Assert.That(session.Journey.AwaitingSupplementary, Is.True);
-            Assert.That(screen.LessonList.CurrentChallengeId, Is.EqualTo("volleyball_practice"));
-            screen.LessonList.transform.Find("Lesson2").GetComponent<Button>().onClick.Invoke();
-            Assert.That(selectedMode, Is.EqualTo(ChallengeAttemptMode.Supplementary));
+            Assert.That(screen.LessonList.CurrentChallengeId, Is.EqualTo("volleyball_exam"));
+            Transform exam = screen.LessonList.transform.Find("Lesson3");
+            Assert.That(exam.GetComponent<Button>().interactable, Is.False);
+            Assert.That(exam.Find("Objective").GetComponent<TMP_Text>().text, Is.EqualTo(VietText.Fix("Hết lượt thi")));
+
+            var fresh = new GameSession();
+            fresh.Journey.SetAttemptsRemaining(0);
+            screen.RefreshJourney(fresh);
+            Assert.That(screen.LessonList.CurrentChallengeId, Is.EqualTo("sprint_learn"));
+            Assert.That(screen.LessonList.transform.Find("Lesson1").GetComponent<Button>().interactable, Is.True);
         }
 
         [Test]

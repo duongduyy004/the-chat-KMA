@@ -49,8 +49,7 @@ namespace KMA.Gameplay.UI
             }
             SupplementaryRounds = session.Journey.SupplementaryRounds;
             if (summaryText != null)
-                summaryText.text = VietText.Fix("HOÀN TẤT  |  " + string.Join("   |   ", scores) +
-                    $"  |  Lượt thi bổ sung: {SupplementaryRounds}");
+                summaryText.text = VietText.Fix("HOÀN TẤT  |  " + string.Join("   |   ", scores));
             gameObject.SetActive(true);
         }
     }

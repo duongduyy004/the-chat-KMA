@@ -16,6 +16,19 @@ namespace KMA.Gameplay.UI
         public JourneyCourseSummary CourseSummary { get; private set; }
 
 
+        GameSession boundSession;
+
+        void Update()
+        {
+            if (boundSession == null) return;
+            if (boundSession.RefreshLives())
+            {
+                KMA.Gameplay.Core.GameManager.Instance?.TryPersistSession(out _);
+                RefreshJourney(boundSession);
+            }
+            Hearts?.SetCountdown(boundSession.TimeUntilNextLife, boundSession.Lives == 0);
+        }
+
         public void BindPresentation(MapNodeView[] nodes, HeartBar heartBar, GameSession session)
             => BindPresentation(nodes, heartBar, session, null);
 
@@ -26,6 +39,7 @@ namespace KMA.Gameplay.UI
             Hearts = heartBar;
             LessonList = lessonList != null ? lessonList : GetComponentInChildren<JourneyLessonList>(true);
             CourseSummary = GetComponentInChildren<JourneyCourseSummary>(true);
+            boundSession = session;
             if (session == null)
                 return;
             if (LessonList != null)

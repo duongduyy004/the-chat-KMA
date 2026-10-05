@@ -26,6 +26,7 @@ namespace KMA.Gameplay.UI
         string lastCheckpointId;
         Coroutine revealRoutine;
         int currentCardIndex = -1;
+        bool currentOutOfLives;
 
         readonly List<string> lessonIds = new List<string>(3);
         public IReadOnlyList<string> LessonIds => lessonIds;
@@ -93,6 +94,7 @@ namespace KMA.Gameplay.UI
                 .Where(challenge => challenge.Subject == selectedSubject).ToArray();
             lessonIds.Clear();
             currentCardIndex = -1;
+            currentOutOfLives = false;
             for (int index = 0; index < lessonCards.Count; index++)
             {
                 LessonCard card = lessonCards[index];
@@ -116,16 +118,19 @@ namespace KMA.Gameplay.UI
                     _ => "THI"
                 };
                 card.Title.text = VietText.Fix(stage);
-                card.Objective.text = VietText.Fix(objective);
-                card.Button.interactable = unlocked;
-                ApplyState(card, index, complete, checkpoint, unlocked, chapterColor,
-                    checkpoint && session.Journey.AwaitingSupplementary);
+                bool outOfLives = checkpoint && !complete && !session.Journey.CourseComplete &&
+                    challenge.Kind != ChallengeKind.Learn && session.Lives == 0;
+                card.Objective.text = VietText.Fix(outOfLives ? "Hết lượt thi" : objective);
+                card.Button.interactable = unlocked && !outOfLives;
+                ApplyState(card, index, complete, checkpoint, unlocked, chapterColor, outOfLives);
 
-                if (checkpoint) currentCardIndex = index;
+                if (checkpoint)
+                {
+                    currentCardIndex = index;
+                    currentOutOfLives = outOfLives;
+                }
                 ChallengeAttemptMode mode = session.Journey.CourseComplete
                     ? ChallengeAttemptMode.FreePlay
-                    : checkpoint && session.Journey.AwaitingSupplementary
-                    ? ChallengeAttemptMode.Supplementary
                     : complete ? ChallengeAttemptMode.Review
                         : checkpoint ? ChallengeAttemptMode.Journey : ChallengeAttemptMode.Review;
                 card.Button.onClick.RemoveAllListeners();
@@ -146,8 +151,8 @@ namespace KMA.Gameplay.UI
             if (hint != null)
                 hint.text = VietText.Fix(session.Journey.CourseComplete
                     ? "Đã hoàn thành khóa học · Chạm một chặng để chơi lại"
-                    : session.Journey.AwaitingSupplementary
-                    ? "Hoàn thành bài luyện bổ sung để nhận lại 5 lượt thi"
+                    : session.Lives == 0
+                    ? "Hết lượt thi · Chờ hồi lượt để thi tiếp"
                     : "Hoàn thành từng chặng để mở bài tiếp theo");
 
             string current = session.Journey.CheckpointChallengeId;
@@ -156,14 +161,14 @@ namespace KMA.Gameplay.UI
             if (continueButton != null)
             {
                 continueButton.gameObject.SetActive(CurrentChallengeId != null);
-                continueButton.interactable = CurrentChallengeId != null;
+                continueButton.interactable = CurrentChallengeId != null && !currentOutOfLives;
             }
 
             if (reveal) PlayReveal();
         }
 
         static void ApplyState(LessonCard card, int index, bool complete, bool checkpoint,
-            bool unlocked, Color chapterColor, bool supplementary)
+            bool unlocked, Color chapterColor, bool outOfLives)
         {
             UITheme theme = UITheme.Shared;
             card.Background.color = checkpoint ? theme.TextPrimary
@@ -185,7 +190,7 @@ namespace KMA.Gameplay.UI
                 : complete ? theme.Success : theme.MapLockedCard;
             card.Status.color = theme.Surface;
             card.Status.text = VietText.Fix(checkpoint
-                ? supplementary ? "LUYỆN BỔ SUNG  ›" : "BẮT ĐẦU  ›"
+                ? outOfLives ? "CHỜ HỒI LƯỢT" : "BẮT ĐẦU  ›"
                 : complete ? "ÔN LẠI  ›" : unlocked ? "CHƠI LẠI  ›"
                 : index == 1 ? "Hoàn thành HỌC để mở" : "Hoàn thành LUYỆN để mở");
             card.Glow.gameObject.SetActive(checkpoint);
@@ -255,9 +260,7 @@ namespace KMA.Gameplay.UI
         {
             if (session == null || string.IsNullOrEmpty(CurrentChallengeId)) return;
             string id = CurrentChallengeId;
-            ChallengeAttemptMode mode = session.Journey.AwaitingSupplementary
-                ? ChallengeAttemptMode.Supplementary : ChallengeAttemptMode.Journey;
-            onSelected?.Invoke(id, mode);
+            onSelected?.Invoke(id, ChallengeAttemptMode.Journey);
         }
 
         void CacheChildReferences()

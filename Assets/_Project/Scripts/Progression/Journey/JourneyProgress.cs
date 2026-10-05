@@ -28,8 +28,6 @@ namespace KMA.Gameplay
             catalog.Ordered.FirstOrDefault(x => !completedChallengeIds.Contains(x.Id))?.Id;
 
         public int AttemptsRemaining => attemptsRemaining;
-        [Obsolete("Supplementary rounds were removed; deleted in Task 8.")]
-        public bool AwaitingSupplementary => false;
         public int SupplementaryRounds => supplementaryRounds;
         public bool CourseComplete => catalog.Ordered.All(x => completedChallengeIds.Contains(x.Id));
         public ChallengeAttemptContext ActiveAttempt => activeAttempt;

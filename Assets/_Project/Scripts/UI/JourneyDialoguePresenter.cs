@@ -82,11 +82,7 @@ namespace KMA.Gameplay.UI
             }
 
             Add("opening");
-            if (journey.AwaitingSupplementary)
-            {
-                Add("supplementary", $"supplementary_{journey.SupplementaryRounds + 1}");
-            }
-            else if (journey.CourseComplete)
+            if (journey.CourseComplete)
             {
                 Add("soccer_pass");
                 Add("course_complete");

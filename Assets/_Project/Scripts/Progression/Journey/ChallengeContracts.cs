@@ -38,14 +38,6 @@ namespace KMA.Gameplay
             FrogJumpSavesLife = frogJumpSavesLife;
             CourseComplete = courseComplete;
         }
-
-        [Obsolete("Supplementary rounds were removed; deleted in Task 8.")]
-        public JourneyCommitOutcome(bool accepted, string nextChallengeId, int attemptsRemaining,
-            bool awaitingSupplementary, bool courseComplete)
-            : this(accepted, nextChallengeId, attemptsRemaining, false, false, courseComplete) { }
-
-        [Obsolete("Supplementary rounds were removed; deleted in Task 8.")]
-        public bool AwaitingSupplementary => false;
     }
 
     public interface IChallengeController
