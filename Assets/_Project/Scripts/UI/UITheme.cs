@@ -116,6 +116,12 @@ namespace KMA.Gameplay.UI
             public float captionSize = 20f;
             public float objectiveSize = 20f;
             public float iconSize = 64f;
+            // Lesson card spacing, in canvas pixels: edge inset, gap between rows, row heights.
+            public float cardInset = 16f;
+            public float cardSpacing = 12f;
+            public float cardBadgeHeight = 28f;
+            public float cardStepHeight = 24f;
+            public float cardActionHeight = 34f;
             public float revealDuration = .20f;
             public float revealStagger = .05f;
             public float revealScale = .94f;

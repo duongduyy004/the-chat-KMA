@@ -72,12 +72,29 @@ namespace KMA.Gameplay.UI
             button.colors = colors;
             rect.gameObject.AddComponent<CanvasGroup>();
 
-            TMP_Text number = Label(rect, "StepNumber", Style.captionSize, Theme.MutedForeground, FontStyles.Bold);
-            number.text = $"0{index + 1}";
-            Anchor(number.rectTransform, new Vector2(.05f, .83f), new Vector2(.22f, .97f));
+            float pad = Style.cardInset;
+            float gap = Style.cardSpacing;
+            float icon = Style.iconSize;
+            float textLeft = pad + icon + gap;
+            float headerBottom = pad + icon;
+            float actionTop = pad + Style.cardActionHeight;
+
+            // Header: icon on the left, step number above the title to its right, state at top right.
+            Image disc = Shape(rect, "StageIcon", Theme.Accent, true);
+            Inset(disc.rectTransform, new Vector2(0f, 1f), new Vector2(0f, 1f),
+                new Vector2(pad, -headerBottom), new Vector2(pad + icon, -pad));
+            Image glow = Shape(disc.transform, "Glow", Theme.Accent, true);
+            glow.sprite = UiKitAssets.Load().Ring;
+            Anchor(glow.rectTransform, Vector2.one * -.10f, Vector2.one * 1.10f);
+            Image glyph = Shape(disc.transform, "Glyph", Theme.Surface);
+            glyph.sprite = Resources.Load<Sprite>("Icons/" + StageIcons[index]);
+            glyph.type = Image.Type.Simple;
+            glyph.preserveAspect = true;
+            Anchor(glyph.rectTransform, Vector2.one * .18f, Vector2.one * .82f);
 
             Image badge = Shape(rect, "StateBadge", Theme.Accent);
-            Anchor(badge.rectTransform, new Vector2(.50f, .83f), new Vector2(.95f, .97f));
+            Inset(badge.rectTransform, new Vector2(.58f, 1f), Vector2.one,
+                new Vector2(0f, -pad - Style.cardBadgeHeight), new Vector2(-pad, -pad));
             TMP_Text state = Label(badge.transform, "Label", Style.captionSize, Theme.Surface, FontStyles.Bold);
             state.alignment = TextAlignmentOptions.Center;
             Anchor(state.rectTransform, Vector2.zero, Vector2.one);
@@ -91,31 +108,30 @@ namespace KMA.Gameplay.UI
             longStroke.rectTransform.localRotation = Quaternion.Euler(0f, 0f, 45f);
             completeMark.gameObject.SetActive(false);
 
-            Image disc = Shape(rect, "StageIcon", Theme.Accent, true);
-            Place(disc.rectTransform, new Vector2(.14f, .62f), Vector2.one * Style.iconSize);
-            Image glow = Shape(disc.transform, "Glow", Theme.Accent, true);
-            glow.sprite = UiKitAssets.Load().Ring;
-            Anchor(glow.rectTransform, Vector2.one * -.10f, Vector2.one * 1.10f);
-            Image glyph = Shape(disc.transform, "Glyph", Theme.Surface);
-            glyph.sprite = Resources.Load<Sprite>("Icons/" + StageIcons[index]);
-            glyph.type = Image.Type.Simple;
-            glyph.preserveAspect = true;
-            Anchor(glyph.rectTransform, Vector2.one * .18f, Vector2.one * .82f);
+            TMP_Text number = Label(rect, "StepNumber", Style.captionSize, Theme.MutedForeground, FontStyles.Bold);
+            number.text = $"0{index + 1}";
+            Inset(number.rectTransform, new Vector2(0f, 1f), new Vector2(.56f, 1f),
+                new Vector2(textLeft, -pad - Style.cardStepHeight), new Vector2(0f, -pad));
 
             TMP_Text title = Label(rect, "StageTitle", Style.stageSize, Theme.Surface, FontStyles.Bold);
             title.alignment = TextAlignmentOptions.MidlineLeft;
-            Anchor(title.rectTransform, new Vector2(.28f, .50f), new Vector2(.95f, .78f));
+            Inset(title.rectTransform, new Vector2(0f, 1f), Vector2.one,
+                new Vector2(textLeft, -headerBottom), new Vector2(-pad, -pad - Style.cardStepHeight));
 
+            // Body: the objective fills the space between header and action, centred both ways.
             TMP_Text objective = Label(rect, "Objective", Style.objectiveSize, Theme.Surface);
-            objective.alignment = TextAlignmentOptions.Top;
+            objective.alignment = TextAlignmentOptions.Center;
             objective.enableWordWrapping = true;
-            Anchor(objective.rectTransform, new Vector2(.05f, .20f), new Vector2(.95f, .49f));
+            Inset(objective.rectTransform, Vector2.zero, Vector2.one,
+                new Vector2(pad, actionTop + gap), new Vector2(-pad, -headerBottom - gap));
 
             Image action = Shape(rect, "ActionSurface", Theme.Muted);
-            Anchor(action.rectTransform, new Vector2(.04f, .04f), new Vector2(.96f, .18f));
+            Inset(action.rectTransform, Vector2.zero, new Vector2(1f, 0f),
+                new Vector2(pad, pad), new Vector2(-pad, actionTop));
             TMP_Text status = Label(rect, "Status", Style.captionSize, Theme.Surface, FontStyles.Bold);
             status.alignment = TextAlignmentOptions.Center;
-            Anchor(status.rectTransform, new Vector2(.045f, .04f), new Vector2(.955f, .18f));
+            Inset(status.rectTransform, Vector2.zero, new Vector2(1f, 0f),
+                new Vector2(pad, pad), new Vector2(-pad, actionTop));
         }
 
         static void CreateConnector(RectTransform panel, int index)
@@ -229,6 +245,14 @@ namespace KMA.Gameplay.UI
             rect.anchorMin = min;
             rect.anchorMax = max;
             rect.offsetMin = rect.offsetMax = Vector2.zero;
+        }
+
+        static void Inset(RectTransform rect, Vector2 min, Vector2 max, Vector2 offsetMin, Vector2 offsetMax)
+        {
+            rect.anchorMin = min;
+            rect.anchorMax = max;
+            rect.offsetMin = offsetMin;
+            rect.offsetMax = offsetMax;
         }
 
         static void Place(RectTransform rect, Vector2 anchor, Vector2 size, Vector2? pivot = null)

@@ -69,6 +69,11 @@ MonoBehaviour:
     captionSize: 20
     objectiveSize: 20
     iconSize: 64
+    cardInset: 16
+    cardSpacing: 12
+    cardBadgeHeight: 28
+    cardStepHeight: 24
+    cardActionHeight: 34
     revealDuration: 0.2
     revealStagger: 0.05
     revealScale: 0.94
