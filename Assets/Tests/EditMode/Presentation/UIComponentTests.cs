@@ -700,6 +700,80 @@ namespace KMA.Tests.Presentation
             finally { Object.DestroyImmediate(root); }
         }
 
+        [Test]
+        public void MapMarkers_FreshGameMarksSprintCurrentAndSelected()
+        {
+            var root = new GameObject("markers", typeof(RectTransform));
+            try
+            {
+                var screen = root.AddComponent<MapScreen>();
+                MapPresentationBuilder.Build(screen, new GameSession());
+                Assert.That(screen.Nodes.Select(node => node.IsCurrent), Is.EqualTo(new[] { true, false, false }));
+                Assert.That(screen.Nodes.Select(node => node.IsSelected), Is.EqualTo(new[] { true, false, false }));
+                Assert.That(screen.Nodes[0].transform.Find("CurrentTag").gameObject.activeSelf, Is.True);
+                Assert.That(screen.Nodes[1].transform.Find("CurrentTag").gameObject.activeSelf, Is.False);
+            }
+            finally { Object.DestroyImmediate(root); }
+        }
+
+        [Test]
+        public void MapMarkers_AfterSprintCourseTheCurrentStopMovesToVolleyballAndSelectionFollowsClicks()
+        {
+            var root = new GameObject("markers-2", typeof(RectTransform));
+            try
+            {
+                var screen = root.AddComponent<MapScreen>();
+                MapPresentationBuilder.Build(screen, CompleteSprintJourney());
+                MapNodeView sprint = screen.Nodes[0], volley = screen.Nodes[1], football = screen.Nodes[2];
+                Assert.That(volley.IsCurrent, Is.True);
+                Assert.That(sprint.IsCurrent, Is.False);
+                Assert.That(football.IsLocked, Is.True);
+
+                screen.SelectSubject(SubjectId.Sprint);
+                Assert.That(sprint.IsSelected, Is.True);
+                Assert.That(volley.IsSelected, Is.False);
+                Assert.That(volley.IsCurrent, Is.True, "Selecting an older stop must not move the current marker.");
+
+                screen.SelectSubject(SubjectId.Football);   // locked: selection must not change
+                Assert.That(football.IsSelected, Is.False);
+                Assert.That(sprint.IsSelected, Is.True);
+            }
+            finally { Object.DestroyImmediate(root); }
+        }
+
+        [Test]
+        public void MapMarkers_CompletedCourseHasNoCurrentStop()
+        {
+            var root = new GameObject("markers-3", typeof(RectTransform));
+            try
+            {
+                var session = new GameSession();
+                foreach (ChallengeDefinition definition in session.Journey.Catalog.Ordered)
+                    Complete(session, definition.Id);
+                var screen = root.AddComponent<MapScreen>();
+                MapPresentationBuilder.Build(screen, session);
+                Assert.That(screen.Nodes.Any(node => node.IsCurrent), Is.False);
+                Assert.That(root.GetComponentsInChildren<Transform>(true)
+                    .Where(t => t.name == "CurrentTag").All(t => !t.gameObject.activeSelf), Is.True);
+            }
+            finally { Object.DestroyImmediate(root); }
+        }
+
+        [Test]
+        public void LessonPanelHeadingIsOnlyTheSubjectName()
+        {
+            var root = new GameObject("heading", typeof(RectTransform));
+            try
+            {
+                var screen = root.AddComponent<MapScreen>();
+                MapPresentationBuilder.Build(screen, new GameSession());
+                Assert.That(screen.LessonList.transform.Find("CourseTitle").GetComponent<TMP_Text>().text,
+                    Is.EqualTo("Chạy nước rút"));
+                Assert.That(screen.LessonList.SelectedSubject, Is.EqualTo(SubjectId.Sprint));
+            }
+            finally { Object.DestroyImmediate(root); }
+        }
+
         static (MapScreen screen, RectTransform grid) BuildMapAt(GameObject root, Vector2 size, GameSession session)
         {
             ((RectTransform)root.transform).sizeDelta = size;

@@ -1,4 +1,5 @@
 using System;
+using System.Linq;
 using KMA.Gameplay;
 using UnityEngine;
 
@@ -57,6 +58,7 @@ namespace KMA.Gameplay.UI
                     session.Journey.IsSubjectUnlocked(node.SubjectId), record.Passed, record);
             }
             LessonList?.Bind(session, (id, mode) => ChallengeRequested?.Invoke(id, mode));
+            ApplyMarkers();
         }
 
         public void BindBudgetLabel(TMPro.TMP_Text label) => BudgetLabel = label;
@@ -64,7 +66,22 @@ namespace KMA.Gameplay.UI
         public void SelectSubject(SubjectId subject)
         {
             LessonList?.ShowSubject(subject);
+            ApplyMarkers();
             SubjectRequested?.Invoke(subject);
+        }
+
+        static readonly SubjectId[] CourseOrder = { SubjectId.Sprint, SubjectId.Volleyball, SubjectId.Football };
+
+        void ApplyMarkers()
+        {
+            MapNodeView current = Nodes
+                .Where(node => node != null && !node.IsComingSoon && !node.IsLocked && !node.IsCompleted)
+                .OrderBy(node => Array.IndexOf(CourseOrder, node.SubjectId))
+                .FirstOrDefault();
+            SubjectId selected = LessonList != null ? LessonList.SelectedSubject : SubjectId.Sprint;
+            foreach (MapNodeView node in Nodes)
+                if (node != null)
+                    node.SetJourneyMarkers(node == current, node.SubjectId == selected && !node.IsLocked);
         }
     }
 }

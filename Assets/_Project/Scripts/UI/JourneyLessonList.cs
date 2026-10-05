@@ -30,6 +30,7 @@ namespace KMA.Gameplay.UI
         readonly List<string> lessonIds = new List<string>(3);
         public IReadOnlyList<string> LessonIds => lessonIds;
         public string CurrentChallengeId { get; private set; }
+        public SubjectId SelectedSubject => selectedSubject;
 
         public static JourneyLessonList Create(Transform parent)
         {
@@ -72,7 +73,7 @@ namespace KMA.Gameplay.UI
             int subjectIndex = Array.IndexOf(CourseOrder, selectedSubject);
             if (subjectIndex < 0) subjectIndex = 0;
             if (heading != null)
-                heading.text = VietText.Fix($"Chương {subjectIndex + 1:00} · {CourseTitles[subjectIndex]}");
+                heading.text = VietText.Fix(CourseTitles[subjectIndex]);
             Color chapterColor = selectedSubject switch
             {
                 SubjectId.Volleyball => UITheme.Shared.LessonJourney.volleyball,
