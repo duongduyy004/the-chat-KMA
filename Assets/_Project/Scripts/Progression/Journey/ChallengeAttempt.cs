@@ -45,4 +45,20 @@ namespace KMA.Gameplay
             Placement = placement;
         }
     }
+
+    public sealed class FrogJumpPending
+    {
+        public string Id { get; }
+        public string FailedAttemptId { get; }
+        public string FailedChallengeId { get; }
+        public bool SavesLife { get; }
+
+        public FrogJumpPending(string id, string failedAttemptId, string failedChallengeId, bool savesLife)
+        {
+            Id = id;
+            FailedAttemptId = failedAttemptId;
+            FailedChallengeId = failedChallengeId;
+            SavesLife = savesLife;
+        }
+    }
 }

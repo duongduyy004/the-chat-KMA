@@ -6,14 +6,15 @@ namespace KMA.Gameplay
 {
     public sealed class JourneyProgress
     {
-        const string NoSupplementaryChallenge = "";
         readonly ChallengeCatalog catalog;
         readonly HashSet<string> completedChallengeIds = new HashSet<string>(StringComparer.Ordinal);
+        readonly Dictionary<string, int> failCounts = new Dictionary<string, int>(StringComparer.Ordinal);
 
         ChallengeAttemptContext activeAttempt;
         string lastCommittedAttemptId;
         JourneyResultData lastCommittedResult;
-        string awaitingSupplementaryChallengeId;
+        FrogJumpPending pendingFrogJump;
+        string lastAppliedFrogJumpId;
         int attemptsRemaining = GameSession.MaxLives;
         int supplementaryRounds;
         List<string> seenDialogueIds = new List<string>();
@@ -23,22 +24,40 @@ namespace KMA.Gameplay
             this.catalog = catalog ?? throw new ArgumentNullException(nameof(catalog));
         }
 
-        public string CheckpointChallengeId
-        {
-            get
-            {
-                if (AwaitingSupplementary)
-                    return awaitingSupplementaryChallengeId;
-                return catalog.Ordered.FirstOrDefault(x => !completedChallengeIds.Contains(x.Id))?.Id;
-            }
-        }
+        public string CheckpointChallengeId =>
+            catalog.Ordered.FirstOrDefault(x => !completedChallengeIds.Contains(x.Id))?.Id;
 
         public int AttemptsRemaining => attemptsRemaining;
-        public bool AwaitingSupplementary => !string.IsNullOrEmpty(awaitingSupplementaryChallengeId);
+        [Obsolete("Supplementary rounds were removed; deleted in Task 8.")]
+        public bool AwaitingSupplementary => false;
         public int SupplementaryRounds => supplementaryRounds;
         public bool CourseComplete => catalog.Ordered.All(x => completedChallengeIds.Contains(x.Id));
         public ChallengeAttemptContext ActiveAttempt => activeAttempt;
         public ChallengeCatalog Catalog => catalog;
+        public FrogJumpPending PendingFrogJump => pendingFrogJump;
+
+        public int FailCount(string id) =>
+            !string.IsNullOrEmpty(id) && failCounts.TryGetValue(id, out int count) ? count : 0;
+
+        public void SetAttemptsRemaining(int value) =>
+            attemptsRemaining = Math.Max(0, Math.Min(GameSession.MaxLives, value));
+
+        public bool TryApplyFrogJump(string frogJumpId, bool reachedFinish)
+        {
+            if (pendingFrogJump == null || string.IsNullOrEmpty(frogJumpId) ||
+                !string.Equals(frogJumpId, pendingFrogJump.Id, StringComparison.Ordinal) ||
+                string.Equals(frogJumpId, lastAppliedFrogJumpId, StringComparison.Ordinal))
+                return false;
+            if (pendingFrogJump.SavesLife && !reachedFinish)
+                attemptsRemaining = Math.Max(0, attemptsRemaining - 1);
+            lastAppliedFrogJumpId = frogJumpId;
+            pendingFrogJump = null;
+            return true;
+        }
+
+        /// An unfinished frog jump only ever means one thing: it was lost.
+        public bool ForfeitPendingFrogJump() =>
+            pendingFrogJump != null && TryApplyFrogJump(pendingFrogJump.Id, false);
 
         public bool IsDialogueSeen(string key) => !string.IsNullOrWhiteSpace(key) &&
             seenDialogueIds.Contains(key, StringComparer.Ordinal);
@@ -85,7 +104,8 @@ namespace KMA.Gameplay
             out ChallengeAttemptContext context)
         {
             context = null;
-            if (activeAttempt != null || !Enum.IsDefined(typeof(ChallengeAttemptMode), mode) ||
+            if (activeAttempt != null || pendingFrogJump != null ||
+                !Enum.IsDefined(typeof(ChallengeAttemptMode), mode) ||
                 !Enum.IsDefined(typeof(ChallengeDifficulty), difficulty))
             {
                 return false;
@@ -103,9 +123,8 @@ namespace KMA.Gameplay
 
             bool allowed = mode switch
             {
-                ChallengeAttemptMode.Journey => !AwaitingSupplementary && id == CheckpointChallengeId,
-                ChallengeAttemptMode.Supplementary => AwaitingSupplementary &&
-                    id == awaitingSupplementaryChallengeId && definition.Kind == ChallengeKind.Practice,
+                ChallengeAttemptMode.Journey => id == CheckpointChallengeId &&
+                    (definition.Kind == ChallengeKind.Learn || attemptsRemaining > 0),
                 ChallengeAttemptMode.Review => IsChallengeComplete(id) && IsSubjectUnlocked(definition.Subject),
                 ChallengeAttemptMode.FreePlay => CourseComplete,
                 _ => false
@@ -116,11 +135,7 @@ namespace KMA.Gameplay
             if (definition.Subject == SubjectId.Football)
                 difficulty = ChallengeDifficulty.Normal;
 
-            if ((mode == ChallengeAttemptMode.Journey || mode == ChallengeAttemptMode.Supplementary) &&
-                difficulty != definition.Difficulty)
-            {
-                return false;
-            }
+            if (mode == ChallengeAttemptMode.Journey && difficulty != definition.Difficulty) return false;
 
             context = new ChallengeAttemptContext(Guid.NewGuid().ToString("N"), id, mode, difficulty);
             activeAttempt = context;
@@ -137,35 +152,21 @@ namespace KMA.Gameplay
             }
 
             ChallengeDefinition definition = catalog.Get(activeAttempt.ChallengeId);
-            ChallengeAttemptMode mode = activeAttempt.Mode;
-            if (mode == ChallengeAttemptMode.Supplementary)
+            if (activeAttempt.Mode == ChallengeAttemptMode.Journey)
             {
                 if (result.Pass)
                 {
                     completedChallengeIds.Add(definition.Id);
-                    attemptsRemaining = GameSession.MaxLives;
-                    supplementaryRounds++;
-                    awaitingSupplementaryChallengeId = null;
+                    failCounts.Remove(definition.Id);
                 }
-            }
-            else if (mode == ChallengeAttemptMode.Journey)
-            {
-                if (definition.Kind == ChallengeKind.Exam)
+                else if (definition.Kind != ChallengeKind.Learn)
                 {
-                    if (result.Pass)
-                    {
-                        completedChallengeIds.Add(definition.Id);
-                    }
-                    else
-                    {
+                    int count = FailCount(definition.Id) + 1;
+                    failCounts[definition.Id] = count;
+                    if (count >= 2)
                         attemptsRemaining = Math.Max(0, attemptsRemaining - 1);
-                        if (attemptsRemaining == 0)
-                            awaitingSupplementaryChallengeId = PracticeId(definition.Subject);
-                    }
-                }
-                else if (result.Pass)
-                {
-                    completedChallengeIds.Add(definition.Id);
+                    pendingFrogJump = new FrogJumpPending(Guid.NewGuid().ToString("N"),
+                        activeAttempt.AttemptId, definition.Id, count == 1);
                 }
             }
 
@@ -184,7 +185,10 @@ namespace KMA.Gameplay
             activeAttempt = JourneyAttemptData.FromContext(activeAttempt),
             lastCommittedAttemptId = lastCommittedAttemptId,
             lastCommittedResult = lastCommittedResult?.Copy(),
-            awaitingSupplementaryChallengeId = awaitingSupplementaryChallengeId,
+            failCounts = catalog.Ordered.Where(x => FailCount(x.Id) > 0)
+                .Select(x => new JourneyFailCountData { challengeId = x.Id, count = FailCount(x.Id) }).ToList(),
+            pendingFrogJump = JourneyFrogJumpData.FromPending(pendingFrogJump),
+            lastAppliedFrogJumpId = lastAppliedFrogJumpId,
             supplementaryRounds = supplementaryRounds,
             seenDialogueIds = new List<string>(seenDialogueIds)
         };
@@ -209,9 +213,20 @@ namespace KMA.Gameplay
                 ? new List<string>()
                 : new List<string>(data.seenDialogueIds);
 
-            awaitingSupplementaryChallengeId = IsPracticeId(data?.awaitingSupplementaryChallengeId)
-                ? data.awaitingSupplementaryChallengeId
-                : null;
+            failCounts.Clear();
+            if (data?.failCounts != null)
+            {
+                foreach (JourneyFailCountData entry in data.failCounts)
+                {
+                    if (entry != null && entry.count > 0 && IsPenalized(entry.challengeId))
+                        failCounts[entry.challengeId] = entry.count;
+                }
+            }
+            lastAppliedFrogJumpId = data?.lastAppliedFrogJumpId;
+            pendingFrogJump = data?.pendingFrogJump?.ToPending();
+            if (pendingFrogJump != null && (!IsPenalized(pendingFrogJump.FailedChallengeId) ||
+                pendingFrogJump.Id == lastAppliedFrogJumpId))
+                pendingFrogJump = null;
             activeAttempt = data?.activeAttempt?.ToContext();
             if (activeAttempt != null && (string.IsNullOrWhiteSpace(activeAttempt.AttemptId) ||
                 !catalog.Ordered.Any(x => x.Id == activeAttempt.ChallengeId)))
@@ -221,22 +236,15 @@ namespace KMA.Gameplay
         }
 
         JourneyCommitOutcome Outcome(bool accepted) => new JourneyCommitOutcome(accepted,
-            CheckpointChallengeId, attemptsRemaining, AwaitingSupplementary, CourseComplete);
+            CheckpointChallengeId, attemptsRemaining, pendingFrogJump != null,
+            pendingFrogJump?.SavesLife ?? false, CourseComplete);
 
-        bool IsPracticeId(string id) => !string.IsNullOrEmpty(id) && catalog.Ordered.Any(x =>
-            x.Id == id && x.Kind == ChallengeKind.Practice);
+        bool IsPenalized(string id) => !string.IsNullOrEmpty(id) &&
+            catalog.Ordered.Any(x => x.Id == id && x.Kind != ChallengeKind.Learn);
 
         static bool SameContext(ChallengeAttemptContext left, ChallengeAttemptContext right) =>
             left != null && right != null && left.AttemptId == right.AttemptId &&
             left.ChallengeId == right.ChallengeId && left.Mode == right.Mode &&
             left.Difficulty == right.Difficulty;
-
-        static string PracticeId(SubjectId subject) => subject switch
-        {
-            SubjectId.Sprint => "sprint_practice",
-            SubjectId.Volleyball => "volleyball_practice",
-            SubjectId.Football => "soccer_practice",
-            _ => NoSupplementaryChallenge
-        };
     }
 }

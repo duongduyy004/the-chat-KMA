@@ -40,16 +40,17 @@ namespace KMA.Tests.Gameplay.Progression
         }
 
         [Test]
-        public void LearnAndPracticeFailures_DoNotSpendExamAttempts()
+        public void LearnFailureIsFreeAndPracticeFailureRequiresAFrogJump()
         {
             var session = new GameSession();
 
-            Assert.That(JourneyTestData.Play(session, "sprint_learn", false).Accepted, Is.True);
+            Assert.That(JourneyTestData.Play(session, "sprint_learn", false).FrogJumpRequired, Is.False);
             Assert.That(session.Lives, Is.EqualTo(5));
             Assert.That(session.Journey.CheckpointChallengeId, Is.EqualTo("sprint_learn"));
 
             JourneyTestData.CompleteThrough(session, "sprint_learn");
-            Assert.That(JourneyTestData.Play(session, "sprint_practice", false).Accepted, Is.True);
+            JourneyCommitOutcome practice = JourneyTestData.Play(session, "sprint_practice", false);
+            Assert.That(practice.FrogJumpRequired, Is.True);
             Assert.That(session.Lives, Is.EqualTo(5));
             Assert.That(session.Journey.CheckpointChallengeId, Is.EqualTo("sprint_practice"));
         }
@@ -100,36 +101,23 @@ namespace KMA.Tests.Gameplay.Progression
         }
 
         [Test]
-        public void FifthExamFailure_RequiresOneFreshPracticeBeforeRestoringBudget()
+        public void RepeatedExamFailuresDrainLivesAndNeverOpenSupplementaryPractice()
         {
             var session = new GameSession();
             JourneyTestData.CompleteThrough(session, "sprint_practice");
 
-            for (int i = 0; i < 5; i++)
+            JourneyTestData.Play(session, "sprint_exam", false);
+            session.Journey.TryApplyFrogJump(session.Journey.PendingFrogJump.Id, false);
+            for (int i = 0; i < 4; i++)
             {
-                Assert.That(JourneyTestData.Play(session, "sprint_exam", false).Accepted, Is.True);
+                JourneyTestData.Play(session, "sprint_exam", false);
+                session.Journey.TryApplyFrogJump(session.Journey.PendingFrogJump.Id, true);
             }
 
             Assert.That(session.Lives, Is.Zero);
-            Assert.That(session.Journey.AwaitingSupplementary, Is.True);
-            Assert.That(session.Journey.CheckpointChallengeId, Is.EqualTo("sprint_practice"));
-            Assert.That(session.TryStartChallenge("sprint_practice", ChallengeAttemptMode.Journey,
-                ChallengeDifficulty.Normal, out _), Is.False);
-            Assert.That(session.TryStartChallenge("sprint_practice", ChallengeAttemptMode.Supplementary,
-                ChallengeDifficulty.Normal, out ChallengeAttemptContext practice), Is.True);
-            var receipt = new ChallengeAttemptResult(practice, true,
-                new ChallengeMetrics(distance: 100f, elapsed: 18f));
-            Assert.That(session.SubmitChallengeResult(receipt).AttemptsRemaining, Is.EqualTo(5));
-            Assert.That(session.Journey.AwaitingSupplementary, Is.False);
-            Assert.That(session.Journey.SupplementaryRounds, Is.EqualTo(1));
             Assert.That(session.Journey.CheckpointChallengeId, Is.EqualTo("sprint_exam"));
-
-            JourneyStateData saved = session.Journey.ToData();
-            var restored = new GameSession();
-            restored.Journey.Restore(saved, 5);
-            Assert.That(restored.SubmitChallengeResult(receipt).Accepted, Is.False);
-            Assert.That(restored.Lives, Is.EqualTo(5));
-            Assert.That(restored.Journey.SupplementaryRounds, Is.EqualTo(1));
+            Assert.That(session.Journey.TryBegin("sprint_practice", ChallengeAttemptMode.Supplementary,
+                ChallengeDifficulty.Normal, out _), Is.False);
         }
 
         [Test]

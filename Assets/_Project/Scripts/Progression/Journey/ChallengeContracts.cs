@@ -24,18 +24,28 @@ namespace KMA.Gameplay
         public bool Accepted { get; }
         public string NextChallengeId { get; }
         public int AttemptsRemaining { get; }
-        public bool AwaitingSupplementary { get; }
+        public bool FrogJumpRequired { get; }
+        public bool FrogJumpSavesLife { get; }
         public bool CourseComplete { get; }
 
         public JourneyCommitOutcome(bool accepted, string nextChallengeId, int attemptsRemaining,
-            bool awaitingSupplementary, bool courseComplete)
+            bool frogJumpRequired, bool frogJumpSavesLife, bool courseComplete)
         {
             Accepted = accepted;
             NextChallengeId = nextChallengeId;
             AttemptsRemaining = attemptsRemaining;
-            AwaitingSupplementary = awaitingSupplementary;
+            FrogJumpRequired = frogJumpRequired;
+            FrogJumpSavesLife = frogJumpSavesLife;
             CourseComplete = courseComplete;
         }
+
+        [Obsolete("Supplementary rounds were removed; deleted in Task 8.")]
+        public JourneyCommitOutcome(bool accepted, string nextChallengeId, int attemptsRemaining,
+            bool awaitingSupplementary, bool courseComplete)
+            : this(accepted, nextChallengeId, attemptsRemaining, false, false, courseComplete) { }
+
+        [Obsolete("Supplementary rounds were removed; deleted in Task 8.")]
+        public bool AwaitingSupplementary => false;
     }
 
     public interface IChallengeController
@@ -49,8 +59,10 @@ namespace KMA.Gameplay
     {
         Continue,
         Retry,
+        // Retained for serialized values; the supplementary practice route was removed.
         Practice,
-        RetrySave
+        RetrySave,
+        FrogJump
     }
 
     public interface IChallengeResultPanel

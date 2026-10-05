@@ -13,6 +13,40 @@ namespace KMA.Gameplay
         public string awaitingSupplementaryChallengeId;
         public int supplementaryRounds;
         public List<string> seenDialogueIds = new List<string>();
+        public List<JourneyFailCountData> failCounts = new List<JourneyFailCountData>();
+        public JourneyFrogJumpData pendingFrogJump;
+        public string lastAppliedFrogJumpId;
+    }
+
+    [Serializable]
+    public sealed class JourneyFailCountData
+    {
+        public string challengeId;
+        public int count;
+    }
+
+    [Serializable]
+    public sealed class JourneyFrogJumpData
+    {
+        public string id;
+        public string failedAttemptId;
+        public string failedChallengeId;
+        public bool savesLife;
+
+        public static JourneyFrogJumpData FromPending(FrogJumpPending pending) => pending == null
+            ? null
+            : new JourneyFrogJumpData
+            {
+                id = pending.Id,
+                failedAttemptId = pending.FailedAttemptId,
+                failedChallengeId = pending.FailedChallengeId,
+                savesLife = pending.SavesLife
+            };
+
+        // JsonUtility writes an empty object for null fields, so an empty id means "none".
+        public FrogJumpPending ToPending() => string.IsNullOrWhiteSpace(id)
+            ? null
+            : new FrogJumpPending(id, failedAttemptId, failedChallengeId, savesLife);
     }
 
     [Serializable]
