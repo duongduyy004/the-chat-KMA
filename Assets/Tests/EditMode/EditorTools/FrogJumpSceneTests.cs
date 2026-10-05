@@ -39,5 +39,32 @@ namespace KMA.Tests.EditorTools
             Assert.That(FrogJumpController.CanAcceptTap(MinigamePhase.Play, true, 1f), Is.False);
             Assert.That(FrogJumpController.CanAcceptTap(MinigamePhase.Tutorial, false, 1f), Is.False);
         }
+
+        [Test]
+        public void FrogJumpBuildsWithoutTheVolleyballArtAndShowsTheCampus()
+        {
+            FrogJumpSceneConfigurator.BuildScene();
+            EditorSceneManager.OpenScene(FrogJumpSceneConfigurator.ScenePath, OpenSceneMode.Single);
+            foreach (var renderer in Object.FindObjectsByType<SpriteRenderer>(FindObjectsSortMode.None))
+                Assert.That(AssetDatabase.GetAssetPath(renderer.sprite), Does.Not.Contain("/Environments/Volleyball/"), renderer.name);
+            var world = Object.FindFirstObjectByType<CampusBackdropWorld>();
+            Assert.That(world, Is.Not.Null);
+            foreach (string name in new[] { "Sky", "Grass" })
+                foreach (var t in Object.FindObjectsByType<Transform>(FindObjectsInactive.Include, FindObjectsSortMode.None).Where(t => t.name == name))
+                    Assert.That(t.IsChildOf(world.transform), Is.True, name + " is an old flat quad");
+        }
+
+        [Test]
+        public void TimerProgressAndStatusSitOnOneKitCard()
+        {
+            FrogJumpSceneConfigurator.BuildScene();
+            EditorSceneManager.OpenScene(FrogJumpSceneConfigurator.ScenePath, OpenSceneMode.Single);
+            Transform card = Object.FindObjectsByType<RectTransform>(FindObjectsInactive.Include, FindObjectsSortMode.None)
+                .Single(t => t.name == "ProgressCard");
+            foreach (string name in new[] { "Timer", "Progress", "Status" })
+                Assert.That(card.GetComponentsInChildren<Transform>(true).Any(t => t.name == name), Is.True, name);
+            Assert.That(card.GetComponent<UnityEngine.UI.Image>().color.a,
+                Is.EqualTo(KMA.UI.Kit.MinigameUiTheme.SurfaceSoft).Within(.01f));
+        }
     }
 }

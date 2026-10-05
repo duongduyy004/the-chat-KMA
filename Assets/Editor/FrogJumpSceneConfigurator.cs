@@ -22,7 +22,6 @@ namespace KMA.EditorTools
         public const string ScenePath = "Assets/_Project/Scenes/MG_FrogJump.unity";
         const string BalanceDir = "Assets/_Project/ScriptableObjects/FrogJump";
         const string BalancePath = BalanceDir + "/FrogJumpBalance.asset";
-        const string PixelPath = "Assets/_Project/Art/Environments/Volleyball/Pixel.png";
         const string HudRootName = "S2_HUD_Minigame";
         const int HudSortingOrder = 500;
         const float StartX = -7f, FinishX = 7f, GroundY = -2f;
@@ -63,17 +62,12 @@ namespace KMA.EditorTools
         static void BuildWorld(FrogJumpBalanceConfig balance)
         {
             Scene scene = EditorSceneManager.NewScene(NewSceneSetup.EmptyScene, NewSceneMode.Single);
-            Sprite pixel = AssetDatabase.LoadAssetAtPath<Sprite>(PixelPath) ??
-                throw new InvalidOperationException($"[KMA] {PixelPath} is missing; build the volleyball scene first.");
-
-            Quad("Sky", pixel, new Color32(120, 205, 240, 255), new Vector3(0f, 4f, 0f), new Vector2(60f, 16f), -31);
-            Quad("Grass", pixel, new Color32(110, 190, 90, 255), new Vector3(0f, GroundY - 6f, 0f), new Vector2(60f, 12f));
-            Quad("Track", pixel, new Color32(214, 120, 80, 255), new Vector3(0f, GroundY - .6f, 0f),
+            Sprite pixel = CampusBackdropAuthoring.Load("CampusPixel");
+            Quad("Track", pixel, new Color32(0xe0, 0x60, 0x4a, 0xff), new Vector3(0f, GroundY - .6f, 0f),
                 new Vector2(FinishX - StartX + 2f, 1.2f), -29);
-            Quad("StartLine", pixel, Color.white, new Vector3(StartX, GroundY - .6f, 0f), new Vector2(.12f, 1.2f), -28);
-            Quad("FinishLine", pixel, Color.white, new Vector3(FinishX, GroundY - .6f, 0f), new Vector2(.2f, 1.2f), -28);
-            Quad("FinishFlag", pixel, MinigameUiTheme.Accent, new Vector3(FinishX + .3f, GroundY + .9f, 0f),
-                new Vector2(.6f, .4f), -27);
+            Quad("StartLine", pixel, new Color32(0xff, 0xfb, 0xea, 0xff), new Vector3(StartX, GroundY - .6f, 0f), new Vector2(.12f, 1.2f), -28);
+            Quad("FinishLine", pixel, new Color32(0xff, 0xfb, 0xea, 0xff), new Vector3(FinishX, GroundY - .6f, 0f), new Vector2(.2f, 1.2f), -28);
+            Quad("FinishFlag", pixel, MinigameUiTheme.Accent, new Vector3(FinishX + .3f, GroundY + .9f, 0f), new Vector2(.6f, .4f), -27);
 
             Sprite squat = CharacterArt.Load(CharacterArt.Hero, "duck");
             Sprite jump = CharacterArt.Load(CharacterArt.Hero, "jump");
@@ -113,12 +107,14 @@ namespace KMA.EditorTools
         {
             SpriteRenderer renderer = Renderer(name, pixel, position, order);
             renderer.color = color;
-            renderer.transform.localScale = new Vector3(size.x, size.y, 1f);
+            // CampusPixel is 8x8 px at 100 ppu (0.08 units), so scale by the sprite size to get `size` in world units.
+            renderer.transform.localScale = new Vector3(size.x / pixel.bounds.size.x, size.y / pixel.bounds.size.y, 1f);
         }
 
         static void AddControls(FrogJumpBalanceConfig balance)
         {
             Scene scene = EditorSceneManager.OpenScene(ScenePath, OpenSceneMode.Single);
+            CampusBackdropAuthoring.AddWorld(scene, Camera.main, GroundY, 3.2f, true);
             GameObject hudRoot = scene.GetRootGameObjects().Single(go => go.name == HudRootName);
             hudRoot.GetComponent<Canvas>().sortingOrder = HudSortingOrder;
             var parent = (RectTransform)(hudRoot.transform.Find("SafeAreaRoot") ?? hudRoot.transform);
@@ -196,22 +192,35 @@ namespace KMA.EditorTools
         /// progress bar, and put the "Còn x m" status under the progress bar.
         static void ConfigureSharedHud(Transform hud)
         {
+            // Children of a prefab instance cannot be reparented, so detach the HUD from its prefab first.
+            if (PrefabUtility.IsPartOfPrefabInstance(hud))
+                PrefabUtility.UnpackPrefabInstance(PrefabUtility.GetOutermostPrefabInstanceRoot(hud),
+                    PrefabUnpackMode.Completely, InteractionMode.AutomatedAction);
             Transform Child(string name) => hud.GetComponentsInChildren<Transform>(true).FirstOrDefault(t => t.name == name);
-            Transform progress = Child("Progress");
-            Transform status = Child("Status");
-            if (progress != null && status != null)
-            {
-                var from = (RectTransform)progress;
-                var to = (RectTransform)status;
-                to.SetParent(from.parent, false);
-                to.anchorMin = from.anchorMin;
-                to.anchorMax = from.anchorMax;
-                to.pivot = new Vector2(.5f, 1f);
-                to.sizeDelta = new Vector2(Mathf.Max(from.sizeDelta.x, 300f), 36f);
-                to.anchoredPosition = from.anchoredPosition + new Vector2(0f, -from.sizeDelta.y * from.pivot.y - 6f);
-            }
             foreach (string name in new[] { "Phase", "Stamina", "Score", "HeartBar" })
                 Child(name)?.gameObject.SetActive(false);
+
+            var safe = (RectTransform)(hud.Find("SafeAreaRoot") ?? hud);
+            Transform existing = safe.Find("ProgressCard");
+            Image card = existing != null ? existing.GetComponent<Image>()
+                : UiKit.Panel(safe, "ProgressCard", MinigameUiTheme.RadiusPanel, MinigameUiTheme.SurfaceSoft);
+            UiKit.Place(card.rectTransform, new Vector2(.5f, 1f), new Vector2(.5f, 1f),
+                new Vector2(0f, -MinigameUiTheme.SpaceMd), new Vector2(560f, 150f));
+
+            void Into(string name, Vector2 min, Vector2 max)
+            {
+                var rect = Child(name) as RectTransform;
+                if (rect == null) return;
+                rect.SetParent(card.transform, false);
+                rect.anchorMin = min;
+                rect.anchorMax = max;
+                rect.pivot = new Vector2(.5f, .5f);
+                rect.offsetMin = new Vector2(MinigameUiTheme.SpaceSm, 0f);
+                rect.offsetMax = new Vector2(-MinigameUiTheme.SpaceSm, 0f);
+            }
+            Into("Timer", new Vector2(0f, .58f), new Vector2(1f, .98f));
+            Into("Progress", new Vector2(0f, .38f), new Vector2(1f, .52f));
+            Into("Status", new Vector2(0f, .04f), new Vector2(1f, .34f));
         }
 
         static RectTransform UiRect(string name, Transform parent, Vector2 anchorMin, Vector2 anchorMax)
