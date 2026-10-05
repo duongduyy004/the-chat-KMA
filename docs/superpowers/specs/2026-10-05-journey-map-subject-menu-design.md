@@ -26,10 +26,10 @@ tham chiếu 1920×1080 và phải chuyển thành anchor tương đối khi cod
 ## Thiết kế
 
 ### Header
-- Thấp hơn: cao ~84 (hiện 116). Nút back 60, tiêu đề cỡ ~40 cùng dòng với phụ đề.
-  **Giữ nguyên chữ hiện tại**: tiêu đề `CHỌN MÔN THI`, phụ đề `Chọn một môn để bắt
-  đầu`. Bộ đếm lượt giữ nguyên nội dung (`Lượt thi: n/5`) và nút back vẫn gọi
-  `RouteToMenu`.
+- Thấp hơn: cao ~84 (hiện 116). Nút back 60, tiêu đề cỡ ~40.
+  **Chỉ giữ lại chữ của tiêu đề**: `CHỌN MÔN THI`. Kiểu dáng theo style mới (gọn,
+  cỡ chữ nhỏ hơn) và bỏ dòng phụ đề `Chọn một môn để bắt đầu`. Bộ đếm lượt giữ
+  nguyên nội dung (`Lượt thi: n/5`) và nút back vẫn gọi `RouteToMenu`.
 
 ### Bản đồ
 - Một đường cong qua tâm ba trạm: Chạy nước rút (thấp, trái), Bóng chuyền (cao,
