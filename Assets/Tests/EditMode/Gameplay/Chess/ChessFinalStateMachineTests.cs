@@ -152,5 +152,23 @@ namespace KMA.Tests.Gameplay.Chess
             Assert.That(faulty.Mistakes, Is.EqualTo(0));
             Assert.That(faulty.Phase, Is.EqualTo(ChessFinalPhase.PlayerTurn));
         }
+
+        [Test]
+        public void NonInvalidOperationExceptionErrorsAlsoCaughtAndReturnTurn()
+        {
+            PuzzleDefinition broken = ScholarTwoMover();
+            var faulty = new ChessFinalStateMachine(broken);
+            // Corrupt the puzzle after construction (TryValidateShape passed)
+            broken.nodes[0].moves = null;
+            string failure = null;
+            faulty.GradingFailed += message => failure = message;
+            faulty.Begin();
+            // This should trigger a NullReferenceException (or similar) inside Grade
+            Assert.That(faulty.Submit(Uci("d1h5")), Is.Null);
+            Assert.That(failure, Is.Not.Null);
+            Assert.That(faulty.Mistakes, Is.EqualTo(0));
+            Assert.That(faulty.Phase, Is.EqualTo(ChessFinalPhase.PlayerTurn));
+            Assert.That(faulty.Clock.Running, Is.True);
+        }
     }
 }

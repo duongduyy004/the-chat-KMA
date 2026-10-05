@@ -66,7 +66,7 @@ namespace KMA.Gameplay.Chess
             {
                 grade = grader.Grade(Position, Node, PlayerMovesMade, move);
             }
-            catch (InvalidOperationException exception)
+            catch (Exception exception)
             {
                 GradingFailed?.Invoke(exception.Message);
                 ReturnToPlayer();
