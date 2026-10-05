@@ -120,7 +120,7 @@ namespace KMA.EditorTools
                 screen.SubjectRequested += _ => selected++;
                 foreach (var node in screen.Nodes)
                     node.GetComponent<Button>()?.onClick.Invoke();
-                Check(selected == 3, "Authored Map buttons were not rebound");
+                Check(selected == 4, "Authored Map buttons were not rebound");
                 string challenge = null;
                 KMA.Gameplay.ChallengeAttemptMode? mode = null;
                 screen.ChallengeRequested += (id, attemptMode) => { challenge = id; mode = attemptMode; };

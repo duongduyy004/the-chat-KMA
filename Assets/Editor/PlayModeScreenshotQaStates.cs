@@ -21,6 +21,12 @@ namespace KMA.EditorTools
     ///   map-chess-open     Map with the course done through soccer_exam (final exam is the checkpoint)
     ///   map-complete       Map with the whole course done (summary and replay button)
     ///   chess-select       MG_ChessFinal: start the attempt and select the first main-line piece
+    ///   chess-wrong        MG_ChessFinal: one wrong move (Sai: 1/2, whistle)
+    ///   chess-boss         MG_ChessFinal: first correct move played, boss turn
+    ///   chess-hint         MG_ChessFinal: hint level 2 shown
+    ///   chess-promotion    MG_ChessFinal: promotion picker opened directly (the demo puzzle has no promotion)
+    ///   chess-win          MG_ChessFinal: whole main line played, result panel (use a long wait)
+    ///   chess-timeout      MG_ChessFinal: clock set to 89.9 s and ticked out, result panel (use a long wait)
     ///   celebration-cheer  Celebration: wait until the timeline reaches 3 s (cheer beat)
     ///   celebration-teacher Celebration: wait until the timeline reaches 6 s (teacher and bubble)
     ///   celebration-skip   Celebration: press Skip and wait for the summary to fade in
@@ -31,6 +37,8 @@ namespace KMA.EditorTools
         public static bool IsKnown(string state) => state == "" || state == "frog-fall" ||
             state == "frog-win-keep" || state == "frog-lose-zero" || state == "exam-fail-1" ||
             state == "exam-fail-2" || state == "map-lives-3" || state == "map-lives-0" || state == "chess-select" ||
+            state == "chess-wrong" || state == "chess-boss" || state == "chess-hint" ||
+            state == "chess-promotion" || state == "chess-win" || state == "chess-timeout" ||
             state == "map-chess-locked" || state == "map-chess-open" || state == "map-complete" ||
             state == "celebration-cheer" || state == "celebration-teacher" || state == "celebration-skip";
 
@@ -51,6 +59,12 @@ namespace KMA.EditorTools
                 case "map-chess-open": return SetMapProgress("soccer_exam");
                 case "map-complete": return SetMapProgress("chess_final");
                 case "chess-select": return CaptureSoonAfterApply = ChessSelect();
+                case "chess-wrong": return CaptureSoonAfterApply = ChessWrong();
+                case "chess-boss": return CaptureSoonAfterApply = ChessBoss();
+                case "chess-hint": return ChessHint();
+                case "chess-promotion": return ChessPromotion();
+                case "chess-win": return CaptureSoonAfterApply = ChessWin();
+                case "chess-timeout": return CaptureSoonAfterApply = ChessTimeout();
                 case "celebration-cheer": return CaptureSoonAfterApply = CelebrationAt(3f);
                 case "celebration-teacher": return CaptureSoonAfterApply = CelebrationAt(6f);
                 case "celebration-skip": return CaptureSoonAfterApply = CelebrationSkip();
@@ -78,6 +92,102 @@ namespace KMA.EditorTools
             ChessMove.TryParseUci(controller.Machine.Puzzle.nodes[0].moves[0].uci, out ChessMove move);
             board.ClickSquare(move.From);
             return board.SelectedSquare == move.From;
+        }
+
+        static ChessFinalController ReadyChess()
+        {
+            var controller = Object.FindFirstObjectByType<ChessFinalController>();
+            if (controller == null || controller.Machine == null) return null;
+            if (controller.Machine.Phase == ChessFinalPhase.Intro) controller.BeginAttempt();
+            return controller;
+        }
+
+        static void PlayTreeMove(ChessFinalController controller)
+        {
+            ChessFinalStateMachine machine = controller.Machine;
+            ChessMove.TryParseUci(machine.Puzzle.nodes[machine.Node].moves[0].uci, out ChessMove move);
+            controller.RequestMove(move.From, move.To);
+        }
+
+        static double finishSeenAt;
+
+        // The standalone scene has no SceneRouter, so show the card the router would: the final-mode challenge card.
+        // Waits (wall clock) past the controller's result delay so the card replaces the phase banner as in play.
+        static bool ShowChessResult(ChessFinalController controller, bool solved)
+        {
+            if (finishSeenAt == 0) finishSeenAt = UnityEditor.EditorApplication.timeSinceStartup;
+            if (UnityEditor.EditorApplication.timeSinceStartup - finishSeenAt < 2.5) return false;
+            var panel = Object.FindFirstObjectByType<ResultPanel>(FindObjectsInactive.Include);
+            if (panel == null) return false;
+            ChallengeDefinition definition = new GameSession().Journey.Catalog.Get("chess_final");
+            var context = new ChallengeAttemptContext("qa", "chess_final", ChallengeAttemptMode.Journey,
+                ChallengeDifficulty.Normal);
+            MinigameResult mini = controller.BuildResult(solved);
+            var result = new ChallengeAttemptResult(context, solved, controller.BuildMetrics(definition, mini), mini);
+            var outcome = new JourneyCommitOutcome(true, null, 0, false, false, solved, true);
+            panel.ShowChallenge(context, result, outcome, null);
+            return true;
+        }
+
+        static bool ChessWrong()
+        {
+            var controller = ReadyChess();
+            if (controller == null) return false;
+            ChessFinalStateMachine machine = controller.Machine;
+            if (machine.Phase == ChessFinalPhase.PlayerTurn && machine.Mistakes == 0)
+            {
+                ChessMove.TryParseUci(machine.Puzzle.nodes[0].moves[0].uci, out ChessMove right);
+                foreach (ChessMove move in MoveGenerator.LegalMoves(machine.Position))
+                    if (move.From != right.From || move.To != right.To)
+                    {
+                        controller.RequestMove(move.From, move.To);
+                        break;
+                    }
+            }
+            return machine.Mistakes == 1;
+        }
+
+        static bool ChessBoss()
+        {
+            var controller = ReadyChess();
+            if (controller == null) return false;
+            if (controller.Machine.Phase == ChessFinalPhase.PlayerTurn && controller.Machine.PlayerMovesMade == 0)
+                PlayTreeMove(controller);
+            return controller.Machine.Phase == ChessFinalPhase.BossTurn;
+        }
+
+        static bool ChessHint()
+        {
+            var controller = ReadyChess();
+            if (controller == null || controller.Machine.Phase != ChessFinalPhase.PlayerTurn) return false;
+            if (controller.Machine.HintLevel < 2) controller.RevealHint();
+            return controller.Machine.HintLevel == 2;
+        }
+
+        static bool ChessPromotion()
+        {
+            var controller = ReadyChess();
+            var picker = Object.FindFirstObjectByType<PromotionPicker>(FindObjectsInactive.Include);
+            if (controller == null || picker == null) return false;
+            if (!picker.IsOpen) picker.Open(_ => { });
+            return picker.IsOpen;
+        }
+
+        static bool ChessWin()
+        {
+            var controller = ReadyChess();
+            if (controller == null) return false;
+            if (controller.Machine.Phase == ChessFinalPhase.PlayerTurn) PlayTreeMove(controller);
+            return controller.Machine.Phase == ChessFinalPhase.Completed && ShowChessResult(controller, true);
+        }
+
+        static bool ChessTimeout()
+        {
+            var controller = ReadyChess();
+            if (controller == null) return false;
+            ChessFinalStateMachine machine = controller.Machine;
+            if (machine.Phase == ChessFinalPhase.PlayerTurn && machine.Clock.Elapsed < 89f) machine.Clock.Tick(89.9f);
+            return machine.Phase == ChessFinalPhase.Failed && ShowChessResult(controller, false);
         }
 
         // Game time lags wall time in a background Editor, so the beats are reached on the timeline clock.

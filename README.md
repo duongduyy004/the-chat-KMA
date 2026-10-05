@@ -33,6 +33,8 @@ The shared lifecycle is `Tutorial → Countdown → Play → Resolve`, with exac
 4. A second failure costs one life.
 5. Failure costs one life and returns to Map, or to GameOver when no lives remain.
 
+The course ends with the chess final exam (`MG_ChessFinal`). It has no lives and no frog jump: a failure never costs a life and can be replayed freely. The first win completes the course and opens the `Celebration` scene (save version 9); later visits replay it from the Map. Details and QA: [Chess Final and Celebration QA](docs/qa/chess-final-celebration.md).
+
 Football uses a custom result screen. A failed attempt offers Retry, which consumes one life and starts a fresh five-kick attempt directly; Continue returns to the campaign route.
 
 `SceneRouter` keeps the live `GameSession` across scene loads and guards against duplicate transitions.
@@ -44,6 +46,8 @@ Football uses a custom result screen. A failed attempt offers Retry, which consu
 | `MG_Sprint` | Sprint subject with rival pace, stamina, wind cue, and counterplay |
 | `MG_Volleyball` | 1v1 beach volleyball against an authored AI; first to 5 points within 120 s |
 | `MG_Football` | Five-kick penalty shootout with cartoon field, goal, player, goalkeeper, and touch controls |
+| `MG_ChessFinal` | Course final exam: mate in 2 against Cô Thể Chất within 90 s, two recoverable mistakes, hints |
+| `Celebration` | Skippable course celebration with a results summary; opens on the first win of the final |
 | `Punishment` | Recovery challenge for a failed first attempt |
 | `Map` | Return route after subject resolution |
 | `GameOver` | Route after lives are exhausted |

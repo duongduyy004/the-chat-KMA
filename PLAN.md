@@ -13,7 +13,7 @@
 
 `Bootstrap → Menu → Map → Subject → Result`; thất bại làm mất một mạng và trở về Map, hoặc đến GameOver khi hết mạng.
 
-`SceneRouter` duy trì `GameSession` qua các lần tải scene và ngăn chuyển cảnh trùng lặp. Save có phiên bản và migration để giữ tiến trình tương thích khi cấu trúc môn học thay đổi.
+`SceneRouter` duy trì `GameSession` qua các lần tải scene và ngăn chuyển cảnh trùng lặp. Save có phiên bản và migration để giữ tiến trình tương thích khi cấu trúc môn học thay đổi. Bản lưu hiện tại là v9 (thêm kỷ lục cờ vua và cờ `celebrationSeen`).
 
 ## 3. Môn học được giữ lại
 
@@ -22,12 +22,13 @@
 | Sprint | `MG_Sprint` | Có thể chơi |
 | Volleyball | `MG_Volleyball` | Có thể chơi |
 | Football | `MG_Football` | Penalty: thanh hướng, lực sút và trọng lực |
+| Bài kiểm tra cuối (cờ vua) | `MG_ChessFinal` | Trạm thứ 4 trên bản đồ: chiếu hết trong 2 nước, 90 giây, sửa sai 2 lần; không trừ lượt, không bật cóc. Thắng lần đầu mở `Celebration` |
 
 Mỗi môn có luật và điều kiện hoàn thành riêng. Kết quả dùng cùng thang điểm và vòng đời chung: `Tutorial → Countdown → Play → Resolve`.
 
 ## 4. Scene và hệ thống dùng chung
 
-- `Bootstrap`, `Map`, `MG_Sprint`, `MG_Volleyball`, `MG_Football`, `Punishment`, `GameOver`.
+- `Bootstrap`, `Map`, `MG_Sprint`, `MG_Volleyball`, `MG_Football`, `MG_ChessFinal`, `Celebration`, `Punishment`, `GameOver`.
 - `GameSession`, `SaveSystem`, `SceneRouter`, subject configuration và bộ trình bày bản đồ quản lý tiến trình.
 - Input dùng chung gồm tap, alternate tap, rhythm, hold, swipe và timing window; scene chỉ sử dụng các detector phù hợp.
 - Thành phần UI chia sẻ theme, safe-area handling, HUD, tutorial, countdown và kết quả.
