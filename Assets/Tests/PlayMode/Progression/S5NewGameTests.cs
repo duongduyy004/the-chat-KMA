@@ -270,7 +270,8 @@ namespace KMA.Tests.Gameplay.Progression
             Assert.That(screen.Nodes[0].IsInteractable, Is.True);
             Assert.That(screen.Nodes[1].IsInteractable, Is.False);
             Assert.That(screen.Nodes[2].IsInteractable, Is.False);
-            Assert.That(screen.Nodes.Skip(1).All(node => node.StatusText == "CHƯA MỞ KHÓA"), Is.True);
+            Assert.That(screen.Nodes.Skip(1).All(node => node.StatusText ==
+                (node.SubjectId == SubjectId.Chess ? "Đạt Bóng đá để mở" : "CHƯA MỞ KHÓA")), Is.True);
             Assert.That(GameObject.Find("SelectionGrid").GetComponent<GridLayoutGroup>(), Is.Not.Null);
         }
 

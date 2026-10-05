@@ -140,6 +140,11 @@ namespace KMA.Gameplay.Chess
             if (hud == null) return;
             hud.SetTurn(phase);
             hud.SetHintAvailable(phase == ChessFinalPhase.PlayerTurn && Machine.HintLevel < PuzzleHints.MaxLevel);
+            // Each submit clears the hurt pose; a mistake sets it again right after.
+            if (phase == ChessFinalPhase.Validating && !resolving) cast.SetStudent("idle");
+            // The whistle sequence after a mistake already ends on strictLook, so it is left to finish.
+            if (phase == ChessFinalPhase.PlayerTurn && !resolving && !cast.TeacherSequenceRunning)
+                cast.SetTeacher("strictLook");
             RefreshInput();
         }
 

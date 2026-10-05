@@ -28,6 +28,8 @@ namespace KMA.Gameplay.Celebration
         [SerializeField] Button skipButton;
         [SerializeField] Button menuButton;
         [SerializeField] Button replayButton;
+        [SerializeField] Image fade;
+        const float FadeSeconds = .6f;
         float frameClock;
         bool leaving;
 
@@ -47,6 +49,8 @@ namespace KMA.Gameplay.Celebration
             title = titleLabel; rows = rowLabels; footnote = note;
             skipButton = skip; menuButton = menu; replayButton = replay;
         }
+
+        public void SetFade(Image cover) => fade = cover;
 
         void Start()
         {
@@ -73,6 +77,7 @@ namespace KMA.Gameplay.Celebration
         void Update()
         {
             Timeline.Tick(Time.deltaTime);
+            UpdateFade();
             frameClock += Time.deltaTime;
             int cheer = Mathf.FloorToInt(frameClock / .35f) % 2 == 0 ? 1 : 2;
             CelebrationBeat beat = Timeline.Beat;
@@ -88,6 +93,14 @@ namespace KMA.Gameplay.Celebration
             }
             if (Timeline.SummaryShown)
                 summaryGroup.alpha = Mathf.MoveTowards(summaryGroup.alpha, 1f, Time.deltaTime * 3f);
+        }
+
+        void UpdateFade()
+        {
+            if (fade == null || !fade.gameObject.activeSelf) return;
+            float alpha = Timeline.Skipped ? 0f : 1f - Mathf.Clamp01(Timeline.Time / FadeSeconds);
+            fade.color = new Color(0f, 0f, 0f, alpha);
+            if (alpha <= 0f) fade.gameObject.SetActive(false);
         }
 
         void OnSummaryRequested()

@@ -31,6 +31,7 @@ namespace KMA.Tests.Presentation
             Assert.That(screen.Nodes.Select(n => n.SubjectId), Is.EqualTo(new[]
                 { SubjectId.Sprint, SubjectId.Volleyball, SubjectId.Football, SubjectId.Chess }));
             Assert.That(screen.Nodes[3].IsInteractable, Is.False);
+            Assert.That(screen.Nodes[3].StatusText, Is.EqualTo(VietText.Fix("Đạt Bóng đá để mở")));
 
             CompleteThrough(session, "soccer_exam");
             screen.RefreshJourney(session);
@@ -51,6 +52,8 @@ namespace KMA.Tests.Presentation
             Button card = screen.LessonList.GetComponentsInChildren<Button>()
                 .First(b => b.gameObject.activeInHierarchy && b.name.StartsWith("Lesson"));
             Assert.That(card.interactable, Is.True);
+            Assert.That(screen.LessonList.transform.Find("JourneyHint").GetComponent<TMPro.TMP_Text>().text,
+                Does.Not.Contain(VietText.Fix("Hết lượt thi")));
         }
 
         [Test]

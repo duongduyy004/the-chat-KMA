@@ -140,7 +140,7 @@ namespace KMA.Gameplay.UI
                     JourneyProgress.IsPenalizedKind(challenge.Kind) && session.Lives == 0;
                 card.Objective.text = VietText.Fix(outOfLives ? "Hết lượt thi" : objective);
                 card.Button.interactable = unlocked && !outOfLives;
-                ApplyState(card, index, complete, checkpoint, unlocked, chapterColor, outOfLives);
+                ApplyState(card, index, challenge.Kind, complete, checkpoint, unlocked, chapterColor, outOfLives);
 
                 if (checkpoint)
                 {
@@ -172,7 +172,7 @@ namespace KMA.Gameplay.UI
             if (hint != null)
                 hint.text = VietText.Fix(session.Journey.CourseComplete
                     ? "Đã hoàn thành khóa học · Chạm một chặng để chơi lại"
-                    : session.Lives == 0
+                    : currentOutOfLives
                     ? "Hết lượt thi · Chờ hồi lượt để thi tiếp"
                     : "Hoàn thành từng chặng để mở bài tiếp theo");
 
@@ -191,7 +191,7 @@ namespace KMA.Gameplay.UI
             if (reveal) PlayReveal();
         }
 
-        static void ApplyState(LessonCard card, int index, bool complete, bool checkpoint,
+        static void ApplyState(LessonCard card, int index, ChallengeKind kind, bool complete, bool checkpoint,
             bool unlocked, Color chapterColor, bool outOfLives)
         {
             UITheme theme = UITheme.Shared;
@@ -216,6 +216,7 @@ namespace KMA.Gameplay.UI
             card.Status.text = VietText.Fix(checkpoint
                 ? outOfLives ? "CHỜ HỒI LƯỢT" : "BẮT ĐẦU  ›"
                 : complete ? "ÔN LẠI  ›" : unlocked ? "CHƠI LẠI  ›"
+                : kind == ChallengeKind.Final ? "Đạt Bóng đá để mở"
                 : index == 1 ? "Hoàn thành HỌC để mở" : "Hoàn thành LUYỆN để mở");
             card.Glow.gameObject.SetActive(checkpoint);
             card.Glow.color = MinigameUiTheme.WithAlpha(theme.Accent, theme.LessonJourney.glowAlpha.x);

@@ -60,6 +60,9 @@ namespace KMA.EditorTools
             Image student = Avatar(parent, "Student", .5f, CharacterArt.Load(CharacterArt.Hero, "idle"));
             Image teacher = Avatar(parent, "Teacher", .78f, CharacterArt.Load(CharacterArt.Boss, "idleBoss"));
 
+            // Confetti falls in front of the cast and behind the speech bubble and the summary.
+            var confetti = Rect(parent, "Confetti", Vector2.zero, Vector2.one).gameObject.AddComponent<UiConfetti>();
+
             Image bubble = UiKit.Panel(parent, "SpeechBubble");
             UiKit.Place(bubble.rectTransform, new Vector2(.78f, .45f), centre, Vector2.zero, new Vector2(320f, 150f));
             TMP_Text bubbleText = UiKit.Label(bubble.transform, "Text", string.Empty, MinigameUiTheme.Caption,
@@ -67,9 +70,6 @@ namespace KMA.EditorTools
             UiKit.Stretch(bubbleText.rectTransform, new Vector2(18f, 14f), new Vector2(-18f, -14f));
             bubbleText.textWrappingMode = TextWrappingModes.Normal;
             bubble.gameObject.SetActive(false);
-
-            // Confetti falls in front of the cast and behind the summary.
-            var confetti = Rect(parent, "Confetti", Vector2.zero, Vector2.one).gameObject.AddComponent<UiConfetti>();
 
             ButtonHandle skip = UiKit.Button(parent, "SkipButton", "Bỏ qua", ButtonVariant.Secondary);
             UiKit.Place((RectTransform)skip.Button.transform, Vector2.one, Vector2.one, new Vector2(-24f, -24f),
@@ -98,10 +98,16 @@ namespace KMA.EditorTools
             UiKit.Place((RectTransform)replay.Button.transform, bottom, bottom, new Vector2(-170f, 32f),
                 new Vector2(300f, MinigameUiTheme.ButtonHeight));
 
+            // Black cover that fades out at the start; it never takes raycasts, so Skip always works.
+            Image fade = Rect(parent, "FadeIn", Vector2.zero, Vector2.one).gameObject.AddComponent<Image>();
+            fade.color = Color.black;
+            fade.raycastTarget = false;
+
             var controller = canvasObject.AddComponent<CelebrationSceneController>();
             controller.Configure(student, classmate, teacher, Poses(CharacterArt.Hero, CheerPoses),
                 Poses(Classmate, CheerPoses), Poses(CharacterArt.Boss, TeacherPoses), bubble.gameObject, bubbleText,
                 confetti, summaryGroup, title, rows, footnote, skip.Button, menu.Button, replay.Button);
+            controller.SetFade(fade);
             EditorUtility.SetDirty(controller);
             EditorSceneManager.MarkSceneDirty(scene);
             EditorSceneManager.SaveScene(scene, ScenePath);

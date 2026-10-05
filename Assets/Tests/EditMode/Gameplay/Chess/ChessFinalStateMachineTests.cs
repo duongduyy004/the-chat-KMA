@@ -139,6 +139,23 @@ namespace KMA.Tests.Gameplay.Chess
         }
 
         [Test]
+        public void HintLevelResetsWhenTheNodeChangesButHintUsedSticks()
+        {
+            machine.Begin();
+            machine.RevealNextHint();
+            machine.RevealNextHint();
+            machine.RevealNextHint();
+            Assert.That(machine.HintLevel, Is.EqualTo(3));
+            machine.Submit(Uci("d1h5"));
+            Assert.That(machine.CompleteBossMove(), Is.True);
+            Assert.That(machine.HintLevel, Is.EqualTo(0));
+            Assert.That(machine.HintUsed, Is.True);
+            Assert.That(machine.RevealNextHint(), Is.EqualTo(PuzzleHints.For(machine.Puzzle, 1, machine.Position, 1)));
+            machine.Restart();
+            Assert.That(machine.HintUsed, Is.False);
+        }
+
+        [Test]
         public void DataErrorsReturnTheTurnWithoutAMistake()
         {
             PuzzleDefinition broken = ScholarTwoMover();

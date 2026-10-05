@@ -393,7 +393,8 @@ namespace KMA.Tests.Presentation
                 foreach (MapNodeView future in screen.Nodes.Where(node => node.SubjectId != SubjectId.Sprint))
                 {
                     Assert.That(future.IsInteractable, Is.False, future.DisplayName);
-                    Assert.That(future.StatusText, Is.EqualTo("CHƯA MỞ KHÓA"));
+                    Assert.That(future.StatusText, Is.EqualTo(future.SubjectId == SubjectId.Chess
+                        ? "Đạt Bóng đá để mở" : "CHƯA MỞ KHÓA"));
                 }
 
             }

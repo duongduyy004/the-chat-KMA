@@ -179,7 +179,7 @@ namespace KMA.Gameplay
                 OfferChessResult(result.Metrics, result.ExamResult.Score);
 
             lastCommittedAttemptId = activeAttempt.AttemptId;
-            lastCommittedResult =JourneyResultData.FromResult(result);
+            lastCommittedResult = JourneyResultData.FromResult(result);
             activeAttempt = null;
             return Outcome(true, definition.Kind == ChallengeKind.Final);
         }

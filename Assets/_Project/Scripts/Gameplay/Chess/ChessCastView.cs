@@ -28,6 +28,7 @@ namespace KMA.Gameplay.Chess
 
         public string StudentPose { get; private set; }
         public string TeacherPose { get; private set; }
+        public bool TeacherSequenceRunning => teacherSequence != null;
         public string BubbleText => bubble != null && bubble.activeSelf ? bubbleText.text : string.Empty;
 
         public void Configure(Image studentImage, Image teacherImage, Pose[] studentSet, Pose[] teacherSet,

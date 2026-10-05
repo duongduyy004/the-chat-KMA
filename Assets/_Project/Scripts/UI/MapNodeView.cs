@@ -56,6 +56,7 @@ namespace KMA.Gameplay.UI
         public string StatusText => statusLabel == null ? string.Empty : statusLabel.text;
 
         bool completed;
+        float baseStatusSize;
 
         public void Configure(SubjectId id, string name, bool isComingSoon, SubjectRecord record, int lives)
         {
@@ -101,7 +102,15 @@ namespace KMA.Gameplay.UI
             completed = passed;
             Stars = completed ? ScoreUtil.ToStars(BestRank) : 0;
             if (titleLabel != null) titleLabel.text = VietText.Fix(title);
-            RenderAvailability(unlocked, unlocked ? completed ? "HOÀN THÀNH" : "SẴN SÀNG" : "CHƯA MỞ KHÓA");
+            bool needsExam = !unlocked && subject == SubjectId.Chess;
+            RenderAvailability(unlocked, unlocked ? completed ? "HOÀN THÀNH" : "SẴN SÀNG"
+                : needsExam ? "Đạt Bóng đá để mở" : "CHƯA MỞ KHÓA");
+            // The longer locked copy of the final exam stop needs a smaller size to fit beside the stars.
+            if (statusLabel != null)
+            {
+                if (baseStatusSize <= 0f) baseStatusSize = statusLabel.fontSizeMax;
+                statusLabel.fontSizeMax = needsExam ? baseStatusSize * .8f : baseStatusSize;
+            }
         }
 
         public void Bind(Button target, TMP_Text title, TMP_Text detail, GameObject detailRoot = null)

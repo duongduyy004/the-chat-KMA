@@ -11,7 +11,7 @@ toàn bộ vòng lặp trong Editor, và chưa kiểm tra trên thiết bị hay
 
 - Trạm thứ 4 "Bài kiểm tra cuối" nằm sau Bóng đá trên bản đồ. Cô Thể Chất đặt một thế cờ; Tân Thủ (Trắng) phải chiếu
   hết trong tối đa 2 nước, có 90 giây suy nghĩ và được sửa sai 2 lần (lần sai thứ 3 kết thúc lượt chơi).
-- Đồng hồ chỉ chạy ở lượt người chơi. Lúc giảng viên đi quân, lúc hiện bảng chọn phong cấp hoặc khi tạm dừng đều không trừ giờ.
+- Đồng hồ chỉ chạy ở lượt người chơi. Lúc giảng viên đi quân hoặc khi tạm dừng không trừ giờ; khi bảng chọn phong cấp đang mở đồng hồ vẫn chạy (spec 3.4).
 - Chấm theo thứ tự: nước đi không hợp lệ chỉ báo "không hợp lệ" (không tính lỗi); nước làm đối phương bị chiếu hết thì
   thắng (kể cả khi nằm ngoài cây đáp án); nước nằm trong cây đáp án thì được nhận và giảng viên đi nước đáp đầu tiên;
   còn lại là sai (tính một lần sửa).
@@ -111,7 +111,7 @@ router thật, callback lưu thật).
 Ghi chú về cách chụp: scene `MG_ChessFinal` chạy độc lập không có router, nên ở `chess-win` và `chess-timeout` trạng thái
 QA tự mở bảng kết quả bằng `ResultPanel.ShowChallenge` ở chế độ Final với kết quả thật của controller (điểm và chi tiết do
 `BuildResult`/`BuildMetrics` tính). `chess-final-win.png` có thời gian 00:00 vì trạng thái QA đi nước ngay lập tức. Mọi
-ảnh đã được xem lại: chữ tiếng Việt đúng dấu, nhãn `Sai: x/2`, `Lượt giảng viên`, `Hết giờ` có mặt, không chồng chữ trong bố cục chơi.
+ảnh đã được xem lại: chữ tiếng Việt đúng dấu, nhãn `Sai: x/2`, `Lượt giảng viên`, `Hết giờ` có mặt; bố cục chơi không chồng chữ, còn các màn kết quả có lỗi chồng chữ của phần dùng chung như nêu dưới đây.
 
 Lỗi thị giác thấy khi xem, thuộc phần dùng chung (không sửa trong task này):
 

@@ -133,6 +133,27 @@ namespace KMA.Tests.Gameplay.Chess
             Assert.That(board.Interactable, Is.True);
         }
 
+        [UnityTest]
+        public IEnumerator PosesFollowTheTurnAndAMistakeDoesNotCutTheWhistle()
+        {
+            var cast = Object.FindFirstObjectByType<ChessCastView>();
+            controller.BeginAttempt();
+            yield return null;
+            Assert.That(cast.TeacherPose, Is.EqualTo("strictLook"));
+            ChessPosition start = controller.Machine.Position;
+            string[] tree = controller.Machine.Puzzle.nodes[0].moves.Select(m => m.uci).ToArray();
+            ChessMove wrong = MoveGenerator.LegalMoves(start).First(m => !tree.Contains(m.ToUci()) &&
+                !MoveGenerator.IsCheckmate(start.Apply(m)) && m.Promotion == 0);
+            yield return Play(wrong.ToUci());
+            Assert.That(controller.Machine.Phase, Is.EqualTo(ChessFinalPhase.PlayerTurn));
+            Assert.That(cast.StudentPose, Is.EqualTo("hurt"));
+            Assert.That(cast.TeacherSequenceRunning, Is.True, "the whistle sequence is still playing");
+            yield return new WaitForSeconds(.9f);
+            Assert.That(cast.TeacherPose, Is.EqualTo("strictLook"));
+            yield return Play(tree[0]);
+            Assert.That(cast.StudentPose, Is.EqualTo("idle"));
+        }
+
         IEnumerator Play(string uci)
         {
             ChessMove.TryParseUci(uci, out ChessMove move);

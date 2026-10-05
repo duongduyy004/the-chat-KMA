@@ -75,6 +75,28 @@ namespace KMA.Tests.Gameplay.Progression
         }
 
         [Test]
+        public void Load_Version7MidCourse_KeepsJourney()
+        {
+            SaveData old = Version8("sprint_learn", "sprint_practice", "sprint_exam", "volleyball_learn");
+            old.version = 7;
+            old.journey.failCounts.Add(new JourneyFailCountData { challengeId = "volleyball_practice", count = 1 });
+            saveSystem.Save(old);
+
+            SaveData loaded = saveSystem.Load();
+
+            Assert.That(saveSystem.HasLoadedValidSave, Is.True);
+            Assert.That(loaded.version, Is.EqualTo(9));
+            Assert.That(loaded.subjects.Length, Is.EqualTo(4));
+            Assert.That(loaded.tutorialSeen.Length, Is.EqualTo(4));
+            Assert.That(loaded.journey.completedChallengeIds, Is.EqualTo(new[]
+                { "sprint_learn", "sprint_practice", "sprint_exam", "volleyball_learn" }));
+            Assert.That(loaded.journey.failCounts[0].challengeId, Is.EqualTo("volleyball_practice"));
+            Assert.That(loaded.journey.failCounts[0].count, Is.EqualTo(1));
+            Assert.That(loaded.journey.seenDialogueIds, Does.Contain("opening"));
+            Assert.That(loaded.lives, Is.EqualTo(3));
+        }
+
+        [Test]
         public void Load_Version8CompletedCourse_ResumesAtTheChessFinal()
         {
             saveSystem.Save(Version8(AllNine));

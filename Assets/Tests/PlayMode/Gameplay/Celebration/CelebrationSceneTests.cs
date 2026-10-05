@@ -17,9 +17,13 @@ namespace KMA.Tests.Gameplay.Celebration
             var controller = Object.FindFirstObjectByType<CelebrationSceneController>();
             Assert.That(controller.Summary.IsSample, Is.True);
             Assert.That(controller.SummaryVisible, Is.False);
+            UnityEngine.UI.Image fade = controller.transform.Find("SafeAreaRoot/FadeIn").GetComponent<UnityEngine.UI.Image>();
+            Assert.That(fade.raycastTarget, Is.False);
+            Assert.That(fade.color.a, Is.GreaterThan(.2f));
             controller.Skip();
             yield return new WaitForSeconds(.6f);
             Assert.That(controller.SummaryVisible, Is.True);
+            Assert.That(fade.gameObject.activeSelf, Is.False);
             Assert.That(controller.RowTexts.Length, Is.EqualTo(4));
             Assert.That(controller.RowTexts[3], Does.Contain("Bài kiểm tra cuối"));
         }

@@ -44,7 +44,7 @@ namespace KMA.Gameplay.Chess
         public ChessMove? LastMove { get; private set; }
         public ChessMove? PendingBossReply { get; private set; }
         public int HintLevel { get; private set; }
-        public bool HintUsed => HintLevel > 0;
+        public bool HintUsed { get; private set; }
         public bool CanMove => Phase == ChessFinalPhase.PlayerTurn;
         public string CurrentHint => HintLevel == 0 ? null : PuzzleHints.For(Puzzle, Node, Position, HintLevel);
 
@@ -108,6 +108,7 @@ namespace KMA.Gameplay.Chess
             ChessMove reply = PendingBossReply.Value;
             PendingBossReply = null;
             Commit(Position.Apply(reply), reply, false);
+            HintLevel = 0;
             ReturnToPlayer();
             return true;
         }
@@ -137,6 +138,7 @@ namespace KMA.Gameplay.Chess
         {
             if (Phase != ChessFinalPhase.PlayerTurn) return null;
             HintLevel = Math.Min(PuzzleHints.MaxLevel, HintLevel + 1);
+            HintUsed = true;
             return CurrentHint;
         }
 
@@ -149,6 +151,7 @@ namespace KMA.Gameplay.Chess
             PlayerMovesMade = 0;
             Mistakes = 0;
             HintLevel = 0;
+            HintUsed = false;
             FailReason = ChessFailReason.None;
             LastMove = null;
             PendingBossReply = null;
