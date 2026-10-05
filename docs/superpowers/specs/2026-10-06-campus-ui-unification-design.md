@@ -150,3 +150,15 @@ Gameplay và độ khó; nội dung Bootstrap/splash; art nhân vật; build And
 - `MG_Football.unity`, `MG_Volleyball.unity`, prefab UI (`HUD_Minigame`, `PhaseOverlay`, `ResultPanel`) và `EditorBuildSettings` đang có thay đổi chưa commit; cần commit/stash trước khi triển khai.
 - `KMA/Volleyball/Build Scene` dựng lại scene từ rỗng; mọi chỉnh tay trong scene sẽ mất — thay đổi phải nằm trong configurator.
 - Art sinh bằng script phải được người dùng duyệt bằng ảnh trước khi áp vào tất cả scene.
+
+## 10. Điều chỉnh khi lập kế hoạch
+
+Đọc code chi tiết khi viết kế hoạch cho thấy một số mục ở trên cần sửa:
+
+- **Volleyball "player đứng ngoài vạch"** không phải lỗi: đó là vị trí giao bóng sau đường biên cuối (`VolleyballMatch.PlayerServeSpot = (-8.5, 0)`, nửa sân dài 8 m). Giữ nguyên.
+- **Sprint:** chỉ bỏ `SprintPlayerIdentityOutline`. Sorting order bị trùng chỉ do chính bản sao này gây ra, và tag PLAYER + chevron đã đủ để nhận diện người chơi, nên không đổi order và không thêm vòng dưới chân.
+- **`BrutalButton`** vẫn còn được các điểm dừng trên Map dùng, nên chỉ xóa `Btn_Brutal.prefab`.
+- **Cỡ chữ GameOver** đã lấy từ token `MinigameUiTheme.MinimumFontSize`, không cần đổi.
+- **Thang spacing** đã có sẵn (`MinigameUiTheme.SpaceXs/Sm/Md/Lg`). Kế hoạch dùng lại thang này thay vì thêm vào `UITheme`, và sửa lề nút pause của FrogJump cho khớp.
+- **Volleyball:** camera chuyển lên `y = 1`, ortho `6.2` để có chỗ cho skyline phía trên biên xa. Đây chỉ là thay đổi trình bày, không ảnh hưởng input, vì điều khiển nằm trên UI.
+- **Save cũ:** trường `SaveData.awaitingPunishment` được giữ lại trong schema (luôn ghi `false`), `SessionRoute.Punishment` đổi tên thành `RetiredPunishment` và giữ nguyên giá trị số.
