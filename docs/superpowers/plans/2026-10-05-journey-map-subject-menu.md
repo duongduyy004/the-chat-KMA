@@ -100,8 +100,7 @@ public void MapNodeJourneyStop_ShowsLockStarsAndMarkersFromState()
         Assert.That(lockIcon.activeSelf, Is.True);
         Assert.That(doneMark.activeSelf, Is.False);
         Assert.That(node.StatusText, Is.EqualTo("CHƯA MỞ KHÓA"));
-        Assert.That(stars.Count(star => star.color.a > .99f && star.color == UITheme.Shared.Menu.gold),
-            Is.Zero);
+        Assert.That(stars.Count(star => star.color == UITheme.Shared.Menu.gold), Is.Zero);
 
         var record = new SubjectRecord();
         record.Accept(new MinigameResult(true, 0f, Rank.C));
@@ -218,7 +217,7 @@ In `ApplyVisualState`, append at the end (before the closing brace):
 
 ```csharp
             IsLocked = locked;
-            if (lockIcon != null) lockIcon.SetActive(locked && !comingSoon || locked);
+            if (lockIcon != null) lockIcon.SetActive(locked);
             if (doneMark != null) doneMark.SetActive(completed && !locked);
             if (badgeImage != null) badgeImage.color = locked ? LockedCard : subjectColor;
             for (int i = 0; i < starImages.Length; i++)
@@ -227,14 +226,26 @@ In `ApplyVisualState`, append at the end (before the closing brace):
                         ? UITheme.Shared.Menu.gold : UITheme.Shared.MapLockedIcon;
 ```
 
-Then simplify the lock line to `if (lockIcon != null) lockIcon.SetActive(locked);` (the `|| locked` form above is redundant — use the simple one).
+Add the current-stop glow to `MapNodeView` (new method, any position in the class) and reset the alpha when markers change — append `if (selectionRing != null) selectionRing.color = HomeMenuStyle.Gold;` as the last line of `SetJourneyMarkers`:
+
+```csharp
+        void Update()
+        {
+            if (!IsCurrent || selectionRing == null) return;
+            float pulse = (Mathf.Sin(Time.unscaledTime * UITheme.Shared.LessonJourney.glowSpeed) + 1f) * .5f;
+            Color gold = HomeMenuStyle.Gold;
+            selectionRing.color = new Color(gold.r, gold.g, gold.b, Mathf.Lerp(.55f, 1f, pulse));
+        }
+```
+
+Add to the Task 1 test, right after the `SetJourneyMarkers(true, true)` assertions: `Assert.That(ring.color.a, Is.EqualTo(1f).Within(.001f));` (alpha is reset by `SetJourneyMarkers`; `Update` does not run in EditMode).
 
 Note: `ApplyVisualState` already reads `completed` as a parameter that shadows the field; the body uses the parameter, which equals the field at every call site.
 
 - [ ] **Step 5: Run to verify it passes**
 
 Run: `tools/run-unity-tests.sh EditMode MapNodeJourneyStop_ShowsLockStarsAndMarkersFromState journey-stop-green`
-Expected: 1 passed. Then run `tools/run-unity-tests.sh EditMode MapNode_ReportsReadyCompletedAndUnavailableStates journey-stop-regress` (it is in `S5NewGameTests`'s sibling file; use the filter `MapNode_Reports`) — expected: still passes (hand-bound nodes have no stop parts).
+Expected: 1 passed. Then run `tools/run-unity-tests.sh PlayMode MapNode_ReportsReadyCompletedAndUnavailableStates journey-stop-regress` (the test lives in `Assets/Tests/PlayMode/Progression/S5NewGameTests.cs`) — expected: still passes (hand-bound nodes have no stop parts).
 
 - [ ] **Step 6: Commit**
 
@@ -336,6 +347,9 @@ public void MapStops_UseCircularBadgesAndRuntimeSprites()
                 Is.EqualTo(UITheme.Shared.LessonJourney.stopSize), node.name);
         }
         Assert.That(stars, Has.Count.EqualTo(1), "All stars share one runtime sprite.");
+        Assert.That(screen.Nodes[2].transform.Find("Badge/FinishFlag"), Is.Not.Null);
+        Assert.That(screen.Nodes[0].transform.Find("Badge/FinishFlag"), Is.Null);
+        Assert.That(screen.Nodes[1].transform.Find("Badge/FinishFlag"), Is.Null);
     }
     finally { Object.DestroyImmediate(root); }
 }
@@ -383,6 +397,7 @@ namespace KMA.Gameplay.UI
     {
         static Sprite starSprite;
         static Sprite checkSprite;
+        static Sprite flagSprite;
         static UITheme.LessonJourneyStyle Style => UITheme.Shared.LessonJourney;
 
         public static MapNodeView Build(Transform parent, MapScreen screen, SubjectId subject,
@@ -412,8 +427,7 @@ namespace KMA.Gameplay.UI
             tagOutline.effectColor = HomeMenuStyle.Navy;
             tagOutline.effectDistance = new Vector2(3f, -3f);
             MapPresentationBuilder.LayoutLabel(tag, "Tag", "ĐANG Ở ĐÂY", 20, HomeMenuStyle.Navy,
-                TextAnchor.MiddleCenter).transform.parent.GetComponent<RectTransform>()
-                .anchorMin = Vector2.zero;
+                TextAnchor.MiddleCenter);
             StretchChild(tag);
 
             // Gold ring behind the badge (current or selected).
@@ -489,6 +503,18 @@ namespace KMA.Gameplay.UI
             lockImage.color = Color.white;
             lockImage.preserveAspect = true;
             lockImage.raycastTarget = false;
+
+            if (order == 3)
+            {
+                RectTransform flag = MapPresentationBuilder.Rect(badge, "FinishFlag");
+                Place(flag, new Vector2(1f, 1f), Vector2.one * 56f, new Vector2(-2f, 18f));
+                flag.pivot = new Vector2(.5f, .5f);
+                Image flagImage = flag.gameObject.AddComponent<Image>();
+                flagImage.sprite = FlagSprite();
+                flagImage.preserveAspect = true;
+                flagImage.raycastTarget = false;
+                flag.gameObject.AddComponent<Outline>().effectColor = HomeMenuStyle.Navy;
+            }
 
             // Name + meta pill below the badge.
             RectTransform labelGroup = MapPresentationBuilder.Rect(root, "LabelGroup");
@@ -599,6 +625,28 @@ namespace KMA.Gameplay.UI
                     pixels[y * size + x] = new Color32(255, 255, 255, 255);
             starSprite = MakeSprite("RuntimeStarIcon", size, pixels);
             return starSprite;
+        }
+
+        internal static Sprite FlagSprite()
+        {
+            if (flagSprite != null) return flagSprite;
+            const int size = 64;
+            var pixels = new Color32[size * size];
+            // Pole, then a 4x3 chequered cloth.
+            for (int y = 4; y < 60; y++)
+            for (int x = 8; x < 13; x++)
+                pixels[y * size + x] = new Color32(255, 255, 255, 255);
+            for (int cy = 0; cy < 3; cy++)
+            for (int cx = 0; cx < 4; cx++)
+            {
+                bool dark = (cx + cy) % 2 == 0;
+                for (int y = 0; y < 12; y++)
+                for (int x = 0; x < 11; x++)
+                    pixels[(36 + cy * 12 + y) * size + 13 + cx * 11 + x] = dark
+                        ? new Color32(11, 42, 74, 255) : new Color32(255, 255, 255, 255);
+            }
+            flagSprite = MakeSprite("RuntimeFlagIcon", size, pixels);
+            return flagSprite;
         }
 
         internal static Sprite CheckSprite()
@@ -1428,17 +1476,12 @@ Run `git diff --check` and `git status --short` afterwards; the only remaining m
 | Spec section | Task |
 | --- | --- |
 | Header (compact, `CHỌN MÔN THI`, no subtitle, lives/back unchanged) | Task 5 step 4 |
-| Road: curve through stops, behind badges, progress hidden at zero, flag | Task 3. **Gap fixed:** the spec asks for a finish flag on the Football badge — add it in Task 2 step 4 below. |
+| Road: curve through stops, behind badges, progress hidden at zero, flag | Task 3; finish flag on the Football badge in Task 2. |
 | Stop: badge, number, ✓, icon, name, 3 stars, status pill, locked state | Task 1, Task 2 |
-| Current stop larger/glow/tag; selected ring | Task 1 (`SetJourneyMarkers`), Task 4. The glow animation is added in the follow-up below. |
+| Current stop larger/glow/tag; selected ring | Task 1 (`SetJourneyMarkers`, glow `Update`), Task 4. |
 | Panel: lower/shorter, subject-name heading, shorter cards, locked readable, one accent, BẮT ĐẦU/CHƠI LẠI | Task 4 (heading), Task 5 (geometry/colours). `BẮT ĐẦU ›`/`ÔN LẠI ›`/`CHƠI LẠI ›` already exist as card actions in `JourneyLessonList.ApplyState`; no new button is created. |
 | Code table incl. `MapScreen`, `JourneyLessonList`, `UITheme`, authoring + scene | Tasks 1–6 |
 | Tests (geometry at 4 ratios, no cut text, stars+status on all, progress, current larger, no duplicate UI) | Tasks 2, 3, 4, 6 |
-
-**Follow-ups to add while implementing (not placeholders — exact content):**
-
-1. **Finish flag (Task 2, `MapStopBuilder.Build`, only when `order == 3`):** add under `Badge` a child `FinishFlag`: `Place(flag, new Vector2(1f, 1f), Vector2.one * 56f, new Vector2(-4f, 22f))`, an `Image` using `CheckSprite()`-style drawing is not suitable; draw a two-colour chequered `FlagSprite()` (4×3 cells, `Color32` black/white alternating) in `MapStopBuilder` with the same `MakeSprite` helper and `preserveAspect = true`. Test: in `MapStops_UseCircularBadgesAndRuntimeSprites` assert `screen.Nodes[2].transform.Find("Badge/FinishFlag")` is not null and `screen.Nodes[0].transform.Find("Badge/FinishFlag")` is null.
-2. **Current glow (Task 1, `MapNodeView`):** add `void Update()` that, when `IsCurrent && selectionRing != null`, sets `selectionRing.color` to `HomeMenuStyle.Gold` with alpha `Mathf.Lerp(.55f, 1f, (Mathf.Sin(Time.unscaledTime * UITheme.Shared.LessonJourney.glowSpeed) + 1f) * .5f)`; and resets alpha to `1f` in `SetJourneyMarkers`. Test: `SetJourneyMarkers(true,false)` then `Assert.That(ring.color.a, Is.InRange(.5f, 1f))`.
 
 **Placeholder scan:** no TBD/TODO steps; the only conditional instructions ("if the ratio is under 4.5, use `MapLockedBorder`", "if a label truncation fails, adjust the named anchors") name the exact fallback and keep the assertion.
 
