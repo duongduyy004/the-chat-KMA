@@ -318,6 +318,10 @@ namespace KMA.Gameplay
 
             Transform presentation = player.GetComponentInChildren<RunnerVisualPresenter>(true)?.transform ?? player;
 
+            Transform ghost = presentation.GetComponentInChildren<SpriteRenderer>(true)?.transform.Find("PlayerIdentityOutline");
+            if (ghost != null)
+                Object.Destroy(ghost.gameObject);
+
             Transform stale = presentation.Find("PlayerLabel");
             if (stale != null)
                 Object.DestroyImmediate(stale.gameObject);
@@ -370,14 +374,6 @@ namespace KMA.Gameplay
             var placement = presentation.GetComponent<SprintPlayerMarkerPlacement>()
                 ?? presentation.gameObject.AddComponent<SprintPlayerMarkerPlacement>();
             placement.Bind(marker);
-
-            SpriteRenderer playerVisual = presentation.GetComponentInChildren<SpriteRenderer>(true);
-            if (playerVisual != null && playerVisual.transform != plate && playerVisual.transform != chevron)
-            {
-                var identity = presentation.GetComponent<SprintPlayerIdentityOutline>()
-                    ?? presentation.gameObject.AddComponent<SprintPlayerIdentityOutline>();
-                identity.Bind(playerVisual, MinigameUiTheme.Player);
-            }
         }
 
         static void EnsurePause(RectTransform parent, Rect safe, SprintChromeLayout chromeLayout)
@@ -457,73 +453,6 @@ namespace KMA.Gameplay
                 var local = chevron.localPosition;
                 chevron.localPosition = new Vector3(-Mathf.Sign(offset) * ChevronOffset, local.y, local.z);
             }
-        }
-    }
-
-    public sealed class SprintPlayerIdentityOutline : MonoBehaviour
-    {
-        public const float OutlineScale = 1.12f;
-
-        [SerializeField] SpriteRenderer source;
-        [SerializeField] SpriteRenderer outline;
-        [SerializeField] Color outlineColor = Color.cyan;
-
-        public SpriteRenderer Source => source;
-        public SpriteRenderer Outline => outline;
-        public Color OutlineColor => outlineColor;
-
-        public void Bind(SpriteRenderer sourceRenderer, Color color)
-        {
-            source = sourceRenderer;
-            outlineColor = color;
-            EnsureOutlineRenderer();
-            Refresh();
-        }
-
-        void LateUpdate()
-        {
-            Refresh();
-        }
-
-        void EnsureOutlineRenderer()
-        {
-            if (source == null)
-                return;
-
-            if (outline == null)
-            {
-                Transform existing = source.transform.Find("PlayerIdentityOutline");
-                if (existing != null)
-                    outline = existing.GetComponent<SpriteRenderer>();
-            }
-
-            if (outline == null)
-            {
-                var outlineObject = new GameObject("PlayerIdentityOutline");
-                outlineObject.transform.SetParent(source.transform, false);
-                outlineObject.transform.localScale = new Vector3(OutlineScale, OutlineScale, 1f);
-                outline = outlineObject.AddComponent<SpriteRenderer>();
-            }
-
-            outline.sharedMaterial = source.sharedMaterial;
-            outline.sortingLayerID = source.sortingLayerID;
-            outline.sortingOrder = source.sortingOrder - 1;
-        }
-
-        void Refresh()
-        {
-            if (source == null)
-                return;
-
-            EnsureOutlineRenderer();
-            if (outline == null)
-                return;
-
-            outline.sprite = source.sprite;
-            outline.flipX = source.flipX;
-            outline.flipY = source.flipY;
-            outline.enabled = source.enabled;
-            outline.color = outlineColor;
         }
     }
 }

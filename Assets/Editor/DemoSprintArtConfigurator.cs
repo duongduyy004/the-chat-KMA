@@ -46,6 +46,7 @@ namespace KMA.EditorTools
         public static void Configure()
         {
             AssetDatabase.Refresh();
+            CampusBackdropAuthoring.EnsureArt();
 
             var characters = RivalCharacterByLane.Values.Concat(new[] { PlayerCharacter }).Distinct().ToArray();
             // Every pose is imported before any is loaded; see CharacterArt.ImportAll for why.
@@ -102,10 +103,17 @@ namespace KMA.EditorTools
             var parallax = UnityEngine.Object.FindFirstObjectByType<SprintParallax>();
             var serialized = new SerializedObject(parallax);
             var layers = serialized.FindProperty("layers");
-            var names = new[] { "Sky", "Campus", "Track" };
-            for (int i = 0; i < names.Length; i++)
+            var sprites = new[]
             {
-                var sprite = ImportSprite("Environments/Sprint/" + names[i] + ".png");
+                CampusBackdropAuthoring.Load("CampusSky"),
+                CampusBackdropAuthoring.Load("CampusSkyline"),
+                CampusBackdropAuthoring.Load("SprintTrack")
+            };
+            float trackTop = SprintTrackLayout.WorldYForRow(460f);
+            const float SkylineHeight = 2.3f;
+            for (int i = 0; i < sprites.Length; i++)
+            {
+                var sprite = sprites[i];
                 var layer = layers.GetArrayElementAtIndex(i);
                 foreach (string field in new[] { "first", "second" })
                 {
@@ -115,30 +123,28 @@ namespace KMA.EditorTools
                     renderer.drawMode = SpriteDrawMode.Simple;
                     renderer.sharedMaterial = SpriteMaterial();
                     renderer.color = Color.white;
-                    renderer.flipX = field == "second";
+                    renderer.flipX = field == "second"; // the mirrored second tile hides the raster seam, as before
                     renderer.sortingOrder = -30 + i * 10;
-                    // The track backdrop carries the painted lanes that runner Y is derived from,
-                    // so its geometry comes from SprintTrackLayout, never from constants here -
-                    // a backdrop scaled independently leaves every runner floating off their lane.
-                    bool isTrack = i == 2;
                     float parentScaleY = tile.parent == null ? 1f : tile.parent.lossyScale.y;
-                    tile.localScale = new Vector3(25.6f / sprite.bounds.size.x,
-                        isTrack
-                            ? SprintTrackLayout.BackdropScaleY / parentScaleY
-                            : 10.8f / sprite.bounds.size.y,
-                        1f);
-                    if (isTrack)
+                    float scaleX = 25.6f / sprite.bounds.size.x;
+                    Vector3 world = tile.position;
+                    if (i == 2)
                     {
-                        var world = tile.position;
+                        // The track carries the painted lanes runner Y is derived from (SprintTrackLayout).
+                        tile.localScale = new Vector3(scaleX, SprintTrackLayout.BackdropScaleY / parentScaleY, 1f);
                         world.y = SprintTrackLayout.BackdropCenterY;
-                        tile.position = world;
+                    }
+                    else if (i == 1)
+                    {
+                        tile.localScale = new Vector3(scaleX, SkylineHeight / sprite.bounds.size.y / parentScaleY, 1f);
+                        world.y = trackTop + SkylineHeight * .5f;
                     }
                     else
                     {
-                        var position = tile.localPosition;
-                        position.y = 0f;
-                        tile.localPosition = position;
+                        tile.localScale = new Vector3(scaleX, 10.8f / sprite.bounds.size.y / parentScaleY, 1f);
+                        world.y = 0f;
                     }
+                    tile.position = world;
                 }
             }
             EditorSceneManager.SaveScene(scene);

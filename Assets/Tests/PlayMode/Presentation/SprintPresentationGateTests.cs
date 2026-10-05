@@ -1,6 +1,7 @@
 using KMA.UI.Kit;
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using KMA.Gameplay;
 using KMA.Gameplay.UI;
 using KMA.Input;
@@ -318,11 +319,6 @@ namespace KMA.Tests.Presentation
             Assert.That(markerLabel, Is.Not.Null);
             Assert.That(markerLabel.text, Is.EqualTo("PLAYER"));
 
-            MonoBehaviour playerIdentity = FindIdentityOutline(playerPresentation);
-            Assert.That(playerIdentity, Is.Not.Null);
-            Assert.That(ReadProperty<Color>(playerIdentity, "OutlineColor"), Is.EqualTo(MinigameUiTheme.Player));
-            Assert.That(ReadProperty<SpriteRenderer>(playerIdentity, "Source"), Is.SameAs(
-                runnerRoots[1].GetComponentInChildren<SpriteRenderer>(true)));
             for (int lane = 0; lane < runnerRoots.Length; lane++)
             {
                 if (lane == 1) continue;
@@ -357,11 +353,24 @@ namespace KMA.Tests.Presentation
             Assert.That(label.text, Is.EqualTo("PLAYER"));
             Assert.That(label.color, Is.EqualTo(MinigameUiTheme.Player));
 
-            var outline = player.GetComponentInChildren<SprintPlayerIdentityOutline>(true);
-            Assert.That(outline, Is.Not.Null);
-            Assert.That(outline.OutlineColor, Is.EqualTo(MinigameUiTheme.Player));
-            Assert.That(outline.Outline.transform.localScale.x,
-                Is.EqualTo(SprintPlayerIdentityOutline.OutlineScale).Within(.001f));
+            Assert.That(FindIdentityOutline(player.transform), Is.Null,
+                "no tinted copy of the player sprite: it reads as a ghost behind the runner");
+            foreach (var renderer in player.GetComponentsInChildren<SpriteRenderer>(true))
+                Assert.That(renderer.name, Is.Not.EqualTo("PlayerIdentityOutline"));
+        }
+
+        [UnityTest]
+        public IEnumerator SprintBackdropShowsTheCampusAboveTheTrack()
+        {
+            yield return LoadSprint();
+            var skyline = Object.FindObjectsByType<SpriteRenderer>(FindObjectsSortMode.None)
+                .First(r => r.sprite != null && r.sprite.name == "CampusSkyline");
+            Assert.That(skyline.bounds.min.y, Is.EqualTo(SprintTrackLayout.WorldYForRow(460f)).Within(.05f),
+                "the skyline stands on the track's top edge");
+            Assert.That(skyline.bounds.max.y, Is.LessThan(5.4f), "the skyline is inside the view");
+            var track = Object.FindObjectsByType<SpriteRenderer>(FindObjectsSortMode.None)
+                .First(r => r.sprite != null && r.sprite.name == "SprintTrack");
+            Assert.That(track.sortingOrder, Is.EqualTo(-10));
         }
 
         [UnityTest]
@@ -372,8 +381,8 @@ namespace KMA.Tests.Presentation
 
             foreach (var rival in Object.FindObjectsByType<RivalRunnerAI>(FindObjectsSortMode.None))
             {
-                Assert.That(rival.GetComponentInChildren<SprintPlayerIdentityOutline>(true), Is.Null,
-                    "cyan is reserved for the player");
+                Assert.That(FindIdentityOutline(rival.transform), Is.Null,
+                    "no identity outline copies exist");
                 Assert.That(rival.GetComponentInChildren<TMPro.TextMeshPro>(true), Is.Null,
                     "rivals carry no PLAYER marker");
             }

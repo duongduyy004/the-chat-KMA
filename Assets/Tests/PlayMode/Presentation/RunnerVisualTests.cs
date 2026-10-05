@@ -75,7 +75,7 @@ namespace KMA.Tests.Presentation
             var backgrounds = parallax.GetComponentsInChildren<SpriteRenderer>();
             Assert.That(backgrounds, Has.Length.EqualTo(6),
                 "The backdrop is artwork only — it reaches the viewport floor without a filler strip.");
-            Assert.That(backgrounds.First(renderer => renderer.sprite.name == "Track").bounds.min.y,
+            Assert.That(backgrounds.First(renderer => renderer.sprite.name == "SprintTrack").bounds.min.y,
                 Is.LessThanOrEqualTo(-5.4f),
                 "The track must cover the viewport floor so no sky shows beneath it.");
 
