@@ -102,6 +102,13 @@ namespace KMA.EditorTools
                     "Authored Map grid is missing layout components");
                 MapPresentationBuilder.Build(screen, null);
                 Check(screen.Nodes.Length == 3, "Map needs three authored subject nodes");
+                Check(screen.Nodes.All(node => node.transform.Find("Badge") != null &&
+                    node.transform.Find("LabelGroup/MetaPill/Stars") != null),
+                    "Map stops must be the circular journey stops");
+                Check(screen.Nodes[0].IsCurrent && !screen.Nodes[1].IsCurrent && !screen.Nodes[2].IsCurrent,
+                    "A fresh game must mark only Sprint as the current stop");
+                Check(grid.Find("PathTrack1") != null && grid.Find("PathTrack2") != null,
+                    "Map road segments are missing");
                 Check(screen.Nodes[0].SubjectId == KMA.Gameplay.SubjectId.Sprint &&
                     screen.Nodes[0].IsInteractable && !screen.Nodes[1].IsInteractable &&
                     !screen.Nodes[2].IsInteractable,

@@ -275,6 +275,40 @@ namespace KMA.Tests.Gameplay.Progression
         }
 
         [UnityTest]
+        public IEnumerator MapScene_JourneyMap_StopsClearTheHeaderAndLessonPanelAtEveryAspect()
+        {
+            SceneManager.LoadScene("Map", LoadSceneMode.Single);
+            yield return null;
+            var screen = Object.FindFirstObjectByType<MapScreen>(FindObjectsInactive.Include);
+            Assert.That(screen.transform.Cast<Transform>().Count(c => c.name == "S5MapPresentation"), Is.EqualTo(1));
+            var header = (RectTransform)screen.transform.Find("S5MapPresentation/Content/Header");
+            var panel = (RectTransform)screen.transform.Find("S5MapPresentation/Content/JourneyLessons");
+            foreach (Vector2Int resolution in new[]
+            {
+                new Vector2Int(1280, 720), new Vector2Int(1440, 1080), new Vector2Int(1728, 1080),
+                new Vector2Int(1920, 1080), new Vector2Int(2400, 1080)
+            })
+            {
+                Screen.SetResolution(resolution.x, resolution.y, false);
+                yield return null;
+                Canvas.ForceUpdateCanvases();
+                LayoutRebuilder.ForceRebuildLayoutImmediate(screen.transform as RectTransform);
+                Canvas.ForceUpdateCanvases();
+                foreach (MapNodeView node in screen.Nodes)
+                {
+                    Rect stop = WorldBounds((RectTransform)node.transform);
+                    Assert.That(stop.Overlaps(WorldBounds(header)), Is.False,
+                        $"{node.SubjectId} overlaps the header at {resolution}.");
+                    Assert.That(stop.Overlaps(WorldBounds(panel)), Is.False,
+                        $"{node.SubjectId} overlaps the lesson panel at {resolution}.");
+                    foreach (TMP_Text label in node.GetComponentsInChildren<TMP_Text>(false))
+                        Assert.That(label.preferredHeight, Is.LessThanOrEqualTo(label.rectTransform.rect.height + 1f),
+                            $"{node.SubjectId}/{label.name} truncated at {resolution}.");
+                }
+            }
+        }
+
+        [UnityTest]
         public IEnumerator MapScene_ResponsiveLayout_KeepsCardsAndLessonsInsideTheirPanels()
         {
             SceneManager.LoadScene("Map", LoadSceneMode.Single);
