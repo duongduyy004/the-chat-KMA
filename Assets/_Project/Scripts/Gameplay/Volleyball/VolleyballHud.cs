@@ -14,6 +14,7 @@ namespace KMA.Gameplay.Volleyball
         [SerializeField] TMP_Text hintLabel;
         [SerializeField] GameObject hintBackdrop;
         [SerializeField] TMP_Text timerLabel;
+        [SerializeField] GameObject timerBackdrop;
 
         float feedbackLeft;
         float hintLeft = HintSeconds;
@@ -37,7 +38,11 @@ namespace KMA.Gameplay.Volleyball
 
         public void ConfigureHintBackdrop(GameObject backdrop) => hintBackdrop = backdrop;
 
-        public void ConfigureTimer(TMP_Text timer) => timerLabel = timer;
+        public void ConfigureTimer(TMP_Text timer, GameObject backdrop = null)
+        {
+            timerLabel = timer;
+            timerBackdrop = backdrop;
+        }
 
         /// m:ss for the time left on the match clock.
         public static string TimerText(float secondsRemaining)
@@ -86,6 +91,8 @@ namespace KMA.Gameplay.Volleyball
             if (timerLabel)
             {
                 bool timed = match != null && match.ClockLimit > 0f;
+                if (timerBackdrop)
+                    timerBackdrop.SetActive(timed);
                 timerLabel.gameObject.SetActive(timed);
                 if (timed)
                     timerLabel.text = VietText.Fix(TimerText(match.TimeRemaining));

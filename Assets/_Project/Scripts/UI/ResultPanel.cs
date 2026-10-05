@@ -55,6 +55,7 @@ namespace KMA.Gameplay.UI
         public bool IsActionPending => actionPending;
         public bool IsVisible => contentRoot ? contentRoot.activeInHierarchy : gameObject.activeInHierarchy;
         public bool ContinueInteractable => actionButton && actionButton.interactable;
+        public string StatusText => statusLabel ? statusLabel.text : null;
         public bool SupportsRetry => retryButton && detailLabel && livesLabel;
         /// The main button's caption exactly as SetButtonLabel wrote it (VietText-normalized).
         public string ContinueLabel => actionButton != null

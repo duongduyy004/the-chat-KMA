@@ -37,12 +37,14 @@ two lesson cards are visible because the hook rebinds the list and it scrolls to
 1. Generic English tutorial card opened (fixed earlier: `FrogJumpController.UsesSharedTutorial => false`).
 2. Frog HUD: the stray `PLAY` caption, stamina and score are hidden; the progress bar stays (real distance). Re-captured in images 1, 2, 3.
 3. `Còn x m` now sits under the progress bar at the top, clear of the power bar and needle (image 2).
-4. Map countdown: the lives panel has room above the hearts and the label is 22 px, centred, inside the panel (6a, 6b).
+4. Map countdown: the lives panel has room above the hearts and the label is 28 px (larger than the 24 px `Lượt thi` text), centred, inside the panel (6a, 6b). The header is 96 px and the lives panel 82 px tall to fit it.
 5. Frog result card uses a shorter card, so there is no empty score gap (4a, 4b). The normal result layout is restored on every other `Show`.
 6. Single-button pause menu shrinks to fit (pause).
 7. At 0 lives the `TIẾP TỤC BÀI HỌC` button is dimmed with the kit's disabled alpha (6b).
-8. Volleyball shows an `m:ss` clock under the scoreboard whenever the match has a time limit (`volleyball-timer.png`, 1:57 of 2:00); `BuildHudState` reports the remaining time for practice too.
+8. Volleyball shows an `m:ss` clock on a kit chip in the top-left corner (clear of the scoreboard and the net) whenever the match has a time limit (`volleyball-timer.png`, 1:57 of 2:00); `BuildHudState` reports the remaining time for practice too.
 9. Frog scene Sky and Grass quads shared a sorting order, so a rebuild could draw the sky over the grass; Sky is now -31.
 
 Capture note: a background Editor only renders the Game view reliably when its window is activated; activate it
 before each capture and restart it after editing scripts.
+
+9. The real MG_FrogJump scene win path is covered by `TheRealFrogJumpSceneReportsAWinThroughItsControllerAndKeepsTheLife` (drives `Rules` to the finish, checks the saved life, `VỀ ĐÍCH!` and the retry route).
