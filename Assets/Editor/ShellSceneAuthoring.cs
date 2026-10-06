@@ -39,13 +39,7 @@ namespace KMA.EditorTools
                 properties.ApplyModifiedPropertiesWithoutUndo();
                 view.GetComponent<CanvasGroup>().alpha = 1f;
             });
-            Author("Menu", scene =>
-            {
-                var screen = Require<MainMenuScreen>(scene);
-                HomePresentationBuilder.Build(screen);
-                RemoveChild(screen.transform, "HomeLogo");
-                RemoveChild(screen.transform, "HomeTitle");
-            });
+            AuthorMenu();
             ApplyMap();
             Author("GameOver", scene =>
             {
@@ -55,6 +49,29 @@ namespace KMA.EditorTools
             });
             AssetDatabase.SaveAssets();
             Debug.Log("[KMA] Authored Bootstrap, Menu, Map, and GameOver scene UI.");
+        }
+
+        const string MenuKeyArtPath = "Assets/_Project/Art/UI/MenuKeyArt.png";
+
+        /// The menu is one painted key-art picture (panel, title, buttons, runners); the scene only lays
+        /// invisible hit areas over its buttons, so the art is fitted to the screen like a cover image.
+        [MenuItem("KMA/Presentation/Author Menu Scene")]
+        public static void AuthorMenu()
+        {
+            Author("Menu", scene =>
+            {
+                var screen = Require<MainMenuScreen>(scene);
+                var art = screen.transform.root.Find("HomeIllustration");
+                RemoveChild(screen.transform.root, "HomeTint"); // the key art is meant to be seen at full brightness
+                if (art == null) throw new InvalidOperationException("Menu has no HomeIllustration.");
+                art.GetComponent<Image>().sprite = AssetDatabase.LoadAssetAtPath<Sprite>(MenuKeyArtPath);
+                var fitter = art.GetComponent<AspectRatioFitter>() ?? art.gameObject.AddComponent<AspectRatioFitter>();
+                fitter.aspectMode = AspectRatioFitter.AspectMode.EnvelopeParent;
+                fitter.aspectRatio = 1672f / 941f;
+                HomePresentationBuilder.Rebuild(screen);
+                RemoveChild(screen.transform, "HomeLogo");
+                RemoveChild(screen.transform, "HomeTitle");
+            });
         }
 
         [MenuItem("KMA/Presentation/Author Map Lesson Journey")]
