@@ -56,7 +56,10 @@ namespace KMA.Gameplay.Volleyball
             if (context == null) throw new ArgumentNullException(nameof(context));
             if (definition.Subject != SubjectId.Volleyball || definition.Id != context.ChallengeId)
                 throw new ArgumentException("Volleyball controller received a mismatched challenge context.");
-            if (Lifecycle != null && Lifecycle.Phase != MinigamePhase.Tutorial)
+            // PhaseOverlay may open the start gate before the router binds the scene (Awake/OnEnable
+            // order is not fixed on device), so the countdown can already be running: still pre-play.
+            if (Lifecycle != null && Lifecycle.Phase != MinigamePhase.Tutorial &&
+                Lifecycle.Phase != MinigamePhase.Countdown)
                 throw new InvalidOperationException("Volleyball challenge must be configured before play starts.");
             UnsubscribeMatch(Match);
             challengeDefinition = definition;

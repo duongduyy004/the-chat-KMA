@@ -53,6 +53,36 @@ namespace KMA.Tests.Gameplay.Volleyball
             Assert.That(session.Journey.CheckpointChallengeId, Is.EqualTo("volleyball_exam"));
         }
 
+        // On device the PhaseOverlay can open the start gate before the router binds the scene;
+        // a throw there aborted every later sceneLoaded handler, pause exit included.
+        [UnityTest]
+        public IEnumerator ChallengeCanBeConfiguredOnceTheCountdownHasStarted()
+        {
+            root = new GameObject("JourneyVolleyballController");
+            root.SetActive(false);
+            var input = root.AddComponent<VolleyballInputBridge>();
+            var controller = root.AddComponent<VolleyballController>();
+            viewRoot = new GameObject("VolleyballViews");
+            VolleyAthleteView player = View("Player"), opponent = View("Opponent");
+            var ball = new GameObject("Ball").AddComponent<VolleyBallView>();
+            ball.transform.SetParent(viewRoot.transform);
+            var hud = root.AddComponent<VolleyballHud>();
+            controller.Configure(player, opponent, ball, input, hud);
+            root.SetActive(true);
+            controller.SetTutorialGate(false);
+            Assert.That(controller.PresentationPhase, Is.EqualTo(MinigamePhase.Countdown));
+
+            var session = new GameSession();
+            Complete(session, "sprint_learn");
+            Complete(session, "sprint_practice");
+            Complete(session, "sprint_exam");
+            ChallengeDefinition definition = ChallengeCatalog.LoadDefault().Get("volleyball_learn");
+            Assert.That(session.TryStartChallenge(definition.Id, ChallengeAttemptMode.Journey,
+                definition.Difficulty, out ChallengeAttemptContext context), Is.True);
+            Assert.DoesNotThrow(() => controller.ConfigureChallenge(definition, context));
+            yield return null;
+        }
+
         VolleyAthleteView View(string name)
         {
             var go = new GameObject(name);
