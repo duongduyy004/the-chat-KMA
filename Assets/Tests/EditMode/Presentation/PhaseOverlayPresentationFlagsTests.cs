@@ -89,6 +89,23 @@ namespace KMA.Tests.Presentation
             Assert.That(minigame.BaseOwnsStartGate, Is.False);
         }
 
+        [Test]
+        public void ResolveLeavesTheHeadlineToTheResultPanel()
+        {
+            var phaseLabel = new GameObject("PhaseLabel").AddComponent<TMPro.TextMeshPro>();
+            phaseLabel.transform.SetParent(root.transform, false);
+            Set("phaseLabel", phaseLabel);
+            FlagMinigame minigame = Minigame(sharedTutorial: true, sharedCountdown: true, ownsGate: false);
+            overlay.Bind(minigame);
+            for (int i = 0; i < 20 && minigame.PresentationPhase != MinigamePhase.Play; i++)
+                minigame.Advance(1f);
+            Assert.That(minigame.PresentationPhase, Is.EqualTo(MinigamePhase.Play));
+            minigame.Lose();
+            Assert.That(minigame.PresentationPhase, Is.EqualTo(MinigamePhase.Resolve));
+            Assert.That(resolveRoot.activeSelf, Is.False, "no RESOLVE chip on top of the result panel");
+            Assert.That(phaseLabel.text, Is.Empty, "no second headline above the result title");
+        }
+
         GameObject Child(string name)
         {
             var child = new GameObject(name);
@@ -127,6 +144,7 @@ namespace KMA.Tests.Presentation
                     Awake();
             }
 
+            public void Lose() => Finish(new MinigameResult(false, 0f, Rank.F));
             public void Advance(float seconds) => Lifecycle.Tick(seconds);
             protected override void TickPlay(float dt) { }
         }

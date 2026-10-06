@@ -92,10 +92,10 @@ namespace KMA.Gameplay.UI
                 (tutorialOverlay == null || tutorialOverlay.ShouldShow));
             SetActive(countdownRoot, sharedCountdown && phase == MinigamePhase.Countdown);
             SetActive(playRoot, sharedTutorial && phase == MinigamePhase.Play);
-            SetActive(resolveRoot, phase == MinigamePhase.Resolve);
+            SetActive(resolveRoot, false); // ResultPanel owns the resolve headline.
 
             if (phaseLabel != null)
-                phaseLabel.text = VietText.Fix(!sharedTutorial && phase != MinigamePhase.Resolve ? string.Empty : PhaseName(phase));
+                phaseLabel.text = VietText.Fix(!sharedTutorial || phase == MinigamePhase.Resolve ? string.Empty : PhaseName(phase));
             if (sharedCountdown)
                 RefreshCountdown();
         }
