@@ -232,7 +232,8 @@ namespace KMA.UI.Kit
         public static void ApplyVariant(ButtonHandle handle, ButtonVariant variant)
         {
             Color faceColor = variant == ButtonVariant.Danger ? MinigameUiTheme.Energy : MinigameUiTheme.Accent;
-            if (handle.Face != null)
+            bool disabled = handle.Button != null && !handle.Button.interactable;
+            if (handle.Face != null && !disabled)
                 handle.Face.color = faceColor;
             if (handle.Feedback != null)
                 handle.Feedback.SetRestColor(faceColor);
@@ -240,10 +241,16 @@ namespace KMA.UI.Kit
                 handle.Fill.gameObject.SetActive(variant == ButtonVariant.Secondary);
             if (handle.Label != null)
             {
-                handle.Label.color = variant == ButtonVariant.Secondary ? MinigameUiTheme.TextPrimary : MinigameUiTheme.Surface;
+                Color labelColor = variant == ButtonVariant.Secondary ? MinigameUiTheme.TextPrimary : MinigameUiTheme.Surface;
+                if (handle.Feedback != null)
+                {
+                    handle.Feedback.BindLabel(handle.Label);
+                    handle.Feedback.SetLabelRestColor(labelColor);
+                }
+                else
+                    handle.Label.color = labelColor;
                 VietTypography.Apply(handle.Label, variant == ButtonVariant.Secondary
                     ? VietFontRole.ButtonSecondary : VietFontRole.ButtonPrimary);
-                handle.Feedback?.BindLabel(handle.Label);
             }
         }
 

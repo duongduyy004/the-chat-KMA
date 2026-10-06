@@ -22,7 +22,7 @@ namespace KMA.UI.Kit
         public static Color Border(ControlState state) => state switch
         {
             ControlState.Hint or ControlState.Pressed =>
-                MinigameUiTheme.WithAlpha(MinigameUiTheme.Accent, 1f),
+                MinigameUiTheme.WithAlpha(MinigameUiTheme.Accent, MinigameUiTheme.BorderActive),
             ControlState.Disabled => MinigameUiTheme.WithAlpha(MinigameUiTheme.Accent, MinigameUiTheme.BorderDisabled),
             _ => MinigameUiTheme.WithAlpha(MinigameUiTheme.Accent, MinigameUiTheme.BorderHint)
         };

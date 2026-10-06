@@ -72,6 +72,42 @@ namespace KMA.Tests.Presentation
         }
 
         [Test]
+        public void DisabledLookSurvivesDeactivateAndReactivate()
+        {
+            ButtonHandle handle = UiKit.Button(root.transform, "Shoot", "GIỮ ĐỂ SÚT", ButtonVariant.Primary);
+            Color restLabel = handle.Label.color;
+            handle.Button.interactable = false;
+            handle.Feedback.Tick(0f);
+            handle.Button.gameObject.SetActive(false);
+            handle.Button.gameObject.SetActive(true);
+            handle.Feedback.Tick(0f);
+            Assert.That(handle.Face.color, Is.EqualTo(MinigameUiTheme.DisabledSurface));
+            Assert.That(handle.Label.color, Is.EqualTo(MinigameUiTheme.DisabledText));
+
+            handle.Button.interactable = true;
+            handle.Feedback.Tick(0f);
+            Assert.That(handle.Face.color, Is.EqualTo(MinigameUiTheme.Accent));
+            Assert.That(handle.Label.color, Is.EqualTo(restLabel));
+        }
+
+        [Test]
+        public void ApplyVariantOnADisabledButtonKeepsTheDisabledTokens()
+        {
+            ButtonHandle handle = UiKit.Button(root.transform, "Shoot", "GIỮ ĐỂ SÚT", ButtonVariant.Primary);
+            handle.Button.interactable = false;
+            handle.Feedback.Tick(0f);
+            UiKit.ApplyVariant(handle, ButtonVariant.Secondary);
+            handle.Feedback.Tick(0f);
+            Assert.That(handle.Face.color, Is.EqualTo(MinigameUiTheme.DisabledSurface));
+            Assert.That(handle.Label.color, Is.EqualTo(MinigameUiTheme.DisabledText));
+
+            handle.Button.interactable = true;
+            handle.Feedback.Tick(0f);
+            Assert.That(handle.Face.color, Is.EqualTo(MinigameUiTheme.Accent));
+            Assert.That(handle.Label.color, Is.EqualTo(MinigameUiTheme.TextPrimary));
+        }
+
+        [Test]
         public void ControlStates_MakeTheHintMoreProminentThanRest()
         {
             Assert.That(KitControlState.Border(ControlState.Hint).a, Is.GreaterThan(KitControlState.Border(ControlState.Rest).a));

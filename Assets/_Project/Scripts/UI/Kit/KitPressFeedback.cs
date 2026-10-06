@@ -84,7 +84,18 @@ namespace KMA.UI.Kit
             restoreRemaining = 0f;
             if (face != null)
                 face.color = restColor;
+            if (wasDisabled && label != null)
+                label.color = labelRestColor;
+            wasDisabled = false;
             SetScale(1f);
+        }
+
+        /// Records the label colour a re-enabled button returns to (used while the button is disabled).
+        public void SetLabelRestColor(Color color)
+        {
+            labelRestColor = color;
+            if (!wasDisabled && label != null)
+                label.color = color;
         }
 
         public void BindLabel(TMP_Text buttonLabel)
