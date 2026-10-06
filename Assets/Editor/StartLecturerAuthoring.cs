@@ -90,7 +90,7 @@ namespace KMA.EditorTools
         static Placement PlaceInSprint(Scene scene)
         {
             float lowestLaneLineY = SprintTrackLayout.WorldYForRow(SprintTrackLayout.LaneLineRows[SprintTrackLayout.LaneCount]);
-            return new Placement(new Vector3(-5.8f, lowestLaneLineY - .55f, 0f), 1f, false, 50, 1.6f);
+            return new Placement(new Vector3(-5.8f, lowestLaneLineY - .55f, 0f), 1.3f, false, 50, 1.6f);
         }
 
         /// Beside the left baseline, level with the far half of the court, looking right at the player.

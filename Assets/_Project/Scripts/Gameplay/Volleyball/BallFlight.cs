@@ -8,7 +8,7 @@ namespace KMA.Gameplay.Volleyball
     // contact moment is known up front.
     public sealed class BallFlight
     {
-        public const float Gravity = 12f;
+        public const float Gravity = 8f;
 
         public BallFlight(Vector2 start, float startHeight, Vector2 target, float apexHeight, CourtSide hitter)
         {
