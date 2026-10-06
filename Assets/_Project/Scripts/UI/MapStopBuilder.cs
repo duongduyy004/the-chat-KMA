@@ -64,8 +64,8 @@ namespace KMA.Gameplay.UI
             border.effectColor = Color.white;
             border.effectDistance = new Vector2(6f, -6f);
             Shadow shadow = badge.gameObject.AddComponent<Shadow>();
-            shadow.effectColor = new Color(0f, 0f, 0f, .4f);
-            shadow.effectDistance = new Vector2(0f, -8f);
+            shadow.effectColor = MinigameUiTheme.ShadowColor;
+            shadow.effectDistance = MinigameUiTheme.ShadowOffset;
 
             RectTransform glyph = MapPresentationBuilder.Rect(badge, "IconGlyph");
             MapPresentationBuilder.Stretch(glyph, new Vector2(34f, 34f), new Vector2(-34f, -34f));

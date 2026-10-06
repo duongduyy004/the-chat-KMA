@@ -260,8 +260,7 @@ namespace KMA.EditorTools
             // The shared pause button sits in the safe area's top-right corner, as in Volleyball.
             var pause = UnityEngine.Object.FindFirstObjectByType<PausePanel>(FindObjectsInactive.Include);
             pause.transform.SetParent(safe, false);
-            UiKit.Place((RectTransform)pause.transform, Vector2.one, Vector2.one, new Vector2(-edge, -edge),
-                Vector2.one * MinigameUiTheme.ButtonHeight);
+            UiKit.PlacePause((RectTransform)pause.transform);
 
             hud.Configure(direction.Slider, hold, power, warning.gameObject, score.Label, remaining.Label, markers,
                 start.gameObject, startButton, null, null, null, directionValue, feedback, scrim.gameObject);

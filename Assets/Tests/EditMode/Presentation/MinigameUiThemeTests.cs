@@ -1,3 +1,4 @@
+using KMA.Gameplay.UI;
 using KMA.UI.Kit;
 using NUnit.Framework;
 using UnityEngine;
@@ -84,6 +85,13 @@ namespace KMA.Tests.Presentation
                 MinigameUiTheme.Surface), Is.True);
             Assert.That(MinigameUiTheme.RgbEquals(new Color32(255, 152, 0, 255), MinigameUiTheme.Accent), Is.False,
                 "Volleyball's old orange is not a token.");
+        }
+
+        [Test]
+        public void KitAndJourneyShareOneShadowOffset()
+        {
+            Assert.That(MinigameUiTheme.ShadowOffset, Is.EqualTo(UITheme.Shared.ShadowOffset));
+            Assert.That(UITheme.Shared.ShadowOffset, Is.EqualTo(new Vector2(0f, -4f)));
         }
     }
 }

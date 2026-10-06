@@ -50,19 +50,25 @@ namespace KMA.Tests.Presentation
         }
 
         [Test]
-        public void DisabledButtonsFadeAndIgnorePresses()
+        public void DisabledButtonsUseTheDisabledTokensAtFullOpacity()
         {
             ButtonHandle handle = UiKit.Button(root.transform, "Shoot", "GIỮ ĐỂ SÚT", ButtonVariant.Primary);
+            Color restLabel = handle.Label.color;
             handle.Button.interactable = false;
             handle.Feedback.Tick(0f);
-            Assert.That(handle.Button.GetComponent<CanvasGroup>().alpha, Is.EqualTo(MinigameUiTheme.DisabledAlpha).Within(.001f));
+            CanvasGroup group = handle.Button.GetComponent<CanvasGroup>();
+            Assert.That(group == null || group.alpha == 1f, Is.True, "disabled buttons must not fade into the background");
+            Assert.That(handle.Face.color, Is.EqualTo(MinigameUiTheme.DisabledSurface));
+            Assert.That(handle.Label.color, Is.EqualTo(MinigameUiTheme.DisabledText));
+            Assert.That(MinigameUiTheme.ContrastRatio(MinigameUiTheme.DisabledText, MinigameUiTheme.DisabledSurface),
+                Is.GreaterThanOrEqualTo(3f));
             handle.Feedback.Press();
             Assert.That(handle.Feedback.IsPressed, Is.False);
-            Assert.That(handle.Feedback.Scale, Is.EqualTo(1f).Within(.001f));
 
             handle.Button.interactable = true;
             handle.Feedback.Tick(0f);
-            Assert.That(handle.Button.GetComponent<CanvasGroup>().alpha, Is.EqualTo(1f).Within(.001f));
+            Assert.That(handle.Face.color, Is.EqualTo(MinigameUiTheme.Accent));
+            Assert.That(handle.Label.color, Is.EqualTo(restLabel));
         }
 
         [Test]

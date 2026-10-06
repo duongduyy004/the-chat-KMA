@@ -18,7 +18,7 @@ namespace KMA.Gameplay.UI
         [SerializeField] private float spacing = 8f;
         [Min(0f)] [SerializeField] private float cornerRadius = 24f;
         [Min(0f)] [SerializeField] private float borderWidth = 4f;
-        [SerializeField] private Vector2 shadowOffset = new Vector2(6f, -6f);
+        [SerializeField] private Vector2 shadowOffset = new Vector2(0f, -4f);
 
         // UiKitAssets lives in Resources and references this asset, including in player builds.
         public static UITheme Shared
@@ -32,6 +32,8 @@ namespace KMA.Gameplay.UI
         }
 
         [Header("Shared surfaces")]
+        [SerializeField] private Color disabledSurface = new Color32(74, 92, 110, 255);
+        [SerializeField] private Color disabledText = new Color32(190, 201, 212, 255);
         [SerializeField] private Color surface = new Color32(8, 35, 61, 255);
         [SerializeField] private Color textPrimary = new Color32(255, 249, 231, 255);
         [SerializeField] private Color textOutline = new Color32(3, 18, 33, 255);
@@ -228,5 +230,7 @@ namespace KMA.Gameplay.UI
         public float CornerRadius => Mathf.Max(0f, cornerRadius);
         public float BorderWidth => Mathf.Max(0f, borderWidth);
         public Vector2 ShadowOffset => shadowOffset;
+        public Color DisabledSurface => disabledSurface;
+        public Color DisabledText => disabledText;
     }
 }

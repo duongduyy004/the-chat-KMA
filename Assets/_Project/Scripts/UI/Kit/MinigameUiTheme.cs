@@ -19,7 +19,7 @@ namespace KMA.UI.Kit
         public const float SurfaceOpaque = .92f;
         public const float SurfaceSoft = .82f;
         public const float SurfaceControl = .42f;
-        public const float SurfaceControlActive = .55f;
+        public const float SurfaceControlActive = .95f;
         public const float SurfaceDisabled = .30f;
         public const float BorderRest = .25f;
         public const float BorderHint = .75f;
@@ -45,7 +45,9 @@ namespace KMA.UI.Kit
         public const float SpaceLg = 32f;
 
         public static Color ShadowColor => UITheme.Shared.ShadowColor;
-        public static readonly Vector2 ShadowOffset = new Vector2(0f, -4f);
+        public static Vector2 ShadowOffset => UITheme.Shared.ShadowOffset;
+        public static Color DisabledSurface => UITheme.Shared.DisabledSurface;
+        public static Color DisabledText => UITheme.Shared.DisabledText;
 
         public static float PressScale => UITheme.Shared.Motion.pressScale;
         public static float PressLighten => UITheme.Shared.Motion.pressLighten;

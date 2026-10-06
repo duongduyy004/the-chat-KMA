@@ -16,15 +16,15 @@ namespace KMA.UI.Kit
                 MinigameUiTheme.WithAlpha(MinigameUiTheme.Surface, MinigameUiTheme.SurfaceControlActive),
                 MinigameUiTheme.PressLighten),
             ControlState.Disabled => MinigameUiTheme.WithAlpha(MinigameUiTheme.Surface, MinigameUiTheme.SurfaceDisabled),
-            _ => MinigameUiTheme.WithAlpha(MinigameUiTheme.Surface, MinigameUiTheme.SurfaceControl)
+            _ => MinigameUiTheme.WithAlpha(MinigameUiTheme.Surface, MinigameUiTheme.SurfaceSoft)
         };
 
         public static Color Border(ControlState state) => state switch
         {
             ControlState.Hint or ControlState.Pressed =>
-                MinigameUiTheme.WithAlpha(MinigameUiTheme.Accent, MinigameUiTheme.BorderHint),
+                MinigameUiTheme.WithAlpha(MinigameUiTheme.Accent, 1f),
             ControlState.Disabled => MinigameUiTheme.WithAlpha(MinigameUiTheme.Accent, MinigameUiTheme.BorderDisabled),
-            _ => MinigameUiTheme.WithAlpha(MinigameUiTheme.Accent, MinigameUiTheme.BorderRest)
+            _ => MinigameUiTheme.WithAlpha(MinigameUiTheme.Accent, MinigameUiTheme.BorderHint)
         };
 
         public static void Apply(Image fill, Image border, ControlState state)

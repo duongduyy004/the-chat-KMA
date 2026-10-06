@@ -216,5 +216,15 @@ namespace KMA.Tests.Presentation
             Assert.That(chip.Label.enableAutoSizing, Is.True);
             Assert.That(chip.Label.fontSizeMin, Is.EqualTo(MinigameUiTheme.MinimumFontSize));
         }
+
+        [Test]
+        public void PlacePauseUsesTheKitCornerMargin()
+        {
+            var pause = (RectTransform)new GameObject("Pause", typeof(RectTransform)).transform;
+            UiKit.PlacePause(pause);
+            Assert.That(pause.anchoredPosition, Is.EqualTo(new Vector2(-MinigameUiTheme.SpaceMd, -MinigameUiTheme.SpaceMd)));
+            Assert.That(pause.sizeDelta, Is.EqualTo(Vector2.one * MinigameUiTheme.ButtonHeight));
+            Object.DestroyImmediate(pause.gameObject);
+        }
     }
 }

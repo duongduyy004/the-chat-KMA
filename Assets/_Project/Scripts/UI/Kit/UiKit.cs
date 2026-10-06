@@ -54,6 +54,11 @@ namespace KMA.UI.Kit
             rect.sizeDelta = size;
         }
 
+        /// Pins the shared pause button to the safe area's top-right corner with the kit margin.
+        public static void PlacePause(RectTransform pause) =>
+            Place(pause, Vector2.one, Vector2.one, new Vector2(-MinigameUiTheme.SpaceMd, -MinigameUiTheme.SpaceMd),
+                Vector2.one * MinigameUiTheme.ButtonHeight);
+
         /// Gives an Image a baked rounded-rect sprite and scales its corners to the radius.
         public static void SetRadius(Image image, float radius)
         {
@@ -218,6 +223,7 @@ namespace KMA.UI.Kit
 
             var feedback = GetOrAdd<KitPressFeedback>(root);
             feedback.Configure(face, (RectTransform)root.transform);
+            feedback.BindLabel(label);
             var handle = new ButtonHandle(button, face, fill, label, feedback);
             ApplyVariant(handle, variant);
             return handle;
@@ -237,6 +243,7 @@ namespace KMA.UI.Kit
                 handle.Label.color = variant == ButtonVariant.Secondary ? MinigameUiTheme.TextPrimary : MinigameUiTheme.Surface;
                 VietTypography.Apply(handle.Label, variant == ButtonVariant.Secondary
                     ? VietFontRole.ButtonSecondary : VietFontRole.ButtonPrimary);
+                handle.Feedback?.BindLabel(handle.Label);
             }
         }
 

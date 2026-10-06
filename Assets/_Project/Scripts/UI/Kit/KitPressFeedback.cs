@@ -1,3 +1,4 @@
+using TMPro;
 using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.UI;
@@ -6,7 +7,7 @@ namespace KMA.UI.Kit
 {
     /// Shared press response: while held, the face lightens and the target shrinks; after release
     /// both ease back over PressRestoreSeconds. A non-interactable Selectable on the same object
-    /// fades to DisabledAlpha and ignores presses. Owns no input.
+    /// paints the DisabledSurface/DisabledText tokens at full opacity and ignores presses. Owns no input.
     public sealed class KitPressFeedback : MonoBehaviour, IPointerDownHandler, IPointerUpHandler
     {
         [SerializeField] Graphic face;
@@ -14,7 +15,9 @@ namespace KMA.UI.Kit
         [SerializeField] Color restColor = Color.white;
         [SerializeField] Selectable selectable;
 
-        CanvasGroup group;
+        [SerializeField] TMP_Text label;
+        Color labelRestColor;
+        bool wasDisabled;
         bool pressed;
         float restoreRemaining;
 
@@ -34,7 +37,7 @@ namespace KMA.UI.Kit
         public void SetRestColor(Color color)
         {
             restColor = color;
-            if (!pressed && restoreRemaining <= 0f && face != null)
+            if (!wasDisabled && !pressed && restoreRemaining <= 0f && face != null)
                 face.color = color;
         }
 
@@ -84,20 +87,39 @@ namespace KMA.UI.Kit
             SetScale(1f);
         }
 
+        public void BindLabel(TMP_Text buttonLabel)
+        {
+            label = buttonLabel;
+            if (label != null)
+                labelRestColor = label.color;
+        }
+
         void ApplyInteractable()
         {
             if (selectable == null)
                 return;
-            if (group == null)
-                group = UiKit.GetOrAdd<CanvasGroup>(gameObject);
-            group.alpha = selectable.interactable ? 1f : MinigameUiTheme.DisabledAlpha;
-            if (!selectable.interactable && pressed)
+            bool disabled = !selectable.interactable;
+            if (disabled == wasDisabled)
+                return;
+            wasDisabled = disabled;
+            if (disabled)
             {
                 pressed = false;
                 restoreRemaining = 0f;
+                SetScale(1f);
+                if (label != null)
+                    labelRestColor = label.color;
+                if (face != null)
+                    face.color = MinigameUiTheme.DisabledSurface;
+                if (label != null)
+                    label.color = MinigameUiTheme.DisabledText;
+            }
+            else
+            {
                 if (face != null)
                     face.color = restColor;
-                SetScale(1f);
+                if (label != null)
+                    label.color = labelRestColor;
             }
         }
 

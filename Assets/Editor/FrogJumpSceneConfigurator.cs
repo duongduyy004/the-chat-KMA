@@ -173,8 +173,7 @@ namespace KMA.EditorTools
             if (pause)
             {
                 pause.transform.SetParent(parent, false);
-                UiKit.Place((RectTransform)pause.transform, Vector2.one, Vector2.one, new Vector2(-22f, -18f),
-                    Vector2.one * MinigameUiTheme.ButtonHeight);
+                UiKit.PlacePause((RectTransform)pause.transform);
             }
 
             var controller = Object.FindFirstObjectByType<FrogJumpController>();
