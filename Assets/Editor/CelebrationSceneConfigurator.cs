@@ -51,6 +51,8 @@ namespace KMA.EditorTools
             classmate.rectTransform.localScale = Vector3.one * .9f;
             Image student = Avatar(parent, "Student", .5f, CharacterArt.Load(CharacterArt.Hero, "idle"));
             Image teacher = Avatar(parent, "Teacher", .78f, CharacterArt.Load(CharacterArt.Boss, "idleBoss"));
+            // The art looks right; she stands right of the students, so mirror her to look at them.
+            teacher.rectTransform.localScale = new Vector3(-1f, 1f, 1f);
 
             // Confetti falls in front of the cast and behind the speech bubble and the summary.
             var confetti = Rect(parent, "Confetti", Vector2.zero, Vector2.one).gameObject.AddComponent<UiConfetti>();
