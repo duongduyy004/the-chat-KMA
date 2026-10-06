@@ -301,7 +301,7 @@ MonoBehaviour:
   m_GameObject: {fileID: 21174559}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 1878193495}
+  m_Script: {fileID: 11500000, guid: 7c1e5a9b3d4f4a60b8e2f1a9c0d63b57, type: 3}
   m_Name: 
   m_EditorClassIdentifier: KMA.Gameplay.UI::KMA.Gameplay.UI.HomeKeyArtButton
   shade: {fileID: 0}
@@ -314,7 +314,7 @@ MonoBehaviour:
   m_GameObject: {fileID: 21174559}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 1360704096}
+  m_Script: {fileID: 11500000, guid: 7c1e5a9b3d4f4a60b8e2f1a9c0d63b57, type: 3}
   m_Name: 
   m_EditorClassIdentifier: KMA.Gameplay.UI::KMA.Gameplay.UI.HomeKeyArtButton
   shade: {fileID: 390068346}
@@ -581,7 +581,7 @@ MonoBehaviour:
   m_GameObject: {fileID: 86378992}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 1878193495}
+  m_Script: {fileID: 11500000, guid: 7c1e5a9b3d4f4a60b8e2f1a9c0d63b57, type: 3}
   m_Name: 
   m_EditorClassIdentifier: KMA.Gameplay.UI::KMA.Gameplay.UI.HomeKeyArtButton
   shade: {fileID: 0}
@@ -594,7 +594,7 @@ MonoBehaviour:
   m_GameObject: {fileID: 86378992}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 1360704096}
+  m_Script: {fileID: 11500000, guid: 7c1e5a9b3d4f4a60b8e2f1a9c0d63b57, type: 3}
   m_Name: 
   m_EditorClassIdentifier: KMA.Gameplay.UI::KMA.Gameplay.UI.HomeKeyArtButton
   shade: {fileID: 117932712}
@@ -1282,21 +1282,6 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1334942445}
   m_CullTransparentMesh: 1
---- !u!115 &1360704096
-MonoScript:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_Name: 
-  serializedVersion: 7
-  m_DefaultReferences: {}
-  m_Icon: {fileID: 0}
-  m_Type: 0
-  m_ExecutionOrder: 0
-  m_ClassName: HomeKeyArtButton
-  m_Namespace: KMA.Gameplay.UI
-  m_AssemblyName: KMA.Gameplay.UI
 --- !u!1 &1367696996
 GameObject:
   m_ObjectHideFlags: 0
@@ -1583,7 +1568,7 @@ MonoBehaviour:
   m_GameObject: {fileID: 1509943501}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 1878193495}
+  m_Script: {fileID: 11500000, guid: 7c1e5a9b3d4f4a60b8e2f1a9c0d63b57, type: 3}
   m_Name: 
   m_EditorClassIdentifier: KMA.Gameplay.UI::KMA.Gameplay.UI.HomeKeyArtButton
   shade: {fileID: 0}
@@ -1596,7 +1581,7 @@ MonoBehaviour:
   m_GameObject: {fileID: 1509943501}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 1360704096}
+  m_Script: {fileID: 11500000, guid: 7c1e5a9b3d4f4a60b8e2f1a9c0d63b57, type: 3}
   m_Name: 
   m_EditorClassIdentifier: KMA.Gameplay.UI::KMA.Gameplay.UI.HomeKeyArtButton
   shade: {fileID: 1590951093}
@@ -2064,7 +2049,7 @@ MonoBehaviour:
   m_GameObject: {fileID: 1683594285}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 1878193495}
+  m_Script: {fileID: 11500000, guid: 7c1e5a9b3d4f4a60b8e2f1a9c0d63b57, type: 3}
   m_Name: 
   m_EditorClassIdentifier: KMA.Gameplay.UI::KMA.Gameplay.UI.HomeKeyArtButton
   shade: {fileID: 0}
@@ -2077,25 +2062,10 @@ MonoBehaviour:
   m_GameObject: {fileID: 1683594285}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 1360704096}
+  m_Script: {fileID: 11500000, guid: 7c1e5a9b3d4f4a60b8e2f1a9c0d63b57, type: 3}
   m_Name: 
   m_EditorClassIdentifier: KMA.Gameplay.UI::KMA.Gameplay.UI.HomeKeyArtButton
   shade: {fileID: 748046989}
---- !u!115 &1878193495
-MonoScript:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_Name: 
-  serializedVersion: 7
-  m_DefaultReferences: {}
-  m_Icon: {fileID: 0}
-  m_Type: 0
-  m_ExecutionOrder: 0
-  m_ClassName: HomeKeyArtButton
-  m_Namespace: KMA.Gameplay.UI
-  m_AssemblyName: KMA.Gameplay.UI
 --- !u!1 &2010103538
 GameObject:
   m_ObjectHideFlags: 0
@@ -2184,7 +2154,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 86710e43de46f6f4bac7c8e50813a599, type: 3}
   m_Name: 
   m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.AspectRatioFitter
-  m_AspectMode: 4
+  m_AspectMode: 3
   m_AspectRatio: 1.7768332
 --- !u!1660057539 &9223372036854775807
 SceneRoots:

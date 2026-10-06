@@ -34,6 +34,22 @@ namespace KMA.Tests.Config
             Assert.That(method.GetParameters(), Is.Empty);
         }
 
+        // A MonoBehaviour that does not live in a file of the same name has no MonoScript asset, so
+        // Unity embeds a synthetic MonoScript object in the scene. The Editor tolerates that, but the
+        // player cannot read the scene back ("level1 is corrupted! Position out of bounds") and crashes.
+        [Test]
+        public void ScenesAndPrefabsEmbedNoMonoScriptObjects()
+        {
+            var offenders = System.IO.Directory
+                .EnumerateFiles("Assets", "*.*", System.IO.SearchOption.AllDirectories)
+                .Where(path => path.EndsWith(".unity") || path.EndsWith(".prefab"))
+                .Where(path => System.IO.File.ReadAllText(path).Contains("\nMonoScript:\n"))
+                .ToArray();
+
+            Assert.That(offenders, Is.Empty,
+                "Each MonoBehaviour needs its own file named after the class: " + string.Join(", ", offenders));
+        }
+
         [Test]
         public void AndroidBuildWithoutArchitectureOverrideForcesArm64()
         {

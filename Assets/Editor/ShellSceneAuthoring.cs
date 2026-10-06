@@ -54,7 +54,7 @@ namespace KMA.EditorTools
         const string MenuKeyArtPath = "Assets/_Project/Art/UI/MenuKeyArt.png";
 
         /// The menu is one painted key-art picture (panel, title, buttons, runners); the scene only lays
-        /// invisible hit areas over its buttons, so the art is fitted to the screen like a cover image.
+        /// invisible hit areas over its buttons, so the whole art is fitted inside the screen (wide screens get side bars rather than a cropped panel).
         [MenuItem("KMA/Presentation/Author Menu Scene")]
         public static void AuthorMenu()
         {
@@ -66,7 +66,7 @@ namespace KMA.EditorTools
                 if (art == null) throw new InvalidOperationException("Menu has no HomeIllustration.");
                 art.GetComponent<Image>().sprite = AssetDatabase.LoadAssetAtPath<Sprite>(MenuKeyArtPath);
                 var fitter = art.GetComponent<AspectRatioFitter>() ?? art.gameObject.AddComponent<AspectRatioFitter>();
-                fitter.aspectMode = AspectRatioFitter.AspectMode.EnvelopeParent;
+                fitter.aspectMode = AspectRatioFitter.AspectMode.FitInParent;
                 fitter.aspectRatio = 1672f / 941f;
                 HomePresentationBuilder.Rebuild(screen);
                 RemoveChild(screen.transform, "HomeLogo");
