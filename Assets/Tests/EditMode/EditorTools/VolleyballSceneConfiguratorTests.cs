@@ -152,6 +152,8 @@ namespace KMA.Tests.EditorTools
             Assert.That(GameObject.Find("JoystickBase").GetComponent<Image>().sprite, Is.SameAs(assets.Circle));
             Assert.That(GameObject.Find("PlayerTitle").GetComponent<TMPro.TMP_Text>().color, Is.EqualTo(MinigameUiTheme.Player));
             Assert.That(GameObject.Find("EnemyTitle").GetComponent<TMPro.TMP_Text>().color, Is.EqualTo(MinigameUiTheme.Energy));
+            Assert.That(GameObject.Find("PlayerTitle").GetComponent<TMPro.TMP_Text>().text, Is.EqualTo("BẠN"));
+            Assert.That(GameObject.Find("EnemyTitle").GetComponent<TMPro.TMP_Text>().text, Is.EqualTo("ĐỐI THỦ"));
 
             var pause = Object.FindFirstObjectByType<PausePanel>();
             Assert.That(pause.GetComponent<Image>().sprite, Is.SameAs(assets.RoundRect20));

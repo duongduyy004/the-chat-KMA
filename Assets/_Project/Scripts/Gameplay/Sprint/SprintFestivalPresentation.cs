@@ -10,7 +10,7 @@ namespace KMA.Gameplay
     {
         const string SuccessTitle = "HOÀN THÀNH!";
         const string FailureTitle = "THẤT BẠI";
-        // The world-space PLAYER plate is a sliced kit sprite drawn at this scale.
+        // The world-space BẠN plate is a sliced kit sprite drawn at this scale.
         const float MarkerSpriteScale = .25f;
 
         public static void Build()
@@ -70,14 +70,17 @@ namespace KMA.Gameplay
             Image rankBadge = UiKit.Shape(scoreboard.transform, "RankBadge", MinigameUiTheme.RadiusPanel,
                 MinigameUiTheme.WithAlpha(MinigameUiTheme.Accent, .22f));
             UiKit.Anchor(rankBadge.rectTransform, new Vector2(.66f, .46f), new Vector2(.95f, .92f));
-            TMP_Text rank = UiKit.Label(rankBadge.transform, "RankLabel", "1st", MinigameUiTheme.Headline,
+            TMP_Text rank = UiKit.Label(rankBadge.transform, "RankLabel", "HẠNG 1", MinigameUiTheme.Headline,
                 MinigameUiTheme.Accent);
-            UiKit.Stretch(rank.rectTransform);
+            UiKit.Stretch(rank.rectTransform, new Vector2(MinigameUiTheme.SpaceSm, 0f), new Vector2(-MinigameUiTheme.SpaceSm, 0f));
+            // "HẠNG 4" is twice as wide as the old "4th": shrink rather than overflow the chip.
+            UiKit.FitLabel(rank, MinigameUiTheme.Headline);
+            rank.textWrappingMode = TextWrappingModes.NoWrap;
 
             TMP_Text combo = Metric(scoreboard.transform, "Combo", MinigameUiTheme.Body,
                 MinigameUiTheme.Energy, new Vector2(.05f, .10f), new Vector2(.62f, .42f));
             combo.alignment = TextAlignmentOptions.Left;
-            combo.text = VietText.Fix("COMBO ×0");
+            combo.text = VietText.Fix("CHUỖI ×0");
 
             // Mode chip
             ChipHandle mode = UiKit.Chip(root, "ModeLabel", "CHẠY NƯỚC RÚT · 100M");
@@ -318,10 +321,6 @@ namespace KMA.Gameplay
 
             Transform presentation = player.GetComponentInChildren<RunnerVisualPresenter>(true)?.transform ?? player;
 
-            Transform ghost = presentation.GetComponentInChildren<SpriteRenderer>(true)?.transform.Find("PlayerIdentityOutline");
-            if (ghost != null)
-                Object.Destroy(ghost.gameObject);
-
             Transform stale = presentation.Find("PlayerLabel");
             if (stale != null)
                 Object.DestroyImmediate(stale.gameObject);
@@ -341,7 +340,7 @@ namespace KMA.Gameplay
             var plateRenderer = plate.GetComponent<SpriteRenderer>();
             plateRenderer.sprite = plateSprite;
             plateRenderer.drawMode = SpriteDrawMode.Sliced;
-            // 1.3 x 0.34 world units: the plate has to cover the PLAYER label, not sit behind it.
+            // 1.3 x 0.34 world units: the plate has to cover the BẠN label, not sit behind it.
             plateRenderer.size = new Vector2(1.296f, .342f) / MarkerSpriteScale;
             plateRenderer.color = MinigameUiTheme.WithAlpha(MinigameUiTheme.Surface, MinigameUiTheme.SurfaceOpaque);
             plateRenderer.sortingOrder = 19;
@@ -349,7 +348,7 @@ namespace KMA.Gameplay
             var labelObject = new GameObject("Label");
             labelObject.transform.SetParent(marker, false);
             var label = labelObject.AddComponent<TextMeshPro>();
-            label.text = VietText.Fix("PLAYER");
+            label.text = VietText.Fix("BẠN");
             label.fontSize = 48 * .055f;
             label.rectTransform.sizeDelta = new Vector2(1.296f, .342f);
             label.alignment = TextAlignmentOptions.Center;

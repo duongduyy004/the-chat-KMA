@@ -192,7 +192,7 @@ namespace KMA.Gameplay
             if (phase == MinigamePhase.Play)
             {
                 if (countdownLabel != null)
-                    countdownLabel.text = VietText.Fix("GO!");
+                    countdownLabel.text = VietText.Fix("CHẠY!");
                 SetActive(countdownRoot, true);
                 goRemaining = GoDuration;
                 Pop(GoPopScale, GoPopDuration);

@@ -319,13 +319,13 @@ namespace KMA.EditorTools
             Image scoreboard = UiKit.Panel(controls, "VolleyballScoreboard");
             UiKit.Place(scoreboard.rectTransform, new Vector2(.5f, 1f), new Vector2(.5f, 1f), new Vector2(0f, -12f),
                 new Vector2(650f, 84f));
-            TMP_Text playerTitle = UiKit.Label(scoreboard.transform, "PlayerTitle", "PLAYER", MinigameUiTheme.Body,
+            TMP_Text playerTitle = UiKit.Label(scoreboard.transform, "PlayerTitle", "BẠN", MinigameUiTheme.Body,
                 MinigameUiTheme.Player);
             UiKit.Place(playerTitle.rectTransform, new Vector2(0f, .5f), centre, new Vector2(136f, 0f), new Vector2(225f, 65f));
             TMP_Text score = UiKit.Label(scoreboard.transform, "Score", VolleyballHud.ScoreText(0, 0),
                 MinigameUiTheme.Title, MinigameUiTheme.TextPrimary);
             UiKit.Place(score.rectTransform, centre, centre, Vector2.zero, new Vector2(215f, 74f));
-            TMP_Text enemyTitle = UiKit.Label(scoreboard.transform, "EnemyTitle", "ENEMY", MinigameUiTheme.Body,
+            TMP_Text enemyTitle = UiKit.Label(scoreboard.transform, "EnemyTitle", "ĐỐI THỦ", MinigameUiTheme.Body,
                 MinigameUiTheme.Energy);
             UiKit.Place(enemyTitle.rectTransform, new Vector2(1f, .5f), centre, new Vector2(-136f, 0f), new Vector2(225f, 65f));
 

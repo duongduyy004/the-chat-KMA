@@ -148,6 +148,7 @@ namespace KMA.EditorTools
             TMP_Text caption = StyleText(content, "ScoreCaption", MinigameUiTheme.Caption,
                 MinigameUiTheme.WithAlpha(MinigameUiTheme.TextPrimary, .7f));
             UiKit.Anchor(caption.rectTransform, new Vector2(.06f, .70f), new Vector2(.94f, .78f));
+            caption.text = VietText.Fix(ResultPanel.ScoreCaptionText);
             TMP_Text score = StyleText(content, "ScoreLabel", MinigameUiTheme.Display, MinigameUiTheme.Accent, true);
             UiKit.Anchor(score.rectTransform, new Vector2(.06f, .46f), new Vector2(.94f, .70f));
             TMP_Text rank = StyleText(content, "RankLabel", MinigameUiTheme.Headline, MinigameUiTheme.TextPrimary);

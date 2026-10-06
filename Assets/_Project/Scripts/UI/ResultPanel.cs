@@ -14,6 +14,8 @@ namespace KMA.Gameplay.UI
     public sealed class ResultPanel : MonoBehaviour, IRetryResultPreviewPanel, IChallengeResultPanel,
         IFrogJumpResultPanel
     {
+        /// Caption above the score number; the prefab styler bakes the same text.
+        public const string ScoreCaptionText = "ĐIỂM";
         static float ScrimDuration => Mathf.Max(0f, UITheme.Shared.Motion.resultScrim);
         static float ModalDuration => Mathf.Max(0f, UITheme.Shared.Motion.resultModal);
         static float TitleDuration => Mathf.Max(0f, UITheme.Shared.Motion.resultTitle);
@@ -388,6 +390,7 @@ namespace KMA.Gameplay.UI
             if (caption != null)
             {
                 caption.color = MinigameUiTheme.WithAlpha(MinigameUiTheme.TextPrimary, .7f);
+                caption.text = VietText.Fix(ScoreCaptionText);
                 // The frog jump card has no score, so its caption would float over nothing.
                 caption.gameObject.SetActive(!frogMode);
             }

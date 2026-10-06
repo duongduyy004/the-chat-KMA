@@ -172,11 +172,11 @@ namespace KMA.Tests.Presentation
             controller.Simulate(1f);
             controller.Simulate(1f);
             controller.Simulate(1f);
-            Assert.That(start.CountdownText, Is.EqualTo("GO!"));
-            Assert.That(start.CountdownScale, Is.GreaterThan(1f), "GO! pops before settling");
+            Assert.That(start.CountdownText, Is.EqualTo("CHẠY!"));
+            Assert.That(start.CountdownScale, Is.GreaterThan(1f), "CHẠY! pops before settling");
 
             start.TickForTest(.51f);
-            Assert.That(start.CountdownText, Is.Empty.Or.Null, "GO! clears after 0.5 s");
+            Assert.That(start.CountdownText, Is.Empty.Or.Null, "CHẠY! clears after 0.5 s");
 
             start.TickForTest(.41f);
             Assert.That(start.InstructionVisible, Is.False, "instruction fades 0.4 s after GO");
@@ -261,23 +261,23 @@ namespace KMA.Tests.Presentation
             Assert.That(distanceBar.Fill.name, Is.EqualTo("RailFill"));
             Assert.That(chrome.GetComponentInParent<SafeAreaFitter>(), Is.Not.Null);
             Assert.That(distance.text, Is.EqualTo("0 / 100 m"));
-            Assert.That(rank.text, Is.EqualTo("1st"));
-            Assert.That(cadence.text, Is.EqualTo("COMBO ×0"));
+            Assert.That(rank.text, Is.EqualTo("HẠNG 1"));
+            Assert.That(cadence.text, Is.EqualTo("CHUỖI ×0"));
 
             controller.ConfigureForTest();
             controller.AdvanceToDistance(42f);
             sprintHud.Refresh();
 
             Assert.That(distance.text, Is.EqualTo("42 / 100 m"));
-            Assert.That(rank.text, Is.EqualTo("1st"));
-            Assert.That(cadence.text, Is.EqualTo("COMBO ×0"));
+            Assert.That(rank.text, Is.EqualTo("HẠNG 1"));
+            Assert.That(cadence.text, Is.EqualTo("CHUỖI ×0"));
             Assert.That(distanceBar.Value, Is.EqualTo(.42f).Within(.001f));
             Assert.That(distanceBar.Fill.rectTransform.anchorMax.x, Is.EqualTo(.42f).Within(.001f));
 
             controller.OnLeftTap();
             controller.OnRightTap();
             sprintHud.Refresh();
-            Assert.That(cadence.text, Is.EqualTo("COMBO ×2"),
+            Assert.That(cadence.text, Is.EqualTo("CHUỖI ×2"),
                 "The scoreboard must track the cadence combo as the only live race feedback.");
 
             yield return null;
@@ -317,12 +317,11 @@ namespace KMA.Tests.Presentation
             Assert.That(marker.IsChildOf(runnerRoots[1]), Is.True);
             TMPro.TextMeshPro markerLabel = marker.GetComponentInChildren<TMPro.TextMeshPro>(true);
             Assert.That(markerLabel, Is.Not.Null);
-            Assert.That(markerLabel.text, Is.EqualTo("PLAYER"));
+            Assert.That(markerLabel.text, Is.EqualTo("BẠN"));
 
             for (int lane = 0; lane < runnerRoots.Length; lane++)
             {
                 if (lane == 1) continue;
-                Assert.That(FindIdentityOutline(runnerRoots[lane]), Is.Null);
                 Assert.That(FindChildRecursive(runnerRoots[lane], "PlayerMarker"), Is.Null);
             }
         }
@@ -350,13 +349,12 @@ namespace KMA.Tests.Presentation
             Assert.That(markerRoot.Find("Plate"), Is.Not.Null, "marker needs a plate so cyan reads over the track");
             Assert.That(markerRoot.Find("Chevron"), Is.Not.Null, "identity must not rely on colour alone");
 
-            Assert.That(label.text, Is.EqualTo("PLAYER"));
+            Assert.That(label.text, Is.EqualTo("BẠN"));
             Assert.That(label.color, Is.EqualTo(MinigameUiTheme.Player));
 
-            Assert.That(FindIdentityOutline(player.transform), Is.Null,
-                "no tinted copy of the player sprite: it reads as a ghost behind the runner");
             foreach (var renderer in player.GetComponentsInChildren<SpriteRenderer>(true))
-                Assert.That(renderer.name, Is.Not.EqualTo("PlayerIdentityOutline"));
+                Assert.That(renderer.name, Is.Not.EqualTo("PlayerIdentityOutline"),
+                    "no tinted copy of the player sprite: it reads as a ghost behind the runner");
         }
 
         [UnityTest]
@@ -381,10 +379,8 @@ namespace KMA.Tests.Presentation
 
             foreach (var rival in Object.FindObjectsByType<RivalRunnerAI>(FindObjectsSortMode.None))
             {
-                Assert.That(FindIdentityOutline(rival.transform), Is.Null,
-                    "no identity outline copies exist");
                 Assert.That(rival.GetComponentInChildren<TMPro.TextMeshPro>(true), Is.Null,
-                    "rivals carry no PLAYER marker");
+                    "rivals carry no BẠN marker");
             }
         }
 
@@ -670,8 +666,13 @@ namespace KMA.Tests.Presentation
             Assert.That(chrome.GetComponentInParent<KMA.Gameplay.UI.SafeAreaFitter>(), Is.Not.Null);
 
             Assert.That(chrome.Find("Scoreboard/Distance").GetComponent<TMP_Text>().text, Is.EqualTo("0 / 100 m"));
-            Assert.That(chrome.Find("Scoreboard/RankBadge/RankLabel").GetComponent<TMP_Text>().text, Is.EqualTo("1st"));
-            Assert.That(chrome.Find("Scoreboard/Combo").GetComponent<TMP_Text>().text, Is.EqualTo("COMBO ×0"));
+            TMP_Text rankChip = chrome.Find("Scoreboard/RankBadge/RankLabel").GetComponent<TMP_Text>();
+            Assert.That(rankChip.text, Is.EqualTo("HẠNG 1"));
+            rankChip.ForceMeshUpdate();
+            Assert.That(rankChip.textInfo.lineCount, Is.EqualTo(1), "the rank chip keeps HẠNG 1 on one line");
+            Assert.That(rankChip.textBounds.size.x, Is.LessThanOrEqualTo(rankChip.rectTransform.rect.width + .5f),
+                "HẠNG 1 must fit inside its chip");
+            Assert.That(chrome.Find("Scoreboard/Combo").GetComponent<TMP_Text>().text, Is.EqualTo("CHUỖI ×0"));
             Assert.That(chrome.Find("ModeLabel/Label").GetComponent<TMP_Text>().text, Is.EqualTo("CHẠY NƯỚC RÚT · 100M"));
 
             KitBar rail = chrome.Find("ProgressRail").GetComponent<KitBar>();
@@ -763,18 +764,6 @@ namespace KMA.Tests.Presentation
             }
             return null;
         }
-
-        static MonoBehaviour FindIdentityOutline(Transform root)
-        {
-            var components = root.GetComponentsInChildren<MonoBehaviour>(true);
-            for (int i = 0; i < components.Length; i++)
-                if (components[i] != null && components[i].GetType().Name == "SprintPlayerIdentityOutline")
-                    return components[i];
-            return null;
-        }
-
-        static T ReadProperty<T>(MonoBehaviour component, string propertyName) =>
-            (T)component.GetType().GetProperty(propertyName).GetValue(component);
 
         static void AssertColor32(Color color, Color32 expected)
         {

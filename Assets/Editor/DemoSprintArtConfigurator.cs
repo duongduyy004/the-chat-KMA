@@ -309,7 +309,7 @@ namespace KMA.EditorTools
             label.transform.SetParent(root.transform, false);
             label.transform.localPosition = new Vector3(0, 1.65f, 0);
             var text = label.AddComponent<TMPro.TextMeshPro>();
-            text.text = VietText.Fix("PLAYER");
+            text.text = VietText.Fix("BẠN");
             text.fontSize = 48 * .065f;
             text.rectTransform.sizeDelta = new Vector2(2f, .6f);
             text.alignment = TMPro.TextAlignmentOptions.Center;

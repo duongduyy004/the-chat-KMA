@@ -57,9 +57,9 @@ namespace KMA.Tests.Presentation
                 Assert.That(presentation.CountdownText, Is.EqualTo("1"));
                 controller.Simulate(1f);
                 Assert.That(controller.PresentationPhase, Is.EqualTo(MinigamePhase.Play));
-                Assert.That(presentation.CountdownText, Is.EqualTo("GO!"));
+                Assert.That(presentation.CountdownText, Is.EqualTo("CHẠY!"));
                 Assert.That(countdownRoot.activeSelf, Is.True,
-                    "GO! must render at the Countdown-to-Play boundary.");
+                    "CHẠY! must render at the Countdown-to-Play boundary.");
                 Assert.That(presentation.InstructionVisible, Is.True);
                 presentation.TickForTest(.5f);
                 Assert.That(countdownRoot.activeSelf, Is.False);

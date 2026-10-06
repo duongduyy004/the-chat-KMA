@@ -155,6 +155,7 @@ MonoBehaviour:
   target: {fileID: 1576258735904471783}
   restColor: {r: 1, g: 0.7921569, b: 0.22745098, a: 1}
   selectable: {fileID: 7802712631662635845}
+  label: {fileID: 3919262518782357019}
 --- !u!1 &446341493788181507
 GameObject:
   m_ObjectHideFlags: 0
@@ -440,7 +441,7 @@ GameObject:
   - component: {fileID: 5637337679076831705}
   - component: {fileID: 4441460370377386041}
   - component: {fileID: 6682379413185311900}
-  - component: {fileID: 2713512245226699935}
+  - component: {fileID: 7587515045471973472}
   m_Layer: 0
   m_Name: Content
   m_TagString: Untagged
@@ -514,7 +515,7 @@ MonoBehaviour:
   m_FillOrigin: 0
   m_UseSpriteMesh: 0
   m_PixelsPerUnitMultiplier: 1
---- !u!114 &2713512245226699935
+--- !u!114 &7587515045471973472
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -594,7 +595,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: SCORE
+  m_text: "\u0110I\u1EC2M"
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 95213cac9f3ffc914a83cd6ef9d38c49, type: 2}
   m_sharedMaterial: {fileID: 8493382299003494270, guid: 95213cac9f3ffc914a83cd6ef9d38c49, type: 2}
@@ -955,6 +956,7 @@ MonoBehaviour:
   target: {fileID: 7036770353270592616}
   restColor: {r: 1, g: 0.7921569, b: 0.22745098, a: 1}
   selectable: {fileID: 3033596982918392440}
+  label: {fileID: 5007831717452612025}
 --- !u!1 &2672881170017396934
 GameObject:
   m_ObjectHideFlags: 0

@@ -59,9 +59,9 @@ namespace KMA.Gameplay.Volleyball
 
         public static string FeedbackText(TimingGrade grade, float offset) => grade switch
         {
-            TimingGrade.Perfect => "PERFECT",
-            TimingGrade.Good => "GOOD",
-            TimingGrade.Late => offset < 0f ? "EARLY" : "LATE",
+            TimingGrade.Perfect => "HOÀN HẢO",
+            TimingGrade.Good => "TỐT",
+            TimingGrade.Late => offset < 0f ? "SỚM" : "MUỘN",
             _ => string.Empty
         };
 

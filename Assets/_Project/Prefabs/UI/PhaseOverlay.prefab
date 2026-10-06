@@ -504,6 +504,7 @@ MonoBehaviour:
   target: {fileID: 2184530589929609354}
   restColor: {r: 1, g: 0.7921569, b: 0.22745098, a: 1}
   selectable: {fileID: 5267739935570982197}
+  label: {fileID: 8048534471395057821}
 --- !u!1 &1332641347606161156
 GameObject:
   m_ObjectHideFlags: 0
@@ -734,6 +735,7 @@ MonoBehaviour:
   target: {fileID: 4228993034850751264}
   restColor: {r: 1, g: 0.7921569, b: 0.22745098, a: 1}
   selectable: {fileID: 2337293660367942587}
+  label: {fileID: 8706425045394976912}
 --- !u!1 &2331676391268299765
 GameObject:
   m_ObjectHideFlags: 0
@@ -1866,6 +1868,7 @@ MonoBehaviour:
   target: {fileID: 3525740041259468574}
   restColor: {r: 1, g: 0.7921569, b: 0.22745098, a: 1}
   selectable: {fileID: 7064996553738116737}
+  label: {fileID: 8212609389227149702}
 --- !u!1 &5889508362837181508
 GameObject:
   m_ObjectHideFlags: 0
@@ -1953,7 +1956,7 @@ GameObject:
   - component: {fileID: 6909399311207261542}
   - component: {fileID: 3735736704928320330}
   - component: {fileID: 4679405148162565661}
-  - component: {fileID: 6161424192751308058}
+  - component: {fileID: 6715821267862293009}
   m_Layer: 0
   m_Name: TutorialRoot
   m_TagString: Untagged
@@ -2047,7 +2050,7 @@ MonoBehaviour:
   nextButton: {fileID: 2337293660367942587}
   skipButton: {fileID: 7064996553738116737}
   closeButton: {fileID: 5267739935570982197}
---- !u!114 &6161424192751308058
+--- !u!114 &6715821267862293009
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -2354,6 +2357,7 @@ MonoBehaviour:
   target: {fileID: 5325165853981317403}
   restColor: {r: 1, g: 0.7921569, b: 0.22745098, a: 1}
   selectable: {fileID: 2427970491983341731}
+  label: {fileID: 9139021346034226738}
 --- !u!1 &7159845239909588429
 GameObject:
   m_ObjectHideFlags: 0

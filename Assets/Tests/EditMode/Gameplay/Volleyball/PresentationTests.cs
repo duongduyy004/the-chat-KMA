@@ -164,10 +164,10 @@ namespace KMA.Tests.Gameplay.Volleyball
         public void HudTextsMatchTheSpec()
         {
             Assert.That(VolleyballHud.ScoreText(3, 2), Is.EqualTo("3  :  2"));
-            Assert.That(VolleyballHud.FeedbackText(TimingGrade.Perfect, 0f), Is.EqualTo("PERFECT"));
-            Assert.That(VolleyballHud.FeedbackText(TimingGrade.Good, .1f), Is.EqualTo("GOOD"));
-            Assert.That(VolleyballHud.FeedbackText(TimingGrade.Late, -.2f), Is.EqualTo("EARLY"));
-            Assert.That(VolleyballHud.FeedbackText(TimingGrade.Late, .2f), Is.EqualTo("LATE"));
+            Assert.That(VolleyballHud.FeedbackText(TimingGrade.Perfect, 0f), Is.EqualTo("HOÀN HẢO"));
+            Assert.That(VolleyballHud.FeedbackText(TimingGrade.Good, .1f), Is.EqualTo("TỐT"));
+            Assert.That(VolleyballHud.FeedbackText(TimingGrade.Late, -.2f), Is.EqualTo("SỚM"));
+            Assert.That(VolleyballHud.FeedbackText(TimingGrade.Late, .2f), Is.EqualTo("MUỘN"));
         }
 
         [Test]
@@ -190,7 +190,7 @@ namespace KMA.Tests.Gameplay.Volleyball
             hud.ShowFeedback(new ActionDecision(ActionKind.Receive, TimingGrade.Perfect, 0f));
             hud.Render(match, MinigamePhase.Play, .1f);
             Assert.That(feedback.enabled, Is.True);
-            Assert.That(feedback.text, Is.EqualTo("PERFECT"));
+            Assert.That(feedback.text, Is.EqualTo("HOÀN HẢO"));
             Assert.That(score.text, Is.EqualTo("0  :  0"));
             Assert.That(hint.enabled, Is.True);
 

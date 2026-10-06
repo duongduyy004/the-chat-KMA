@@ -43,6 +43,8 @@ namespace KMA.Tests.EditorTools
                     if (child.name == "RetryButton") retries++;
                 Assert.That(retries, Is.EqualTo(1), "restyling twice must not add a second retry button");
                 Assert.That(root.transform.Find("Content/ActionButton/Shadow"), Is.Null);
+                Assert.That(root.transform.Find("Content/ScoreCaption").GetComponent<TMP_Text>().text,
+                    Is.EqualTo("ĐIỂM"), "the score caption is Vietnamese");
             }
             finally
             {
