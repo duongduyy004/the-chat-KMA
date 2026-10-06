@@ -110,9 +110,9 @@ namespace KMA.EditorTools
             return new Placement(FootballPresentation.ScreenToWorld(720f, 560f), .9f * kickerScale, true, 22);
         }
 
-        /// In front of the track at the start line, looking left at the frog-jumping student.
+        /// In front of the track at the finish line, looking left back down the track at the student.
         static Placement FrogJumpPlacement() =>
-            new Placement(new Vector3(FrogJumpSceneConfigurator.StartX + 1.5f, FrogJumpSceneConfigurator.GroundY - .6f, 0f),
+            new Placement(new Vector3(FrogJumpSceneConfigurator.FinishX - 1f, FrogJumpSceneConfigurator.GroundY - .6f, 0f),
                 FrogJumpSceneConfigurator.HeroScale, true, 12);
     }
 }
