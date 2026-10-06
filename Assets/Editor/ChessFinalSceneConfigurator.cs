@@ -21,8 +21,6 @@ namespace KMA.EditorTools
     {
         public const string ScenePath = "Assets/_Project/Scenes/MG_ChessFinal.unity";
         const string HudRootName = "S2_HUD_Minigame";
-        const string SkyPath = "Assets/_Project/Art/Environments/Sprint/Sky.png";
-        const string CampusPath = "Assets/_Project/Art/Environments/Sprint/Campus.png";
         const float BoardSize = 740f;
         // Side column centres and avatar box, tuned on 1920x1080 captures: the teacher column clears the
         // pause button, and the 3:4 avatar box matches the 192x256 poses so caps and ponytails stay whole.
@@ -64,13 +62,15 @@ namespace KMA.EditorTools
                 child.gameObject.SetActive(false);
             Vector2 top = new Vector2(.5f, 1f), centre = new Vector2(.5f, .5f), bottom = new Vector2(.5f, 0f);
 
-            // Backdrop: the campus art under a cream wash, so the board stays the focus.
-            RectTransform backdrop = Rect(parent, "Backdrop", Vector2.zero, Vector2.one);
-            backdrop.SetAsFirstSibling();
-            Picture(backdrop, "Sky", SkyPath, Vector2.zero, Vector2.one, Color.white);
-            Picture(backdrop, "Campus", CampusPath, Vector2.zero, new Vector2(1f, .55f), Color.white);
-            Rect(backdrop, "Wash", Vector2.zero, Vector2.one).gameObject.AddComponent<Image>().color =
-                MinigameUiTheme.WithAlpha(UITheme.Shared.Background, .62f);
+            // Backdrop: the shared campus on the canvas root (covers the safe-area insets), then a wash
+            // in the theme background so the board stays the focus.
+            var canvasRoot = (RectTransform)hudRoot.transform;
+            CampusBackdropAuthoring.AddUi(canvasRoot, .18f, .30f, true);
+            RectTransform wash = Rect(canvasRoot, "Wash", Vector2.zero, Vector2.one);
+            var washImage = wash.gameObject.AddComponent<Image>();
+            washImage.color = MinigameUiTheme.WithAlpha(UITheme.Shared.Background, .62f);
+            washImage.raycastTarget = false;
+            wash.SetSiblingIndex(1);
 
             TMP_Text title = UiKit.Label(parent, "Title", "Bài kiểm tra cuối", MinigameUiTheme.Title,
                 MinigameUiTheme.TextPrimary);
@@ -124,12 +124,12 @@ namespace KMA.EditorTools
             bubbleText.textWrappingMode = TextWrappingModes.Normal;
             bubble.gameObject.SetActive(false);
 
-            Image intro = UiKit.Panel(parent, "IntroCard");
-            UiKit.Place(intro.rectTransform, centre, centre, new Vector2(0f, -30f), new Vector2(640f, 380f));
+            Image intro = UiKit.Panel(parent, "IntroCard", alpha: 1f);
+            UiKit.Place(intro.rectTransform, centre, centre, new Vector2(0f, -30f), new Vector2(640f, 320f));
             TMP_Text introText = UiKit.Label(intro.transform, "Text",
-                "Chiếu hết trong 2 nước.\nThời gian suy nghĩ 90 giây.\nĐược sửa sai 2 lần.",
+                "Thời gian suy nghĩ 90 giây.\nĐược sửa sai 2 lần.",
                 MinigameUiTheme.BodyLarge, MinigameUiTheme.TextPrimary);
-            UiKit.Place(introText.rectTransform, top, top, new Vector2(0f, -36f), new Vector2(580f, 200f));
+            UiKit.Place(introText.rectTransform, top, top, new Vector2(0f, -36f), new Vector2(580f, 140f));
             ButtonHandle start = UiKit.Button(intro.transform, "StartButton", "Bắt đầu", ButtonVariant.Primary);
             UiKit.Place((RectTransform)start.Button.transform, bottom, bottom, new Vector2(0f, 36f),
                 new Vector2(320f, MinigameUiTheme.ButtonHeight));
@@ -195,15 +195,6 @@ namespace KMA.EditorTools
                 outline: true);
             UiKit.Place(label.rectTransform, new Vector2(x, .86f), new Vector2(.5f, .5f), Vector2.zero,
                 new Vector2(320f, 60f));
-        }
-
-        static void Picture(RectTransform parent, string name, string path, Vector2 min, Vector2 max, Color color)
-        {
-            var image = Rect(parent, name, min, max).gameObject.AddComponent<Image>();
-            image.sprite = AssetDatabase.LoadAssetAtPath<Sprite>(path) ??
-                throw new InvalidOperationException("[KMA] Missing backdrop " + path);
-            image.color = color;
-            image.raycastTarget = false;
         }
 
         static RectTransform Rect(Transform parent, string name, Vector2 min, Vector2 max)

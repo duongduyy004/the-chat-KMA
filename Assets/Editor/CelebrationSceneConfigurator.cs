@@ -18,9 +18,6 @@ namespace KMA.EditorTools
     public static class CelebrationSceneConfigurator
     {
         public const string ScenePath = "Assets/_Project/Scenes/Celebration.unity";
-        const string SkyPath = "Assets/_Project/Art/Environments/Sprint/Sky.png";
-        const string CampusPath = "Assets/_Project/Art/Environments/Sprint/Campus.png";
-        const string TrackPath = "Assets/_Project/Art/Environments/Sprint/Track.png";
         const string Classmate = "FemalePerson";
         static readonly Vector2 AvatarSize = new Vector2(300f, 400f);
         static readonly string[] CheerPoses = { "idle", "cheer0", "cheer1" };
@@ -36,7 +33,7 @@ namespace KMA.EditorTools
             var camera = cameraObject.GetComponent<Camera>();
             camera.orthographic = true;
             camera.clearFlags = CameraClearFlags.SolidColor;
-            camera.backgroundColor = UITheme.Shared.Background;
+            camera.backgroundColor = CampusBackdropAuthoring.EnsureArt().SkyColor;
 
             var canvasObject = new GameObject("CelebrationCanvas", typeof(RectTransform), typeof(Canvas),
                 typeof(CanvasScaler), typeof(GraphicRaycaster));
@@ -45,15 +42,10 @@ namespace KMA.EditorTools
             scaler.uiScaleMode = CanvasScaler.ScaleMode.ScaleWithScreenSize;
             scaler.referenceResolution = new Vector2(1920f, 1080f);
             scaler.matchWidthOrHeight = .5f;
+            CampusBackdropAuthoring.AddUi((RectTransform)canvasObject.transform, .14f, .34f, true);
             RectTransform parent = Rect(canvasObject.transform, "SafeAreaRoot", Vector2.zero, Vector2.one);
             parent.gameObject.AddComponent<SafeAreaFitter>();
             Vector2 centre = new Vector2(.5f, .5f), bottom = new Vector2(.5f, 0f), top = new Vector2(.5f, 1f);
-
-            RectTransform backdrop = Rect(parent, "Backdrop", Vector2.zero, Vector2.one);
-            Picture(backdrop, "Sky", SkyPath, Vector2.zero, Vector2.one);
-            Picture(backdrop, "Campus", CampusPath, Vector2.zero, new Vector2(1f, .6f));
-            // The track's painted half meets the campus grass line, so the cast stands on the track.
-            Picture(backdrop, "Track", TrackPath, Vector2.zero, new Vector2(1f, .42f));
 
             Image classmate = Avatar(parent, "Classmate", .33f, CharacterArt.Load(Classmate, "idle"));
             classmate.rectTransform.localScale = Vector3.one * .9f;
@@ -129,14 +121,6 @@ namespace KMA.EditorTools
             image.preserveAspect = true;
             image.raycastTarget = false;
             return image;
-        }
-
-        static void Picture(RectTransform parent, string name, string path, Vector2 min, Vector2 max)
-        {
-            var image = Rect(parent, name, min, max).gameObject.AddComponent<Image>();
-            image.sprite = AssetDatabase.LoadAssetAtPath<Sprite>(path) ??
-                throw new InvalidOperationException("[KMA] Missing backdrop " + path);
-            image.raycastTarget = false;
         }
 
         static RectTransform Rect(Transform parent, string name, Vector2 min, Vector2 max)

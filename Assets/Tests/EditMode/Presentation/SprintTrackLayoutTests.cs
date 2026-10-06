@@ -41,7 +41,7 @@ namespace KMA.Tests.Presentation
         [Test]
         public void EveryLaneIsOnThePaintedTrackRatherThanTheSky()
         {
-            // Row 460 is the first opaque row of Track.png — the sky/track horizon.
+            // Row 460 is the first opaque row of SprintTrack.png — the sky/track horizon.
             float horizonY = SprintTrackLayout.WorldYForRow(460f);
             for (int lane = 0; lane < SprintTrackLayout.LaneCount; lane++)
                 Assert.That(SprintTrackLayout.LaneCenterY(lane), Is.LessThan(horizonY),

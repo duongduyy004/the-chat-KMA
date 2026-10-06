@@ -14,7 +14,7 @@ namespace KMA.Gameplay
         const float FinishAnchorWidth = .03f;
         const float FinishEntryAnchorX = 1f;    // just past the right edge, so it slides in unseen
 
-        // Track.png has transparent sky above the painted lanes. Keep the checkerboard inside the
+        // SprintTrack.png has transparent sky above the painted lanes. Keep the checkerboard inside the
         // four-lane band instead of stretching it over the whole camera presentation.
         public const float FinishAnchorMinY = .12f;
         public const float FinishAnchorMaxY = .66f;
