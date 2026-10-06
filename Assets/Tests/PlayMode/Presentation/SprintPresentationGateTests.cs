@@ -638,7 +638,7 @@ namespace KMA.Tests.Presentation
             var routes = new List<string>();
             panel.ActionRequested += routes.Add;
 
-            panel.Show(new MinigameResult(false, 0f, Rank.F), "Punishment");
+            panel.Show(new MinigameResult(false, 0f, Rank.F), "Map");
             // The shared panel animates its reveal; the settled state is asserted after it ends.
             yield return new WaitForSecondsRealtime(1.5f);
             Assert.That(title.text, Is.EqualTo("THẤT BẠI"));
@@ -650,7 +650,7 @@ namespace KMA.Tests.Presentation
 
             panel.Continue();
             panel.Continue();
-            Assert.That(routes, Is.EqualTo(new[] { "Punishment" }));
+            Assert.That(routes, Is.EqualTo(new[] { "Map" }));
 
             panel.Show(new MinigameResult(true, 8.4f, Rank.A), "Map");
             yield return new WaitForSecondsRealtime(1.5f);

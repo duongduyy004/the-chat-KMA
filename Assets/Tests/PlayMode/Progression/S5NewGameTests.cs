@@ -543,7 +543,6 @@ namespace KMA.Tests.Gameplay.Progression
             Assert.That(transitions, Has.Count.EqualTo(1));
             Assert.That(transitions[0].Route, Is.EqualTo(SessionRoute.Map));
             Assert.That(manager.Session.ActiveSubject, Is.Null);
-            Assert.That(manager.Session.AwaitingPunishment, Is.False);
             Assert.That(saved, Is.Null, "Routing an already-normalized checkpoint does not rewrite the save.");
 
             yield return WaitForRoutedScene(router, "Map");
@@ -605,7 +604,6 @@ namespace KMA.Tests.Gameplay.Progression
             Assert.That(menu.CanContinue, Is.True);
             SubjectId? activeBefore = manager.Session.ActiveSubject;
             int attemptBefore = manager.Session.VisitAttempt;
-            bool awaitingBefore = manager.Session.AwaitingPunishment;
             int livesBefore = manager.Session.Lives;
 
             menu.Continue();
@@ -615,7 +613,6 @@ namespace KMA.Tests.Gameplay.Progression
             Assert.That(transitions[0].Subject, Is.EqualTo(expectedSubject));
             Assert.That(manager.Session.ActiveSubject, Is.EqualTo(activeBefore));
             Assert.That(manager.Session.VisitAttempt, Is.EqualTo(attemptBefore));
-            Assert.That(manager.Session.AwaitingPunishment, Is.EqualTo(awaitingBefore));
             Assert.That(manager.Session.Lives, Is.EqualTo(livesBefore));
 
             yield return WaitForRoutedScene(router, expectedScene);

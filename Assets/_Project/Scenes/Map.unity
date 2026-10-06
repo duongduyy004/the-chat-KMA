@@ -165,7 +165,6 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   celebrationScene: Celebration
   frogJumpScene: MG_FrogJump
-  punishmentScene: Punishment
   mapScene: Map
   gameOverScene: GameOver
   subjectScenes:

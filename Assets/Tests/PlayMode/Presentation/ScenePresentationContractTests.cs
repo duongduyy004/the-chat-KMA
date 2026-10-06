@@ -14,7 +14,6 @@ namespace KMA.Tests.Presentation
         {
             "MG_Sprint",
             "MG_Football",
-            "Punishment",
             "Map",
             "GameOver"
         };
@@ -24,9 +23,6 @@ namespace KMA.Tests.Presentation
         {
             foreach (var sceneName in SceneNames)
             {
-                if (sceneName == "Punishment")
-                    LogAssert.Expect(LogType.Error, "Punishment requires a pending subject from the live GameSession.");
-
                 yield return SceneManager.LoadSceneAsync(sceneName, LoadSceneMode.Single);
 
                 Assert.That(Camera.main, Is.Not.Null, sceneName);

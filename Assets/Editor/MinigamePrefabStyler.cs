@@ -11,13 +11,12 @@ using Object = UnityEngine.Object;
 namespace KMA.EditorTools
 {
     /// Restyles the shared minigame prefabs with the UI kit in place. Node names and serialized
-    /// references stay, so every scene instance (GameOver, Punishment, minigames) follows.
+    /// references stay, so every scene instance (GameOver, minigames) follows.
     public static class MinigamePrefabStyler
     {
         public const string HudPrefab = "Assets/_Project/Prefabs/UI/HUD_Minigame.prefab";
         public const string PhasePrefab = "Assets/_Project/Prefabs/UI/PhaseOverlay.prefab";
         public const string ResultPrefab = "Assets/_Project/Prefabs/UI/ResultPanel.prefab";
-        public const string PunishmentScene = "Assets/_Project/Scenes/Punishment.unity";
 
         [MenuItem("KMA/UI/Restyle Shared Minigame Prefabs")]
         public static void RestyleAll()
@@ -26,8 +25,6 @@ namespace KMA.EditorTools
             Restyle(PhasePrefab, StylePhaseOverlay);
             Restyle(ResultPrefab, StyleResultPanel);
             AssetDatabase.SaveAssets();
-            // Punishment keeps an assembler-made pause button in its scene; rebuild it with the kit.
-            MinigameUIAssembler.AssembleScenePath(PunishmentScene);
             Debug.Log("[KMA] Shared minigame prefabs restyled.");
         }
 

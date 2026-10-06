@@ -22,7 +22,6 @@ namespace KMA.Tests.Gameplay.Core
             "Assets/_Project/Scenes/Menu.unity",
             "Assets/_Project/Scenes/Map.unity",
             "Assets/_Project/Scenes/MG_Sprint.unity",
-            "Assets/_Project/Scenes/Punishment.unity",
             "Assets/_Project/Scenes/GameOver.unity"
         };
 

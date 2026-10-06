@@ -11,7 +11,6 @@ namespace KMA.Tests.Gameplay.Progression
         static readonly string[] SceneNames =
         {
             "MG_Sprint",
-            "Punishment",
             "Map",
             "GameOver"
         };
@@ -21,9 +20,6 @@ namespace KMA.Tests.Gameplay.Progression
         {
             foreach (var sceneName in SceneNames)
             {
-                if (sceneName == "Punishment")
-                    LogAssert.Expect(LogType.Error, "Punishment requires a pending subject from the live GameSession.");
-
                 yield return SceneManager.LoadSceneAsync(sceneName, LoadSceneMode.Single);
 
                 Assert.That(Camera.main, Is.Not.Null, $"{sceneName} needs a tagged Main Camera.");

@@ -43,15 +43,6 @@ namespace KMA.Tests.EditorTools
         }
 
         [Test]
-        public void PunishmentPauseButtonFollowsTheKit()
-        {
-            EditorSceneManager.OpenScene(MinigamePrefabStyler.PunishmentScene, OpenSceneMode.Single);
-            var pause = Object.FindFirstObjectByType<PausePanel>(FindObjectsInactive.Include);
-            var problems = MinigameStyleAudit.Audit(pause.gameObject);
-            Assert.That(problems, Is.Empty, string.Join("\n", problems));
-        }
-
-        [Test]
         public void AuditCatchesOffKitSpritesColoursFontsAndLegacyText()
         {
             var root = new GameObject("Offender", typeof(RectTransform));

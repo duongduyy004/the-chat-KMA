@@ -17,6 +17,13 @@ namespace KMA.Tests.Gameplay.Progression
             router = new GameObject("SceneRouterSessionTests.Router").AddComponent<SceneRouter>();
         }
 
+        [Test]
+        public void RouterHasNoSceneForTheRetiredRoute()
+        {
+            Assert.That(router.TryGetSceneName(SessionRoute.RetiredPunishment, SubjectId.Sprint, out string scene), Is.False);
+            Assert.That(scene, Is.Null.Or.Empty);
+        }
+
         [TearDown]
         public void TearDown()
         {

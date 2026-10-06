@@ -2,6 +2,7 @@ using System;
 using System.Linq;
 using UnityEditor;
 using UnityEditor.Build;
+using UnityEditor.SceneManagement;
 using UnityEngine;
 
 namespace KMA.EditorTools
@@ -13,6 +14,23 @@ namespace KMA.EditorTools
         const int AndroidMinApiLevel = 25;
         const int AndroidTargetApiLevel = 35;
         const int DspBufferSize = 256;
+
+        public static void RemoveRetiredScenes()
+        {
+            EditorBuildSettings.scenes = EditorBuildSettings.scenes
+                .Where(s => !s.path.EndsWith("/Punishment.unity", StringComparison.Ordinal)).ToArray();
+            AssetDatabase.SaveAssets();
+        }
+
+        public static void ResaveShellScenes()
+        {
+            foreach (string path in new[] { "Assets/_Project/Scenes/Bootstrap.unity", "Assets/_Project/Scenes/Map.unity", "Assets/_Project/Scenes/MG_Sprint.unity" })
+            {
+                var scene = EditorSceneManager.OpenScene(path, OpenSceneMode.Single);
+                EditorSceneManager.MarkSceneDirty(scene);
+                EditorSceneManager.SaveScene(scene);
+            }
+        }
 
         [MenuItem("KMA/Apply Project Settings")]
         public static void Apply()

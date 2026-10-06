@@ -15,7 +15,6 @@ namespace KMA.Input
         [SerializeField] InputActionReference swipeAction;
         [SerializeField] InputActionReference rhythmAction;
         [SerializeField] string sprintActionMapName = "Sprint";
-        [SerializeField] string punishmentActionMapName = "Punishment";
         [SerializeField] string uiActionMapName = "UI";
         [SerializeField] string gameplayActionMapName = "Gameplay";
         [SerializeField] double rhythmOffsetMs;
@@ -28,7 +27,6 @@ namespace KMA.Input
         AlternateTapInputDetector sprintTapDetector;
         SwipeInputDetector swipeDetector;
         InputActionMap sprintActionMap;
-        InputActionMap punishmentActionMap;
         InputActionMap uiActionMap;
         InputActionMap gameplayActionMap;
         InputAction resolvedTapAction;
@@ -51,7 +49,6 @@ namespace KMA.Input
 
         public InputActionAsset InputActions => inputActions;
         public string SprintActionMapName => sprintActionMapName;
-        public string PunishmentActionMapName => punishmentActionMapName;
         public string UiActionMapName => uiActionMapName;
         public double RhythmOffsetMs { get => rhythmOffsetMs; set => rhythmOffsetMs = value; }
         public double RhythmBeatDsp { get; set; }
@@ -295,7 +292,6 @@ namespace KMA.Input
                 return;
 
             sprintActionMap = inputActions.FindActionMap(sprintActionMapName, false);
-            punishmentActionMap = inputActions.FindActionMap(punishmentActionMapName, false);
             uiActionMap = inputActions.FindActionMap(uiActionMapName, false);
             gameplayActionMap = inputActions.FindActionMap(gameplayActionMapName, false);
         }

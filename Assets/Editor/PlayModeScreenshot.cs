@@ -190,7 +190,7 @@ namespace KMA.EditorTools
                     bool pass = forceResult == "pass";
                     var result = new KMA.Gameplay.MinigameResult(pass, pass ? 8.4f : 0f,
                         pass ? KMA.Gameplay.Rank.A : KMA.Gameplay.Rank.F);
-                    panel.Show(result, pass ? "Map" : "Punishment");
+                    panel.Show(result, "Map");
                 }
             }
 

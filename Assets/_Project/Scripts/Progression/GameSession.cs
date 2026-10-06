@@ -6,8 +6,8 @@ namespace KMA.Gameplay
     public enum SessionRoute
     {
         Subject,
-        // Retained for old serialized route identifiers.
-        Punishment,
+        // Value 1 is retired; never produced. Kept so the numbers of later routes do not shift.
+        RetiredPunishment,
         RetrySubject,
         Map,
         GameOver,
@@ -47,10 +47,8 @@ namespace KMA.Gameplay
         public int Lives => Journey.AttemptsRemaining;
         public IReadOnlyDictionary<SubjectId, SubjectRecord> Records => records;
         public JourneyProgress Journey { get; private set; }
-        public SubjectId? PendingPunishmentSubject => null;
         public SubjectId? ActiveSubject => active;
         public int VisitAttempt => FirstVisit;
-        public bool AwaitingPunishment => false;
         public long NextLifeAtUtcTicks => nextLifeAtUtcTicks;
         public TimeSpan? TimeUntilNextLife => LifeRegen.Remaining(Lives, nextLifeAtUtcTicks, clock.UtcNow, MaxLives);
         public FrogJumpPending PendingFrogJump => Journey.PendingFrogJump;
@@ -245,10 +243,6 @@ namespace KMA.Gameplay
                 ? SessionRoute.Subject
                 : SessionRoute.Map;
         }
-
-        // Kept for old callers. The new course has no punishment-only scene.
-        public SessionRoute CompletePunishment() => throw new InvalidOperationException(
-            "The punishment route was retired; failed challenges use the frog jump.");
 
         public SubjectId AbandonActiveSubject()
         {

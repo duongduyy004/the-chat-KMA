@@ -85,16 +85,6 @@ namespace KMA.Tests.EditorTools
             }
         }
 
-        [Test]
-        public void PunishmentPauseButtonIsTheKitPauseButton()
-        {
-            EditorSceneManager.OpenScene(MinigamePrefabStyler.PunishmentScene, OpenSceneMode.Single);
-            var pause = Object.FindFirstObjectByType<PausePanel>(FindObjectsInactive.Include);
-            Assert.That(pause, Is.Not.Null);
-            Assert.That(pause.GetComponent<Image>().sprite, Is.SameAs(UiKitAssets.Load().RoundRect20));
-            Assert.That(pause.transform.Find("BarLeft"), Is.Not.Null);
-            Assert.That(pause.GetComponentsInChildren<Text>(true), Is.Empty);
-        }
     }
 }
 #endif

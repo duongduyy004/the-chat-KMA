@@ -205,7 +205,6 @@ namespace KMA.Tests.Gameplay.Progression
             Assert.That(router.ResumeCampaign(), Is.False, "Continue must be rejected.");
 
             Assert.That(session.ActiveSubject, Is.EqualTo(SubjectId.Sprint));
-            Assert.That(session.PendingPunishmentSubject, Is.Null);
             Assert.That(session.Lives, Is.EqualTo(livesBefore));
             Assert.That(session.GetRecord(SubjectId.Sprint).FailedVisits, Is.Zero);
             Assert.That(session.GetRecord(SubjectId.Sprint).Passed, Is.False);
@@ -273,7 +272,6 @@ namespace KMA.Tests.Gameplay.Progression
             Assert.That(transitions, Has.Count.EqualTo(1));
             Assert.That(transitions[0].Route, Is.EqualTo(SessionRoute.Map));
             Assert.That(transitions[0].Subject, Is.Null);
-            Assert.That(relaunched.Session.PendingPunishmentSubject, Is.Null);
             Assert.That(relaunched.Session.ActiveSubject, Is.Null);
             Assert.That(relaunched.Session.VisitAttempt, Is.EqualTo(1));
             Assert.That(relaunched.Session.Lives, Is.EqualTo(4));
@@ -304,7 +302,6 @@ namespace KMA.Tests.Gameplay.Progression
 
             Assert.That(session.ActiveSubject, Is.EqualTo(SubjectId.Sprint));
             Assert.That(session.VisitAttempt, Is.EqualTo(1));
-            Assert.That(session.AwaitingPunishment, Is.False);
             Assert.That(persistenceEvents, Is.Zero);
 
             yield return WaitForScene("Menu");

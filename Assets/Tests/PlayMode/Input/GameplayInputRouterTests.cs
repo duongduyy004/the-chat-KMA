@@ -396,7 +396,6 @@ namespace KMA.Tests.Input
             Assert.That(swipeCount, Is.EqualTo(2));
         }
 
-        [TestCase("Punishment")]
         public void SharedSideActionMaps_RouteTapHoldSwipeAndAlternate(string mapName)
         {
             var taps = new InputLayer.TapMashInputDetector();

@@ -397,7 +397,6 @@ MonoBehaviour:
   swipeAction: {fileID: 0}
   rhythmAction: {fileID: 0}
   sprintActionMapName: Sprint
-  punishmentActionMapName: Punishment
   uiActionMapName: UI
   gameplayActionMapName: Sprint
   rhythmOffsetMs: 0
@@ -1179,7 +1178,6 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   celebrationScene: Celebration
   frogJumpScene: MG_FrogJump
-  punishmentScene: Punishment
   mapScene: Map
   gameOverScene: GameOver
   subjectScenes:

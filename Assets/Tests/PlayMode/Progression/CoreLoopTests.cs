@@ -16,7 +16,6 @@ namespace KMA.Tests.Gameplay.Progression
 
             Assert.That(session.PreviewRoute(SubjectId.Sprint, result), Is.EqualTo(SessionRoute.Map));
             Assert.That(session.Lives, Is.EqualTo(5));
-            Assert.That(session.PendingPunishmentSubject, Is.Null);
         }
 
         [Test]

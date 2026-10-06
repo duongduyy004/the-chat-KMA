@@ -73,7 +73,7 @@ namespace KMA.Gameplay.Core
         void CompleteTransition() => transitioning = false;
 
         static bool RequiresSubject(SessionRoute route) => route == SessionRoute.Subject ||
-            route == SessionRoute.Punishment || route == SessionRoute.RetrySubject;
+            route == SessionRoute.RetrySubject;
     }
 
     [DefaultExecutionOrder(-1000)]
@@ -88,7 +88,6 @@ namespace KMA.Gameplay.Core
 
         static SceneRouter instance;
 
-        [SerializeField] string punishmentScene = "Punishment";
         [SerializeField] string mapScene = "Map";
         [SerializeField] string gameOverScene = "GameOver";
         [SerializeField] SubjectScene[] subjectScenes = DefaultSubjectScenes();
@@ -254,19 +253,6 @@ namespace KMA.Gameplay.Core
                 SubjectCompleted?.Invoke(subject, result);
             else if (session.Lives < livesBefore)
                 LifeLost?.Invoke(session.Lives);
-            return true;
-        }
-
-        public bool CompletePunishment(SubjectId subject)
-        {
-            if (IsTransitioning)
-                return false;
-
-            SaveData previous = session.ToSaveData();
-            SessionRoute route = session.CompletePunishment();
-            if (!TryRouteMutatedSession(previous, route, subject))
-                return false;
-            SessionChanged?.Invoke();
             return true;
         }
 
@@ -438,7 +424,6 @@ namespace KMA.Gameplay.Core
         {
             sceneName = route switch
             {
-                SessionRoute.Punishment => punishmentScene,
                 SessionRoute.Map => mapScene,
                 SessionRoute.GameOver => gameOverScene,
                 SessionRoute.FrogJump => frogJumpScene,
@@ -511,10 +496,6 @@ namespace KMA.Gameplay.Core
                 case SessionRoute.RetrySubject:
                     activeSubject = subject;
                     awaitingSubjectScene = true;
-                    break;
-                case SessionRoute.Punishment:
-                    activeSubject = subject;
-                    awaitingSubjectScene = false;
                     break;
                 case SessionRoute.Map:
                 case SessionRoute.GameOver:

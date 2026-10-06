@@ -305,7 +305,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 3912e3bbf8baef8cb98b7de4da857c43, type: 3}
   m_Name: 
   m_EditorClassIdentifier: KMA.Gameplay.Core::KMA.Gameplay.Core.SceneRouter
-  punishmentScene: Punishment
+  celebrationScene: Celebration
+  frogJumpScene: MG_FrogJump
   mapScene: Map
   gameOverScene: GameOver
   subjectScenes:

@@ -23,7 +23,7 @@ namespace KMA.Gameplay.Core
 
         public AudioClip MusicFor(string scene) => scene switch
         {
-            "Menu" or "Map" or "Punishment" or "GameOver" => menu,
+            "Menu" or "Map" or "GameOver" => menu,
             "MG_Sprint" => sprint,
             "MG_Volleyball" => volleyball,
             "MG_Football" => football,

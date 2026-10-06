@@ -17,7 +17,6 @@ namespace KMA.Tests.Gameplay.Progression
             GameSession restored = RoundTrip(original);
 
             Assert.That(restored.ActiveSubject, Is.Null);
-            Assert.That(restored.PendingPunishmentSubject, Is.Null);
             Assert.That(restored.Lives, Is.EqualTo(5));
             Assert.That(restored.Journey.CheckpointChallengeId, Is.EqualTo("sprint_learn"));
             Assert.That(restored.ResumeRoute(), Is.EqualTo(SessionRoute.Map));
@@ -30,7 +29,6 @@ namespace KMA.Tests.Gameplay.Progression
 
             Assert.That(session.ResumeRoute(), Is.EqualTo(SessionRoute.Map));
             Assert.That(session.VisitAttempt, Is.EqualTo(1));
-            Assert.That(session.AwaitingPunishment, Is.False);
         }
 
         [Test]
@@ -47,7 +45,6 @@ namespace KMA.Tests.Gameplay.Progression
             Assert.That(restored.ActiveSubject, Is.Null);
             Assert.That(restored.Journey.CheckpointChallengeId, Is.EqualTo("volleyball_learn"));
             Assert.That(restored.VisitAttempt, Is.EqualTo(1));
-            Assert.That(restored.AwaitingPunishment, Is.False);
             Assert.That(restored.Lives, Is.EqualTo(5));
             Assert.That(restored.GetRecord(SubjectId.Sprint).Passed, Is.True);
             Assert.That(restored.GetRecord(SubjectId.Sprint).BestScore, Is.EqualTo(8f));
@@ -69,8 +66,6 @@ namespace KMA.Tests.Gameplay.Progression
 
             Assert.That(restored.ResumeRoute(), Is.EqualTo(SessionRoute.Map));
             Assert.That(restored.ActiveSubject, Is.Null);
-            Assert.That(restored.PendingPunishmentSubject, Is.Null);
-            Assert.That(restored.AwaitingPunishment, Is.False);
             Assert.That(restored.Lives, Is.EqualTo(3));
             Assert.That(restored.GetRecord(SubjectId.Sprint).FailedVisits, Is.EqualTo(1));
             Assert.That(restored.GetRecord(SubjectId.Volleyball).FailedVisits, Is.EqualTo(1));
@@ -86,7 +81,6 @@ namespace KMA.Tests.Gameplay.Progression
 
             Assert.That(restored.ResumeRoute(), Is.EqualTo(SessionRoute.Map));
             Assert.That(restored.ActiveSubject, Is.Null);
-            Assert.That(restored.AwaitingPunishment, Is.False);
             Assert.That(restored.GetRecord(SubjectId.Football).Passed, Is.True);
         }
 
@@ -173,7 +167,6 @@ namespace KMA.Tests.Gameplay.Progression
             var session = new GameSession();
             session.Restore(data);
             Assert.That(session.ActiveSubject, Is.Null);
-            Assert.That(session.AwaitingPunishment, Is.False);
             Assert.That(session.Lives, Is.Zero);
             Assert.That(session.Journey.CheckpointChallengeId, Is.EqualTo("sprint_learn"));
             Assert.That(session.ResumeRoute(), Is.EqualTo(SessionRoute.Map));
@@ -196,7 +189,6 @@ namespace KMA.Tests.Gameplay.Progression
 
             Assert.That(session.ActiveSubject, Is.Null);
             Assert.That(session.VisitAttempt, Is.EqualTo(1));
-            Assert.That(session.AwaitingPunishment, Is.False);
             Assert.That(session.ResumeRoute(), Is.EqualTo(SessionRoute.Map));
         }
 
@@ -377,8 +369,7 @@ namespace KMA.Tests.Gameplay.Progression
             var session = new GameSession();
             session.Restore(data);
 
-            Assert.That(session.AwaitingPunishment, Is.False);
-            Assert.That(session.PendingPunishmentSubject, Is.Null);
+            Assert.That(session.ToSaveData().awaitingPunishment, Is.False);
             Assert.That(session.VisitAttempt, Is.EqualTo(1));
             Assert.That(session.ResumeRoute(), Is.EqualTo(SessionRoute.Map));
             Assert.That(session.ActiveSubject, Is.Null);
@@ -394,10 +385,6 @@ namespace KMA.Tests.Gameplay.Progression
             session.Restore(data);
 
             Assert.That(session.ActiveSubject, Is.Null);
-            bool exhausted = data.lives == 0;
-            Assert.That(session.PendingPunishmentSubject,
-                Is.EqualTo(exhausted ? SubjectId.Sprint : (SubjectId?)null));
-            Assert.That(session.AwaitingPunishment, Is.EqualTo(exhausted));
             Assert.That(session.VisitAttempt, Is.EqualTo(1));
             Assert.That(session.ResumeRoute(), Is.EqualTo(SessionRoute.Map));
         }

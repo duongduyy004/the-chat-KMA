@@ -16,7 +16,7 @@ namespace KMA.Tests.Input
             Assert.That(asset, Is.Not.Null);
             Assert.That(asset.actionMaps.Select(map => map.name), Is.EquivalentTo(new[]
             {
-                "Sprint", "Gameplay", "Punishment", "UI"
+                "Sprint", "Gameplay", "UI"
             }));
         }
 
@@ -30,8 +30,6 @@ namespace KMA.Tests.Input
                 Is.EquivalentTo(new[] { "SprintLeft", "SprintRight", "TouchPosition" }));
             Assert.That(asset.FindActionMap("Gameplay").actions.Select(action => action.name),
                 Is.EquivalentTo(new[] { "Tap", "Hold", "SwipeUp", "SwipeDown", "TouchPosition" }));
-            Assert.That(asset.FindActionMap("Punishment").actions.Select(action => action.name),
-                Is.EquivalentTo(new[] { "Tap", "Hold", "Left", "Right" }));
             Assert.That(asset.FindActionMap("UI").actions.Select(action => action.name),
                 Is.EquivalentTo(new[] { "Navigate", "Submit", "Cancel", "Pause" }));
 

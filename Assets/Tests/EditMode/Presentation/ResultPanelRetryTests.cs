@@ -96,12 +96,12 @@ namespace KMA.Tests.Presentation
         {
             var routes = new System.Collections.Generic.List<string>();
             panel.ActionRequested += routes.Add;
-            panel.Show(new MinigameResult(false, 0f, Rank.F), "Punishment");
+            panel.Show(new MinigameResult(false, 0f, Rank.F), "Map");
             Assert.That(retryButton.gameObject.activeSelf, Is.False);
             Assert.That(lives.gameObject.activeSelf, Is.False, "lives only show for panels that offer a retry");
             panel.Continue();
             panel.Continue();
-            Assert.That(routes, Is.EqualTo(new[] { "Punishment" }));
+            Assert.That(routes, Is.EqualTo(new[] { "Map" }));
         }
 
         [Test]

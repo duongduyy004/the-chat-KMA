@@ -118,7 +118,6 @@ namespace KMA.Gameplay.Core
         static string SceneTitle(string sceneName) => sceneName switch
         {
             "MG_Sprint" => "KMA — Sprint",
-            "Punishment" => "KMA — Recovery Challenge",
             "Map" => "KMA — Map",
             "GameOver" => "KMA — Game Over",
             _ => "KMA Gameplay"
@@ -127,7 +126,6 @@ namespace KMA.Gameplay.Core
         static string Controls(string sceneName) => sceneName switch
         {
             "MG_Sprint" => "Sprint: Left / Right arrows",
-            "Punishment" => "Recovery: Space tap · H hold · Left / Right alternate",
             "Map" => "Progression route",
             "GameOver" => "Run complete",
             _ => "KMA Gameplay Prototype"

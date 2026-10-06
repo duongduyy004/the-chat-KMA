@@ -22,7 +22,6 @@ namespace KMA.Gameplay.UI
         static readonly string[] ScenePaths =
         {
             "Assets/_Project/Scenes/MG_Sprint.unity",
-            "Assets/_Project/Scenes/Punishment.unity",
             "Assets/_Project/Scenes/Map.unity",
             "Assets/_Project/Scenes/GameOver.unity",
             "Assets/_Project/Scenes/MG_Football.unity",
@@ -106,7 +105,7 @@ namespace KMA.Gameplay.UI
             StretchToParent(resultRoot);
             resultRoot.SetActive(false);
 
-            if (scene.name.StartsWith("MG_", StringComparison.Ordinal) || scene.name == "Punishment")
+            if (scene.name.StartsWith("MG_", StringComparison.Ordinal))
                 EnsurePausePanel(scene, canvasTransform);
 
             EnsureEventSystem(scene);
@@ -114,7 +113,7 @@ namespace KMA.Gameplay.UI
         }
 
         static bool IsGameplayScene(Scene scene)
-            => scene.name.StartsWith("MG_", StringComparison.Ordinal) || scene.name == "Punishment";
+            => scene.name.StartsWith("MG_", StringComparison.Ordinal);
 
         static void RemoveGameplayPresentation(Scene scene)
         {

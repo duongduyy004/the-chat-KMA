@@ -44,7 +44,7 @@ namespace KMA.Gameplay.Core
         {
             if (scene.name != "Bootstrap" && scene.name != "Menu" && scene.name != "Map" &&
                 scene.name != "MG_Sprint" && scene.name != "MG_Volleyball" && scene.name != "MG_Football" &&
-                scene.name != "Punishment" && scene.name != "GameOver")
+                scene.name != "GameOver")
             {
                 if (Instance) Instance.PlayMusicForScene(scene.name);
                 return;
