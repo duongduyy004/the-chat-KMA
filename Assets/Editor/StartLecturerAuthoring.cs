@@ -83,14 +83,14 @@ namespace KMA.EditorTools
             return lecturer;
         }
 
-        /// Behind the top lane, a little right of the start line, looking left at the runners.
-        /// She leaves after the whistle so she never stands in a rival's way. The runners are
-        /// placed by the Sprint presentation at run time, so the spot is measured on screen:
-        /// the start line sits near world x -10 on the 21:9 camera.
+        /// Below the bottom lane line, just right of the TRÁI button, looking right down the track
+        /// at the finish. She leaves after the whistle so she never stands in a rival's way. The
+        /// runners are placed by the Sprint presentation at run time, so the spot is measured on
+        /// screen: the start line sits near world x -10 on the 21:9 camera.
         static Placement PlaceInSprint(Scene scene)
         {
-            float y = SprintTrackLayout.LaneCenterYForAuthoredLane(1) + .45f;
-            return new Placement(new Vector3(-7.4f, y, 0f), 1f, true, 5, 1.6f);
+            float lowestLaneLineY = SprintTrackLayout.WorldYForRow(SprintTrackLayout.LaneLineRows[SprintTrackLayout.LaneCount]);
+            return new Placement(new Vector3(-5.8f, lowestLaneLineY - .55f, 0f), 1f, false, 50, 1.6f);
         }
 
         /// Beside the left baseline, level with the far half of the court, looking right at the player.

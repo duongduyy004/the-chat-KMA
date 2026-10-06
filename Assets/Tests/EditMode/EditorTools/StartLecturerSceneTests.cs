@@ -12,8 +12,8 @@ namespace KMA.Tests.EditorTools
         [OneTimeSetUp]
         public void ImportOnce() => CharacterArt.ImportAll();
 
-        // The lecturer faces the athletes: left of her in Sprint, Football and Frog Jump, right of her in Volleyball.
-        [TestCase("MG_Sprint", true)]
+        // The lecturer faces the athletes: left of her in Football and Frog Jump, right of her in Sprint and Volleyball.
+        [TestCase("MG_Sprint", false)]
         [TestCase("MG_Football", true)]
         [TestCase("MG_FrogJump", true)]
         [TestCase("MG_Volleyball", false)]
