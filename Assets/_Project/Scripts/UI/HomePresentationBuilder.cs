@@ -28,7 +28,8 @@ namespace KMA.Gameplay.UI
             layout.anchorMin = Vector2.zero;
             layout.anchorMax = Vector2.one;
             layout.offsetMin = layout.offsetMax = Vector2.zero;
-            var art = screen.transform.root.Find("HomeIllustration") as RectTransform;
+            // The hit areas follow the fitted panel frame; older scenes without one fall back to the full art.
+            var art = (screen.transform.root.Find("HomePanelFrame") ?? screen.transform.root.Find("HomeIllustration")) as RectTransform;
             layout.gameObject.AddComponent<HomeKeyArtLayout>().Configure(art != null ? art : (RectTransform)screen.transform);
             var oldLogo = screen.transform.Find("HomeLogo");
             if (oldLogo != null) oldLogo.gameObject.SetActive(false);

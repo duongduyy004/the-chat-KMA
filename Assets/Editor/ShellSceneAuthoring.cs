@@ -51,23 +51,52 @@ namespace KMA.EditorTools
             Debug.Log("[KMA] Authored Bootstrap, Menu, Map, and GameOver scene UI.");
         }
 
-        const string MenuKeyArtPath = "Assets/_Project/Art/UI/MenuKeyArt.png";
+        const string MenuBackdropPath = "Assets/_Project/Art/UI/MenuKeyArtBackdrop.png";
+        const string MenuPanelPath = "Assets/_Project/Art/UI/MenuKeyArtPanel.png";
+        // Pixel box of the panel cut-out inside the 1672 x 941 key art (see tools/split-menu-key-art.py).
+        const float ArtWidth = 1672f, ArtHeight = 941f;
+        const float PanelLeft = 50f, PanelTop = 40f, PanelRight = 646f, PanelBottom = 892f;
 
-        /// The menu is one painted key-art picture (panel, title, buttons, runners); the scene only lays
-        /// invisible hit areas over its buttons, so the whole art is fitted inside the screen (wide screens get side bars rather than a cropped panel).
+        /// The menu is a full-bleed scenery backdrop plus the painted panel (title and buttons) as its own
+        /// sprite. The panel is fitted inside the screen, so it stays compact on wide phones while the
+        /// scenery still covers every pixel; the scene lays invisible hit areas over the panel's buttons.
         [MenuItem("KMA/Presentation/Author Menu Scene")]
         public static void AuthorMenu()
         {
             Author("Menu", scene =>
             {
                 var screen = Require<MainMenuScreen>(scene);
-                var art = screen.transform.root.Find("HomeIllustration");
-                RemoveChild(screen.transform.root, "HomeTint"); // the key art is meant to be seen at full brightness
+                var root = screen.transform.root;
+                var art = root.Find("HomeIllustration");
+                RemoveChild(root, "HomeTint"); // the key art is meant to be seen at full brightness
                 if (art == null) throw new InvalidOperationException("Menu has no HomeIllustration.");
-                art.GetComponent<Image>().sprite = AssetDatabase.LoadAssetAtPath<Sprite>(MenuKeyArtPath);
+                art.GetComponent<Image>().sprite = AssetDatabase.LoadAssetAtPath<Sprite>(MenuBackdropPath);
                 var fitter = art.GetComponent<AspectRatioFitter>() ?? art.gameObject.AddComponent<AspectRatioFitter>();
-                fitter.aspectMode = AspectRatioFitter.AspectMode.FitInParent;
-                fitter.aspectRatio = 1672f / 941f;
+                fitter.aspectMode = AspectRatioFitter.AspectMode.EnvelopeParent;
+                fitter.aspectRatio = ArtWidth / ArtHeight;
+
+                RemoveChild(root, "HomePanelFrame");
+                var frame = new GameObject("HomePanelFrame", typeof(RectTransform), typeof(AspectRatioFitter))
+                    .GetComponent<RectTransform>();
+                frame.SetParent(art.parent, false);
+                frame.SetSiblingIndex(art.GetSiblingIndex() + 1);
+                frame.anchorMin = Vector2.zero;
+                frame.anchorMax = Vector2.one;
+                frame.offsetMin = frame.offsetMax = Vector2.zero;
+                var frameFit = frame.GetComponent<AspectRatioFitter>();
+                frameFit.aspectMode = AspectRatioFitter.AspectMode.FitInParent;
+                frameFit.aspectRatio = ArtWidth / ArtHeight;
+
+                var panel = new GameObject("HomePanelArt", typeof(RectTransform), typeof(CanvasRenderer), typeof(Image));
+                var panelRect = panel.GetComponent<RectTransform>();
+                panelRect.SetParent(frame, false);
+                panelRect.anchorMin = new Vector2(PanelLeft / ArtWidth, 1f - PanelBottom / ArtHeight);
+                panelRect.anchorMax = new Vector2(PanelRight / ArtWidth, 1f - PanelTop / ArtHeight);
+                panelRect.offsetMin = panelRect.offsetMax = Vector2.zero;
+                var panelImage = panel.GetComponent<Image>();
+                panelImage.sprite = AssetDatabase.LoadAssetAtPath<Sprite>(MenuPanelPath);
+                panelImage.raycastTarget = false;
+
                 HomePresentationBuilder.Rebuild(screen);
                 RemoveChild(screen.transform, "HomeLogo");
                 RemoveChild(screen.transform, "HomeTitle");
