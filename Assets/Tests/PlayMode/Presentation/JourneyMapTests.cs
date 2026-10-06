@@ -93,6 +93,27 @@ namespace KMA.Tests.Presentation
             Assert.That(screen.LessonList.transform.Find("Lesson1").GetComponent<Button>().interactable, Is.True);
         }
 
+        [UnityTest]
+        public IEnumerator OutOfLivesContinueButtonUsesTheReadableDisabledTokens()
+        {
+            var session = new GameSession();
+            Play(session, "sprint_learn", true);
+            Play(session, "sprint_practice", true);
+            session.Journey.SetAttemptsRemaining(0);
+            MapPresentationBuilder.Build(screen, session);
+            screen.RefreshJourney(session);
+            yield return null;
+
+            Transform continueButton = screen.LessonList.transform.Find("ContinueCheckpoint");
+            Assert.That(continueButton.gameObject.activeSelf, Is.True);
+            Assert.That(continueButton.GetComponent<Button>().interactable, Is.False);
+            Assert.That(continueButton.GetComponent<Image>().color, Is.EqualTo(KMA.UI.Kit.MinigameUiTheme.DisabledSurface));
+            Assert.That(continueButton.Find("Label").GetComponent<TMP_Text>().color,
+                Is.EqualTo(KMA.UI.Kit.MinigameUiTheme.DisabledText));
+            CanvasGroup group = continueButton.GetComponent<CanvasGroup>();
+            Assert.That(group == null || group.alpha == 1f, Is.True, "disabled buttons must not fade into the panel");
+        }
+
         [Test]
         public void CompletedCourseShowsSummaryAndLessonReplayUsesFreePlay()
         {

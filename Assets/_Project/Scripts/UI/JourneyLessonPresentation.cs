@@ -200,7 +200,10 @@ namespace KMA.Gameplay.UI
             label.text = VietText.Fix(text);
             label.alignment = TextAlignmentOptions.Center;
             Anchor(label.rectTransform, new Vector2(.02f, 0f), new Vector2(.98f, 1f));
-            image.gameObject.AddComponent<KitPressFeedback>().Configure(image, image.rectTransform);
+            var feedback = image.gameObject.AddComponent<KitPressFeedback>();
+            feedback.Configure(image, image.rectTransform);
+            // Bound so a disabled button paints DisabledText on DisabledSurface, not navy on grey.
+            feedback.BindLabel(label);
             return button;
         }
 

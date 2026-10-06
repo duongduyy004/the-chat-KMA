@@ -23,7 +23,6 @@ namespace KMA.UI.Kit
         public const float BorderHint = .75f;
         public const float BorderActive = 1f;
         public const float BorderDisabled = .15f;
-        public const float DisabledAlpha = .45f;
 
         public const float Display = 160f;
         public const float Title = 54f;
