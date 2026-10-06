@@ -13,13 +13,13 @@ namespace KMA.Gameplay.UI
         static Sprite disc;
         static readonly Dictionary<(float, float, int, int, bool), Sprite> SlantSprites = new Dictionary<(float, float, int, int, bool), Sprite>();
 
-        // The panel, title and button faces are painted into the menu key art (Art/UI/MenuKeyArt.png),
+        // The panel, title and button faces are painted into the menu key art (Art/UI/MenuKeyArtPanel.png),
         // so the real buttons are invisible hit areas laid over the painted ones. The button captions are
         // kept as clear labels so the buttons still read as "CHƠI MỚI", "TIẾP TỤC", ... to tests and tools.
         const float ArtWidth = 1672f;
         const float ArtHeight = 941f;
-        const float ButtonLeft = 107f;
-        const float ButtonRight = 575f;
+        const float ButtonLeft = 102f;
+        const float ButtonRight = 592f;
 
         public static void Build(MainMenuScreen screen)
         {
@@ -35,10 +35,10 @@ namespace KMA.Gameplay.UI
             if (oldLogo != null) oldLogo.gameObject.SetActive(false);
             var oldTitle = screen.transform.Find("HomeTitle");
             if (oldTitle != null) oldTitle.gameObject.SetActive(false);
-            HitArea(screen, layout, "NEW GAMEButton", "CHƠI MỚI", 432f, 513f);
-            HitArea(screen, layout, "CONTINUEButton", "TIẾP TỤC", 537f, 617f);
-            HitArea(screen, layout, "SETTINGSButton", "CÀI ĐẶT", 641f, 720f);
-            HitArea(screen, layout, "QUITButton", "THOÁT", 745f, 823f);
+            HitArea(screen, layout, "NEW GAMEButton", "CHƠI MỚI", 426f, 530f);
+            HitArea(screen, layout, "CONTINUEButton", "TIẾP TỤC", 532f, 634f);
+            HitArea(screen, layout, "SETTINGSButton", "CÀI ĐẶT", 636f, 738f);
+            HitArea(screen, layout, "QUITButton", "THOÁT", 740f, 842f);
         }
 
         /// Drops an earlier menu layout (keeping the scene's buttons) so authoring can rebuild it.

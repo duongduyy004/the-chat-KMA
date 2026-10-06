@@ -53,9 +53,9 @@ namespace KMA.EditorTools
 
         const string MenuBackdropPath = "Assets/_Project/Art/UI/MenuKeyArtBackdrop.png";
         const string MenuPanelPath = "Assets/_Project/Art/UI/MenuKeyArtPanel.png";
-        // Pixel box of the panel cut-out inside the 1672 x 941 key art (see tools/split-menu-key-art.py).
+        // Pixel box of the panel overlay on the 1672 x 941 canvas (menu asset pack layout.json).
         const float ArtWidth = 1672f, ArtHeight = 941f;
-        const float PanelLeft = 50f, PanelTop = 40f, PanelRight = 646f, PanelBottom = 892f;
+        const float PanelLeft = 48f, PanelTop = 43f, PanelRight = 650f, PanelBottom = 890f;
 
         /// The menu is a full-bleed scenery backdrop plus the painted panel (title and buttons) as its own
         /// sprite. The panel is fitted inside the screen, so it stays compact on wide phones while the
