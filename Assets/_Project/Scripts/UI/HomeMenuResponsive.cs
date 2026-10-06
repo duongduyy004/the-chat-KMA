@@ -19,7 +19,7 @@ namespace KMA.Gameplay.UI
         void LateUpdate() => Resize();
 
         public static float ScaleFor(Vector2 viewport) => Mathf.Min(HomeMenuStyle.MenuScale,
-            viewport.y / 650f, viewport.x * .45f / HomeMenuStyle.PanelWidth);
+            viewport.y / 700f, viewport.x * .45f / HomeMenuStyle.PanelWidth);
 
         void Resize()
         {

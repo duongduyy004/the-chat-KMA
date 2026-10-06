@@ -13,14 +13,18 @@ namespace KMA.Gameplay.UI
         public static Color Grass => UITheme.Shared.Menu.grass;
         public static Color White => UITheme.Shared.Card;
         public static Color Glass => KMA.UI.Kit.MinigameUiTheme.WithAlpha(Navy, 190f / 255f);
+        public static readonly Color Cream = new Color32(251, 246, 232, 255);
+        public static readonly Color Coral = new Color32(240, 98, 78, 255);
+        public static readonly Color CreamDisabled = new Color32(226, 222, 210, 255);
         public const float BadgeSize = 132f;
+        public const float TitleSize = 66f;
         public const float TitleTopSize = 48f;
         public const float TitleKmaSize = 94f;
-        public const float PanelWidth = 560f;
-        public const float PanelHeight = 700f;
-        public const float MenuScale = 1.7f;
-        public const float ButtonWidth = 320f;
-        public const float ButtonHeight = 56f;
-        public const float ButtonStep = 70f;
+        public const float PanelWidth = 500f;
+        public const float PanelHeight = 640f;
+        public const float MenuScale = 1.4f;
+        public const float ButtonWidth = 424f;
+        public const float ButtonHeight = 66f;
+        public const float ButtonStep = 82f;
     }
 }
