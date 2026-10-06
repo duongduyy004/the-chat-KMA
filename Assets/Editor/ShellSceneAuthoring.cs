@@ -39,7 +39,13 @@ namespace KMA.EditorTools
                 properties.ApplyModifiedPropertiesWithoutUndo();
                 view.GetComponent<CanvasGroup>().alpha = 1f;
             });
-            AuthorMenu();
+            Author("Menu", scene =>
+            {
+                var screen = Require<MainMenuScreen>(scene);
+                HomePresentationBuilder.Build(screen);
+                RemoveChild(screen.transform, "HomeLogo");
+                RemoveChild(screen.transform, "HomeTitle");
+            });
             ApplyMap();
             Author("GameOver", scene =>
             {
@@ -49,20 +55,6 @@ namespace KMA.EditorTools
             });
             AssetDatabase.SaveAssets();
             Debug.Log("[KMA] Authored Bootstrap, Menu, Map, and GameOver scene UI.");
-        }
-
-        [MenuItem("KMA/Presentation/Author Menu Scene")]
-        public static void AuthorMenu()
-        {
-            Author("Menu", scene =>
-            {
-                var screen = Require<MainMenuScreen>(scene);
-                HomePresentationBuilder.Rebuild(screen);
-                HomePresentationBuilder.BuildRunners(screen,
-                    CharacterArt.Load(CharacterArt.Hero, "run1"), CharacterArt.Load(CharacterArt.Boss, "run1"));
-                RemoveChild(screen.transform, "HomeLogo");
-                RemoveChild(screen.transform, "HomeTitle");
-            });
         }
 
         [MenuItem("KMA/Presentation/Author Map Lesson Journey")]

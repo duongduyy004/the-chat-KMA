@@ -23,7 +23,6 @@ namespace KMA.Gameplay.UI
         bool focused;
         bool pressed;
         [SerializeField] bool primary;
-        [SerializeField] bool card;
         TMP_Text[] labels;
 
         public Kind ButtonKind => kind;
@@ -48,20 +47,17 @@ namespace KMA.Gameplay.UI
             Apply();
         }
 
-        // Card buttons are cream with a navy border, the primary one gold; no slant or icon.
-        public void UseCardStyle() { card = true; Apply(); }
-
         public void SetPrimary(bool value)
         {
             primary = value;
             if (labels != null)
                 foreach (var label in labels)
                 {
-                    label.fontSize = card ? 30f : primary ? 23f : 22f;
+                    label.fontSize = primary ? 23f : 22f;
                     if (label.enableAutoSizing)
                     {
                         label.fontSizeMax = label.fontSize;
-                        label.fontSizeMin = Mathf.Min(label.fontSizeMin, card ? 22f : 18f);
+                        label.fontSizeMin = Mathf.Min(label.fontSizeMin, 18f);
                     }
                 }
             Apply();
@@ -79,18 +75,6 @@ namespace KMA.Gameplay.UI
             if (button == null || border == null || fill == null) return;
             bool enabled = button.interactable;
             bool active = enabled && (hovered || focused);
-            if (card)
-            {
-                border.color = !enabled ? UITheme.Shared.Menu.disabledBorder : HomeMenuStyle.Navy;
-                fill.color = !enabled ? HomeMenuStyle.CreamDisabled :
-                    primary ? (active ? HomeMenuStyle.GoldLight : HomeMenuStyle.Gold) :
-                    (active ? new Color32(255, 236, 170, 255) : HomeMenuStyle.Cream);
-                rect.anchoredPosition = restingPosition + (active ? new Vector2(6f, 0f) : Vector2.zero);
-                rect.localScale = Vector3.one * (pressed && enabled ? UITheme.Shared.Menu.pressScale : 1f);
-                foreach (var label in labels)
-                    label.color = enabled ? HomeMenuStyle.Navy : new Color32(120, 126, 138, 255);
-                return;
-            }
             border.color = !enabled ? UITheme.Shared.Menu.disabledBorder :
                 active ? HomeMenuStyle.Gold : HomeMenuStyle.White;
             fill.color = !enabled ? UITheme.Shared.Menu.disabledFill :
