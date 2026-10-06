@@ -153,6 +153,9 @@ namespace KMA.Gameplay.UI
             public Color gold = new Color32(255, 201, 40, 255);
             public Color goldLight = new Color32(255, 224, 102, 255);
             public Color goldDark = new Color32(255, 180, 0, 255);
+            public Color disabledBorder = new Color(1f, 1f, 1f, .24f);
+            public Color disabledFill = new Color(.04f, .13f, .22f, .34f);
+            public Color disabledText = new Color(1f, 1f, 1f, .42f);
             public Color red = new Color32(226, 85, 61, 255);
             public Color grass = new Color32(107, 164, 58, 255);
             [Range(-45f, 45f)] public float titleAngle = -8f;

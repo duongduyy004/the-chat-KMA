@@ -236,42 +236,24 @@ namespace KMA.Gameplay.Shell
             AddLabel(card.transform, "Message", "Tiến độ hiện tại sẽ được thay thế.\nBạn có chắc muốn tiếp tục?",
                 new Vector2(0f, 25f), 22, new Color32(62, 79, 96, 255));
             AddButton(card.transform, "XÁC NHẬN", new Vector2(-145f, -105f), mainMenu.ConfirmNewGame,
-                new Color32(255, 89, 94, 255));
+                ButtonVariant.Danger);
             AddButton(card.transform, "QUAY LẠI", new Vector2(145f, -105f), () =>
             {
                 mainMenu.CancelNewGame();
                 confirmationRoot.SetActive(false);
-            }, new Color32(25, 130, 196, 255));
+            }, ButtonVariant.Secondary);
             confirmationRoot.SetActive(false);
         }
 
         static Button AddButton(Transform parent, string label, Vector2 position,
-            UnityEngine.Events.UnityAction action, Color color)
+            UnityEngine.Events.UnityAction action, ButtonVariant variant)
         {
-            var root = new GameObject(label + "Button");
-            root.transform.SetParent(parent, false);
-            var rect = root.AddComponent<RectTransform>();
-            rect.sizeDelta = new Vector2(250f, 76f);
+            ButtonHandle handle = UiKit.Button(parent, label + "Button", label, variant);
+            var rect = (RectTransform)handle.Button.transform;
+            rect.sizeDelta = new Vector2(250f, MinigameUiTheme.ButtonHeight);
             rect.anchoredPosition = position;
-            root.AddComponent<Image>().color = color;
-            Outline outline = root.AddComponent<Outline>();
-            outline.effectColor = new Color32(3, 18, 33, 255);
-            outline.effectDistance = new Vector2(3f, -3f);
-            var button = root.AddComponent<Button>();
-            button.onClick.AddListener(action);
-            var textObject = new GameObject("Label");
-            textObject.transform.SetParent(root.transform, false);
-            var labelRect = textObject.AddComponent<RectTransform>();
-            labelRect.anchorMin = Vector2.zero;
-            labelRect.anchorMax = Vector2.one;
-            labelRect.offsetMin = Vector2.zero;
-            labelRect.offsetMax = Vector2.zero;
-            var text = textObject.AddComponent<TextMeshProUGUI>();
-            text.text = VietText.Fix(label);
-            text.alignment = TextAlignmentOptions.Center;
-            UiKit.StyleLabel(text, 22, Color.white);
-            UiKit.FitLabel(text, 32f);
-            return button;
+            handle.Button.onClick.AddListener(action);
+            return handle.Button;
         }
 
         static TMP_Text AddLabel(Transform parent, string name, string value, Vector2 position,

@@ -212,6 +212,11 @@ namespace KMA.UI.Kit
             Stretch(fill.rectTransform, Vector2.one * MinigameUiTheme.BorderWidth, -Vector2.one * MinigameUiTheme.BorderWidth);
 
             TMP_Text label = root.GetComponentInChildren<TMP_Text>(true);
+            if (label == null && text != null)
+            {
+                label = Label(root.transform, "Label", text, MinigameUiTheme.Body, MinigameUiTheme.TextPrimary);
+                Stretch(label.rectTransform, new Vector2(MinigameUiTheme.SpaceSm, 0f), new Vector2(-MinigameUiTheme.SpaceSm, 0f));
+            }
             if (label != null)
             {
                 StyleLabel(label, MinigameUiTheme.Body, MinigameUiTheme.TextPrimary);

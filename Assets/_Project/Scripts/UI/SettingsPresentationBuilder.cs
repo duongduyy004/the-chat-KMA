@@ -1,3 +1,4 @@
+using KMA.UI.Kit;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
@@ -47,16 +48,9 @@ namespace KMA.Gameplay.UI
                 Color.white, VietFontRole.Hud, Center);
 
             var backRect = Rect(panel, "BackButton", new Vector2(.26f, .075f), new Vector2(.74f, .18f));
-            var backImage = backRect.gameObject.AddComponent<Image>();
-            backImage.color = screen.Theme.Background;
             var back = backRect.gameObject.AddComponent<Button>();
-            back.targetGraphic = backImage;
-            var colors = back.colors;
-            colors.fadeDuration = UITheme.Shared.Motion.buttonFade;
-            back.colors = colors;
             back.onClick.AddListener(screen.Back);
-            Label(backRect, "Label", "QUAY LẠI", Vector2.zero, Vector2.one, LabelSize, Color.white,
-                VietFontRole.ButtonSecondary, Center);
+            UiKit.StyleButton(back, ButtonVariant.Secondary, "QUAY LẠI");
             Label(panel, "Hint", "Thay đổi được lưu tự động", new Vector2(.08f, .015f), new Vector2(.92f, .065f), HintSize,
                 UITheme.Shared.SettingsHint, VietFontRole.Body, Center);
             screen.BindControls(music, sfx, toggle, musicValue, sfxValue, vibrationValue);

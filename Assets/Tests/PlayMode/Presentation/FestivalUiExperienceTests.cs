@@ -94,8 +94,11 @@ namespace KMA.Tests.Presentation
             Assert.That(settings.CurrentSettings.musicVol, Is.EqualTo(.25f));
             Assert.That(settings.CurrentSettings.sfxVol, Is.EqualTo(.5f));
             Assert.That(settings.CurrentSettings.vibration, Is.False);
-            settings.GetComponentsInChildren<Button>().Single(button => button.name == "BackButton")
-                .onClick.Invoke();
+            Button settingsBack = settings.GetComponentsInChildren<Button>().Single(button => button.name == "BackButton");
+            Assert.That(settingsBack.GetComponent<KMA.UI.Kit.KitPressFeedback>(), Is.Not.Null);
+            Assert.That(settingsBack.GetComponent<Image>().sprite, Is.Not.Null);
+            Assert.That(settingsBack.GetComponentInChildren<TMP_Text>().text, Is.Not.Empty, "back keeps its caption");
+            settingsBack.onClick.Invoke();
             Assert.That(menu.IsVisible, Is.True);
             Assert.That(settings.gameObject.activeInHierarchy, Is.False);
         }
@@ -112,7 +115,10 @@ namespace KMA.Tests.Presentation
 
             Transform root = GameObject.Find("S5MapPresentation")?.transform;
             Assert.That(root, Is.Not.Null);
-            Assert.That(root.Find("Content/Header/BackButton"), Is.Not.Null);
+            Transform mapBack = root.Find("Content/Header/BackButton");
+            Assert.That(mapBack, Is.Not.Null);
+            Assert.That(mapBack.GetComponent<KMA.UI.Kit.KitPressFeedback>(), Is.Not.Null);
+            Assert.That(mapBack.GetComponentInChildren<TMP_Text>().text, Is.Not.Empty, "back arrow keeps its glyph");
             RectTransform header = root.Find("Content/Header").GetComponent<RectTransform>();
             Assert.That(header.rect.height, Is.InRange(76f, 92f));
 

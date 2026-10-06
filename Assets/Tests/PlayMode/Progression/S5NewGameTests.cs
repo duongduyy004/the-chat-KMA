@@ -94,6 +94,21 @@ namespace KMA.Tests.Gameplay.Progression
         }
 
         [Test]
+        public void ConfirmDialogButtonsUseTheKitStyle()
+        {
+            CreateShellMenu();
+            Button confirm = Object.FindObjectsByType<Button>(FindObjectsInactive.Include, FindObjectsSortMode.None)
+                .Single(button => button.name == "XÁC NHẬNButton");
+            Button back = Object.FindObjectsByType<Button>(FindObjectsInactive.Include, FindObjectsSortMode.None)
+                .Single(button => button.name == "QUAY LẠIButton");
+            foreach (Button button in new[] { confirm, back })
+            {
+                Assert.That(button.GetComponent<KMA.UI.Kit.KitPressFeedback>(), Is.Not.Null, button.name);
+                Assert.That(button.GetComponent<Image>().sprite, Is.Not.Null, button.name);
+            }
+        }
+
+        [Test]
         public void MapNode_ReportsReadyCompletedAndUnavailableStates()
         {
             var node = new GameObject("MapNode").AddComponent<MapNodeView>();

@@ -75,19 +75,19 @@ namespace KMA.Gameplay.UI
             if (button == null || border == null || fill == null) return;
             bool enabled = button.interactable;
             bool active = enabled && (hovered || focused);
-            border.color = !enabled ? new Color(1f, 1f, 1f, .24f) :
+            border.color = !enabled ? UITheme.Shared.Menu.disabledBorder :
                 active ? HomeMenuStyle.Gold : HomeMenuStyle.White;
-            fill.color = !enabled ? new Color(.04f, .13f, .22f, .34f) :
+            fill.color = !enabled ? UITheme.Shared.Menu.disabledFill :
                 kind == Kind.Exit ? new Color(0f, 0f, 0f, 0f) :
                 primary ? HomeMenuStyle.Red : HomeMenuStyle.Glass;
             rect.anchoredPosition = restingPosition + (active ? new Vector2(8f, 0f) : Vector2.zero);
             rect.localScale = Vector3.one * (pressed && enabled ? UITheme.Shared.Menu.pressScale : 1f);
             if (arrow != null) arrow.gameObject.SetActive(active);
             if (icon != null) icon.color = enabled ? HomeMenuStyle.White :
-                new Color(1f, 1f, 1f, .42f);
+                UITheme.Shared.Menu.disabledText;
             foreach (var label in labels)
                 if (label != arrow) label.color = enabled ? HomeMenuStyle.White :
-                    new Color(1f, 1f, 1f, .42f);
+                    UITheme.Shared.Menu.disabledText;
         }
 
         public void OnPointerEnter(PointerEventData eventData)

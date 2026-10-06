@@ -432,16 +432,10 @@ namespace KMA.Gameplay.UI
 
         Button MakeSkip()
         {
-            Image plate = UiKit.Shape(overlay, "BỎ QUA", 32f, MinigameUiTheme.WithAlpha(HomeMenuStyle.Navy, .85f));
-            plate.raycastTarget = true;
-            UiKit.Place(plate.rectTransform, Vector2.one, Vector2.one, new Vector2(-58f, -43f), new Vector2(220f, 64f));
-            Outline outline = plate.gameObject.AddComponent<Outline>();
-            outline.effectColor = HomeMenuStyle.Gold;
-            outline.effectDistance = new Vector2(2f, -2f);
-            TMP_Text label = MakeText(plate.rectTransform, "Label", 24f, HomeMenuStyle.White, TextAlignmentOptions.Center);
-            UiKit.Stretch(label.rectTransform);
-            label.text = VietText.Fix("BỎ QUA »");
-            return plate.gameObject.AddComponent<Button>();
+            ButtonHandle handle = UiKit.Button(overlay, "BỎ QUA", "BỎ QUA »", ButtonVariant.Secondary);
+            UiKit.Place((RectTransform)handle.Button.transform, Vector2.one, Vector2.one, new Vector2(-58f, -43f),
+                new Vector2(240f, MinigameUiTheme.ButtonHeight));
+            return handle.Button;
         }
 
         static TMP_Text MakeText(Transform parent, string name, float fontSize, Color color, TextAlignmentOptions alignment)

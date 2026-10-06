@@ -279,19 +279,12 @@ namespace KMA.Gameplay.UI
         static Button HeaderButton(Transform parent, string name, string label, Color border)
         {
             RectTransform root = Rect(parent, name);
-            Image image = root.gameObject.AddComponent<Image>();
-            image.color = UITheme.Shared.TextPrimary;
-            UseRoundedSurface(image);
-            Outline outline = root.gameObject.AddComponent<Outline>();
-            outline.effectColor = border;
-            outline.effectDistance = new Vector2(UITheme.Shared.BorderWidth * .5f, -UITheme.Shared.BorderWidth * .5f);
             Button button = root.gameObject.AddComponent<Button>();
-            button.targetGraphic = image;
-            button.colors = ButtonColors();
             LayoutElement element = root.gameObject.AddComponent<LayoutElement>();
+            // The 96px header row cannot hold a full ButtonHeight plate, so the back arrow stays 60x60.
             element.preferredWidth = 60f;
             element.preferredHeight = 60f;
-            TextTmp(root, "Label", label, 40, UITheme.Shared.Surface, TextAnchor.MiddleCenter);
+            UiKit.StyleButton(button, ButtonVariant.Secondary, label);
             return button;
         }
 

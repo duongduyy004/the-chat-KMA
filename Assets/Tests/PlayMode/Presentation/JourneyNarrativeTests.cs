@@ -49,6 +49,8 @@ namespace KMA.Tests.Presentation
             allowSave = false;
             yield return null;
             Button skip = Find<Button>("BỎ QUA");
+            Assert.That(skip.GetComponent<KMA.UI.Kit.KitPressFeedback>(), Is.Not.Null);
+            Assert.That(skip.GetComponent<Image>().sprite, Is.Not.Null);
             skip.onClick.Invoke();
             Assert.That(presenter.IsShowing, Is.True);
             Assert.That(savedKey, Is.EqualTo("opening"));
