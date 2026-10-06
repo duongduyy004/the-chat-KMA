@@ -11,6 +11,10 @@ namespace KMA.Gameplay.Volleyball
         public const float OpponentBlockX = .6f;
         public const float TipApexHeight = 3f;
         public const float LobApexHeight = 5f;
+        // Loopier than the player's smash so a diving player has time to reach it.
+        public const float OpponentSmashRise = .8f;
+        // The player's wider reach is an assist; the AI keeps the original one metre.
+        public const float OpponentReach = 1f;
         public static readonly Vector2 WeakReceiveTarget = new Vector2(-5f, 0f);
         const float ReboundRise = .3f;
         const float ReboundDepth = 2.5f;
@@ -53,7 +57,7 @@ namespace KMA.Gameplay.Volleyball
                 return;
 
             opponentResolvedFlight = Flight;
-            if (Vector2.Distance(Opponent.Position, contact) > ActionResolver.Reach)
+            if (Vector2.Distance(Opponent.Position, contact) > OpponentReach)
             {
                 OpponentSmashTell = false;
                 return;
@@ -142,7 +146,7 @@ namespace KMA.Gameplay.Volleyball
                 new ActionDecision(smashing ? ActionKind.Smash : ActionKind.Receive, TimingGrade.Miss, 0f),
                 touchesBefore);
             Rally.RegisterTouch(CourtSide.Opponent, true);
-            float apex = smashing ? BallHeight + SmashRise : step.Attack == AttackKind.Tip ? TipApexHeight : LobApexHeight;
+            float apex = smashing ? BallHeight + OpponentSmashRise : step.Attack == AttackKind.Tip ? TipApexHeight : LobApexHeight;
             Launch(target, apex, CourtSide.Opponent);
         }
 

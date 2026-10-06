@@ -11,6 +11,8 @@ namespace KMA.Gameplay.Volleyball
         public const float HeldBallSideOffset = .8f;
         public const float MinShadowScale = .6f;
         public const float ShadowFullHeight = 5f;
+        public static readonly Color MarkerOutOfReachColor = new Color(1f, .9f, .2f, .85f);
+        public static readonly Color MarkerInReachColor = new Color(.3f, 1f, .4f, .9f);
         const float MarkerLeadSeconds = .6f;
         const float MarkerGrowth = 1.5f;
 
@@ -65,11 +67,16 @@ namespace KMA.Gameplay.Volleyball
 
             if (contactMarker)
             {
-                bool cue = match.TryGetPlayerContactCue(out float secondsToIdeal);
+                // The ring marks where to stand, not where the ball is now, and turns green
+                // once the player is close enough to play it.
+                bool cue = match.TryGetPlayerContactCue(out float secondsToIdeal, out Vector2 contactPoint);
                 contactMarker.enabled = cue;
                 if (cue)
                 {
-                    contactMarker.transform.position = shadowPosition;
+                    contactMarker.transform.position = CourtSpace.ToWorld(contactPoint, 0f);
+                    contactMarker.color = match.PlayerInReachOf(contactPoint)
+                        ? MarkerInReachColor
+                        : MarkerOutOfReachColor;
                     contactMarker.transform.localScale = Vector3.one * MarkerScaleFor(secondsToIdeal);
                     contactMarker.sortingOrder = MarkerSortingOrder;
                 }

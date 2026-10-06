@@ -38,7 +38,6 @@ namespace KMA.EditorTools
         static readonly Color LineColor = new Color32(0xff, 0xfb, 0xea, 0xff);
         const float SkylineHeight = 2.1f;
         static readonly Color ShadowTint = new Color(1f, 1f, 1f, .8f);
-        static readonly Color ContactTint = new Color(1f, .9f, .2f, .85f);
         static readonly Color AimTint = new Color(1f, .25f, .2f, .85f);
         static readonly Color BallInk = new Color32(10, 40, 61, 255);
 
@@ -214,7 +213,7 @@ namespace KMA.EditorTools
             SpriteRenderer shadow = Renderer("BallShadow", shadowSprite, Vector3.zero, VolleyBallView.ShadowSortingOrder);
             shadow.color = ShadowTint;
             SpriteRenderer contact = Renderer("ContactMarker", shadowSprite, Vector3.zero, VolleyBallView.MarkerSortingOrder);
-            contact.color = ContactTint;
+            contact.color = VolleyBallView.MarkerOutOfReachColor;
             SpriteRenderer aim = Renderer("AimMarker", shadowSprite, Vector3.zero, VolleyBallView.MarkerSortingOrder);
             aim.color = AimTint;
             var ballView = new GameObject("BallView").AddComponent<VolleyBallView>();

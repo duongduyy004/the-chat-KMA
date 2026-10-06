@@ -118,6 +118,31 @@ namespace KMA.Tests.Gameplay.Volleyball
         }
 
         [Test]
+        public void ContactMarkerSitsOnTheContactPointAndTurnsGreenInReach()
+        {
+            SpriteRenderer ball = Renderer("Ball"), shadow = Renderer("Shadow"),
+                contact = Renderer("Contact"), aim = Renderer("Aim");
+            var view = root.AddComponent<VolleyBallView>();
+            view.Configure(ball, shadow, contact, aim);
+            var match = new VolleyballMatch(null, new OpponentTuning(0f, .25f));
+            match.ForceServerForTest(CourtSide.Opponent);
+            while (match.BallState != BallState.InPlay)
+                match.Tick(1f / 60f);
+            match.Tick(.1f);
+
+            Assert.That(match.TryGetPlayerContactCue(out _, out Vector2 point), Is.True);
+            match.Player.PlaceAt(point + new Vector2(0f, 3f));
+            view.Render(match);
+            Assert.That(contact.enabled, Is.True);
+            Assert.That(Vector3.Distance(contact.transform.position, CourtSpace.ToWorld(point, 0f)), Is.LessThan(1e-4f));
+            Assert.That(contact.color, Is.EqualTo(VolleyBallView.MarkerOutOfReachColor));
+
+            match.Player.PlaceAt(point);
+            view.Render(match);
+            Assert.That(contact.color, Is.EqualTo(VolleyBallView.MarkerInReachColor));
+        }
+
+        [Test]
         public void HeldBallSitsBesideTheServerTowardsTheNet()
         {
             SpriteRenderer ball = Renderer("Ball"), shadow = Renderer("Shadow");

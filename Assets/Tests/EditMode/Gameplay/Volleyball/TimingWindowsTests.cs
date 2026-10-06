@@ -6,16 +6,23 @@ namespace KMA.Tests.Gameplay.Volleyball
     public sealed class TimingWindowsTests
     {
         [TestCase(0f, TimingGrade.Perfect)]
-        [TestCase(.08f, TimingGrade.Perfect)]
-        [TestCase(-.08f, TimingGrade.Perfect)]
-        [TestCase(.081f, TimingGrade.Good)]
-        [TestCase(-.18f, TimingGrade.Good)]
-        [TestCase(.181f, TimingGrade.Late)]
-        [TestCase(-.3f, TimingGrade.Late)]
-        [TestCase(.301f, TimingGrade.Miss)]
+        [TestCase(.1f, TimingGrade.Perfect)]
+        [TestCase(-.1f, TimingGrade.Perfect)]
+        [TestCase(.101f, TimingGrade.Good)]
+        [TestCase(-.24f, TimingGrade.Good)]
+        [TestCase(.241f, TimingGrade.Late)]
+        [TestCase(-.4f, TimingGrade.Late)]
+        [TestCase(.401f, TimingGrade.Miss)]
         public void GradesByAbsoluteOffset(float offset, TimingGrade expected)
         {
             Assert.That(TimingWindows.Grade(offset), Is.EqualTo(expected));
+        }
+
+        [Test]
+        public void SmashKeepsTheNarrowerLateEdge()
+        {
+            Assert.That(TimingWindows.Grade(.35f), Is.EqualTo(TimingGrade.Late));
+            Assert.That(TimingWindows.Grade(.35f, lateWindow: TimingWindows.SmashLate), Is.EqualTo(TimingGrade.Miss));
         }
 
         [Test]

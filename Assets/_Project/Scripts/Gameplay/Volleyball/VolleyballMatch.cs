@@ -25,10 +25,12 @@ namespace KMA.Gameplay.Volleyball
         public const float TimeLimit = 120f;
         public const float PointPause = 1.2f;
         public const float OpponentServeDelay = 1f;
-        public const float PlayerSpeed = 5f;
+        public const float PlayerSpeed = 6.5f;
+        // The AI keeps its own base so a faster player doesn't also mean a faster opponent.
+        public const float OpponentBaseSpeed = 5f;
         public const float TossStartHeight = 1.2f;
         public const float TossApexHeight = 3.2f;
-        public const float SetApexHeight = 4f;
+        public const float SetApexHeight = 4.5f;
         public const float FreeBallApexHeight = 4.5f;
         public const float ReceiveSeconds = .35f;
         public const float SmashSeconds = .45f;
@@ -47,7 +49,7 @@ namespace KMA.Gameplay.Volleyball
         public static readonly Vector2 OpponentServeSpot = new Vector2(8.5f, 0f);
         public static readonly Vector2 PlayerReadySpot = new Vector2(-5f, 0f);
         public static readonly Vector2 OpponentReadySpot = new Vector2(5f, 0f);
-        public static readonly Vector2 PlayerSetSpot = new Vector2(-1.5f, 0f);
+        public static readonly Vector2 PlayerSetSpot = new Vector2(-2f, 0f);
         public static readonly Vector2 OpponentSetSpot = new Vector2(1.5f, 0f);
         static readonly Vector2 NormalServeTarget = new Vector2(5f, 0f);
         static readonly Vector2 FreeBallTarget = new Vector2(5f, 0f);
@@ -66,7 +68,7 @@ namespace KMA.Gameplay.Volleyball
             this.options = options ?? new VolleyballMatchOptions(PointsToWin, TimeLimit);
             Plan = plan ?? OpponentPlan.Authored();
             Player = new VolleyAthlete(CourtSide.Player, PlayerSpeed);
-            Opponent = new VolleyAthlete(CourtSide.Opponent, PlayerSpeed * this.tuning.SpeedFactor);
+            Opponent = new VolleyAthlete(CourtSide.Opponent, OpponentBaseSpeed * this.tuning.SpeedFactor);
             Server = this.options.OpponentAlwaysServes ? CourtSide.Opponent : CourtSide.Player;
             BeginPoint();
         }
@@ -217,9 +219,15 @@ namespace KMA.Gameplay.Volleyball
                 Complete();
         }
 
-        public bool TryGetPlayerContactCue(out float secondsToIdeal)
+        public bool TryGetPlayerContactCue(out float secondsToIdeal) =>
+            TryGetPlayerContactCue(out secondsToIdeal, out _);
+
+        // Where the player should stand and how long until the ideal press. The contact point is
+        // the ball's ground position at that ideal moment, so it stays still while the ball flies.
+        public bool TryGetPlayerContactCue(out float secondsToIdeal, out Vector2 contactPoint)
         {
             secondsToIdeal = 0f;
+            contactPoint = Vector2.zero;
             if (Flight == null)
                 return false;
 
@@ -233,9 +241,10 @@ namespace KMA.Gameplay.Volleyball
                 bool smash = Rally.Touches >= 1 &&
                              Mathf.Abs(Player.Position.x) <= ActionResolver.SmashNetDistance &&
                              Flight.ApexHeight > ActionResolver.SmashContactHeight;
-                ideal = Flight.TimeAtHeightDescending(smash
-                    ? ActionResolver.SmashContactHeight
-                    : ActionResolver.ReceiveContactHeight);
+                ideal = Flight.TimeAtHeightDescending(ActionResolver.SmashContactHeight);
+                // Past the smash's late edge the ball can still be played low as a receive.
+                if (!smash || FlightTime - ideal > TimingWindows.SmashLate)
+                    ideal = Flight.TimeAtHeightDescending(ActionResolver.ReceiveContactHeight);
             }
             else
             {
@@ -243,8 +252,12 @@ namespace KMA.Gameplay.Volleyball
             }
 
             secondsToIdeal = ideal - FlightTime;
+            contactPoint = Flight.GroundAt(ideal);
             return secondsToIdeal >= -TimingWindows.Late;
         }
+
+        public bool PlayerInReachOf(Vector2 contactPoint) =>
+            Vector2.Distance(Player.Position, contactPoint) <= ActionResolver.Reach;
 
         public MinigameResult BuildResult()
         {

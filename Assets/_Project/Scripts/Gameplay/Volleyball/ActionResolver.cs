@@ -72,13 +72,13 @@ namespace KMA.Gameplay.Volleyball
     // ground position at the ideal moment, so positioning and timing are judged separately.
     public static class ActionResolver
     {
-        public const float Reach = 1f;
+        public const float Reach = 1.5f;
         public const float ReceiveContactHeight = 1f;
         public const float SmashContactHeight = 2.6f;
         public const float SmashMinHeight = 2.2f;
-        public const float SmashNetDistance = 3f;
-        public const float DiveMinDistance = 1f;
-        public const float DiveMaxDistance = 2.2f;
+        public const float SmashNetDistance = 3.5f;
+        public const float DiveMinDistance = Reach;
+        public const float DiveMaxDistance = 2.8f;
         public const float BlockNetDistance = 1.2f;
         public const float BlockLateral = 1f;
 
@@ -132,7 +132,7 @@ namespace KMA.Gameplay.Volleyball
             {
                 float smashIdeal = flight.TimeAtHeightDescending(SmashContactHeight);
                 float smashOffset = time - smashIdeal;
-                TimingGrade smashGrade = TimingWindows.Grade(smashOffset);
+                TimingGrade smashGrade = TimingWindows.Grade(smashOffset, lateWindow: TimingWindows.SmashLate);
                 // The height gate confirms the set was high enough to smash at all, judged at the
                 // fixed ideal contact moment - not at the actual press time, which would otherwise
                 // penalize a late-but-still-within-window press on top of the timing grade.

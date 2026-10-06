@@ -63,7 +63,7 @@ namespace KMA.Tests.Gameplay.Volleyball
             var toss = new BallFlight(new Vector2(-8.5f, 0f), 1.2f, new Vector2(-8.5f, 0f), 3.2f, CourtSide.Player);
             var rally = new RallyState();
             rally.BeginServe(CourtSide.Player);
-            Assert.That(Resolve(PlayerAt(new Vector2(-8.5f, 0f)), BallState.Toss, toss, toss.ApexTime + .35f,
+            Assert.That(Resolve(PlayerAt(new Vector2(-8.5f, 0f)), BallState.Toss, toss, toss.ApexTime + .45f,
                 rally, CourtSide.Player).Kind, Is.EqualTo(ActionKind.None));
         }
 
@@ -85,9 +85,19 @@ namespace KMA.Tests.Gameplay.Volleyball
         {
             BallFlight serve = OpponentServe();
             float ideal = serve.TimeAtHeightDescending(ActionResolver.ReceiveContactHeight);
-            VolleyAthlete far = PlayerAt(serve.GroundAt(ideal) + new Vector2(0f, 1.5f));
+            VolleyAthlete far = PlayerAt(serve.GroundAt(ideal) + new Vector2(0f, 1.6f));
             Assert.That(Resolve(far, BallState.InPlay, serve, ideal, PlayerPossession(0)).Kind,
                 Is.EqualTo(ActionKind.None));
+        }
+
+        [Test]
+        public void ReceiveForgivesStandingUpToOneAndAHalfMetresOff()
+        {
+            BallFlight serve = OpponentServe();
+            float ideal = serve.TimeAtHeightDescending(ActionResolver.ReceiveContactHeight);
+            VolleyAthlete near = PlayerAt(serve.GroundAt(ideal) + new Vector2(0f, 1.45f));
+            Assert.That(Resolve(near, BallState.InPlay, serve, ideal, PlayerPossession(0)).Kind,
+                Is.EqualTo(ActionKind.Receive));
         }
 
         [Test]
@@ -95,7 +105,7 @@ namespace KMA.Tests.Gameplay.Volleyball
         {
             BallFlight serve = OpponentServe();
             float ideal = serve.TimeAtHeightDescending(ActionResolver.ReceiveContactHeight);
-            Assert.That(Resolve(PlayerAt(serve.GroundAt(ideal)), BallState.InPlay, serve, ideal + .35f,
+            Assert.That(Resolve(PlayerAt(serve.GroundAt(ideal)), BallState.InPlay, serve, ideal + .45f,
                 PlayerPossession(0)).Kind, Is.Not.EqualTo(ActionKind.Receive));
         }
 
@@ -104,7 +114,7 @@ namespace KMA.Tests.Gameplay.Volleyball
         {
             BallFlight serve = OpponentServe();
             float ideal = serve.TimeAtHeightDescending(ActionResolver.ReceiveContactHeight);
-            VolleyAthlete athlete = PlayerAt(serve.Target + new Vector2(0f, 1.6f));
+            VolleyAthlete athlete = PlayerAt(serve.Target + new Vector2(0f, 2f));
             ActionDecision d = Resolve(athlete, BallState.InPlay, serve, ideal + .05f, PlayerPossession(0));
             Assert.That(d.Kind, Is.EqualTo(ActionKind.Dive));
             Assert.That(d.Grade, Is.EqualTo(TimingGrade.Late));

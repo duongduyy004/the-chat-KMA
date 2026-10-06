@@ -125,7 +125,7 @@ namespace KMA.Tests.Gameplay.Volleyball
             ActionDecision receive = match.PressAction();
             Assert.That(receive.Kind, Is.EqualTo(ActionKind.Receive));
             Assert.That(receive.Grade, Is.EqualTo(TimingGrade.Perfect));
-            Assert.That(match.Flight.Target, Is.EqualTo(new Vector2(-1.5f, Mathf.Clamp(contact.y, -3f, 3f))));
+            Assert.That(match.Flight.Target, Is.EqualTo(new Vector2(VolleyballMatch.PlayerSetSpot.x, Mathf.Clamp(contact.y, -3f, 3f))));
             Assert.That(match.Rally.Touches, Is.EqualTo(1));
 
             float smashIdeal = match.Flight.TimeAtHeightDescending(ActionResolver.SmashContactHeight);
@@ -356,6 +356,58 @@ namespace KMA.Tests.Gameplay.Volleyball
             match.PressAction();
             Assert.That(match.TryGetPlayerContactCue(out float seconds), Is.True);
             Assert.That(seconds, Is.EqualTo(match.Flight.ApexTime).Within(1e-4f));
+        }
+
+        [Test]
+        public void ContactCueMarksWhereToStandNotWhereTheBallIsNow()
+        {
+            var match = FrozenOpponentMatch();
+            match.ForceServerForTest(CourtSide.Opponent);
+            Assert.That(MatchDriver.AdvanceUntil(match, () => match.BallState == BallState.InPlay, 3f), Is.True);
+            MatchDriver.Advance(match, .1f);
+
+            Assert.That(match.TryGetPlayerContactCue(out float seconds, out Vector2 contact), Is.True);
+            float ideal = match.Flight.TimeAtHeightDescending(ActionResolver.ReceiveContactHeight);
+            Assert.That(seconds, Is.EqualTo(ideal - match.FlightTime).Within(1e-4f));
+            Assert.That(Vector2.Distance(contact, match.Flight.GroundAt(ideal)), Is.LessThan(1e-4f));
+            Assert.That(Vector2.Distance(contact, match.BallGround), Is.GreaterThan(1f));
+
+            match.Player.PlaceAt(contact + new Vector2(0f, 3f));
+            Assert.That(match.PlayerInReachOf(contact), Is.False);
+            match.Player.PlaceAt(contact + new Vector2(0f, 1.4f));
+            Assert.That(match.PlayerInReachOf(contact), Is.True);
+        }
+
+        [Test]
+        public void OnceTheSmashWindowPassesTheCueFallsBackToTheReceive()
+        {
+            var match = FrozenOpponentMatch();
+            match.ForceServerForTest(CourtSide.Opponent);
+            Assert.That(MatchDriver.AdvanceUntil(match, () => match.BallState == BallState.InPlay, 3f), Is.True);
+            float receiveIdeal = match.Flight.TimeAtHeightDescending(ActionResolver.ReceiveContactHeight);
+            match.Player.PlaceAt(match.Flight.GroundAt(receiveIdeal));
+            MatchDriver.AdvanceToFlightTime(match, receiveIdeal);
+            Assert.That(match.PressAction().Kind, Is.EqualTo(ActionKind.Receive));
+
+            float smashIdeal = match.Flight.TimeAtHeightDescending(ActionResolver.SmashContactHeight);
+            receiveIdeal = match.Flight.TimeAtHeightDescending(ActionResolver.ReceiveContactHeight);
+            match.Player.PlaceAt(match.Flight.GroundAt(smashIdeal));
+            MatchDriver.AdvanceToFlightTime(match, smashIdeal);
+            Assert.That(match.TryGetPlayerContactCue(out float toSmash, out _), Is.True);
+            Assert.That(toSmash, Is.EqualTo(0f).Within(1e-3f));
+
+            MatchDriver.AdvanceToFlightTime(match, smashIdeal + TimingWindows.SmashLate + .01f);
+            Assert.That(match.TryGetPlayerContactCue(out float toReceive, out Vector2 point), Is.True);
+            Assert.That(toReceive, Is.EqualTo(receiveIdeal - match.FlightTime).Within(1e-3f));
+            Assert.That(Vector2.Distance(point, match.Flight.GroundAt(receiveIdeal)), Is.LessThan(1e-3f));
+        }
+
+        [Test]
+        public void PlayerOutrunsTheOpponent()
+        {
+            var match = new VolleyballMatch();
+            Assert.That(match.Player.Speed, Is.EqualTo(6.5f));
+            Assert.That(match.Opponent.Speed, Is.EqualTo(5f * OpponentTuning.Default.SpeedFactor).Within(1e-4f));
         }
 
         [Test]
