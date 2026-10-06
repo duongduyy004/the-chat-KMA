@@ -22,6 +22,7 @@ namespace KMA.Gameplay.UI
                 SetStat(screen, "StatPassed", $"{current.SubjectsPassed}/{current.SubjectsTotal}");
                 SetStat(screen, "StatFailed", current.FailedVisits.ToString());
                 SetStat(screen, "StatScore", current.TotalScore.ToString());
+                ApplyBackground(screen, screen.transform.Find("GameOverVeil") as RectTransform);
                 return;
             }
             var stats = GameOverStats.From(session);
@@ -32,6 +33,7 @@ namespace KMA.Gameplay.UI
             // Opaque: nothing from a previous scene's HUD may show through behind the result.
             veilImage.color = HomeMenuStyle.Navy;
             veil.SetAsFirstSibling();
+            ApplyBackground(screen, veil);
 
             var layout = Rect(screen.transform, LayoutName);
             layout.anchorMin = layout.anchorMax = Center;
@@ -57,6 +59,30 @@ namespace KMA.Gameplay.UI
             Action(screen, layout, "RETRYButton", "CHƠI LẠI", -215f, HomeMenuButton.Kind.Continue, true);
             Action(screen, layout, "NEW GAMEButton", "CHƠI MỚI", -295f, HomeMenuButton.Kind.NewGame, false);
             Action(screen, layout, "MAIN MENUButton", "MENU CHÍNH", -375f, HomeMenuButton.Kind.Secondary, false);
+        }
+
+        // Idempotent: scenes authored before the illustration existed keep their baked layout and gain it here.
+        static void ApplyBackground(GameOverScreen screen, RectTransform veil)
+        {
+            if (screen.Background == null || veil == null || veil.Find("Illustration") != null) return;
+            RectTransform artRect = Rect(veil, "Illustration");
+            Rect area = ((RectTransform)screen.transform).rect;
+            if (area.width < 1f || area.height < 1f) area = new Rect(0f, 0f, 1920f, 1080f);
+            Sprite sprite = screen.Background;
+            Rect cover = CampusBackdropLayout.Cover(new Rect(-area.width * .5f, -area.height * .5f, area.width, area.height),
+                sprite.rect.width / sprite.rect.height);
+            artRect.anchorMin = artRect.anchorMax = new Vector2(.5f, .5f);
+            artRect.sizeDelta = cover.size;
+            artRect.anchoredPosition = cover.center;
+            Image art = artRect.gameObject.AddComponent<Image>();
+            art.sprite = sprite;
+            art.raycastTarget = false;
+
+            RectTransform washRect = Rect(veil, "Wash");
+            Stretch(washRect);
+            Image wash = washRect.gameObject.AddComponent<Image>();
+            wash.color = MinigameUiTheme.WithAlpha(UITheme.Shared.MapBackgroundTint, .78f);
+            wash.raycastTarget = false;
         }
 
         static void SetStat(GameOverScreen screen, string name, string value)

@@ -1,9 +1,14 @@
 using System;
+using UnityEngine;
 
 namespace KMA.Gameplay.UI
 {
     public sealed class GameOverScreen : ScreenBase
     {
+        [SerializeField] Sprite background;
+        public Sprite Background => background;
+        public void SetBackground(Sprite sprite) => background = sprite;
+
         public event Action RetryRequested;
         public event Action NewGameRequested;
         public event Action MenuRequested;

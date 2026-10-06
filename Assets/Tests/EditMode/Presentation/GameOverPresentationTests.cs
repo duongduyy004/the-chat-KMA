@@ -82,5 +82,39 @@ namespace KMA.Tests.Presentation
             var missing = GameOverStats.From(null);
             Assert.That(missing.SubjectsPassed, Is.EqualTo(0));
         }
+
+        [Test]
+        public void BackgroundAddsIllustrationAndWashAfterTheOpaqueVeil()
+        {
+            var tex = new Texture2D(40, 20);
+            var sprite = Sprite.Create(tex, new Rect(0, 0, 40, 20), new Vector2(.5f, .5f));
+            screen.SetBackground(sprite);
+            GameOverPresentationBuilder.Build(screen, new GameSession());
+
+            var veil = screen.transform.Find("GameOverVeil");
+            Assert.That(veil.GetComponent<Image>().color, Is.EqualTo(HomeMenuStyle.Navy));
+            var art = veil.Find("Illustration").GetComponent<Image>();
+            Assert.That(art.sprite, Is.SameAs(sprite));
+            Assert.That(art.rectTransform.sizeDelta.x / art.rectTransform.sizeDelta.y, Is.EqualTo(2f).Within(.01f));
+            var wash = veil.Find("Wash").GetComponent<Image>();
+            Assert.That(wash.color.a, Is.EqualTo(.78f).Within(.001f));
+            Assert.That(art.transform.GetSiblingIndex(), Is.LessThan(wash.transform.GetSiblingIndex()));
+            Object.DestroyImmediate(sprite); Object.DestroyImmediate(tex);
+        }
+
+        [Test]
+        public void BackgroundIsAddedOnceToAnAlreadyBuiltLayout()
+        {
+            GameOverPresentationBuilder.Build(screen, new GameSession());
+            var tex = new Texture2D(40, 20);
+            var sprite = Sprite.Create(tex, new Rect(0, 0, 40, 20), new Vector2(.5f, .5f));
+            screen.SetBackground(sprite);
+            GameOverPresentationBuilder.Build(screen, new GameSession());
+            GameOverPresentationBuilder.Build(screen, new GameSession());
+
+            var veil = screen.transform.Find("GameOverVeil");
+            Assert.That(veil.Cast<Transform>().Count(t => t.name == "Illustration"), Is.EqualTo(1));
+            Object.DestroyImmediate(sprite); Object.DestroyImmediate(tex);
+        }
     }
 }
