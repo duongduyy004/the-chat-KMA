@@ -6,6 +6,15 @@ namespace KMA.Gameplay
     /// Rect math for the shared campus backdrop, in any unit (world units or canvas pixels), y up.
     public static class CampusBackdropLayout
     {
+        /// Number of skyline tiles a backdrop currently shows: Refit activates Skyline0..n-1 and hides the rest.
+        public static int ActiveSkylineTiles(Transform root)
+        {
+            int count = 0;
+            for (Transform tile; (tile = root.Find("Skyline" + count)) != null && tile.gameObject.activeSelf;)
+                count++;
+            return count;
+        }
+
         /// The smallest rect with the sprite's aspect that covers the view, centred on it.
         public static Rect Cover(Rect view, float aspect)
         {

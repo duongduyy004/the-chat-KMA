@@ -3,7 +3,9 @@ using UnityEngine;
 namespace KMA.Gameplay
 {
     /// Draws the campus sky, skyline and optional ground behind a 2D scene and keeps them fitted to
-    /// an orthographic camera. Owns its child renderers; Refit reuses them.
+    /// an orthographic camera. Owns its child renderers; Refit reuses them. In Play Mode it refits
+    /// whenever the camera changes; in edit mode only Configure/Refit touch the scene, so opening
+    /// a scene never rewrites it to the Game view's current aspect.
     [ExecuteAlways]
     public sealed class CampusBackdropWorld : MonoBehaviour
     {
@@ -21,9 +23,10 @@ namespace KMA.Gameplay
         float fittedAspect, fittedSize;
         Vector3 fittedPosition;
 
-        public SpriteRenderer Sky => sky;
-        public SpriteRenderer Ground => ground;
-        public int SkylineTileCount { get; private set; }
+        // Looked up from the children when a loaded scene has not refitted yet (edit mode never refits on load).
+        public SpriteRenderer Sky => sky != null ? sky : sky = transform.Find("Sky")?.GetComponent<SpriteRenderer>();
+        public SpriteRenderer Ground => ground != null ? ground : ground = transform.Find("Ground")?.GetComponent<SpriteRenderer>();
+        public int SkylineTileCount => CampusBackdropLayout.ActiveSkylineTiles(transform);
 
         public void Configure(CampusBackdropArt backdropArt, Camera camera, float horizon, float height, bool withGround,
             Color? groundColor = null)
@@ -38,11 +41,15 @@ namespace KMA.Gameplay
             Refit();
         }
 
-        void OnEnable() => Refit();
+        void OnEnable()
+        {
+            if (Application.isPlaying)
+                Refit();
+        }
 
         void LateUpdate()
         {
-            if (targetCamera != null && (targetCamera.aspect != fittedAspect ||
+            if (Application.isPlaying && targetCamera != null && (targetCamera.aspect != fittedAspect ||
                 targetCamera.orthographicSize != fittedSize || targetCamera.transform.position != fittedPosition))
                 Refit();
         }
@@ -68,7 +75,6 @@ namespace KMA.Gameplay
                 Place(Child("Skyline" + i, art.Skyline, SkylineOrder), tiles[i]);
             for (int i = tiles.Length; transform.Find("Skyline" + i) != null; i++)
                 transform.Find("Skyline" + i).gameObject.SetActive(false);
-            SkylineTileCount = tiles.Length;
 
             ground = Child("Ground", art.Pixel, GroundOrder);
             ground.color = overrideGround ? groundOverride : art.GroundColor;

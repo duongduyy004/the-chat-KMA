@@ -117,6 +117,21 @@ namespace KMA.Tests.Gameplay.Common
             Assert.That(backdropObject.transform.childCount, Is.EqualTo(children));
         }
 
+        [Test]
+        public void EditModeReEnableDoesNotRefitOrRewriteTheCamera()
+        {
+            CampusBackdropWorld world = Build();
+            Vector3 skyScale = world.Sky.transform.localScale;
+            var camera = cameraObject.GetComponent<Camera>();
+            camera.orthographicSize = 8f;
+            camera.backgroundColor = Color.magenta;
+            backdropObject.SetActive(false);
+            backdropObject.SetActive(true);
+            Assert.That(world.Sky.transform.localScale, Is.EqualTo(skyScale),
+                "outside Play Mode only Configure/Refit may touch the scene");
+            Assert.That(camera.backgroundColor, Is.EqualTo(Color.magenta));
+        }
+
         Renderer[] SkylineTiles()
         {
             var tiles = new System.Collections.Generic.List<Renderer>();

@@ -77,6 +77,19 @@ namespace KMA.Tests.Presentation
             Assert.That(Local(backdrop.Ground.rectTransform).width, Is.EqualTo(2400f).Within(.5f));
         }
 
+        [Test]
+        public void EditModeReEnableAndResizeDoNotRefit()
+        {
+            CampusBackdropUi backdrop = Build();
+            Vector2 skySize = backdrop.Sky.rectTransform.sizeDelta;
+            // A taller rect changes the cover size of the 4:1 test sky (a wider one would not).
+            ((RectTransform)canvasObject.transform).sizeDelta = new Vector2(1920f, 1440f);
+            root.gameObject.SetActive(false);
+            root.gameObject.SetActive(true);
+            Assert.That(backdrop.Sky.rectTransform.sizeDelta, Is.EqualTo(skySize),
+                "outside Play Mode only Configure/Refit may touch the scene");
+        }
+
         static Rect Local(RectTransform rect)
         {
             Vector2 size = rect.rect.size;

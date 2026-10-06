@@ -5,7 +5,8 @@ using UnityEngine.UI;
 namespace KMA.Gameplay.UI
 {
     /// Canvas version of the campus backdrop. Lives outside SafeAreaRoot so it covers the whole
-    /// screen; children are centre-anchored and laid out in this rect's local pixels.
+    /// screen; children are centre-anchored and laid out in this rect's local pixels. In Play Mode it
+    /// refits whenever the rect changes; in edit mode only Configure/Refit touch the scene.
     [ExecuteAlways]
     [RequireComponent(typeof(RectTransform))]
     public sealed class CampusBackdropUi : MonoBehaviour
@@ -17,9 +18,10 @@ namespace KMA.Gameplay.UI
 
         Image sky, ground;
 
-        public Image Sky => sky;
-        public Image Ground => ground;
-        public int SkylineTileCount { get; private set; }
+        // Looked up from the children when a loaded scene has not refitted yet (edit mode never refits on load).
+        public Image Sky => sky != null ? sky : sky = transform.Find("Sky")?.GetComponent<Image>();
+        public Image Ground => ground != null ? ground : ground = transform.Find("Ground")?.GetComponent<Image>();
+        public int SkylineTileCount => CampusBackdropLayout.ActiveSkylineTiles(transform);
 
         public void Configure(CampusBackdropArt backdropArt, float horizon, float skylineHeight, bool withGround)
         {
@@ -30,8 +32,17 @@ namespace KMA.Gameplay.UI
             Refit();
         }
 
-        void OnEnable() => Refit();
-        void OnRectTransformDimensionsChange() => Refit();
+        void OnEnable()
+        {
+            if (Application.isPlaying)
+                Refit();
+        }
+
+        void OnRectTransformDimensionsChange()
+        {
+            if (Application.isPlaying)
+                Refit();
+        }
 
         public void Refit()
         {
@@ -55,7 +66,6 @@ namespace KMA.Gameplay.UI
                 Place(Child("Skyline" + i, art.Skyline, 2 + i), tiles[i]);
             for (int i = tiles.Length; transform.Find("Skyline" + i) != null; i++)
                 transform.Find("Skyline" + i).gameObject.SetActive(false);
-            SkylineTileCount = tiles.Length;
         }
 
         Image Child(string childName, Sprite sprite, int sibling)

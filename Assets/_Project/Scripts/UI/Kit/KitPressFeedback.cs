@@ -78,6 +78,9 @@ namespace KMA.UI.Kit
 
         void Update() => Tick(Time.unscaledDeltaTime);
 
+        // OnDisable restores the rest colours, so a disabled button re-activated mid-frame repaints at once.
+        void OnEnable() => ApplyInteractable();
+
         void OnDisable()
         {
             pressed = false;
