@@ -11,7 +11,7 @@ namespace KMA.EditorTools
 {
     public static class SprintSceneConfigurator
     {
-        const string ScenePath = "Assets/_Project/Scenes/MG_Sprint.unity";
+        public const string ScenePath = "Assets/_Project/Scenes/MG_Sprint.unity";
         const string RivalPrefabPath = "Assets/_Project/Prefabs/Gameplay/RivalRunner.prefab";
         const string RivalTypeName = "KMA.Gameplay.RivalRunnerAI";
         const string ControllerTypeName = "KMA.Gameplay.SprintController";

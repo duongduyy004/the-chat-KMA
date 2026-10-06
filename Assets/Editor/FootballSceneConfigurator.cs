@@ -29,7 +29,8 @@ namespace KMA.EditorTools
         public const string KeeperCharacter = "MalePerson";
         public const string KeeperReadyPose = "cheer1";
         // The kicker stands nearest the camera: 186x248 preview px, feet just below the penalty spot row.
-        const float KickerDisplayWidth = 186f, KickerDisplayHeight = 248f;
+        const float KickerDisplayWidth = 186f;
+        public const float KickerDisplayHeight = 248f;
         static readonly Vector2 KickerFeet = new Vector2(510f, 600f);
         static readonly Vector2 StartCardSize = new Vector2(850f, 400f);
         const float StartCardY = 200f;
@@ -58,6 +59,7 @@ namespace KMA.EditorTools
             BuildUi(scene);
             EnsureEventSystem(scene);
 
+            StartLecturerAuthoring.AddToFootball(scene);
             ConfigureSubjectAsset();
             EnsureInBuildSettings();
             EditorSceneManager.MarkSceneDirty(scene);

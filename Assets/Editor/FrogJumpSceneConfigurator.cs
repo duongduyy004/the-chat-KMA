@@ -24,8 +24,9 @@ namespace KMA.EditorTools
         const string BalancePath = BalanceDir + "/FrogJumpBalance.asset";
         const string HudRootName = "S2_HUD_Minigame";
         const int HudSortingOrder = 500;
-        const float StartX = -7f, FinishX = 7f, GroundY = -2f;
-        const float HeroScale = 1.8f;
+        public const float StartX = -7f, GroundY = -2f;
+        const float FinishX = 7f;
+        public const float HeroScale = 1.8f;
         const int Segments = 20;
 
         [MenuItem("KMA/Frog Jump/Build Scene")]
@@ -89,6 +90,7 @@ namespace KMA.EditorTools
 
             var controllerObject = new GameObject("FrogJumpController");
             controllerObject.AddComponent<FrogJumpController>();
+            StartLecturerAuthoring.AddToFrogJump(scene);
 
             EditorSceneManager.SaveScene(scene, ScenePath);
         }

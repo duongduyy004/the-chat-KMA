@@ -228,6 +228,7 @@ namespace KMA.EditorTools
             var input = controllerObject.AddComponent<VolleyballInputBridge>();
             var controller = controllerObject.AddComponent<VolleyballController>();
             controller.Configure(player, opponent, ballView, input, null);
+            StartLecturerAuthoring.AddToVolleyball(scene);
 
             EditorSceneManager.SaveScene(scene, ScenePath);
         }
