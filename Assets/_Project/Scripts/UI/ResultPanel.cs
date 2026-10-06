@@ -14,6 +14,8 @@ namespace KMA.Gameplay.UI
     public sealed class ResultPanel : MonoBehaviour, IRetryResultPreviewPanel, IChallengeResultPanel,
         IFrogJumpResultPanel
     {
+        const int SortingOrder = 500;
+
         /// Caption above the score number; the prefab styler bakes the same text.
         public const string ScoreCaptionText = "ĐIỂM";
         static float ScrimDuration => Mathf.Max(0f, UITheme.Shared.Motion.resultScrim);
@@ -104,6 +106,17 @@ namespace KMA.Gameplay.UI
             RefreshButtons();
         }
 
+        /// The HUD canvas renders through the camera at order 0, so world sprites with higher
+        /// sorting orders (the runners) would draw over the panel. A nested canvas lifts it above them.
+        void RaiseAboveWorldSprites()
+        {
+            var canvas = UiKit.GetOrAdd<Canvas>(gameObject);
+            canvas.overrideSorting = true;
+            canvas.sortingOrder = SortingOrder;
+            if (GetComponent<GraphicRaycaster>() == null)
+                gameObject.AddComponent<GraphicRaycaster>();
+        }
+
         public void Show(MinigameResult result, string previewRoute)
         {
             frogMode = false;
@@ -119,6 +132,7 @@ namespace KMA.Gameplay.UI
 
             gameObject.SetActive(true);
             transform.SetAsLastSibling();
+            RaiseAboveWorldSprites();
             if (contentRoot != null)
                 contentRoot.SetActive(true);
             ApplyTheme();
@@ -204,6 +218,7 @@ namespace KMA.Gameplay.UI
             actionPending = false;
             gameObject.SetActive(true);
             transform.SetAsLastSibling();
+            RaiseAboveWorldSprites();
             if (contentRoot != null) contentRoot.SetActive(true);
             ApplyTheme();
             if (statusLabel != null)
@@ -309,6 +324,7 @@ namespace KMA.Gameplay.UI
             actionPending = false;
             gameObject.SetActive(true);
             transform.SetAsLastSibling();
+            RaiseAboveWorldSprites();
             if (contentRoot != null) contentRoot.SetActive(true);
             ApplyTheme();
             if (statusLabel != null)
