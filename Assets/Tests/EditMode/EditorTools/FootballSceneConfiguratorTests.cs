@@ -104,6 +104,28 @@ namespace KMA.Tests.EditorTools
             Assert.That(scrim.GetSiblingIndex(), Is.EqualTo(start.transform.GetSiblingIndex() - 1));
             Assert.That(scrim.GetComponent<UnityEngine.UI.Image>().color, Is.EqualTo(KMA.UI.Kit.MinigameUiTheme.Scrim));
         }
+
+        [Test]
+        public void StartCardSitsBetweenTheScoreChipAndTheKicker()
+        {
+            FootballSceneConfigurator.BuildScene();
+            EditorSceneManager.OpenScene(FootballSceneConfigurator.ScenePath, OpenSceneMode.Single);
+            var card = (RectTransform)GameObject.Find("StartPanel").transform;
+            Assert.That(card.sizeDelta.y, Is.LessThanOrEqualTo(420f), "the start card is compact");
+
+            // The HUD canvas scales by height against 1080 px; the card is centre-anchored in the safe area.
+            float cardBottom01 = .5f + (card.anchoredPosition.y - card.sizeDelta.y * card.pivot.y) / 1080f;
+            float cardTop01 = .5f + (card.anchoredPosition.y + card.sizeDelta.y * (1f - card.pivot.y)) / 1080f;
+            var camera = UnityEngine.Object.FindFirstObjectByType<Camera>();
+            float viewBottom = camera.transform.position.y - camera.orthographicSize;
+            var kicker = GameObject.Find("FootballWorld").transform.Find("Player").GetComponent<SpriteRenderer>();
+            float kickerTop01 = (kicker.bounds.max.y - viewBottom) / (camera.orthographicSize * 2f);
+            Assert.That(cardBottom01, Is.GreaterThanOrEqualTo(kickerTop01), "the start card must not cover the kicker");
+
+            var scoreChip = (RectTransform)GameObject.Find("ScoreChip").transform;
+            float chipBottom01 = 1f - (-scoreChip.anchoredPosition.y + scoreChip.sizeDelta.y) / 1080f;
+            Assert.That(cardTop01, Is.LessThanOrEqualTo(chipBottom01), "the start card must not cover the score chip");
+        }
     }
 }
 #endif

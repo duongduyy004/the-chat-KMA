@@ -47,12 +47,5 @@ namespace KMA.Tests.Gameplay.Progression
             Assert.Throws<ArgumentOutOfRangeException>(
                 () => new ChallengeStep(ChallengeMechanic.TapMash, 1, float.NaN));
         }
-
-        static ChallengeSequence ValidSequence() => new ChallengeSequence(new[]
-        {
-            new ChallengeStep(ChallengeMechanic.TapMash, 1, 1)
-        });
-
-        static MinigameResult Failed() => new MinigameResult(false, 0, Rank.F);
     }
 }

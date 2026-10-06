@@ -3,7 +3,10 @@
 // penalty spot, viewBoxes) is kept identical to the previous layers so gameplay alignment holds.
 const fs = require('fs');
 const path = require('path');
-const { Resvg } = require('@resvg/resvg-js') // npm i @resvg/resvg-js; run: node tools/render-football-goalview-art.js Assets/_Project/Art/Football/GoalView;
+const { Resvg } = require('@resvg/resvg-js');
+const { PNG } = require('pngjs');
+// Run: TMP_NODE="$TEMP/kma-resvg"; npm install --prefix "$TMP_NODE" @resvg/resvg-js pngjs
+//      NODE_PATH="$TMP_NODE/node_modules" node tools/render-football-goalview-art.js Assets/_Project/Art/Football/GoalView
 
 const OUT = process.argv[2];
 const C = {
@@ -23,7 +26,8 @@ const cloud = (x, y, s) => blob([[x, y, 20 * s], [x + 26 * s, y - 12 * s, 26 * s
 // Shared campus skyline (cropped from the Sprint campus art), full width, hedge row tucked behind the stands.
 function trees() {
   const png = fs.readFileSync(path.join(__dirname, '..', 'Assets/_Project/Art/Environments/Campus/CampusSkyline.png'));
-  const w = 1200, h = Math.round(w * 321 / 1983), base = 176;
+  const { width, height } = PNG.sync.read(png);
+  const w = 1200, h = Math.round(w * height / width), base = 176;
   return `<image x="0" y="${base - h}" width="${w}" height="${h}" href="data:image/png;base64,${png.toString('base64')}"/>`;
 }
 

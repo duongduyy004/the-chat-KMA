@@ -123,17 +123,21 @@ namespace KMA.EditorTools
             // MG_Sprint also carries orphaned, unreferenced legacy HUD placeholders (e.g. "Timer",
             // "Stamina") authored directly at the scene root, predating the shared HUD_Minigame
             // prefab. They have no parent, no children, and nothing references them, so they are
-            // safe to delete outright; matching is restricted to scene-root objects so the
+            // safe to delete outright (as are the empty "Rank" and "FX" roots, which nothing references);
+            // matching is restricted to scene-root objects so the
             // still-shared elements nested inside the HUD_Minigame prefab instance (handled at
             // runtime by SprintFestivalPresentation.DisableSharedMetrics) are never touched.
             string[] strayLegacyRootNames =
             {
-                "Timer", "Phase", "Score", "Status", "Progress", "Stamina", "HeartBar"
+                "Timer", "Phase", "Score", "Status", "Progress", "Stamina", "HeartBar", "Rank", "FX"
             };
             var strayRemoved = 0;
             foreach (var root in scene.GetRootGameObjects())
             {
                 if (Array.IndexOf(strayLegacyRootNames, root.name) < 0)
+                    continue;
+                // Only bare placeholders: a root with children or components is real content.
+                if (root.transform.childCount > 0 || root.GetComponents<Component>().Length > 1)
                     continue;
 
                 UnityEngine.Object.DestroyImmediate(root);

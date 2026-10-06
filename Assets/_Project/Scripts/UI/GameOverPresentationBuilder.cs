@@ -61,22 +61,24 @@ namespace KMA.Gameplay.UI
             Action(screen, layout, "MAIN MENUButton", "MENU CHÍNH", -375f, HomeMenuButton.Kind.Secondary, false);
         }
 
-        // Idempotent: scenes authored before the illustration existed keep their baked layout and gain it here.
+        // Idempotent: scenes authored before the illustration existed keep their baked layout and gain it here;
+        // an illustration baked at a fixed size gains the aspect fitter on the next build.
         static void ApplyBackground(GameOverScreen screen, RectTransform veil)
         {
-            if (screen.Background == null || veil == null || veil.Find("Illustration") != null) return;
-            RectTransform artRect = Rect(veil, "Illustration");
-            Rect area = ((RectTransform)screen.transform).rect;
-            if (area.width < 1f || area.height < 1f) area = new Rect(0f, 0f, 1920f, 1080f);
+            if (screen.Background == null || veil == null) return;
             Sprite sprite = screen.Background;
-            Rect cover = CampusBackdropLayout.Cover(new Rect(-area.width * .5f, -area.height * .5f, area.width, area.height),
-                sprite.rect.width / sprite.rect.height);
-            artRect.anchorMin = artRect.anchorMax = new Vector2(.5f, .5f);
-            artRect.sizeDelta = cover.size;
-            artRect.anchoredPosition = cover.center;
-            Image art = artRect.gameObject.AddComponent<Image>();
+            var existing = (RectTransform)veil.Find("Illustration");
+            RectTransform artRect = existing != null ? existing : Rect(veil, "Illustration");
+            artRect.anchorMin = artRect.anchorMax = artRect.pivot = new Vector2(.5f, .5f);
+            artRect.anchoredPosition = Vector2.zero;
+            // Covers the veil at whatever aspect the screen has, instead of a size computed once at bake.
+            var fitter = UiKit.GetOrAdd<AspectRatioFitter>(artRect.gameObject);
+            fitter.aspectMode = AspectRatioFitter.AspectMode.EnvelopeParent;
+            fitter.aspectRatio = sprite.rect.width / sprite.rect.height;
+            Image art = UiKit.GetOrAdd<Image>(artRect.gameObject);
             art.sprite = sprite;
             art.raycastTarget = false;
+            if (existing != null) return;
 
             RectTransform washRect = Rect(veil, "Wash");
             Stretch(washRect);

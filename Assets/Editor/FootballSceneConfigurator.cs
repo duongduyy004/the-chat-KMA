@@ -31,6 +31,8 @@ namespace KMA.EditorTools
         // The kicker stands nearest the camera: 186x248 preview px, feet just below the penalty spot row.
         const float KickerDisplayWidth = 186f, KickerDisplayHeight = 248f;
         static readonly Vector2 KickerFeet = new Vector2(510f, 600f);
+        static readonly Vector2 StartCardSize = new Vector2(850f, 400f);
+        const float StartCardY = 200f;
 
         [MenuItem("KMA/Football/Build Scene")]
         public static void BuildScene()
@@ -239,23 +241,24 @@ namespace KMA.EditorTools
                 MinigameUiTheme.TextPrimary, TextAlignmentOptions.Center, outline: true);
             UiKit.Anchor(feedback.rectTransform, new Vector2(.20f, .69f), new Vector2(.80f, .79f));
 
-            // Start screen with the difficulty picker.
+            // Start card: compact and raised into the band between the score chip and the kicker,
+            // so the kicker (top at ~48% of the view height) stays visible below it.
             Image scrim = UiKit.Shape(root, "StartScrim", 0f, MinigameUiTheme.Scrim);
             scrim.raycastTarget = true;
             UiKit.Stretch(scrim.rectTransform);
             Image start = UiKit.Panel(root, "StartPanel", alpha: 1f);
             start.raycastTarget = true;
-            UiKit.Place(start.rectTransform, centre, centre, Vector2.zero, new Vector2(850f, 585f));
+            UiKit.Place(start.rectTransform, centre, centre, new Vector2(0f, StartCardY), StartCardSize);
             TMP_Text startTitle = UiKit.Label(start.transform, "StartTitle", "LOẠT SÚT LUÂN LƯU", MinigameUiTheme.Title,
                 MinigameUiTheme.TextPrimary);
-            UiKit.Anchor(startTitle.rectTransform, new Vector2(.06f, .76f), new Vector2(.94f, .94f));
+            UiKit.Anchor(startTitle.rectTransform, new Vector2(.06f, .72f), new Vector2(.94f, .94f));
             TMP_Text instructions = UiKit.Label(start.transform, "StartInstructions",
                 "Kéo thanh chọn hướng. Giữ SÚT để xem đường bay, thả để đá.\nGhi ít nhất 3 bàn sau 5 lượt.",
                 MinigameUiTheme.Body, MinigameUiTheme.TextPrimary);
-            UiKit.Anchor(instructions.rectTransform, new Vector2(.08f, .55f), new Vector2(.92f, .77f));
+            UiKit.Anchor(instructions.rectTransform, new Vector2(.08f, .36f), new Vector2(.92f, .72f));
             UiKit.FitLabel(instructions, MinigameUiTheme.Body);
             instructions.textWrappingMode = TextWrappingModes.Normal;
-            Button startButton = StartButton(start.transform, "StartButton", "BẮT ĐẦU", ButtonVariant.Primary, .29f, .71f, .06f, .22f);
+            Button startButton = StartButton(start.transform, "StartButton", "BẮT ĐẦU", ButtonVariant.Primary, .29f, .71f, .07f, .30f);
 
             // The shared pause button sits in the safe area's top-right corner, as in Volleyball.
             var pause = UnityEngine.Object.FindFirstObjectByType<PausePanel>(FindObjectsInactive.Include);

@@ -95,7 +95,10 @@ namespace KMA.Tests.Presentation
             Assert.That(veil.GetComponent<Image>().color, Is.EqualTo(HomeMenuStyle.Navy));
             var art = veil.Find("Illustration").GetComponent<Image>();
             Assert.That(art.sprite, Is.SameAs(sprite));
-            Assert.That(art.rectTransform.sizeDelta.x / art.rectTransform.sizeDelta.y, Is.EqualTo(2f).Within(.01f));
+            var fitter = art.GetComponent<AspectRatioFitter>();
+            Assert.That(fitter, Is.Not.Null, "the illustration must cover any screen aspect, not a size baked once");
+            Assert.That(fitter.aspectMode, Is.EqualTo(AspectRatioFitter.AspectMode.EnvelopeParent));
+            Assert.That(fitter.aspectRatio, Is.EqualTo(2f).Within(.01f));
             var wash = veil.Find("Wash").GetComponent<Image>();
             Assert.That(wash.color.a, Is.EqualTo(.78f).Within(.001f));
             Assert.That(art.transform.GetSiblingIndex(), Is.LessThan(wash.transform.GetSiblingIndex()));
@@ -114,6 +117,27 @@ namespace KMA.Tests.Presentation
 
             var veil = screen.transform.Find("GameOverVeil");
             Assert.That(veil.Cast<Transform>().Count(t => t.name == "Illustration"), Is.EqualTo(1));
+            Assert.That(veil.Cast<Transform>().Count(t => t.name == "Wash"), Is.EqualTo(1));
+            Assert.That(veil.Find("Illustration").GetComponents<AspectRatioFitter>().Length, Is.EqualTo(1));
+            Object.DestroyImmediate(sprite); Object.DestroyImmediate(tex);
+        }
+
+        [Test]
+        public void RebuildGivesABakedFixedSizeIllustrationAnAspectFitter()
+        {
+            var tex = new Texture2D(40, 20);
+            var sprite = Sprite.Create(tex, new Rect(0, 0, 40, 20), new Vector2(.5f, .5f));
+            screen.SetBackground(sprite);
+            GameOverPresentationBuilder.Build(screen, new GameSession());
+            var art = screen.transform.Find("GameOverVeil/Illustration");
+            // Simulate a scene baked before the fitter existed.
+            Object.DestroyImmediate(art.GetComponent<AspectRatioFitter>());
+            GameOverPresentationBuilder.Build(screen, new GameSession());
+
+            var fitter = art.GetComponent<AspectRatioFitter>();
+            Assert.That(fitter, Is.Not.Null);
+            Assert.That(fitter.aspectMode, Is.EqualTo(AspectRatioFitter.AspectMode.EnvelopeParent));
+            Assert.That(fitter.aspectRatio, Is.EqualTo(2f).Within(.01f));
             Object.DestroyImmediate(sprite); Object.DestroyImmediate(tex);
         }
     }
