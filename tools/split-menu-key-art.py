@@ -13,6 +13,17 @@ from scipy import ndimage
 ART = Path(__file__).resolve().parent.parent / "Assets/_Project/Art/UI"
 # Pixel box of the painted panel (including its offset shadow) in the 1672 x 941 art.
 BOX = (50, 40, 646, 892)
+# Output is upscaled so ultra-wide screens (21:9), which stretch the art ~1.5x, stay crisp. The scene only uses
+# fractions of the art size, so the scale factor is free to change.
+SCALE = 2
+
+
+def upscale(img: Image.Image) -> Image.Image:
+    big = img.resize((img.width * SCALE, img.height * SCALE), Image.LANCZOS)
+    rgb = big.convert("RGB").filter(ImageFilter.UnsharpMask(radius=1.4, percent=70, threshold=2))
+    if big.mode == "RGBA":
+        rgb.putalpha(big.getchannel("A"))
+    return rgb
 
 
 def panel_mask(rgb: np.ndarray) -> np.ndarray:
@@ -57,13 +68,13 @@ def main() -> None:
     rgb = np.array(src)
     mask = panel_mask(rgb)
 
-    Image.fromarray(fill_backdrop(rgb, mask)).save(ART / "MenuKeyArtBackdrop.png", optimize=True)
+    upscale(Image.fromarray(fill_backdrop(rgb, mask))).save(ART / "MenuKeyArtBackdrop.png", optimize=True)
 
     x0, y0, x1, y1 = BOX
     alpha = Image.fromarray((mask * 255).astype(np.uint8)).filter(ImageFilter.GaussianBlur(0.8))
     panel = src.copy()
     panel.putalpha(alpha)
-    panel.crop(BOX).save(ART / "MenuKeyArtPanel.png", optimize=True)
+    upscale(panel.crop(BOX)).save(ART / "MenuKeyArtPanel.png", optimize=True)
     print("panel box", BOX, "size", (x1 - x0, y1 - y0))
 
 
