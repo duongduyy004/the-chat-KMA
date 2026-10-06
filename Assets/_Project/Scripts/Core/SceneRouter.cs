@@ -458,11 +458,19 @@ namespace KMA.Gameplay.Core
             transitioner = new SessionRouteTransitioner(session, this);
         }
 
+        // A throw here would skip every later sceneLoaded handler (the pause exit among them),
+        // so each binding step logs its failure and lets the rest run.
         void OnSceneLoaded(Scene scene, LoadSceneMode mode)
         {
-            UnbindFrogJump();
-            UnbindSubjects();
+            RunBindingStep(UnbindFrogJump);
+            RunBindingStep(UnbindSubjects);
+            RunBindingStep(() => BindSubjectScene(scene));
+            RunBindingStep(BindJourneyControllers);
+            RunBindingStep(() => BindFrogJump(scene));
+        }
 
+        void BindSubjectScene(Scene scene)
+        {
             if (session.Journey.ActiveAttempt == null && awaitingSubjectScene && activeSubject.HasValue &&
                 string.Equals(scene.name, SceneFor(activeSubject), StringComparison.Ordinal))
             {
@@ -475,8 +483,12 @@ namespace KMA.Gameplay.Core
                 }
                 awaitingSubjectScene = !boundController;
             }
-            BindJourneyControllers();
-            BindFrogJump(scene);
+        }
+
+        void RunBindingStep(Action step)
+        {
+            try { step(); }
+            catch (Exception exception) { Debug.LogException(exception, this); }
         }
 
         void EnsureRouteIsConfigured(SessionRoute route, SubjectId? subject)

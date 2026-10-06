@@ -213,13 +213,13 @@ namespace KMA.Gameplay.Core
                 {
                     var adapter = minigame.GetComponent<JourneyControllerAdapter>();
                     if (adapter == null) adapter = minigame.gameObject.AddComponent<JourneyControllerAdapter>();
-                    BindChallenge(adapter);
+                    RunBindingStep(() => BindChallenge(adapter));
                 }
             }
             foreach (MonoBehaviour behaviour in FindObjectsByType<MonoBehaviour>(
                 FindObjectsInactive.Include, FindObjectsSortMode.None))
                 if (behaviour is IChallengeController controller)
-                    BindChallenge(controller);
+                    RunBindingStep(() => BindChallenge(controller));
         }
 
         void UnbindJourneyControllers()
