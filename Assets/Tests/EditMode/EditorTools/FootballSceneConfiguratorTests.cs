@@ -91,6 +91,19 @@ namespace KMA.Tests.EditorTools
             Assert.That(serializedSubject.FindProperty("goalText").stringValue, Is.EqualTo("Ghi ít nhất 3 bàn sau 5 lượt sút."));
             Assert.That(EditorBuildSettings.scenes, Has.Some.Matches<EditorBuildSettingsScene>(s => s.path == FootballSceneConfigurator.ScenePath && s.enabled));
         }
+
+        [Test]
+        public void StartCardIsOpaqueAndDimsTheWorldBehindIt()
+        {
+            FootballSceneConfigurator.BuildScene();
+            EditorSceneManager.OpenScene(FootballSceneConfigurator.ScenePath, OpenSceneMode.Single);
+            var start = GameObject.Find("StartPanel").GetComponent<UnityEngine.UI.Image>();
+            Assert.That(start.color.a, Is.EqualTo(1f).Within(1e-3f), "a translucent card shows the kicker through it");
+            Transform scrim = start.transform.parent.Find("StartScrim");
+            Assert.That(scrim, Is.Not.Null);
+            Assert.That(scrim.GetSiblingIndex(), Is.EqualTo(start.transform.GetSiblingIndex() - 1));
+            Assert.That(scrim.GetComponent<UnityEngine.UI.Image>().color, Is.EqualTo(KMA.UI.Kit.MinigameUiTheme.Scrim));
+        }
     }
 }
 #endif

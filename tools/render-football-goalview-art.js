@@ -20,13 +20,11 @@ const blob = (circles, fill, w = 4) =>
 const cloud = (x, y, s) => blob([[x, y, 20 * s], [x + 26 * s, y - 12 * s, 26 * s], [x + 56 * s, y - 4 * s, 22 * s],
   [x + 78 * s, y + 8 * s, 15 * s], [x - 20 * s, y + 8 * s, 14 * s], [x + 4 * s, y + 14 * s, 16 * s], [x + 32 * s, y + 12 * s, 18 * s], [x + 58 * s, y + 14 * s, 15 * s]], C.cloud, 3);
 
+// Shared campus skyline (cropped from the Sprint campus art), full width, hedge row tucked behind the stands.
 function trees() {
-  let out = '';
-  for (let i = 0; i < 26; i++) {
-    const x = i * 48 + (i % 3) * 7, y = 128 + (i % 2) * 6, r = 24 + (i % 4) * 4;
-    out += blob([[x, y, r], [x + r * 0.8, y + 6, r * 0.8]], i % 3 ? C.tree : C.treeDark, 3);
-  }
-  return out;
+  const png = fs.readFileSync(path.join(__dirname, '..', 'Assets/_Project/Art/Environments/Campus/CampusSkyline.png'));
+  const w = 1200, h = Math.round(w * 321 / 1983), base = 176;
+  return `<image x="0" y="${base - h}" width="${w}" height="${h}" href="data:image/png;base64,${png.toString('base64')}"/>`;
 }
 
 function bleachers() {

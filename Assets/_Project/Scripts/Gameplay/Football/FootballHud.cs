@@ -20,6 +20,7 @@ namespace KMA.Gameplay
         [SerializeField] TMP_Text remainingLabel;
         [SerializeField] Image[] kickMarkers = new Image[5];
         [SerializeField] GameObject startPanel;
+        [SerializeField] GameObject startScrim;
         [SerializeField] Button startButton;
         [SerializeField] Button easyButton;
         [SerializeField] Button normalButton;
@@ -35,7 +36,8 @@ namespace KMA.Gameplay
 
         public void Configure(Slider aim, FootballHoldButton shoot, KitBar power, GameObject warning, TMP_Text score,
             TMP_Text remaining, Image[] markers, GameObject start, Button startAction = null, Button easy = null,
-            Button normal = null, Button hard = null, TMP_Text directionText = null, TMP_Text feedback = null)
+            Button normal = null, Button hard = null, TMP_Text directionText = null, TMP_Text feedback = null,
+            GameObject scrim = null)
         {
             directionSlider = aim;
             shootButton = shoot;
@@ -45,6 +47,7 @@ namespace KMA.Gameplay
             remainingLabel = remaining;
             kickMarkers = markers;
             startPanel = start;
+            startScrim = scrim;
             startButton = startAction;
             easyButton = easy;
             normalButton = normal;
@@ -63,8 +66,7 @@ namespace KMA.Gameplay
         {
             selectedDifficulty = FootballDifficulty.Normal;
             HideDifficultySelection();
-            if (startPanel)
-                startPanel.SetActive(true);
+            SetStartVisible(true);
             if (directionSlider) directionSlider.interactable = false;
             if (shootButton) shootButton.SetInteractable(false);
             UpdateDifficultyButtons();
@@ -72,7 +74,13 @@ namespace KMA.Gameplay
 
         public void HideStart()
         {
-            if (startPanel) startPanel.SetActive(false);
+            SetStartVisible(false);
+        }
+
+        void SetStartVisible(bool visible)
+        {
+            if (startPanel) startPanel.SetActive(visible);
+            if (startScrim) startScrim.SetActive(visible);
         }
 
         public void SetDifficulty(FootballDifficulty selected)
@@ -117,7 +125,7 @@ namespace KMA.Gameplay
                     : MinigameUiTheme.Track;
             }
             if (startPanel && rules.State != FootballState.Start)
-                startPanel.SetActive(false);
+                SetStartVisible(false);
             if (directionSlider) directionSlider.SetValueWithoutNotify(rules.AimX);
             if (directionLabel) directionLabel.text = VietText.Fix(Mathf.Abs(rules.AimX) < .02f ? "GIỮA" :
                 (rules.AimX < 0f ? "TRÁI " : "PHẢI ") + Mathf.RoundToInt(Mathf.Abs(rules.AimX) * 100f) + "%");

@@ -240,7 +240,10 @@ namespace KMA.EditorTools
             UiKit.Anchor(feedback.rectTransform, new Vector2(.20f, .69f), new Vector2(.80f, .79f));
 
             // Start screen with the difficulty picker.
-            Image start = UiKit.Panel(root, "StartPanel");
+            Image scrim = UiKit.Shape(root, "StartScrim", 0f, MinigameUiTheme.Scrim);
+            scrim.raycastTarget = true;
+            UiKit.Stretch(scrim.rectTransform);
+            Image start = UiKit.Panel(root, "StartPanel", alpha: 1f);
             start.raycastTarget = true;
             UiKit.Place(start.rectTransform, centre, centre, Vector2.zero, new Vector2(850f, 585f));
             TMP_Text startTitle = UiKit.Label(start.transform, "StartTitle", "LOẠT SÚT LUÂN LƯU", MinigameUiTheme.Title,
@@ -261,7 +264,7 @@ namespace KMA.EditorTools
                 Vector2.one * MinigameUiTheme.ButtonHeight);
 
             hud.Configure(direction.Slider, hold, power, warning.gameObject, score.Label, remaining.Label, markers,
-                start.gameObject, startButton, null, null, null, directionValue, feedback);
+                start.gameObject, startButton, null, null, null, directionValue, feedback, scrim.gameObject);
             hud.ShowStart(FootballDifficulty.Normal);
 
             var result = UnityEngine.Object.FindFirstObjectByType<ResultPanel>(FindObjectsInactive.Include);
