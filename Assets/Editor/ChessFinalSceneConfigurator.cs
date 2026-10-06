@@ -112,6 +112,8 @@ namespace KMA.EditorTools
             // Side columns: avatars bottom-anchored below the name and counters.
             Image student = Avatar(parent, "Student", StudentX, CharacterArt.Load(CharacterArt.Hero, "idle"));
             Image teacher = Avatar(parent, "Teacher", TeacherX, CharacterArt.Load(CharacterArt.Boss, "idleBoss"));
+            // The art looks right; she stands right of the board, so mirror her to look at it.
+            teacher.rectTransform.localScale = new Vector3(-1f, 1f, 1f);
             NameTag(parent, "StudentName", "Tân Thủ", StudentX);
             NameTag(parent, "TeacherName", "Cô Thể Chất", TeacherX);
             ChipHandle mistakes = UiKit.Chip(parent, "Mistakes", "Sai: 0/2");
