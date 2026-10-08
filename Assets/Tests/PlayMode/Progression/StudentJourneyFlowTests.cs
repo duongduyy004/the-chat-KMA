@@ -7,6 +7,9 @@ using KMA.Gameplay.Core;
 using KMA.Gameplay.UI;
 using NUnit.Framework;
 using UnityEngine;
+using UnityEngine.EventSystems;
+using UnityEngine.InputSystem;
+using UnityEngine.InputSystem.LowLevel;
 using UnityEngine.SceneManagement;
 using UnityEngine.TestTools;
 using UnityEngine.UI;
@@ -205,6 +208,123 @@ namespace KMA.Tests.Gameplay.Progression
             Assert.That(panel.ContinueLabel, Is.EqualTo(VietText.Fix("THI LẠI")));
             panel.Continue();
             yield return JourneyRuntimeDriver.WaitForScene(router, retryScene);
+        }
+
+        [UnityTest]
+        public IEnumerator VolleyballPauseExitTapReturnsToTheMap()
+        {
+            yield return StartRuntime();
+            for (int i = 0; i < 3; i++) yield return PlayCheckpoint();
+            yield return StartCheckpoint();
+            yield return PauseAndExitVolleyballToTheMap();
+        }
+
+        [UnityTest]
+        public IEnumerator VolleyballPauseExitAfterAFrogJumpRetryReturnsToTheMap()
+        {
+            yield return StartRuntime();
+            for (int i = 0; i < 5; i++) yield return PlayCheckpoint();
+            ChallengeDefinition exam = router.Session.Journey.Catalog.Get("volleyball_exam");
+            yield return StartCheckpoint();
+            yield return FailIntoFrogJump(exam);
+            yield return FinishFrogJump(true, "MG_Volleyball");
+            yield return PauseAndExitVolleyballToTheMap();
+        }
+
+        [UnityTest]
+        public IEnumerator VolleyballPauseExitAfterARestartReturnsToTheMap()
+        {
+            yield return StartRuntime();
+            for (int i = 0; i < 3; i++) yield return PlayCheckpoint();
+            yield return StartCheckpoint();
+            yield return WaitForVolleyballPlay();
+            var pause = Object.FindFirstObjectByType<PausePanel>(FindObjectsInactive.Include);
+            yield return Tap(pause.GetComponent<Button>(), 0f);
+            Button restart = pause.transform.parent.GetComponentsInChildren<Button>(true)
+                .First(button => button.name == "RestartButton");
+            int loads = 0;
+            UnityEngine.Events.UnityAction<Scene, LoadSceneMode> counted = (_, _) => loads++;
+            SceneManager.sceneLoaded += counted;
+            yield return Tap(restart);
+            float reloadBy = Time.realtimeSinceStartup + 12f;
+            while ((loads == 0 || router.IsTransitioning) && Time.realtimeSinceStartup < reloadBy)
+                yield return null;
+            SceneManager.sceneLoaded -= counted;
+            Assert.That(loads, Is.EqualTo(1), "Restart must reload the volleyball scene.");
+            yield return null;
+            yield return PauseAndExitVolleyballToTheMap();
+        }
+
+        IEnumerator WaitForVolleyballPlay()
+        {
+            Assert.That(SceneManager.GetActiveScene().name, Is.EqualTo("MG_Volleyball"));
+            var volley = Object.FindFirstObjectByType<KMA.Gameplay.Volleyball.VolleyballController>();
+            volley.SetTutorialGate(false);
+            float playBy = Time.realtimeSinceStartup + 8f;
+            while (volley.PresentationPhase != MinigamePhase.Play && Time.realtimeSinceStartup < playBy)
+                yield return null;
+            Assert.That(volley.PresentationPhase, Is.EqualTo(MinigamePhase.Play));
+            yield return new WaitForSeconds(1f);
+        }
+
+        IEnumerator PauseAndExitVolleyballToTheMap()
+        {
+            yield return WaitForVolleyballPlay();
+            var pause = Object.FindFirstObjectByType<PausePanel>(FindObjectsInactive.Include);
+            Assert.That(pause, Is.Not.Null);
+            yield return Tap(pause.GetComponent<Button>(), 0f);
+            Assert.That(pause.IsOpen, Is.True, "Tapping the pause button must open the menu.");
+
+            Button exit = pause.transform.parent.GetComponentsInChildren<Button>(true)
+                .First(button => button.name == "ExitButton");
+            yield return Tap(exit);
+            yield return JourneyRuntimeDriver.WaitForScene(router, "Map");
+            float settle = Time.realtimeSinceStartup + 2f;
+            while (Time.realtimeSinceStartup < settle) yield return null;
+            Assert.That(SceneManager.GetActiveScene().name, Is.EqualTo("Map"), "Exit must stay on the map.");
+            Assert.That(router.Session.ActiveSubject, Is.Null);
+            Assert.That(router.Session.Journey.ActiveAttempt, Is.Null);
+            Assert.That(Time.timeScale, Is.EqualTo(1f));
+        }
+
+        // A real touch through the Input System and the scene's UI input module, with the small
+        // drift a finger has on a phone screen.
+        static IEnumerator Tap(Button button, float drift = 20f)
+        {
+            Assert.That(button, Is.Not.Null);
+            Assert.That(button.isActiveAndEnabled && button.interactable, Is.True, button.name + " is not clickable");
+            Canvas canvas = button.GetComponentInParent<Canvas>().rootCanvas;
+            Camera eventCamera = canvas.renderMode == RenderMode.ScreenSpaceOverlay ? null : canvas.worldCamera;
+            Vector2 screen = RectTransformUtility.WorldToScreenPoint(eventCamera,
+                button.transform.TransformPoint(((RectTransform)button.transform).rect.center));
+            Assert.That(EventSystem.current, Is.Not.Null, "No EventSystem in the scene");
+
+            // Batch-mode players never have focus; let the simulated touch through anyway.
+            InputSettings settings = InputSystem.settings;
+            InputSettings.BackgroundBehavior background = settings.backgroundBehavior;
+            InputSettings.EditorInputBehaviorInPlayMode editorBehaviour = settings.editorInputBehaviorInPlayMode;
+            settings.backgroundBehavior = InputSettings.BackgroundBehavior.IgnoreFocus;
+            settings.editorInputBehaviorInPlayMode = InputSettings.EditorInputBehaviorInPlayMode.AllDeviceInputAlwaysGoesToGameView;
+            var touchscreen = InputSystem.AddDevice<Touchscreen>();
+            try
+            {
+                yield return Touch(touchscreen, UnityEngine.InputSystem.TouchPhase.Began, screen);
+                yield return Touch(touchscreen, UnityEngine.InputSystem.TouchPhase.Moved, screen + new Vector2(drift, 0f));
+                yield return Touch(touchscreen, UnityEngine.InputSystem.TouchPhase.Ended, screen + new Vector2(drift, 0f));
+            }
+            finally
+            {
+                InputSystem.RemoveDevice(touchscreen);
+                settings.backgroundBehavior = background;
+                settings.editorInputBehaviorInPlayMode = editorBehaviour;
+            }
+        }
+
+        static IEnumerator Touch(Touchscreen touchscreen, UnityEngine.InputSystem.TouchPhase phase, Vector2 position)
+        {
+            InputSystem.QueueStateEvent(touchscreen, new TouchState { touchId = 1, phase = phase, position = position });
+            yield return null;
+            yield return null;
         }
 
         IEnumerator StartRuntime()
