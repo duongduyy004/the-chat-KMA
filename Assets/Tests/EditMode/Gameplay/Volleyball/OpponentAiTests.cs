@@ -29,7 +29,7 @@ namespace KMA.Tests.Gameplay.Volleyball
 
             Assert.That(attacked, Is.True);
             Assert.That(sawTell, Is.True);
-            Assert.That(aim, Is.EqualTo(new Vector2(-7f, -3f)));
+            Assert.That(aim, Is.EqualTo(new Vector2(-6f, -2f)));
             Assert.That(match.Flight.Target, Is.EqualTo(aim));
             Assert.That(match.Plan.Index, Is.EqualTo(1));
         }
@@ -57,6 +57,23 @@ namespace KMA.Tests.Gameplay.Volleyball
             Assert.That(match.Flight.Target, Is.EqualTo(VolleyballMatch.WeakReceiveTarget));
             Assert.That(match.Rally.Possession, Is.EqualTo(CourtSide.Player));
             Assert.That(match.Rally.Touches, Is.Zero);
+        }
+
+        [Test]
+        public void MissedReceiveStepLetsTheBallDropAndMovesThePlanOn()
+        {
+            var plan = new OpponentPlan(new[]
+            {
+                new OpponentStep(new Vector2(-5f, 0f), AttackKind.Lob, -5f, 0f, false, false, missesReceive: true),
+                new OpponentStep(new Vector2(-5f, 0f), AttackKind.Lob, -5f, 0f, false, false)
+            });
+            var match = new VolleyballMatch(plan);
+            MatchDriver.ServeGood(match);
+
+            Assert.That(MatchDriver.AdvanceUntil(match, () => match.BallState == BallState.Dead, 6f), Is.True);
+            Assert.That(match.Flight.Hitter, Is.EqualTo(CourtSide.Player), "the AI must not touch the ball");
+            Assert.That(match.PlayerPoints, Is.EqualTo(1));
+            Assert.That(match.Plan.Index, Is.EqualTo(1));
         }
 
         [Test]

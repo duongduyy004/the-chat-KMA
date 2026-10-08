@@ -26,11 +26,13 @@ namespace KMA.Tests.Gameplay.Volleyball
             var attacks = new AttackKind[8];
             var blocks = new bool[8];
             var weak = new bool[8];
+            var misses = new bool[8];
             for (int i = 0; i < 8; i++)
             {
                 attacks[i] = plan.Current.Attack;
                 blocks[i] = plan.Current.BlocksPlayerSmash;
                 weak[i] = plan.Current.WeakReceive;
+                misses[i] = plan.Current.MissesReceive;
                 Assert.That(CourtSpace.IsIn(plan.Current.ServeTarget), Is.True, $"step {i + 1}");
                 Assert.That(plan.Current.ServeTarget.x, Is.LessThan(0f), $"step {i + 1}");
                 plan.Advance();
@@ -38,11 +40,12 @@ namespace KMA.Tests.Gameplay.Volleyball
 
             Assert.That(attacks, Is.EqualTo(new[]
             {
-                AttackKind.Smash, AttackKind.Tip, AttackKind.Lob, AttackKind.Smash,
-                AttackKind.Lob, AttackKind.Smash, AttackKind.Tip, AttackKind.Lob
+                AttackKind.Smash, AttackKind.Smash, AttackKind.Lob, AttackKind.Smash,
+                AttackKind.Lob, AttackKind.Lob, AttackKind.Tip, AttackKind.Lob
             }));
-            Assert.That(blocks, Is.EqualTo(new[] { true, false, false, true, false, true, false, false }));
-            Assert.That(weak, Is.EqualTo(new[] { false, false, false, false, true, false, false, false }));
+            Assert.That(blocks, Is.EqualTo(new[] { false, false, false, true, false, false, false, false }));
+            Assert.That(weak, Is.EqualTo(new[] { false, false, false, false, false, true, false, false }));
+            Assert.That(misses, Is.EqualTo(new[] { false, false, true, false, true, false, false, true }));
         }
 
         [Test]

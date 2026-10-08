@@ -19,9 +19,11 @@ namespace KMA.Gameplay.Volleyball
         public readonly float AttackLateral;
         public readonly bool WeakReceive;
         public readonly bool BlocksPlayerSmash;
+        // The AI runs to the ball but whiffs its first touch, so the ball drops for a point.
+        public readonly bool MissesReceive;
 
         public OpponentStep(Vector2 serveTarget, AttackKind attack, float attackDepth, float attackLateral,
-            bool weakReceive, bool blocksPlayerSmash)
+            bool weakReceive, bool blocksPlayerSmash, bool missesReceive = false)
         {
             ServeTarget = serveTarget;
             Attack = attack;
@@ -29,11 +31,12 @@ namespace KMA.Gameplay.Volleyball
             AttackLateral = attackLateral;
             WeakReceive = weakReceive;
             BlocksPlayerSmash = blocksPlayerSmash;
+            MissesReceive = missesReceive;
         }
     }
 
     // The AI's only source of variety: a fixed cycle that advances every time the AI sends the
-    // ball over the net (serve or attack). Nothing here is random.
+    // ball over the net (serve or attack) or whiffs a receive. Nothing here is random.
     public sealed class OpponentPlan
     {
         readonly OpponentStep[] steps;
@@ -60,16 +63,19 @@ namespace KMA.Gameplay.Volleyball
             return new Vector2(step.AttackDepth, away * step.AttackLateral);
         }
 
+        // Tuned to be beatable: serves land near the player's ready spot, attacks stay inside the
+        // sidelines, three steps whiff the receive outright, one fumbles it into a free ball and
+        // only one step blocks.
         public static OpponentPlan Authored() => new OpponentPlan(new[]
         {
-            new OpponentStep(new Vector2(-7f, 0f), AttackKind.Smash, -7f, 3f, false, true),
-            new OpponentStep(new Vector2(-3f, -2.5f), AttackKind.Tip, -1.5f, 2f, false, false),
-            new OpponentStep(new Vector2(-7f, 3f), AttackKind.Lob, -7f, 3f, false, false),
-            new OpponentStep(new Vector2(-7f, -3f), AttackKind.Smash, -4.5f, 3f, false, true),
-            new OpponentStep(new Vector2(-5f, 0f), AttackKind.Lob, -5f, 0f, true, false),
-            new OpponentStep(new Vector2(-3f, 2.5f), AttackKind.Smash, -6f, 2f, false, true),
-            new OpponentStep(new Vector2(-7f, -3f), AttackKind.Tip, -1.2f, 0f, false, false),
-            new OpponentStep(new Vector2(-5f, 0f), AttackKind.Lob, -7f, 0f, false, false)
+            new OpponentStep(new Vector2(-5f, 0f), AttackKind.Smash, -6f, 2f, false, false),
+            new OpponentStep(new Vector2(-4.5f, -1.5f), AttackKind.Smash, -5f, 2f, false, false),
+            new OpponentStep(new Vector2(-5.5f, 1.5f), AttackKind.Lob, -6f, 2f, false, false, true),
+            new OpponentStep(new Vector2(-4.5f, 1.5f), AttackKind.Smash, -5f, 2f, false, true),
+            new OpponentStep(new Vector2(-5f, 0f), AttackKind.Lob, -5f, 1f, false, false, true),
+            new OpponentStep(new Vector2(-5.5f, -1.5f), AttackKind.Lob, -5f, 1.5f, true, false),
+            new OpponentStep(new Vector2(-5f, 0f), AttackKind.Tip, -2f, 0f, false, false),
+            new OpponentStep(new Vector2(-5f, 1f), AttackKind.Lob, -6f, 0f, false, false, true)
         });
     }
 }

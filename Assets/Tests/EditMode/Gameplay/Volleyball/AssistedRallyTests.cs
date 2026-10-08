@@ -44,6 +44,36 @@ namespace KMA.Tests.Gameplay.Volleyball
             Assert.That(playerSmashes, Is.GreaterThan(0), "The bot should have reached a set to smash.");
         }
 
+        // The exam is the bar a casual player has to clear: the same sloppy bot, serving with a
+        // merely GOOD toss, must reach five points before the AI does and before time runs out.
+        [Test]
+        public void ASloppyRingFollowerWinsTheExam()
+        {
+            var match = new VolleyballMatch(options: new VolleyballMatchOptions(VolleyballMatch.PointsToWin,
+                VolleyballMatch.TimeLimit, requirePointsToWin: true));
+
+            for (float elapsed = 0f; elapsed < 300f && !match.IsOver; elapsed += MatchDriver.Step)
+            {
+                if (match.Server == CourtSide.Player && match.BallState == BallState.Held)
+                    match.PressAction();
+                else if (match.Server == CourtSide.Player && match.BallState == BallState.Toss)
+                {
+                    if (match.FlightTime >= match.Flight.ApexTime + .15f)
+                        match.PressAction();
+                }
+                else
+                {
+                    FollowTheRing(match);
+                }
+                match.Tick(MatchDriver.Step);
+            }
+
+            Assert.That(match.IsOver, Is.True);
+            Assert.That(match.PlayerPoints, Is.EqualTo(VolleyballMatch.PointsToWin),
+                $"Lost {match.PlayerPoints}:{match.OpponentPoints} after {match.Elapsed:F1}s");
+            Assert.That(match.BuildResult().Pass, Is.True);
+        }
+
         static void FollowTheRing(VolleyballMatch match)
         {
             if (match.BallState != BallState.InPlay || match.FlightTime < ReactionSeconds ||

@@ -14,7 +14,9 @@ namespace KMA.Gameplay.Volleyball
             ReactionDelay = Mathf.Max(0f, reactionDelay);
         }
 
-        public static OpponentTuning Default => new OpponentTuning(.85f, .25f);
+        // Slow on purpose: the AI reacts late and runs at under half the player's speed, so a ball
+        // placed away from it is a point for a casual player.
+        public static OpponentTuning Default => new OpponentTuning(.6f, .45f);
     }
 
     // The whole game as plain state: serve, rally, points, clock and result. Advanced only by

@@ -91,7 +91,7 @@ namespace KMA.Tests.Gameplay.Volleyball
             MatchDriver.Advance(match, VolleyballMatch.OpponentServeDelay + .01f);
             Assert.That(match.BallState, Is.EqualTo(BallState.Toss));
             Assert.That(MatchDriver.AdvanceUntil(match, () => match.BallState == BallState.InPlay, 2f), Is.True);
-            Assert.That(match.Flight.Target, Is.EqualTo(new Vector2(-7f, 0f)));
+            Assert.That(match.Flight.Target, Is.EqualTo(OpponentPlan.Authored().Current.ServeTarget));
             Assert.That(match.Flight.Hitter, Is.EqualTo(CourtSide.Opponent));
             Assert.That(match.Plan.Index, Is.EqualTo(1));
 

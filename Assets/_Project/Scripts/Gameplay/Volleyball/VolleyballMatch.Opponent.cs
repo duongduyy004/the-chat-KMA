@@ -4,17 +4,18 @@ namespace KMA.Gameplay.Volleyball
 {
     // The authored AI. It reacts after a fixed delay, runs to the contact point at a tuned
     // speed, sets on its first touch and attacks on its second according to Plan.Current. It
-    // telegraphs smashes and blocks on the steps authored to block. No randomness.
+    // telegraphs smashes, blocks on the steps authored to block and whiffs the receive on the
+    // steps authored to miss. No randomness.
     public sealed partial class VolleyballMatch
     {
-        public const float SmashTellSeconds = .35f;
+        public const float SmashTellSeconds = .55f;
         public const float OpponentBlockX = .6f;
         public const float TipApexHeight = 3f;
         public const float LobApexHeight = 5f;
         // Loopier than the player's smash so a diving player has time to reach it.
         public const float OpponentSmashRise = .8f;
-        // The player's wider reach is an assist; the AI keeps the original one metre.
-        public const float OpponentReach = 1f;
+        // The player's wider reach is an assist; the AI's is shorter than the original metre.
+        public const float OpponentReach = .8f;
         public static readonly Vector2 WeakReceiveTarget = new Vector2(-5f, 0f);
         const float ReboundRise = .3f;
         const float ReboundDepth = 2.5f;
@@ -57,6 +58,13 @@ namespace KMA.Gameplay.Volleyball
                 return;
 
             opponentResolvedFlight = Flight;
+            if (!attacking && step.MissesReceive)
+            {
+                // Advance, or the next point would replay the same whiff forever.
+                Plan.Advance();
+                return;
+            }
+
             if (Vector2.Distance(Opponent.Position, contact) > OpponentReach)
             {
                 OpponentSmashTell = false;
