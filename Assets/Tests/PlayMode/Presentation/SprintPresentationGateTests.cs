@@ -261,7 +261,7 @@ namespace KMA.Tests.Presentation
             Assert.That(distanceBar.Fill.name, Is.EqualTo("RailFill"));
             Assert.That(chrome.GetComponentInParent<SafeAreaFitter>(), Is.Not.Null);
             Assert.That(distance.text, Is.EqualTo("0 / 100 m"));
-            Assert.That(rank.text, Is.EqualTo("HẠNG 1"));
+            Assert.That(rank.text, Is.EqualTo("VỊ TRÍ 1"));
             Assert.That(cadence.text, Is.EqualTo("CHUỖI ×0"));
 
             controller.ConfigureForTest();
@@ -269,7 +269,7 @@ namespace KMA.Tests.Presentation
             sprintHud.Refresh();
 
             Assert.That(distance.text, Is.EqualTo("42 / 100 m"));
-            Assert.That(rank.text, Is.EqualTo("HẠNG 1"));
+            Assert.That(rank.text, Is.EqualTo("VỊ TRÍ 1"));
             Assert.That(cadence.text, Is.EqualTo("CHUỖI ×0"));
             Assert.That(distanceBar.Value, Is.EqualTo(.42f).Within(.001f));
             Assert.That(distanceBar.Fill.rectTransform.anchorMax.x, Is.EqualTo(.42f).Within(.001f));
@@ -667,11 +667,11 @@ namespace KMA.Tests.Presentation
 
             Assert.That(chrome.Find("Scoreboard/Distance").GetComponent<TMP_Text>().text, Is.EqualTo("0 / 100 m"));
             TMP_Text rankChip = chrome.Find("Scoreboard/RankBadge/RankLabel").GetComponent<TMP_Text>();
-            Assert.That(rankChip.text, Is.EqualTo("HẠNG 1"));
+            Assert.That(rankChip.text, Is.EqualTo("VỊ TRÍ 1"));
             rankChip.ForceMeshUpdate();
-            Assert.That(rankChip.textInfo.lineCount, Is.EqualTo(1), "the rank chip keeps HẠNG 1 on one line");
+            Assert.That(rankChip.textInfo.lineCount, Is.EqualTo(1), "the rank chip keeps VỊ TRÍ 1 on one line");
             Assert.That(rankChip.textBounds.size.x, Is.LessThanOrEqualTo(rankChip.rectTransform.rect.width + .5f),
-                "HẠNG 1 must fit inside its chip");
+                "VỊ TRÍ 1 must fit inside its chip");
             Assert.That(chrome.Find("Scoreboard/Combo").GetComponent<TMP_Text>().text, Is.EqualTo("CHUỖI ×0"));
             Assert.That(chrome.Find("ModeLabel/Label").GetComponent<TMP_Text>().text, Is.EqualTo("CHẠY NƯỚC RÚT · 100M"));
 

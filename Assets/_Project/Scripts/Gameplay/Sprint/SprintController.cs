@@ -45,7 +45,7 @@ namespace KMA.Gameplay
         public string LeftInputAction => leftInputAction;
         public string RightInputAction => rightInputAction;
         public int Rank => rules == null ? 1 : rules.Rank;
-        public string RankText => "HẠNG " + Mathf.Clamp(Rank, 1, 4);
+        public string RankText => "VỊ TRÍ " + Mathf.Clamp(Rank, 1, 4);
         public int CadenceCombo => cadenceCombo;
         public int CorrectStreak => rules == null ? 0 : rules.CorrectStreak;
         public float[] RivalDistances => rules == null ? System.Array.Empty<float>() : rules.RivalDistances;

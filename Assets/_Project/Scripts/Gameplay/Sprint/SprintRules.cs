@@ -192,10 +192,11 @@ namespace KMA.Gameplay
         {
             bool pass = distance >= Mathf.Max(0f, goalDistance) && elapsed <= deadline;
             float accuracy = total == 0 ? 0f : 2f * valid / total;
-            float maxStamina = balance.HasValue ? balance.Value.MaxStamina : 100f;
-            float efficiency = Mathf.Clamp01(maxStamina <= 0f ? 0f : stamina / maxStamina);
+            // 1st place earns the full bonus and last place none; leftover stamina earns nothing.
+            int rivals = rivalDistances.Length;
+            float placement = rivals == 0 ? 1f : Mathf.Clamp01((float)(rivals + 1 - currentRank) / rivals);
             float mastery = deadline <= 0f ? 0f : Mathf.Clamp01((deadline - elapsed) / 3f);
-            return ScoreUtil.Build(pass, accuracy, efficiency, mastery);
+            return ScoreUtil.Build(pass, accuracy, placement, mastery);
         }
 
         void UpdateRank()

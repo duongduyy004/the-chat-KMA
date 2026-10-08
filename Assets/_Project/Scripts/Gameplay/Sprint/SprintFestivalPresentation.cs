@@ -70,10 +70,10 @@ namespace KMA.Gameplay
             Image rankBadge = UiKit.Shape(scoreboard.transform, "RankBadge", MinigameUiTheme.RadiusPanel,
                 MinigameUiTheme.WithAlpha(MinigameUiTheme.Accent, .22f));
             UiKit.Anchor(rankBadge.rectTransform, new Vector2(.66f, .46f), new Vector2(.95f, .92f));
-            TMP_Text rank = UiKit.Label(rankBadge.transform, "RankLabel", "HẠNG 1", MinigameUiTheme.Headline,
+            TMP_Text rank = UiKit.Label(rankBadge.transform, "RankLabel", "VỊ TRÍ 1", MinigameUiTheme.Headline,
                 MinigameUiTheme.Accent);
             UiKit.Stretch(rank.rectTransform, new Vector2(MinigameUiTheme.SpaceSm, 0f), new Vector2(-MinigameUiTheme.SpaceSm, 0f));
-            // "HẠNG 4" is twice as wide as the old "4th": shrink rather than overflow the chip.
+            // "VỊ TRÍ 4" is much wider than the old "4th": shrink rather than overflow the chip.
             UiKit.FitLabel(rank, MinigameUiTheme.Headline);
             rank.textWrappingMode = TextWrappingModes.NoWrap;
 

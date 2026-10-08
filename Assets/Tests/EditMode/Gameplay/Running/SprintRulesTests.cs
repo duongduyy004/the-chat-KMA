@@ -118,11 +118,40 @@ namespace KMA.Tests.Gameplay.Running
         }
 
         [Test]
-        public void StaminaIsEfficiencyOnly_AndDoesNotCreateAnotherPassGate()
+        public void EmptyStamina_DoesNotCreateAnotherPassGate()
         {
             var rules = SprintRules.ForTest(distance: 100f, elapsed: 13.9f, rank: 4, stamina: 0f);
 
             Assert.That(rules.BuildResult().Pass, Is.True);
+        }
+
+        [Test]
+        public void FinishingFirst_ScoresAboveFinishingLast_ForTheSameRun()
+        {
+            RivalPaceProfile[] Rivals(float speed) => new[]
+            {
+                new RivalPaceProfile("A", speed, speed),
+                new RivalPaceProfile("B", speed, speed),
+                new RivalPaceProfile("C", speed, speed)
+            };
+            var first = SprintRules.ForTest(distance: 100f, elapsed: 11f, rank: 1, rivalProfiles: Rivals(0f));
+            var last = SprintRules.ForTest(distance: 100f, elapsed: 11f, rank: 4, rivalProfiles: Rivals(200f));
+            first.Tick(1f);
+            last.Tick(1f);
+
+            Assert.That(first.Rank, Is.EqualTo(1));
+            Assert.That(last.Rank, Is.EqualTo(4));
+            Assert.That(first.BuildResult().Score, Is.EqualTo(7.7f).Within(.001f));
+            Assert.That(last.BuildResult().Score, Is.EqualTo(6.7f).Within(.001f));
+        }
+
+        [Test]
+        public void LeftoverStamina_DoesNotChangeTheScore()
+        {
+            var spent = SprintRules.ForTest(distance: 100f, elapsed: 12f, rank: 1, stamina: 0f);
+            var saved = SprintRules.ForTest(distance: 100f, elapsed: 12f, rank: 1, stamina: 100f);
+
+            Assert.That(spent.BuildResult().Score, Is.EqualTo(saved.BuildResult().Score));
         }
 
         [Test]
