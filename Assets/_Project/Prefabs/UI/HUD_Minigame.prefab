@@ -1237,6 +1237,8 @@ MonoBehaviour:
   - {fileID: 3504085510111135101}
   - {fileID: 1878479644958412237}
   countdownLabel: {fileID: 0}
+  hasInk: 0
+  ink: {r: 0, g: 0, b: 0, a: 0}
 --- !u!1 &8863690910283851387
 GameObject:
   m_ObjectHideFlags: 0
