@@ -1,22 +1,47 @@
 using KMA.Gameplay.Core;
+using KMA.UI.Kit;
+using TMPro;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 
 namespace KMA.Gameplay.UI
 {
+    // Shown between scenes: the menu's navy field and gold track lines behind a cream menu
+    // block holding the bobbing sport badge, an italic "loading" title and a slanted bar.
     public sealed class SceneTransitionOverlay : MonoBehaviour
     {
-        const float SpinnerDegreesPerSecond = 240f;
+        const float CardWidth = 640f;
+        const float CardHeight = 300f;
+        const float CardStroke = 4f;
+        static readonly Vector2 CardShadow = new Vector2(6f, -6f);
+        const float BadgeScale = 1f;
+        const float BadgeBob = 6f;
+        const float BadgeBobSpeed = 4f;
+        const float TitleSize = 64f;
+        const float PercentSize = 30f;
+        static readonly Vector2 BarSize = new Vector2(440f, 40f);
+        const float BarStroke = 4f;
+        const float DotSeconds = .35f;
+        const float FadeInSeconds = .1f;
+        const float FadeOutSeconds = .2f;
+        const string Title = "ĐANG TẢI";
 
         static SceneTransitionOverlay instance;
 
         GameObject panel;
-        RectTransform spinner;
+        RectTransform badge;
+        float badgeY;
+        TMP_Text title;
+        TMP_Text titleShadow;
+        TMP_Text percent;
+        RectTransform fill;
         CanvasGroup canvasGroup;
         Slider loadingBar;
         SceneRouter boundRouter;
         bool initialized;
+        float shownFor;
+        int dots = -1;
 
         public static SceneTransitionOverlay Instance => instance;
         public bool IsVisible { get; private set; }
@@ -123,106 +148,223 @@ namespace KMA.Gameplay.UI
         public void Show()
         {
             IsVisible = true;
+            shownFor = 0f;
+            dots = -1;
             SetProgress(0f);
-            canvasGroup.alpha = 1f;
+            UpdateTitle();
             canvasGroup.interactable = true;
             canvasGroup.blocksRaycasts = true;
             panel.SetActive(true);
         }
 
+        // Input is released at once; the panel then fades out over the newly loaded scene.
         public void Hide()
         {
             IsVisible = false;
             canvasGroup.interactable = false;
             canvasGroup.blocksRaycasts = false;
-            panel.SetActive(false);
+            if (!Application.isPlaying || canvasGroup.alpha <= 0f)
+            {
+                canvasGroup.alpha = 0f;
+                panel.SetActive(false);
+            }
         }
 
         void SetProgress(float value)
         {
+            value = Mathf.Clamp01(value);
             if (loadingBar != null)
-                loadingBar.value = Mathf.Clamp01(value);
+                loadingBar.value = value;
+            if (fill != null)
+            {
+                fill.anchoredPosition = new Vector2(-(1f - value) * (BarSize.x - BarStroke * 2f), 0f);
+                fill.gameObject.SetActive(value > 0f);
+            }
+            if (percent != null)
+                percent.text = VietText.Fix($"{Mathf.FloorToInt(value * 100f)}%");
         }
 
         void OnLoadFailed(string _) => Hide();
 
         void Update()
         {
-            if (IsVisible && spinner != null)
-                spinner.Rotate(0f, 0f, -SpinnerDegreesPerSecond * Time.unscaledDeltaTime);
+            if (panel == null || !panel.activeSelf)
+                return;
+
+            float delta = Time.unscaledDeltaTime;
+            if (IsVisible)
+            {
+                canvasGroup.alpha = Mathf.MoveTowards(canvasGroup.alpha, 1f, delta / FadeInSeconds);
+                shownFor += delta;
+                UpdateTitle();
+                badge.anchoredPosition = new Vector2(0f, badgeY + Mathf.Sin(shownFor * BadgeBobSpeed) * BadgeBob);
+            }
+            else
+            {
+                canvasGroup.alpha = Mathf.MoveTowards(canvasGroup.alpha, 0f, delta / FadeOutSeconds);
+                if (canvasGroup.alpha <= 0f)
+                    panel.SetActive(false);
+            }
+        }
+
+        void UpdateTitle()
+        {
+            int count = 1 + Mathf.FloorToInt(shownFor / DotSeconds) % 3;
+            if (count == dots)
+                return;
+            dots = count;
+            // Pad with hidden dots so the centred title does not shift as they appear.
+            string value = VietText.Fix(Title) + new string('.', count) + "<alpha=#00>" + new string('.', 3 - count);
+            title.text = value;
+            titleShadow.text = value;
         }
 
         void Build()
         {
-            panel = new GameObject("Panel");
+            panel = new GameObject("Panel", typeof(RectTransform));
             panel.transform.SetParent(transform, false);
 
             var canvas = panel.AddComponent<Canvas>();
             canvas.renderMode = RenderMode.ScreenSpaceOverlay;
             canvas.sortingOrder = 800;
-            panel.AddComponent<CanvasScaler>();
+            var scaler = panel.AddComponent<CanvasScaler>();
+            scaler.uiScaleMode = CanvasScaler.ScaleMode.ScaleWithScreenSize;
+            scaler.referenceResolution = new Vector2(1920f, 1080f);
+            scaler.matchWidthOrHeight = .5f;
             panel.AddComponent<GraphicRaycaster>();
             canvasGroup = panel.AddComponent<CanvasGroup>();
+            Color navy = HomeMenuStyle.Navy;
 
-            var backdropObject = new GameObject("Backdrop");
-            backdropObject.transform.SetParent(panel.transform, false);
-            var backdropRect = backdropObject.AddComponent<RectTransform>();
-            backdropRect.anchorMin = Vector2.zero;
-            backdropRect.anchorMax = Vector2.one;
-            backdropRect.offsetMin = Vector2.zero;
-            backdropRect.offsetMax = Vector2.zero;
-            var backdropImage = backdropObject.AddComponent<Image>();
-            backdropImage.color = Color.black;
+            var backdrop = Rect(panel.transform, "Backdrop");
+            Stretch(backdrop, Vector2.zero);
+            var backdropImage = backdrop.gameObject.AddComponent<Image>();
+            backdropImage.color = navy;
             backdropImage.raycastTarget = true;
 
-            var spinnerObject = new GameObject("Spinner");
-            spinnerObject.transform.SetParent(panel.transform, false);
-            spinner = spinnerObject.AddComponent<RectTransform>();
-            spinner.sizeDelta = new Vector2(64f, 64f);
-            spinner.anchoredPosition = Vector2.zero;
-            var spinnerImage = spinnerObject.AddComponent<Image>();
-            spinnerImage.color = Color.white;
+            // The splash's gold track lines, running behind the card and out past its sides.
+            for (int i = 0; i < 3; i++)
+            {
+                var line = Rect(panel.transform, "TrackLine" + i);
+                Place(line, new Vector2((i - 1) * 60f, -40f + i * 34f), new Vector2(1240f - i * 160f, 12f));
+                line.localRotation = Quaternion.Euler(0f, 0f, UITheme.Shared.Menu.titleAngle);
+                var image = line.gameObject.AddComponent<Image>();
+                image.color = MinigameUiTheme.WithAlpha(HomeMenuStyle.Gold, .55f);
+                image.raycastTarget = false;
+            }
 
-            var progressObject = new GameObject("LoadingBar", typeof(RectTransform), typeof(Image),
-                typeof(Slider));
-            progressObject.transform.SetParent(panel.transform, false);
-            var progressRect = progressObject.GetComponent<RectTransform>();
-            progressRect.sizeDelta = new Vector2(420f, 24f);
-            progressRect.anchoredPosition = new Vector2(0f, -90f);
-            var track = progressObject.GetComponent<Image>();
-            track.color = new Color(1f, 1f, 1f, 0.3f);
-            track.raycastTarget = false;
+            var card = Rect(panel.transform, "Card");
+            Place(card, Vector2.zero, new Vector2(CardWidth, CardHeight));
+            var border = card.gameObject.AddComponent<Image>();
+            border.color = navy;
+            MapPresentationBuilder.UseRoundedSurface(border);
+            border.raycastTarget = false;
+            var shadow = card.gameObject.AddComponent<Shadow>();
+            shadow.effectColor = MinigameUiTheme.WithAlpha(Color.black, .45f);
+            shadow.effectDistance = CardShadow;
+            var face = Rect(card, "Fill");
+            Stretch(face, Vector2.one * CardStroke);
+            var faceImage = face.gameObject.AddComponent<Image>();
+            faceImage.color = UITheme.Shared.TextPrimary;
+            MapPresentationBuilder.UseRoundedSurface(faceImage);
+            faceImage.raycastTarget = false;
 
-            var fillAreaObject = new GameObject("Fill Area", typeof(RectTransform));
-            fillAreaObject.transform.SetParent(progressObject.transform, false);
-            var fillArea = fillAreaObject.GetComponent<RectTransform>();
-            fillArea.anchorMin = Vector2.zero;
-            fillArea.anchorMax = Vector2.one;
-            fillArea.offsetMin = new Vector2(4f, 4f);
-            fillArea.offsetMax = new Vector2(-4f, -4f);
+            // The badge sits on the card's top edge, like a medal pinned to it.
+            badgeY = CardHeight * .5f;
+            badge = HomePresentationBuilder.CreateBadge(card, "SportBadge");
+            Place(badge, new Vector2(0f, badgeY), Vector2.one * HomeMenuStyle.BadgeSize);
+            badge.localScale = Vector3.one * BadgeScale;
+            foreach (RectTransform part in badge)
+                part.anchorMin = part.anchorMax = Vector2.one * .5f;
 
-            var fillObject = new GameObject("Fill", typeof(RectTransform), typeof(Image));
-            fillObject.transform.SetParent(fillArea, false);
-            var fill = fillObject.GetComponent<RectTransform>();
-            fill.anchorMin = Vector2.zero;
-            fill.anchorMax = Vector2.one;
-            fill.offsetMin = Vector2.zero;
-            fill.offsetMax = Vector2.zero;
-            var fillImage = fillObject.GetComponent<Image>();
-            fillImage.color = new Color32(255, 202, 58, 255);
-            fillImage.raycastTarget = false;
+            titleShadow = Label(card, "TitleShadow", string.Empty, TitleSize, VietFontRole.BodyBold,
+                new Vector2(3f, 7f), new Vector2(CardWidth - 40f, 80f), HomeMenuStyle.Gold);
+            title = Label(card, "Title", string.Empty, TitleSize, VietFontRole.BodyBold,
+                new Vector2(0f, 10f), new Vector2(CardWidth - 40f, 80f), navy);
+            titleShadow.fontStyle = title.fontStyle = FontStyles.Italic;
 
-            loadingBar = progressObject.GetComponent<Slider>();
-            loadingBar.minValue = 0f;
-            loadingBar.maxValue = 1f;
-            loadingBar.interactable = false;
-            loadingBar.transition = Selectable.Transition.None;
-            loadingBar.fillRect = fill;
-            loadingBar.targetGraphic = track;
+            float barX = -50f;
+            CreateBar(card, new Vector2(barX, -80f), navy);
+            percent = Label(card, "Percent", "0%", PercentSize, VietFontRole.Hud,
+                new Vector2(barX + BarSize.x * .5f + 68f, -80f), new Vector2(100f, BarSize.y + 10f), navy);
+            percent.alignment = TextAlignmentOptions.Left;
 
+            canvasGroup.alpha = 0f;
             canvasGroup.interactable = false;
             canvasGroup.blocksRaycasts = false;
+            UpdateTitle();
             panel.SetActive(false);
+        }
+
+        // The splash bar's construction: a slanted navy track, a masked groove, and a full-width
+        // slanted red fill slid in from the left so its leading edge keeps the menu angle.
+        void CreateBar(RectTransform parent, Vector2 position, Color navy)
+        {
+            var track = Rect(parent, "LoadingBar");
+            Place(track, position, BarSize);
+            int width = Mathf.RoundToInt(BarSize.x);
+            int height = Mathf.RoundToInt(BarSize.y);
+            var background = track.gameObject.AddComponent<Image>();
+            background.sprite = HomePresentationBuilder.SlantSprite(false, width, height, 0f);
+            background.color = navy;
+            background.raycastTarget = false;
+            loadingBar = track.gameObject.AddComponent<Slider>();
+            loadingBar.interactable = false;
+            loadingBar.transition = Selectable.Transition.None;
+            loadingBar.minValue = 0f;
+            loadingBar.maxValue = 1f;
+
+            int stroke = Mathf.RoundToInt(BarStroke);
+            var clip = Rect(track, "FillMask");
+            Stretch(clip, Vector2.one * BarStroke);
+            var groove = clip.gameObject.AddComponent<Image>();
+            groove.sprite = HomePresentationBuilder.SlantSprite(false, width - stroke * 2, height - stroke * 2, 0f);
+            groove.color = Color.Lerp(UITheme.Shared.TextPrimary, navy, .15f);
+            groove.raycastTarget = false;
+            clip.gameObject.AddComponent<Mask>().showMaskGraphic = true;
+            fill = Rect(clip, "Fill");
+            Stretch(fill, Vector2.zero);
+            var fillImage = fill.gameObject.AddComponent<Image>();
+            fillImage.sprite = groove.sprite;
+            fillImage.color = HomeMenuStyle.Red;
+            fillImage.raycastTarget = false;
+        }
+
+        static TMP_Text Label(Transform parent, string name, string value, float size, VietFontRole role,
+            Vector2 position, Vector2 box, Color color)
+        {
+            var rect = Rect(parent, name);
+            Place(rect, position, box);
+            var text = rect.gameObject.AddComponent<TextMeshProUGUI>();
+            text.text = VietText.Fix(value);
+            text.fontSize = size;
+            text.alignment = TextAlignmentOptions.Center;
+            text.textWrappingMode = TextWrappingModes.NoWrap;
+            text.raycastTarget = false;
+            VietTypography.Apply(text, role);
+            text.color = color;
+            return text;
+        }
+
+        static RectTransform Rect(Transform parent, string name)
+        {
+            var go = new GameObject(name, typeof(RectTransform));
+            go.transform.SetParent(parent, false);
+            return (RectTransform)go.transform;
+        }
+
+        static void Place(RectTransform rect, Vector2 position, Vector2 size)
+        {
+            rect.anchorMin = rect.anchorMax = rect.pivot = Vector2.one * .5f;
+            rect.anchoredPosition = position;
+            rect.sizeDelta = size;
+        }
+
+        static void Stretch(RectTransform rect, Vector2 inset)
+        {
+            rect.anchorMin = Vector2.zero;
+            rect.anchorMax = Vector2.one;
+            rect.offsetMin = inset;
+            rect.offsetMax = -inset;
         }
     }
 }

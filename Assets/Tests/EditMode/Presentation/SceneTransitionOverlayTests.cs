@@ -2,7 +2,9 @@ using System.Reflection;
 using KMA.Gameplay.Core;
 using KMA.Gameplay.UI;
 using NUnit.Framework;
+using TMPro;
 using UnityEngine;
+using UnityEngine.UI;
 
 namespace KMA.Tests.Presentation
 {
@@ -66,6 +68,50 @@ namespace KMA.Tests.Presentation
                 Object.DestroyImmediate(routerRoot);
             }
         }
+
+        [Test]
+        public void UsesTheMenuLookAndShowsProgressOnTheSlantedBar()
+        {
+            var root = new GameObject("scene-transition-overlay");
+            try
+            {
+                var overlay = root.AddComponent<SceneTransitionOverlay>();
+                overlay.InitializeForTest();
+                Transform panel = root.transform.Find("Panel");
+
+                CanvasScaler scaler = panel.GetComponent<CanvasScaler>();
+                Assert.That(scaler.uiScaleMode, Is.EqualTo(CanvasScaler.ScaleMode.ScaleWithScreenSize));
+                Assert.That(scaler.referenceResolution, Is.EqualTo(new Vector2(1920f, 1080f)));
+                Assert.That(panel.Find("Backdrop").GetComponent<Image>().color, Is.EqualTo(HomeMenuStyle.Navy));
+                Assert.That(panel.Find("Card").GetComponent<Image>().color, Is.EqualTo(HomeMenuStyle.Navy));
+                Assert.That(panel.Find("Card/Fill").GetComponent<Image>().color, Is.EqualTo(UITheme.Shared.TextPrimary));
+                Assert.That(panel.Find("Card/SportBadge"), Is.Not.Null);
+                Assert.That(panel.Find("Card/Title").GetComponent<TMP_Text>().text, Does.StartWith("ĐANG TẢI."));
+
+                overlay.Show();
+                RectTransform fill = (RectTransform)panel.Find("Card/LoadingBar/FillMask/Fill");
+                TMP_Text percent = panel.Find("Card/Percent").GetComponent<TMP_Text>();
+                Assert.That(fill.gameObject.activeSelf, Is.False, "an empty bar shows no fill");
+                Assert.That(percent.text, Is.EqualTo("0%"));
+
+                SetProgress(overlay, .5f);
+                Assert.That(fill.gameObject.activeSelf, Is.True);
+                Assert.That(fill.anchoredPosition.x, Is.LessThan(0f).And.GreaterThan(-fill.rect.width));
+                Assert.That(percent.text, Is.EqualTo("50%"));
+                Assert.That(overlay.Progress, Is.EqualTo(.5f).Within(.0001f));
+
+                SetProgress(overlay, 1f);
+                Assert.That(fill.anchoredPosition.x, Is.EqualTo(0f).Within(.0001f));
+            }
+            finally
+            {
+                Object.DestroyImmediate(root);
+            }
+        }
+
+        static void SetProgress(SceneTransitionOverlay overlay, float value) =>
+            typeof(SceneTransitionOverlay).GetMethod("SetProgress", BindingFlags.Instance | BindingFlags.NonPublic)
+                .Invoke(overlay, new object[] { value });
 
         static void RaiseSceneLoadStarted(SceneRouter router) => InvokeEvent(router, "SceneLoadStarted");
 

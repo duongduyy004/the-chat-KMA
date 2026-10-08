@@ -66,8 +66,9 @@ namespace KMA.Tests.Presentation
             Assert.That(overlay.IsBlockingInput, Is.True);
             Assert.That(overlay.Progress, Is.EqualTo(0.625f).Within(0.0001f));
             Slider visibleBar = overlay.GetComponentInChildren<Slider>(true);
-            Assert.That(visibleBar.fillRect, Is.Not.Null);
-            Assert.That(visibleBar.fillRect.GetComponent<Graphic>().color.a, Is.GreaterThan(0f));
+            Graphic fill = visibleBar.transform.Find("FillMask/Fill").GetComponent<Graphic>();
+            Assert.That(fill.gameObject.activeInHierarchy, Is.True);
+            Assert.That(fill.color.a, Is.GreaterThan(0f));
 
             Raise(router, "SceneLoadCompleted");
 
