@@ -13,7 +13,13 @@ namespace KMA.Gameplay
         public override bool UsesSharedCountdown => false;
         public override bool OwnsStartGate => true;
 
+        // Fastest roll lets the quickest rival finish around 13 s, slowest keeps the last one near 18 s.
+        public const float DefaultMinRivalSpeed = 5.7f;
+        public const float DefaultMaxRivalSpeed = 6.9f;
+
         [SerializeField] RivalPaceProfileAsset[] rivalProfiles;
+        [SerializeField, Min(0f)] float minRivalSpeed = DefaultMinRivalSpeed;
+        [SerializeField, Min(0f)] float maxRivalSpeed = DefaultMaxRivalSpeed;
         [SerializeField] InputActionAsset inputActions;
         [SerializeField] bool directInputEnabled = true;
         [SerializeField] GameplayInputRouter inputRouter;
@@ -288,9 +294,11 @@ namespace KMA.Gameplay
         RivalPaceProfile[] CreateRuntimeProfiles()
         {
             if (rivalProfiles == null || rivalProfiles.Length == 0) return Array.Empty<RivalPaceProfile>();
+            var random = new System.Random();
             var runtimeProfiles = new RivalPaceProfile[rivalProfiles.Length];
             for (var i = 0; i < rivalProfiles.Length; i++)
-                runtimeProfiles[i] = rivalProfiles[i] == null ? null : rivalProfiles[i].ToRuntime();
+                runtimeProfiles[i] = rivalProfiles[i] == null ? null
+                    : RivalPaceRandomizer.Roll(rivalProfiles[i].ToRuntime(), minRivalSpeed, maxRivalSpeed, random);
             return runtimeProfiles;
         }
 
