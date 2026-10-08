@@ -127,7 +127,7 @@ namespace KMA.Gameplay.UI
             objective.lineSpacing = 0f;
             objective.enableAutoSizing = true;
             objective.fontSizeMax = Style.objectiveSize;
-            objective.fontSizeMin = Style.captionSize - 4f;
+            objective.fontSizeMin = Style.objectiveSize - 8f;
             Inset(objective.rectTransform, Vector2.zero, Vector2.one,
                 new Vector2(pad, actionTop + gap), new Vector2(-pad, -headerBottom - gap));
 

@@ -163,8 +163,8 @@ namespace KMA.Tests.Presentation
                 MapPresentationBuilder.Build(screen, new GameSession());
 
                 Transform header = root.transform.Find("S5MapPresentation/Content/Header");
-                Assert.That(header.GetComponent<Image>(), Is.Not.Null);
-                Assert.That(header.Find("Divider"), Is.Not.Null);
+                Assert.That(header.GetComponent<Image>(), Is.Null, "The header floats its blocks on the scenery.");
+                Assert.That(header.Find("Divider"), Is.Null);
 
                 LayoutElement back = header.Find("BackButton").GetComponent<LayoutElement>();
                 Assert.That(back.preferredWidth, Is.GreaterThanOrEqualTo(56f));
@@ -189,7 +189,7 @@ namespace KMA.Tests.Presentation
                     Assert.That(heart.sprite, Is.Not.Null, heart.name);
                     Assert.That(heart.preserveAspect, Is.True, heart.name);
                     Assert.That(heart.GetComponent<LayoutElement>().preferredWidth,
-                        Is.GreaterThanOrEqualTo(32f), heart.name);
+                        Is.GreaterThanOrEqualTo(40f), heart.name);
                 }
             }
             finally
@@ -197,6 +197,65 @@ namespace KMA.Tests.Presentation
                 Object.DestroyImmediate(root);
             }
         }
+
+        // Same language as the menu panel: cream face, thick navy border, hard navy drop shadow,
+        // navy italic title over a gold offset copy and a red square accent.
+        [Test]
+        public void MapHeaderUsesTheMenuPanelStyle()
+        {
+            var root = new GameObject("map", typeof(RectTransform));
+            try
+            {
+                var screen = root.AddComponent<MapScreen>();
+                MapPresentationBuilder.Build(screen, new GameSession());
+                Transform header = root.transform.Find("S5MapPresentation/Content/Header");
+                Color cream = UITheme.Shared.TextPrimary;
+
+                foreach (string block in new[] { "BackButton", "Heading", "LivesPanel" })
+                {
+                    Transform rect = header.Find(block);
+                    Assert.That(rect.GetComponent<Image>().color, Is.EqualTo(HomeMenuStyle.Navy), block);
+                    Shadow shadow = rect.GetComponents<Shadow>().FirstOrDefault(s => !(s is Outline));
+                    Assert.That(shadow, Is.Not.Null, block + " needs the hard drop shadow");
+                    Assert.That(shadow.effectColor, Is.EqualTo(HomeMenuStyle.Navy), block);
+                    Assert.That(shadow.effectDistance.x, Is.GreaterThan(0f), block);
+                    Assert.That(shadow.effectDistance.y, Is.LessThan(0f), block);
+                    Assert.That(rect.Find("Fill").GetComponent<Image>().color, Is.EqualTo(cream), block);
+                }
+
+                TMP_Text title = header.Find("Heading/TitleContainer/Title").GetComponent<TMP_Text>();
+                Assert.That(title.color, Is.EqualTo(HomeMenuStyle.Navy));
+                Assert.That(title.fontStyle & FontStyles.Italic, Is.EqualTo(FontStyles.Italic));
+                TMP_Text titleShadow = header.Find("Heading/TitleContainer/TitleShadow").GetComponent<TMP_Text>();
+                Assert.That(titleShadow.text, Is.EqualTo(title.text));
+                Assert.That(titleShadow.color, Is.EqualTo(HomeMenuStyle.Gold));
+                Assert.That(header.Find("Heading/Accent").GetComponent<Image>().color, Is.EqualTo(HomeMenuStyle.Red));
+
+                TMP_Text arrow = header.Find("BackButton").GetComponentInChildren<TMP_Text>(true);
+                Assert.That(arrow.color, Is.EqualTo(HomeMenuStyle.Navy));
+                TMP_Text lives = header.Find("LivesPanel/LivesLabelContainer/LivesLabel").GetComponent<TMP_Text>();
+                Assert.That(ContrastRatio(lives.color, cream), Is.GreaterThanOrEqualTo(4.5f));
+
+                HeartBar hearts = screen.Hearts;
+                hearts.SetHearts(2);
+                Image empty = hearts.GetComponentsInChildren<Image>(true)[4];
+                Assert.That(ContrastRatio(Opaque(empty.color, cream), cream), Is.GreaterThanOrEqualTo(1.5f),
+                    "An empty heart must still show on the cream face.");
+                hearts.SetCountdown(System.TimeSpan.FromMinutes(5), false);
+                Assert.That(hearts.CountdownText, Is.EqualTo("5:00"));
+                TMP_Text timer = header.Find("LivesPanel/LivesLabelContainer/LifeTimer").GetComponent<TMP_Text>();
+                Assert.That(timer.gameObject.activeSelf, Is.True);
+                Assert.That(ContrastRatio(timer.color, cream), Is.GreaterThanOrEqualTo(4.5f));
+            }
+            finally
+            {
+                Object.DestroyImmediate(root);
+            }
+        }
+
+        static Color Opaque(Color color, Color under) =>
+            new Color(Mathf.Lerp(under.r, color.r, color.a), Mathf.Lerp(under.g, color.g, color.a),
+                Mathf.Lerp(under.b, color.b, color.a), 1f);
 
         [Test]
         public void JourneyLessonLabelsMeetContrastOnTheirButtonSurface()
@@ -483,13 +542,13 @@ namespace KMA.Tests.Presentation
                 Transform sprint = root.transform.Find(
                     "S5MapPresentation/Content/SelectionGrid/SprintNode");
                 Assert.That(sprint.Find("LabelGroup/MetaPill/StatusContainer/Status").GetComponent<TMP_Text>().fontSize,
-                    Is.GreaterThanOrEqualTo(20));
+                    Is.GreaterThanOrEqualTo(24));
                 Assert.That(sprint.Find("LabelGroup/TitleContainer/Title").GetComponent<TMP_Text>().fontSize,
-                    Is.GreaterThanOrEqualTo(30));
+                    Is.GreaterThanOrEqualTo(36));
 
                 foreach (TMP_Text line in root.transform.Find("S5MapPresentation/Content/JourneyLessons")
                              .GetComponentsInChildren<TMP_Text>(true))
-                    Assert.That(line.fontSize, Is.GreaterThanOrEqualTo(16), line.name);
+                    Assert.That(line.fontSize, Is.GreaterThanOrEqualTo(24), line.name);
             }
             finally
             {

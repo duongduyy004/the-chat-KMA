@@ -84,7 +84,6 @@ namespace KMA.Gameplay.UI
             }
             foreach (Button button in screen.GetComponentsInChildren<Button>(true)) button.gameObject.SetActive(false);
             UITheme theme = screen.Theme;
-            Color border = theme.Border;
             Color background = Color.Lerp(theme.Background,
                 UITheme.Shared.MapBackgroundTint, .46f);
 
@@ -98,7 +97,7 @@ namespace KMA.Gameplay.UI
             RectTransform content = Rect(root, "Content");
             Stretch(content, new Vector2(64, 40), new Vector2(-64, -40));
 
-            HeartBar hearts = Header(content, session, border);
+            HeartBar hearts = Header(content, session);
             PinToTop((RectTransform)hearts.transform.parent.parent, 84f);
             RectTransform grid = Rect(content, "SelectionGrid");
             Anchor(grid, new Vector2(0f, .37f), new Vector2(1f, .84f));
@@ -194,57 +193,85 @@ namespace KMA.Gameplay.UI
             return view;
         }
 
-        static HeartBar Header(Transform parent, GameSession session, Color border)
+        // Header blocks share the menu panel's look: a cream face inside a thick navy border with
+        // a hard navy drop shadow, floating on the scenery instead of sitting on a strip.
+        const float BlockHeight = 72f;
+        const float BlockStroke = 4f;
+        static readonly Vector2 BlockShadow = new Vector2(6f, -6f);
+        const float HeartSize = 40f;
+
+        static HeartBar Header(Transform parent, GameSession session)
         {
+            Color navy = HomeMenuStyle.Navy;
             RectTransform header = Rect(parent, "Header");
-            Image headerSurface = header.gameObject.AddComponent<Image>();
-            headerSurface.color = MinigameUiTheme.WithAlpha(UITheme.Shared.Surface, 178f / 255f);
-            headerSurface.raycastTarget = false;
             HorizontalLayoutGroup layout = header.gameObject.AddComponent<HorizontalLayoutGroup>();
-            layout.padding = new RectOffset(14, 16, 8, 10);
-            layout.spacing = 16; layout.childAlignment = TextAnchor.MiddleCenter; layout.childControlWidth = true;
-            layout.childControlHeight = true; layout.childForceExpandWidth = false;
+            // Right and bottom padding leave room for the blocks' drop shadow.
+            layout.padding = new RectOffset(0, (int)BlockShadow.x, 0, (int)-BlockShadow.y);
+            layout.spacing = 20; layout.childAlignment = TextAnchor.MiddleLeft; layout.childControlWidth = true;
+            layout.childControlHeight = true; layout.childForceExpandWidth = false; layout.childForceExpandHeight = false;
             LayoutElement headerElement = header.gameObject.AddComponent<LayoutElement>();
-            headerElement.minHeight = 96;
-            headerElement.preferredHeight = 96;
+            headerElement.minHeight = 84;
+            headerElement.preferredHeight = 84;
             headerElement.flexibleHeight = 0;
-            Button back = HeaderButton(header, "BackButton", "‹", border);
+            Button back = HeaderButton(header, "BackButton", "‹");
             back.onClick.AddListener(() => KMA.Gameplay.Core.SceneRouter.Instance?.RouteToMenu());
+
             RectTransform heading = Rect(header, "Heading");
-            heading.gameObject.AddComponent<LayoutElement>().flexibleWidth = 1;
+            MenuBlock(heading);
+            LayoutElement headingElement = heading.gameObject.AddComponent<LayoutElement>();
+            headingElement.preferredWidth = 440;
+            headingElement.flexibleWidth = 0;
+            headingElement.preferredHeight = BlockHeight;
             VerticalLayoutGroup headingLayout = heading.gameObject.AddComponent<VerticalLayoutGroup>();
-            headingLayout.spacing = 0;
+            headingLayout.padding = new RectOffset(52, 24, 6, 8);
+            headingLayout.childAlignment = TextAnchor.MiddleLeft;
             headingLayout.childControlWidth = true;
             headingLayout.childControlHeight = true;
             headingLayout.childForceExpandHeight = false;
-            TMP_Text title = LayoutLabel(heading, "Title", "CHỌN MÔN THI", 40,
-                Color.white, TextAnchor.MiddleLeft);
+            TMP_Text title = LayoutLabel(heading, "Title", "CHỌN MÔN THI", 40, navy, TextAnchor.MiddleLeft);
+            title.fontStyle |= FontStyles.Italic;
+            title.enableWordWrapping = false;
             title.transform.parent.gameObject.AddComponent<LayoutElement>().preferredHeight = 52;
+            // The menu title's gold offset copy, drawn behind the navy one.
+            TMP_Text titleShadow = TextTmp(title.transform.parent, "TitleShadow", "CHỌN MÔN THI", 40,
+                HomeMenuStyle.Gold, TextAnchor.MiddleLeft);
+            titleShadow.fontStyle = title.fontStyle;
+            titleShadow.enableWordWrapping = false;
+            titleShadow.raycastTarget = false;
+            Stretch(titleShadow.rectTransform, new Vector2(3f, -3f), new Vector2(3f, -3f));
+            titleShadow.transform.SetAsFirstSibling();
+            RectTransform accent = Rect(heading, "Accent");
+            accent.gameObject.AddComponent<LayoutElement>().ignoreLayout = true;
+            accent.anchorMin = accent.anchorMax = accent.pivot = new Vector2(0f, 1f);
+            accent.anchoredPosition = new Vector2(BlockStroke + 6f, -BlockStroke - 6f);
+            accent.sizeDelta = new Vector2(12f, 12f);
+            Image accentImage = accent.gameObject.AddComponent<Image>();
+            accentImage.color = HomeMenuStyle.Red;
+            accentImage.raycastTarget = false;
+
+            RectTransform spacer = Rect(header, "Spacer");
+            spacer.gameObject.AddComponent<LayoutElement>().flexibleWidth = 1;
+
             RectTransform livesPanel = Rect(header, "LivesPanel");
-            Image livesSurface = livesPanel.gameObject.AddComponent<Image>();
-            livesSurface.color = UITheme.Shared.MapLivesSurface;
-            UseRoundedSurface(livesSurface);
-            Outline livesOutline = livesPanel.gameObject.AddComponent<Outline>();
-            livesOutline.effectColor = MinigameUiTheme.WithAlpha(UITheme.Shared.Accent, 210f / 255f);
-            livesOutline.effectDistance = new Vector2(UITheme.Shared.BorderWidth * .5f, -UITheme.Shared.BorderWidth * .5f);
+            MenuBlock(livesPanel);
             HorizontalLayoutGroup livesLayout = livesPanel.gameObject.AddComponent<HorizontalLayoutGroup>();
-            // The top padding leaves room for the life regen countdown above the hearts.
-            livesLayout.padding = new RectOffset(14, 14, 40, 6);
-            livesLayout.spacing = 12;
+            livesLayout.padding = new RectOffset(20, 20, 6, 6);
+            livesLayout.spacing = 16;
             livesLayout.childAlignment = TextAnchor.MiddleCenter;
             livesLayout.childControlWidth = true;
             livesLayout.childControlHeight = true;
             livesLayout.childForceExpandWidth = false;
             livesLayout.childForceExpandHeight = false;
             LayoutElement livesElement = livesPanel.gameObject.AddComponent<LayoutElement>();
-            livesElement.preferredWidth = 470;
-            livesElement.preferredHeight = 82;
+            livesElement.preferredWidth = 500;
+            livesElement.flexibleWidth = 0;
+            livesElement.preferredHeight = BlockHeight;
             RectTransform bar = Rect(livesPanel, "HeartBar");
             HorizontalLayoutGroup heartLayout = bar.gameObject.AddComponent<HorizontalLayoutGroup>();
-            heartLayout.spacing = 6; heartLayout.childAlignment = TextAnchor.MiddleCenter;
+            heartLayout.spacing = 8; heartLayout.childAlignment = TextAnchor.MiddleCenter;
             heartLayout.childControlWidth = true; heartLayout.childControlHeight = true;
             heartLayout.childForceExpandWidth = false; heartLayout.childForceExpandHeight = false;
-            bar.gameObject.AddComponent<LayoutElement>().preferredWidth = 184;
+            bar.gameObject.AddComponent<LayoutElement>().preferredWidth = 5 * HeartSize + 4 * heartLayout.spacing;
             HeartBar hearts = bar.gameObject.AddComponent<HeartBar>();
             var slots = new Image[5];
             for (int i = 0; i < slots.Length; i++)
@@ -252,39 +279,75 @@ namespace KMA.Gameplay.UI
                 RectTransform slot = Rect(bar, "Heart" + (i + 1)); slots[i] = slot.gameObject.AddComponent<Image>();
                 slots[i].sprite = HeartSprite();
                 slots[i].preserveAspect = true;
-                slot.gameObject.AddComponent<Outline>().effectColor = border;
-                LayoutElement element = slot.gameObject.AddComponent<LayoutElement>(); element.preferredWidth = 32; element.preferredHeight = 30;
+                slot.gameObject.AddComponent<Outline>().effectColor = navy;
+                LayoutElement element = slot.gameObject.AddComponent<LayoutElement>();
+                element.preferredWidth = HeartSize; element.preferredHeight = HeartSize - 2f;
             }
             hearts.SetSlots(slots);
             int currentLives = session == null ? GameSession.MaxLives : session.Lives;
-            hearts.SetHearts(currentLives);
-            TMP_Text lives = LayoutLabel(livesPanel, "LivesLabel", $"Lượt thi: {currentLives}/{GameSession.MaxLives}", 24,
-                Color.white, TextAnchor.MiddleRight);
+            TMP_Text lives = LayoutLabel(livesPanel, "LivesLabel", $"Lượt thi: {currentLives}/{GameSession.MaxLives}", 26,
+                navy, TextAnchor.MiddleLeft);
+            lives.fontStyle |= FontStyles.UpperCase;
             lives.enableWordWrapping = false;
-            LayoutElement livesLabelLayout = lives.transform.parent.gameObject.AddComponent<LayoutElement>();
-            livesLabelLayout.preferredWidth = 200;
-            livesLabelLayout.preferredHeight = 44;
-            RectTransform divider = Rect(header, "Divider");
-            LayoutElement dividerLayout = divider.gameObject.AddComponent<LayoutElement>();
-            dividerLayout.ignoreLayout = true;
-            divider.anchorMin = Vector2.zero;
-            divider.anchorMax = new Vector2(1f, 0f);
-            divider.pivot = new Vector2(.5f, 0f);
-            divider.anchoredPosition = Vector2.zero;
-            divider.sizeDelta = new Vector2(0f, 4f);
-            divider.gameObject.AddComponent<Image>().color = new Color32(255, 255, 255, 36);
+            Transform livesColumn = lives.transform.parent;
+            VerticalLayoutGroup columnLayout = livesColumn.gameObject.AddComponent<VerticalLayoutGroup>();
+            columnLayout.childAlignment = TextAnchor.MiddleLeft;
+            columnLayout.childControlWidth = true;
+            columnLayout.childControlHeight = true;
+            columnLayout.childForceExpandWidth = true;
+            columnLayout.childForceExpandHeight = false;
+            LayoutElement livesLabelLayout = livesColumn.gameObject.AddComponent<LayoutElement>();
+            livesLabelLayout.preferredWidth = 210;
+            livesLabelLayout.preferredHeight = 60;
+            lives.gameObject.AddComponent<LayoutElement>().preferredHeight = 34;
+            // The life regen countdown sits under the count, so the hearts stay centred.
+            TMP_Text timer = TextTmp(livesColumn, "LifeTimer", string.Empty, 20, navy, TextAnchor.MiddleLeft);
+            timer.enableWordWrapping = false;
+            timer.raycastTarget = false;
+            timer.gameObject.AddComponent<LayoutElement>().preferredHeight = 24;
+            hearts.UseLightSurface(timer, navy);
+            hearts.SetHearts(currentLives);
             return hearts;
         }
 
-        static Button HeaderButton(Transform parent, string name, string label, Color border)
+        static void MenuBlock(RectTransform rect)
+        {
+            Image border = rect.gameObject.AddComponent<Image>();
+            border.color = HomeMenuStyle.Navy;
+            UseRoundedSurface(border);
+            border.raycastTarget = false;
+            Shadow shadow = rect.gameObject.AddComponent<Shadow>();
+            shadow.effectColor = HomeMenuStyle.Navy;
+            shadow.effectDistance = BlockShadow;
+            RectTransform fill = Rect(rect, "Fill");
+            fill.SetAsFirstSibling();
+            Stretch(fill, Vector2.one * BlockStroke, -Vector2.one * BlockStroke);
+            fill.gameObject.AddComponent<LayoutElement>().ignoreLayout = true;
+            Image face = fill.gameObject.AddComponent<Image>();
+            face.color = UITheme.Shared.TextPrimary;
+            UseRoundedSurface(face);
+            face.raycastTarget = false;
+        }
+
+        static Button HeaderButton(Transform parent, string name, string label)
         {
             RectTransform root = Rect(parent, name);
+            MenuBlock(root);
+            root.GetComponent<Image>().raycastTarget = true;
             Button button = root.gameObject.AddComponent<Button>();
+            Image face = root.Find("Fill").GetComponent<Image>();
+            button.targetGraphic = face;
+            // The shared press response (lighten + shrink) owns the visuals, as on every kit button.
+            button.transition = Selectable.Transition.None;
             LayoutElement element = root.gameObject.AddComponent<LayoutElement>();
-            // The 96px header row cannot hold a full ButtonHeight plate, so the back arrow stays 60x60.
-            element.preferredWidth = 60f;
-            element.preferredHeight = 60f;
-            UiKit.StyleButton(button, ButtonVariant.Secondary, label);
+            element.preferredWidth = BlockHeight;
+            element.preferredHeight = BlockHeight;
+            element.flexibleWidth = 0;
+            TMP_Text arrow = TextTmp(root, "Label", label, 48, HomeMenuStyle.Navy, TextAnchor.MiddleCenter);
+            arrow.raycastTarget = false;
+            KitPressFeedback feedback = root.gameObject.AddComponent<KitPressFeedback>();
+            feedback.Configure(face, root);
+            feedback.BindLabel(arrow);
             return button;
         }
 

@@ -11,15 +11,31 @@ namespace KMA.Gameplay.UI
         [SerializeField] Image[] slots = new Image[SlotCount];
 
         [SerializeField] TMPro.TMP_Text countdownLabel;
+        // Set when the bar sits on a light surface: empty hearts and the countdown use this ink
+        // instead of the default cream, which would vanish there.
+        [SerializeField] bool hasInk;
+        [SerializeField] Color ink;
 
         int shownSeconds = -1;
         bool shownWarning;
 
         public int CurrentHearts { get; private set; }
         public Color FilledColor => MinigameUiTheme.Energy;
-        public Color EmptyColor => MinigameUiTheme.WithAlpha(MinigameUiTheme.TextPrimary, .25f);
+        public Color EmptyColor => hasInk ? MinigameUiTheme.WithAlpha(ink, .3f)
+            : MinigameUiTheme.WithAlpha(MinigameUiTheme.TextPrimary, .25f);
+        Color CountdownColor => hasInk ? ink : MinigameUiTheme.TextPrimary;
 
         public void SetSlots(Image[] value) => slots = value ?? new Image[SlotCount];
+
+        /// Places the life countdown in an authored label and draws on a light surface with `inkColor`.
+        public void UseLightSurface(TMPro.TMP_Text countdown, Color inkColor)
+        {
+            countdownLabel = countdown;
+            hasInk = true;
+            ink = inkColor;
+            if (countdownLabel != null) countdownLabel.gameObject.SetActive(false);
+            SetHearts(CurrentHearts);
+        }
 
         public void SetHearts(int hearts)
         {
@@ -63,7 +79,7 @@ namespace KMA.Gameplay.UI
             shownSeconds = seconds;
             shownWarning = warning;
             countdownLabel.text = FormatCountdown(remaining.Value);
-            countdownLabel.color = warning ? MinigameUiTheme.Energy : MinigameUiTheme.TextPrimary;
+            countdownLabel.color = warning ? MinigameUiTheme.Energy : CountdownColor;
             CountdownWrites++;
         }
 

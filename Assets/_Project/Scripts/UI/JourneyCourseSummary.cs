@@ -58,7 +58,7 @@ namespace KMA.Gameplay.UI
             {
                 // Two lines in the short strip, kept clear of the replay button on the right.
                 summaryText.rectTransform.offsetMax = new Vector2(-(ReplayWidth + 20f), summaryText.rectTransform.offsetMax.y);
-                summaryText.fontSize = UITheme.Shared.LessonJourney.captionSize - 2f;
+                summaryText.fontSize = UITheme.Shared.LessonJourney.captionSize - 6f;
                 summaryText.text = VietText.Fix("HOÀN TẤT HỌC PHẦN\n" + string.Join("  |  ", scores));
             }
             gameObject.SetActive(true);

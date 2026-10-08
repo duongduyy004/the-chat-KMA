@@ -127,17 +127,17 @@ namespace KMA.Gameplay.UI
 
             // Name + meta pill below the badge.
             RectTransform labelGroup = MapPresentationBuilder.Rect(root, "LabelGroup");
-            float labelTop = badgeCenterFromTop + badgeSize * .5f + 22f;
+            float labelTop = badgeCenterFromTop + badgeSize * .5f + 14f;
             Place(labelGroup, new Vector2(.5f, 1f), new Vector2(Style.stopSize.x, 120f), new Vector2(0f, -labelTop));
             labelGroup.pivot = new Vector2(.5f, 1f);
 
-            TMP_Text title = MapPresentationBuilder.LayoutLabel(labelGroup, "Title", label, 30,
+            TMP_Text title = MapPresentationBuilder.LayoutLabel(labelGroup, "Title", label, 36,
                 Color.white, TextAnchor.MiddleCenter);
             RectTransform titleBox = (RectTransform)title.transform.parent;
             titleBox.anchorMin = new Vector2(0f, 1f);
             titleBox.anchorMax = Vector2.one;
             titleBox.pivot = new Vector2(.5f, 1f);
-            titleBox.offsetMin = new Vector2(0f, -48f);
+            titleBox.offsetMin = new Vector2(0f, -50f);
             titleBox.offsetMax = Vector2.zero;
             title.fontStyle = FontStyles.Bold;
             title.enableWordWrapping = false;
@@ -147,8 +147,8 @@ namespace KMA.Gameplay.UI
             RectTransform pill = MapPresentationBuilder.Rect(labelGroup, "MetaPill");
             pill.anchorMin = pill.anchorMax = new Vector2(.5f, 1f);
             pill.pivot = new Vector2(.5f, 1f);
-            pill.sizeDelta = new Vector2(Style.stopSize.x - 4f, 44f);
-            pill.anchoredPosition = new Vector2(0f, -54f);
+            pill.sizeDelta = new Vector2(Style.stopSize.x - 4f, 52f);
+            pill.anchoredPosition = new Vector2(0f, -52f);
             Image pillImage = pill.gameObject.AddComponent<Image>();
             pillImage.sprite = UiKitAssets.Load().RoundRect20;
             pillImage.type = Image.Type.Sliced;
@@ -174,10 +174,10 @@ namespace KMA.Gameplay.UI
                 stars[i].preserveAspect = true;
                 stars[i].raycastTarget = false;
                 var element = star.gameObject.AddComponent<LayoutElement>();
-                element.preferredWidth = element.preferredHeight = 26f;
+                element.preferredWidth = element.preferredHeight = 30f;
             }
 
-            TMP_Text status = MapPresentationBuilder.LayoutLabel(pill, "Status", string.Empty, 20,
+            TMP_Text status = MapPresentationBuilder.LayoutLabel(pill, "Status", string.Empty, 24,
                 HomeMenuStyle.GoldLight, TextAnchor.MiddleRight);
             RectTransform statusBox = (RectTransform)status.transform.parent;
             statusBox.anchorMin = new Vector2(.32f, 0f);
