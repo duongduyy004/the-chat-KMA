@@ -13,5 +13,5 @@ MonoBehaviour:
   m_Name: RivalPaceProfile_Lane1
   m_EditorClassIdentifier:
   profileName: Lane 1 Fast Start
-  openingSpeed: 9.2
-  sustainedSpeed: 6.8
+  openingSpeed: 8.5
+  sustainedSpeed: 5.7

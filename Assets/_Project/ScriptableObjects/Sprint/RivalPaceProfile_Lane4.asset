@@ -13,5 +13,5 @@ MonoBehaviour:
   m_Name: RivalPaceProfile_Lane4
   m_EditorClassIdentifier:
   profileName: Lane 4 Finisher
-  openingSpeed: 6.7
-  sustainedSpeed: 8.1
+  openingSpeed: 6
+  sustainedSpeed: 7.1

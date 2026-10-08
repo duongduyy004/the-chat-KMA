@@ -13,5 +13,5 @@ MonoBehaviour:
   m_Name: RivalPaceProfile_Lane3
   m_EditorClassIdentifier:
   profileName: Lane 3 Steady
-  openingSpeed: 7.4
-  sustainedSpeed: 7.2
+  openingSpeed: 5.8
+  sustainedSpeed: 5.7
