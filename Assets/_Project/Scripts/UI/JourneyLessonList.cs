@@ -6,6 +6,7 @@ using KMA.Gameplay;
 using KMA.UI.Kit;
 using TMPro;
 using UnityEngine;
+using UnityEngine.InputSystem;
 using UnityEngine.UI;
 
 namespace KMA.Gameplay.UI
@@ -298,6 +299,12 @@ namespace KMA.Gameplay.UI
 
         void Update()
         {
+            // Android's Back button arrives as Escape; it closes the popup instead of leaving the map.
+            if (Keyboard.current != null && Keyboard.current.escapeKey.wasPressedThisFrame)
+            {
+                Close();
+                return;
+            }
             if (revealRoutine != null || currentCardIndex < 0 || currentCardIndex >= lessonCards.Count)
                 return;
             UITheme.LessonJourneyStyle style = UITheme.Shared.LessonJourney;
