@@ -509,6 +509,20 @@ namespace KMA.Tests.Gameplay.Volleyball
         }
 
         [Test]
+        public void NoJumpCueWhileTheSmashContactIsOutOfReach()
+        {
+            VolleyballMatch match = ReceivedAndUnderTheSet(out float smashIdeal);
+            Vector2 contact = match.Flight.GroundAt(smashIdeal);
+            match.Player.PlaceAt(contact + new Vector2(0f, 2f));
+            MatchDriver.AdvanceToFlightTime(match, smashIdeal - .3f);
+            Assert.That(match.PlayerInReachOf(contact), Is.False);
+            Assert.That(match.TryGetJumpCue(out _), Is.False, "a jump from here cannot connect");
+
+            match.Player.PlaceAt(contact);
+            Assert.That(match.TryGetJumpCue(out _), Is.True);
+        }
+
+        [Test]
         public void NoJumpCueAwayFromTheNet()
         {
             VolleyballMatch match = ReceivedAndUnderTheSet(out float smashIdeal);

@@ -325,7 +325,8 @@ namespace KMA.EditorTools
             // NHẢY sits just inside ĐÁNH and a little higher, its hit area clear of ĐÁNH's.
             RectTransform jumpRect = UiRect("JumpButton", controls, Vector2.one, Vector2.one);
             jumpRect.anchorMin = jumpRect.anchorMax = jumpRect.pivot = new Vector2(1f, 0f);
-            jumpRect.sizeDelta = new Vector2(260f, 260f);
+            // At least as large as the disc, so every visible pixel of NHẢY is tappable.
+            jumpRect.sizeDelta = new Vector2(300f, 300f);
             jumpRect.anchoredPosition = new Vector2(-428f, 120f);
             jumpRect.gameObject.AddComponent<Image>().color = Color.clear;
             var jump = jumpRect.gameObject.AddComponent<JumpButton>();

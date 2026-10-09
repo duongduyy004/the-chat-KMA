@@ -319,7 +319,12 @@ namespace KMA.Gameplay.Volleyball
                 Flight.ApexHeight <= ActionResolver.SmashContactHeight)
                 return false;
 
-            secondsToIdeal = Flight.TimeAtHeightDescending(ActionResolver.SmashContactHeight) - FlightTime;
+            float smashIdeal = Flight.TimeAtHeightDescending(ActionResolver.SmashContactHeight);
+            // Never invite a jump that cannot connect: mid-air the only touch is the smash.
+            if (!PlayerInReachOf(Flight.GroundAt(smashIdeal)))
+                return false;
+
+            secondsToIdeal = smashIdeal - FlightTime;
             return secondsToIdeal <= JumpCueLead && secondsToIdeal >= -TimingWindows.SmashLate;
         }
 

@@ -155,6 +155,10 @@ namespace KMA.Tests.EditorTools
             Rect jumpArea = WorldRect((RectTransform)jump.transform);
             Rect hitArea = WorldRect((RectTransform)Object.FindFirstObjectByType<ActionButton>().transform);
             Assert.That(jumpArea.Overlaps(hitArea), Is.False, "two thumbs must not share a hit area");
+            Rect jumpDisc = WorldRect((RectTransform)jump.transform.Find("RoundButton"));
+            Assert.That(jumpArea.Contains(jumpDisc.min) && jumpArea.Contains(jumpDisc.max), Is.True,
+                "every visible pixel of NHẢY must be tappable");
+            Assert.That(jumpDisc.Overlaps(hitArea), Is.False, "tapping NHẢY's edge must not hit ĐÁNH");
             Assert.That(jumpArea.center.x, Is.LessThan(hitArea.center.x), "NHẢY sits inside ĐÁNH");
         }
 
