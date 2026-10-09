@@ -391,6 +391,7 @@ namespace KMA.Tests.Presentation
                 Assert.That(summaryBounds.Overlaps(new Rect(corners[0], corners[2] - corners[0])), Is.False,
                     "Course results must not cover any portion of the replay lessons.");
                 Assert.That(summary.GetComponent<Image>().raycastTarget, Is.False);
+                screen.SelectSubject(SubjectId.Sprint);
                 foreach (TMP_Text label in summary.GetComponentsInChildren<TMP_Text>())
                 {
                     label.ForceMeshUpdate(true);
@@ -983,16 +984,16 @@ namespace KMA.Tests.Presentation
         }
 
         [Test]
-        public void JourneyStops_StayInsideMapZoneAboveTheLessonPanel(
+        public void JourneyStops_StayInsideMapZoneWithTheLessonsClosed(
             [Values(1280f, 1440f, 1728f, 1920f, 2400f)] float width)
         {
             var root = new GameObject("zone", typeof(RectTransform));
             try
             {
                 var (screen, grid) = BuildMapAt(root, new Vector2(width, 1080f), new GameSession());
-                var panel = (RectTransform)screen.LessonList.transform;
-                Rect gridRect = WorldRect(grid), panelRect = WorldRect(panel);
-                Assert.That(gridRect.Overlaps(panelRect), Is.False);
+                Assert.That(screen.LessonList.IsOpen, Is.False, "The map opens on the roadmap alone.");
+                Rect gridRect = WorldRect(grid);
+                Assert.That(gridRect.height, Is.GreaterThan(1080f * .75f), "The roadmap fills the screen under the header.");
                 foreach (MapNodeView node in screen.Nodes)
                 {
                     Rect stop = WorldRect((RectTransform)node.transform);
@@ -1000,8 +1001,43 @@ namespace KMA.Tests.Presentation
                     Assert.That(stop.xMax, Is.LessThanOrEqualTo(gridRect.xMax + 1f), node.name);
                     Assert.That(stop.yMin, Is.GreaterThanOrEqualTo(gridRect.yMin - 1f), node.name);
                     Assert.That(stop.yMax, Is.LessThanOrEqualTo(gridRect.yMax + 1f), node.name);
-                    Assert.That(stop.Overlaps(panelRect), Is.False, node.name);
                 }
+                if (width >= 1728f)
+                    Assert.That(screen.Nodes[0].transform.localScale.x, Is.GreaterThan(1f),
+                        "Stops grow when the map has room, so they stay legible on phones.");
+            }
+            finally { Object.DestroyImmediate(root); }
+        }
+
+        [Test]
+        public void TappingAnUnlockedStopOpensTheLessonPopupAndItCloses()
+        {
+            var root = new GameObject("popup", typeof(RectTransform));
+            try
+            {
+                var (screen, _) = BuildMapAt(root, new Vector2(1920f, 1080f), new GameSession());
+                JourneyLessonList lessons = screen.LessonList;
+                Transform scrim = lessons.transform.parent.Find("LessonScrim");
+                Assert.That(scrim, Is.Not.Null);
+                Assert.That(scrim.gameObject.activeSelf, Is.False);
+
+                screen.Nodes[1].GetComponent<Button>().onClick.Invoke();   // Volleyball is still locked
+                Assert.That(lessons.IsOpen, Is.False, "A locked stop does not open the lessons.");
+
+                screen.Nodes[0].GetComponent<Button>().onClick.Invoke();
+                Assert.That(lessons.IsOpen, Is.True);
+                Assert.That(scrim.gameObject.activeSelf, Is.True);
+                Assert.That(lessons.SelectedSubject, Is.EqualTo(SubjectId.Sprint));
+                Assert.That(lessons.transform.GetSiblingIndex(), Is.EqualTo(lessons.transform.parent.childCount - 1),
+                    "The popup draws above the map and the course summary.");
+
+                lessons.transform.Find("CloseButton").GetComponent<Button>().onClick.Invoke();
+                Assert.That(lessons.IsOpen, Is.False);
+                Assert.That(scrim.gameObject.activeSelf, Is.False);
+
+                screen.SelectSubject(SubjectId.Sprint);
+                scrim.GetComponent<Button>().onClick.Invoke();
+                Assert.That(lessons.IsOpen, Is.False, "Tapping outside the popup closes it.");
             }
             finally { Object.DestroyImmediate(root); }
         }

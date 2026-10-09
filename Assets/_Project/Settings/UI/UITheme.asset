@@ -54,8 +54,8 @@ MonoBehaviour:
     football: {r: 0.20784314, g: 0.6627451, b: 0.35686275, a: 1}
     chess: {r: 0.9098039, g: 0.3529412, b: 0.28235295, a: 1}
     completedSurface: {r: 0.88235295, g: 0.95686275, b: 0.87058824, a: 1}
-    panelAnchorMin: {x: 0.02, y: 0.005}
-    panelAnchorMax: {x: 0.98, y: 0.4}
+    panelAnchorMin: {x: 0.06, y: 0.2}
+    panelAnchorMax: {x: 0.94, y: 0.7}
     courseAnchorMin: {x: 0, y: 0.41}
     courseAnchorMax: {x: 1, y: 0.915}
     summaryAnchorMin: {x: 0.05, y: 0.84}
@@ -82,22 +82,23 @@ MonoBehaviour:
     revealScale: 0.94
     glowSpeed: 2.4
     glowAlpha: {x: 0.12, y: 0.32}
-    mapAnchorMin: {x: 0, y: 0.41}
-    mapAnchorMax: {x: 1, y: 0.915}
+    mapAnchorMin: {x: 0, y: 0.02}
+    mapAnchorMax: {x: 1, y: 0.9}
     stopSize: {x: 320, y: 400}
     stopBadgeSize: 170
     stopCurrentScale: 1.3
     stopTagHeight: 52
+    stopMaxScale: 1.35
     stopX:
     - 0.12
     - 0.37
     - 0.63
     - 0.88
     stopY:
-    - 0.45
-    - 0.7
-    - 0.45
-    - 0.7
+    - 0.38
+    - 0.62
+    - 0.38
+    - 0.62
     roadOutlineWidth: 30
     roadFillWidth: 16
     roadDotSize: 12

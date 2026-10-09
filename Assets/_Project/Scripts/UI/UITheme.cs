@@ -101,8 +101,9 @@ namespace KMA.Gameplay.UI
             public Color football = new Color32(53, 169, 91, 255);
             public Color chess = new Color32(232, 90, 72, 255);
             public Color completedSurface = new Color32(225, 244, 222, 255);
-            public Vector2 panelAnchorMin = new Vector2(.02f, .005f);
-            public Vector2 panelAnchorMax = new Vector2(.98f, .40f);
+            // The lesson panel is a popup centred over the map, opened by tapping a stop.
+            public Vector2 panelAnchorMin = new Vector2(.06f, .20f);
+            public Vector2 panelAnchorMax = new Vector2(.94f, .70f);
             public Vector2 courseAnchorMin = new Vector2(0f, .41f);
             public Vector2 courseAnchorMax = new Vector2(1f, .915f);
             public Vector2 summaryAnchorMin = new Vector2(.05f, .84f);
@@ -130,17 +131,19 @@ namespace KMA.Gameplay.UI
             public float revealScale = .94f;
             public float glowSpeed = 2.4f;
             public Vector2 glowAlpha = new Vector2(.12f, .32f);
-            // Journey map: the map zone sits between the compact header and the lesson panel.
-            public Vector2 mapAnchorMin = new Vector2(0f, .41f);
-            public Vector2 mapAnchorMax = new Vector2(1f, .915f);
+            // Journey map: the map zone fills everything under the compact header.
+            public Vector2 mapAnchorMin = new Vector2(0f, .02f);
+            public Vector2 mapAnchorMax = new Vector2(1f, .90f);
             // Fixed-size stop: tag + badge area + name + star/status pill.
             public Vector2 stopSize = new Vector2(320f, 400f);
             public float stopBadgeSize = 170f;
             public float stopCurrentScale = 1.3f;
             public float stopTagHeight = 52f;
+            // Stops grow past their authored size when the map zone has room, so they read on phones.
+            public float stopMaxScale = 1.35f;
             // Badge-centre positions inside the map zone (x of width, y of height).
             public float[] stopX = { .12f, .37f, .63f, .88f };
-            public float[] stopY = { .45f, .70f, .45f, .70f };
+            public float[] stopY = { .38f, .62f, .38f, .62f };
             public float roadOutlineWidth = 30f;
             public float roadFillWidth = 16f;
             public float roadDotSize = 12f;

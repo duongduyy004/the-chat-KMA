@@ -49,6 +49,7 @@ namespace KMA.Tests.Presentation
             MapPresentationBuilder.Build(screen, session);
             screen.RefreshJourney(session);
             Assert.That(screen.LessonList.CurrentChallengeId, Is.EqualTo("chess_final"));
+            screen.SelectSubject(SubjectId.Chess);
             Button card = screen.LessonList.GetComponentsInChildren<Button>()
                 .First(b => b.gameObject.activeInHierarchy && b.name.StartsWith("Lesson"));
             Assert.That(card.interactable, Is.True);

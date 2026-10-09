@@ -52,7 +52,57 @@ namespace KMA.Gameplay.UI
             TMP_Text hint = Label(panel, "JourneyHint", Style.captionSize - 2f, Theme.MapHint);
             hint.alignment = TextAlignmentOptions.Center;
             Anchor(hint.rectTransform, new Vector2(.025f, Style.cardTop + .02f), new Vector2(.975f, .82f));
+            EnsurePopup(panel);
             return panel;
+        }
+
+        // The panel opens as a popup over the map: a dimming scrim behind it that closes it on tap,
+        // and a round close button hanging off its top-right corner. Safe to run on baked scenes.
+        public static void EnsurePopup(RectTransform panel)
+        {
+            Anchor(panel, Style.panelAnchorMin, Style.panelAnchorMax);
+            var parent = (RectTransform)panel.parent;
+            RectTransform scrim = (RectTransform)parent.Find("LessonScrim");
+            if (scrim == null)
+            {
+                scrim = Rect(parent, "LessonScrim");
+                Image shade = scrim.gameObject.AddComponent<Image>();
+                shade.color = MinigameUiTheme.WithAlpha(HomeMenuStyle.Navy, .62f);
+                Button dismiss = scrim.gameObject.AddComponent<Button>();
+                dismiss.targetGraphic = shade;
+                dismiss.transition = Selectable.Transition.None;
+            }
+            // Cover the whole screen, not just the padded content area the panel sits in.
+            scrim.anchorMin = Vector2.zero;
+            scrim.anchorMax = Vector2.one;
+            scrim.offsetMin = -parent.offsetMin;
+            scrim.offsetMax = -parent.offsetMax;
+            scrim.SetAsLastSibling();
+            panel.SetAsLastSibling();
+
+            Transform continueButton = panel.Find("ContinueCheckpoint");
+            if (continueButton != null)
+                Anchor((RectTransform)continueButton, new Vector2(.66f, .84f), new Vector2(.94f, .96f));
+            if (panel.Find("CloseButton") != null) return;
+            Image close = Shape(panel, "CloseButton", HomeMenuStyle.Navy, true);
+            close.raycastTarget = true;
+            Place(close.rectTransform, Vector2.one, new Vector2(72f, 72f));
+            close.rectTransform.anchoredPosition = new Vector2(-10f, -10f);
+            Outline ring = close.gameObject.AddComponent<Outline>();
+            ring.effectColor = HomeMenuStyle.Gold;
+            ring.effectDistance = new Vector2(3f, -3f);
+            Button button = close.gameObject.AddComponent<Button>();
+            button.targetGraphic = close;
+            button.transition = Selectable.Transition.None;
+            close.gameObject.AddComponent<KitPressFeedback>().Configure(close, close.rectTransform);
+            foreach (float angle in new[] { 45f, -45f })
+            {
+                Image stroke = Shape(close.transform, "Stroke", HomeMenuStyle.White);
+                stroke.sprite = null;
+                stroke.type = Image.Type.Simple;
+                Place(stroke.rectTransform, Vector2.one * .5f, new Vector2(34f, 7f));
+                stroke.rectTransform.localRotation = Quaternion.Euler(0f, 0f, angle);
+            }
         }
 
         static void CreateCard(Transform panel, int index)

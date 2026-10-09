@@ -291,14 +291,14 @@ namespace KMA.Tests.Gameplay.Progression
         }
 
         [UnityTest]
-        public IEnumerator MapScene_JourneyMap_StopsClearTheHeaderAndLessonPanelAtEveryAspect()
+        public IEnumerator MapScene_JourneyMap_StopsClearTheHeaderAndLessonsStartClosedAtEveryAspect()
         {
             SceneManager.LoadScene("Map", LoadSceneMode.Single);
             yield return null;
             var screen = Object.FindFirstObjectByType<MapScreen>(FindObjectsInactive.Include);
             Assert.That(screen.transform.Cast<Transform>().Count(c => c.name == "S5MapPresentation"), Is.EqualTo(1));
             var header = (RectTransform)screen.transform.Find("S5MapPresentation/Content/Header");
-            var panel = (RectTransform)screen.transform.Find("S5MapPresentation/Content/JourneyLessons");
+            Assert.That(screen.LessonList.IsOpen, Is.False, "The map opens on the roadmap alone.");
             foreach (Vector2Int resolution in new[]
             {
                 new Vector2Int(1280, 720), new Vector2Int(1440, 1080), new Vector2Int(1728, 1080),
@@ -315,8 +315,6 @@ namespace KMA.Tests.Gameplay.Progression
                     Rect stop = WorldBounds((RectTransform)node.transform);
                     Assert.That(stop.Overlaps(WorldBounds(header)), Is.False,
                         $"{node.SubjectId} overlaps the header at {resolution}.");
-                    Assert.That(stop.Overlaps(WorldBounds(panel)), Is.False,
-                        $"{node.SubjectId} overlaps the lesson panel at {resolution}.");
                     foreach (TMP_Text label in node.GetComponentsInChildren<TMP_Text>(false))
                         Assert.That(label.preferredHeight, Is.LessThanOrEqualTo(label.rectTransform.rect.height + 1f),
                             $"{node.SubjectId}/{label.name} truncated at {resolution}.");
@@ -325,7 +323,7 @@ namespace KMA.Tests.Gameplay.Progression
         }
 
         [UnityTest]
-        public IEnumerator MapScene_ResponsiveLayout_KeepsCardsAndLessonsInsideTheirPanels()
+        public IEnumerator MapScene_ResponsiveLayout_KeepsStopsAndLessonPopupInsideTheirPanels()
         {
             SceneManager.LoadScene("Map", LoadSceneMode.Single);
             yield return null;
@@ -338,6 +336,10 @@ namespace KMA.Tests.Gameplay.Progression
                 .GetComponent<RectTransform>();
             RectTransform lessonPanel = screen.transform.Find("S5MapPresentation/Content/JourneyLessons")
                 .GetComponent<RectTransform>();
+            RectTransform header = screen.transform.Find("S5MapPresentation/Content/Header")
+                .GetComponent<RectTransform>();
+            screen.SelectSubject(SubjectId.Sprint);
+            Assert.That(screen.LessonList.IsOpen, Is.True);
 
             foreach (Vector2Int resolution in new[]
             {
@@ -354,10 +356,8 @@ namespace KMA.Tests.Gameplay.Progression
                 LayoutRebuilder.ForceRebuildLayoutImmediate(screen.transform as RectTransform);
                 Canvas.ForceUpdateCanvases();
 
-                Rect gridBounds = WorldBounds(grid);
-                Rect lessonBounds = WorldBounds(lessonPanel);
-                Assert.That(gridBounds.Overlaps(lessonBounds), Is.False,
-                    $"SelectionGrid must not overlap JourneyLessons at {resolution.x}x{resolution.y}.");
+                Assert.That(WorldBounds(lessonPanel).Overlaps(WorldBounds(header)), Is.False,
+                    $"The lesson popup must not cover the header at {resolution.x}x{resolution.y}.");
                 Assert.That(Contains(content, grid), Is.True);
                 Assert.That(Contains(content, lessonPanel), Is.True);
                 foreach (MapNodeView node in screen.Nodes)

@@ -20,6 +20,7 @@ namespace KMA.EditorTools
     ///   map-chess-locked   Map with the course done through soccer_practice (final stop locked)
     ///   map-chess-open     Map with the course done through soccer_exam (final exam is the checkpoint)
     ///   map-complete       Map with the whole course done (summary and replay button)
+    ///   map-lessons        Map with the Sprint stop tapped, so the HỌC/LUYỆN/THI popup is open
     ///   chess-select       MG_ChessFinal: start the attempt and select the first main-line piece
     ///   chess-wrong        MG_ChessFinal: one wrong move (Sai: 1/2, whistle)
     ///   chess-boss         MG_ChessFinal: first correct move played, boss turn
@@ -39,7 +40,7 @@ namespace KMA.EditorTools
             state == "exam-fail-2" || state == "map-lives-3" || state == "map-lives-0" || state == "chess-select" ||
             state == "chess-wrong" || state == "chess-boss" || state == "chess-hint" ||
             state == "chess-promotion" || state == "chess-win" || state == "chess-timeout" ||
-            state == "map-chess-locked" || state == "map-chess-open" || state == "map-complete" ||
+            state == "map-chess-locked" || state == "map-chess-open" || state == "map-complete" || state == "map-lessons" ||
             state == "celebration-cheer" || state == "celebration-teacher" || state == "celebration-skip";
 
         /// Called every editor tick while a capture is active. Returns true once the state is applied.
@@ -58,6 +59,7 @@ namespace KMA.EditorTools
                 case "map-chess-locked": return SetMapProgress("soccer_practice");
                 case "map-chess-open": return SetMapProgress("soccer_exam");
                 case "map-complete": return SetMapProgress("chess_final");
+                case "map-lessons": return OpenMapLessons();
                 case "chess-select": return CaptureSoonAfterApply = ChessSelect();
                 case "chess-wrong": return CaptureSoonAfterApply = ChessWrong();
                 case "chess-boss": return CaptureSoonAfterApply = ChessBoss();
@@ -242,6 +244,14 @@ namespace KMA.EditorTools
             session.Journey.SetAttemptsRemaining(lives);
             session.RefreshLives();
             map.BindPresentation(map.Nodes, map.Hearts, session, map.LessonList);
+            return true;
+        }
+
+        static bool OpenMapLessons()
+        {
+            var map = Object.FindFirstObjectByType<MapScreen>(FindObjectsInactive.Include);
+            if (map == null || map.LessonList == null) return false;
+            map.SelectSubject(SubjectId.Sprint);
             return true;
         }
 

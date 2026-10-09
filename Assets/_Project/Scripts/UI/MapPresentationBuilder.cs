@@ -60,7 +60,10 @@ namespace KMA.Gameplay.UI
                 var lessonList = existing.GetComponentInChildren<JourneyLessonList>(true) ??
                     JourneyLessonList.Create(existing.Find("Content"));
                 EnsureCourseSummary(screen, existing.Find("Content"));
+                // Scenes baked before the popup carry the panel docked under the map.
+                JourneyLessonPresentation.EnsurePopup((RectTransform)lessonList.transform);
                 screen.BindPresentation(existingNodes, existingHearts, session ?? new GameSession(), lessonList);
+                lessonList.Close();
                 screen.BindBudgetLabel(existing.Find("Content/Header/LivesPanel/LivesLabelContainer/LivesLabel")
                     ?.GetComponent<TMP_Text>());
                 screen.RefreshJourney(session ?? new GameSession());
@@ -116,7 +119,10 @@ namespace KMA.Gameplay.UI
             grid.GetComponent<ResponsiveGridLayout>().Refresh();
             JourneyLessonList lessons = JourneyLessonList.Create(content);
             EnsureCourseSummary(screen, content);
+            // The summary is added after the panel; keep the popup on top of it.
+            JourneyLessonPresentation.EnsurePopup((RectTransform)lessons.transform);
             screen.BindPresentation(nodes.ToArray(), hearts, session ?? new GameSession(), lessons);
+            lessons.Close();
             screen.BindBudgetLabel(content.Find("Header/LivesPanel/LivesLabelContainer/LivesLabel")
                 ?.GetComponent<TMP_Text>());
             screen.RefreshJourney(session ?? new GameSession());

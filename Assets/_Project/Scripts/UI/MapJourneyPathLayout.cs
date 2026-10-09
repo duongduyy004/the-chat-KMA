@@ -64,9 +64,9 @@ namespace KMA.Gameplay.UI
 
             UITheme.LessonJourneyStyle style = Style;
             int count = Mathf.Min(nodes.Count, Mathf.Min(style.stopX.Length, style.stopY.Length), centers.Length);
-            // Shrink the whole stop if the zone is shorter than the stop's fixed height,
+            // Grow the whole stop up to stopMaxScale, shrinking it if the zone is shorter than its height,
             // or too narrow for neighbouring stops to sit side by side.
-            float stopScale = Mathf.Min(1f, size.y / (style.stopSize.y + 20f));
+            float stopScale = Mathf.Min(style.stopMaxScale, size.y / (style.stopSize.y + 20f));
             for (int i = 1; i < count; i++)
                 stopScale = Mathf.Min(stopScale, (style.stopX[i] - style.stopX[i - 1]) * size.x / style.stopSize.x);
             float badgeFromTop = style.stopTagHeight + style.stopBadgeSize * style.stopCurrentScale * .5f;

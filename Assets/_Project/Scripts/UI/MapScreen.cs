@@ -97,7 +97,7 @@ namespace KMA.Gameplay.UI
 
         public void SelectSubject(SubjectId subject)
         {
-            LessonList?.ShowSubject(subject);
+            LessonList?.Open(subject);
             ApplyMarkers();
             SubjectRequested?.Invoke(subject);
         }

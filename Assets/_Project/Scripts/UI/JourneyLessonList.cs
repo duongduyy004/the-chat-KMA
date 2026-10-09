@@ -20,6 +20,8 @@ namespace KMA.Gameplay.UI
         TMP_Text progress;
         TMP_Text hint;
         Button continueButton;
+        Button closeButton;
+        Button scrim;
         GameSession session;
         Action<string, ChallengeAttemptMode> onSelected;
         SubjectId selectedSubject;
@@ -33,6 +35,7 @@ namespace KMA.Gameplay.UI
         public IReadOnlyList<string> LessonIds => lessonIds;
         public string CurrentChallengeId { get; private set; }
         public SubjectId SelectedSubject => selectedSubject;
+        public bool IsOpen => gameObject.activeSelf;
 
         public static JourneyLessonList Create(Transform parent)
         {
@@ -64,6 +67,30 @@ namespace KMA.Gameplay.UI
                 return;
             selectedSubject = subject;
             Refresh(true);
+        }
+
+        /// Pops the lesson menu up over the map for an unlocked subject; locked stops stay closed.
+        public void Open(SubjectId subject)
+        {
+            if (session == null || !session.Journey.IsSubjectUnlocked(subject))
+                return;
+            selectedSubject = subject;
+            SetOpen(true);
+            Refresh(true);
+        }
+
+        public void Close() => SetOpen(false);
+
+        void SetOpen(bool open)
+        {
+            CacheChildReferences();
+            if (!open && revealRoutine != null)
+            {
+                StopCoroutine(revealRoutine);
+                revealRoutine = null;
+            }
+            if (scrim != null) scrim.gameObject.SetActive(open);
+            gameObject.SetActive(open);
         }
 
         public void Refresh() => Refresh(false);
@@ -223,7 +250,8 @@ namespace KMA.Gameplay.UI
         void PlayReveal()
         {
             if (revealRoutine != null) StopCoroutine(revealRoutine);
-            if (!Application.isPlaying)
+            // A closed popup can't run coroutines; Open replays the reveal anyway.
+            if (!Application.isPlaying || !isActiveAndEnabled)
             {
                 foreach (LessonCard card in lessonCards)
                 {
@@ -297,6 +325,24 @@ namespace KMA.Gameplay.UI
                 {
                     continueButton.onClick.RemoveListener(ContinueCheckpoint);
                     continueButton.onClick.AddListener(ContinueCheckpoint);
+                }
+            }
+            if (closeButton == null)
+            {
+                closeButton = transform.Find("CloseButton")?.GetComponent<Button>();
+                if (closeButton != null)
+                {
+                    closeButton.onClick.RemoveListener(Close);
+                    closeButton.onClick.AddListener(Close);
+                }
+            }
+            if (scrim == null && transform.parent != null)
+            {
+                scrim = transform.parent.Find("LessonScrim")?.GetComponent<Button>();
+                if (scrim != null)
+                {
+                    scrim.onClick.RemoveListener(Close);
+                    scrim.onClick.AddListener(Close);
                 }
             }
             if (lessonCards.Count == 0)

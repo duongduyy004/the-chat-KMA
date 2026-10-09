@@ -29,6 +29,22 @@ namespace KMA.Tests.Presentation
             if (root != null) Object.DestroyImmediate(root);
         }
 
+        [UnityTest]
+        public IEnumerator OpeningTheLessonPopupRevealsEveryCard()
+        {
+            MapPresentationBuilder.Build(screen, new GameSession());
+            Assert.That(screen.LessonList.IsOpen, Is.False);
+            for (int open = 0; open < 2; open++)
+            {
+                screen.SelectSubject(SubjectId.Sprint);
+                yield return new WaitForSecondsRealtime(1.2f);
+                for (int i = 1; i <= 3; i++)
+                    Assert.That(screen.LessonList.transform.Find($"Lesson{i}").GetComponent<CanvasGroup>().alpha,
+                        Is.EqualTo(1f), $"Lesson{i} on open #{open + 1}");
+                screen.LessonList.Close();
+            }
+        }
+
         [Test]
         public void NewJourneyShowsCourseOrderLocksFutureSubjectsAndListsCheckpointLessons()
         {
@@ -102,6 +118,7 @@ namespace KMA.Tests.Presentation
             session.Journey.SetAttemptsRemaining(0);
             MapPresentationBuilder.Build(screen, session);
             screen.RefreshJourney(session);
+            screen.SelectSubject(SubjectId.Sprint);
             yield return null;
 
             Transform continueButton = screen.LessonList.transform.Find("ContinueCheckpoint");
