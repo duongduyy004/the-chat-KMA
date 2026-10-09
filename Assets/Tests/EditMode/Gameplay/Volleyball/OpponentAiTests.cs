@@ -77,28 +77,57 @@ namespace KMA.Tests.Gameplay.Volleyball
             Assert.That(match.Plan.Index, Is.EqualTo(1));
         }
 
-        [Test]
-        public void PlayerBlockOnTheTelegraphedLineWinsThePoint()
+        static VolleyballMatch OpponentAboutToSmash(out float netCrossY)
         {
             var match = new VolleyballMatch();
             MatchDriver.ServeGood(match);
             Assert.That(MatchDriver.AdvanceUntil(match, () => match.OpponentSmashTell, 6f), Is.True);
-
-            // The block must be judged against where the smash actually crosses the net, not its
-            // eventual landing spot (OpponentAim). The two differ meaningfully for this serve.
-            float netCrossY = ActionResolver.NetCrossY(match.Flight.GroundAt(match.FlightTime), match.OpponentAim);
+            // The block is judged against where the smash crosses the net, not its landing spot
+            // (OpponentAim); for this serve the two differ by more than a block's width.
+            netCrossY = ActionResolver.NetCrossY(match.Flight.GroundAt(match.FlightTime), match.OpponentAim);
             Assert.That(Mathf.Abs(netCrossY - match.OpponentAim.y), Is.GreaterThan(ActionResolver.BlockLateral));
+            return match;
+        }
 
-            match.Player.PlaceAt(new Vector2(-.8f, match.OpponentAim.y));
-            Assert.That(match.PressAction().Kind, Is.EqualTo(ActionKind.None),
-                "lining up on the smash's landing spot, not its net crossing, must not block");
-
+        [Test]
+        public void JumpingOnTheTelegraphedLineBlocksTheSmash()
+        {
+            VolleyballMatch match = OpponentAboutToSmash(out float netCrossY);
+            int blocked = 0;
+            match.PlayerBlocked += () => blocked++;
             match.Player.PlaceAt(new Vector2(-.8f, netCrossY));
-            Assert.That(match.PressAction().Kind, Is.EqualTo(ActionKind.Block));
+            Assert.That(match.PressJump(), Is.True);
 
             Assert.That(MatchDriver.AdvanceUntil(match, () => match.BallState == BallState.Dead, 1f), Is.True);
             Assert.That(match.PlayerPoints, Is.EqualTo(1));
             Assert.That(match.Winners, Is.EqualTo(1));
+            Assert.That(blocked, Is.EqualTo(1));
+        }
+
+        [Test]
+        public void JumpingOnTheLandingSpotInsteadOfTheNetLineDoesNotBlock()
+        {
+            VolleyballMatch match = OpponentAboutToSmash(out _);
+            int blocked = 0;
+            match.PlayerBlocked += () => blocked++;
+            match.Player.PlaceAt(new Vector2(-.8f, match.OpponentAim.y));
+            Assert.That(match.PressJump(), Is.True);
+
+            Assert.That(MatchDriver.AdvanceUntil(match, () => match.BallState == BallState.Dead, 3f), Is.True);
+            Assert.That(match.PlayerPoints, Is.Zero);
+            Assert.That(match.OpponentPoints, Is.EqualTo(1));
+            Assert.That(blocked, Is.Zero);
+        }
+
+        [Test]
+        public void StandingOnTheLineWithoutJumpingDoesNotBlock()
+        {
+            VolleyballMatch match = OpponentAboutToSmash(out float netCrossY);
+            match.Player.PlaceAt(new Vector2(-.8f, netCrossY));
+            Assert.That(match.PressAction().Kind, Is.EqualTo(ActionKind.None), "the hit button no longer blocks");
+
+            Assert.That(MatchDriver.AdvanceUntil(match, () => match.BallState == BallState.Dead, 3f), Is.True);
+            Assert.That(match.PlayerPoints, Is.Zero);
         }
 
         static VolleyballMatch PlayerReadyToSmashIntoABlock()

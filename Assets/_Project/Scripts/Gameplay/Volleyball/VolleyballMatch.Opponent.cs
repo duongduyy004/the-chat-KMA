@@ -145,6 +145,8 @@ namespace KMA.Gameplay.Volleyball
                 float startHeight = BallHeight;
                 AwardPoint(CourtSide.Player, true);
                 Rebound(from, startHeight, new Vector2(ReboundDepth, Player.Position.y), CourtSide.Player);
+                // After PointScored, so the block call-out replaces the generic point call-out.
+                PlayerBlocked?.Invoke();
                 return;
             }
 
@@ -161,7 +163,7 @@ namespace KMA.Gameplay.Volleyball
         bool PlayerBlocks(Vector2 target)
         {
             float netCrossY = ActionResolver.NetCrossY(BallGround, target);
-            return Player.Action == AthleteAction.Block &&
+            return Player.IsAirborne &&
                    Mathf.Abs(Player.Position.x) <= ActionResolver.BlockNetDistance &&
                    Mathf.Abs(Player.Position.y - netCrossY) <= ActionResolver.BlockLateral;
         }

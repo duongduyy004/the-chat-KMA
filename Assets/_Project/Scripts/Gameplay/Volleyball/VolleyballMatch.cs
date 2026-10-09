@@ -83,6 +83,7 @@ namespace KMA.Gameplay.Volleyball
         public event Action<ActionDecision> PlayerActed;
         public event Action<CourtSide, ActionDecision, int> TouchRegistered;
         public event Action Completed;
+        public event Action PlayerBlocked;
 
         public VolleyAthlete Player { get; }
         public VolleyAthlete Opponent { get; }
