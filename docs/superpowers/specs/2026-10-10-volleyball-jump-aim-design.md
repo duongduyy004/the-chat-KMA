@@ -33,9 +33,10 @@ Giả định (người dùng không phản đối): người chơi phổ thông
 ### 2.2 Nhắm và đập
 
 - Đích đập `SmashAim(stick)` (hàm tĩnh, liên tục, luôn trong sân NPC):
-  - `x = 5.25 + stick.x * 2.75` → kéo trái = bỏ nhỏ sát lưới (2,5), kéo phải = đánh sâu (8).
-  - `y = stick.y * 4`.
-  - Kẹp kết quả trong sân NPC với lề 0,5 m tính từ biên cuối và biên dọc: `x ∈ [2.5, HalfLength − .5] = [2.5, 7.5]`, `|y| ≤ HalfWidth − .5 = 3.5` (`CourtSpace.HalfLength = 8`, `HalfWidth = 4`).
+  - Joystick được kẹp độ dài ≤ 1 trước.
+  - `x = 5.25 + stick.x * 2.25` → kéo trái = bỏ nhỏ (3), kéo phải = đánh sâu (7,5). Mép ngắn là 3 vì đó là đích ngắn nhất mà code hiện tại đã chứng minh là qua được lưới cao 2,24 m.
+  - `y = stick.y * 5`, nên chỉ cần kéo chéo là đã chạm biên. Nếu dùng hệ số 4, cú đập ngắn và rộng nhất chỉ làm đường bóng qua lưới lệch khoảng 0,8 m, nhỏ hơn tầm chắn 1 m của NPC, nghĩa là nhắm thế nào cũng không né được chắn.
+  - Kẹp trong sân NPC với lề 0,5 m: `x ∈ [3, 7.5]`, `|y| ≤ 3.5` (`CourtSpace.HalfLength = 8`, `HalfWidth = 4`).
   - Joystick thả (0, 0) → đích (5.25, 0), gần chỗ đứng chờ của NPC: không nhắm thì khó ăn điểm (cố ý).
 - `PlayerAim` = `SmashAim(move)` khi người chơi đang trên không.
 - **Điều kiện đập** = các điều kiện hiện tại của `ResolveTouch` (chạm thứ 2–3, `|x| ≤ SmashNetDistance`, bóng đủ cao, trong `Reach`, cửa sổ thời gian smash) **cộng thêm người chơi đang trên không**.
@@ -67,12 +68,12 @@ Phát bóng, đỡ, chuyền, đỡ cứu, `OpponentPlan`, tốc độ/phản �
   - (cơ hội đập) bên mình giữ bóng, chạm thứ 1–2 đã xảy ra, `|x| ≤ SmashNetDistance`, apex bóng > `SmashContactHeight`, và còn ≤ `JumpCueLead = 0.5` giây tới thời điểm đập lý tưởng; hoặc
   - (cơ hội chắn) `OpponentSmashTell` đang bật và `|x| ≤ BlockNetDistance`.
 
-  Khi cue đúng: nút NHẢY phóng to nhịp đập và vòng đứng hiện chữ "NHẢY!".
+  Khi cue đúng, nút NHẢY phóng to theo nhịp. Không vẽ chữ lên vòng đứng: việc đó cần thêm một TMP world-space, trong khi nút nhấp nháy đã đủ báo hiệu.
 - **Hướng dẫn HUD:**
   - Mặc định/Exam: "Joystick: di chuyển · NHẢY rồi kéo joystick để nhắm · ĐÁNH để đập"
   - Practice: "ĐỠ → CHUYỀN → NHẢY ĐẬP · {n}/{N} ĐIỂM"
   - Learn: giữ nguyên.
-- **Phản hồi:** Perfect/Good/Late giữ nguyên; chắn thành công hiện "CHẮN!".
+- **Phản hồi:** Perfect/Good/Late giữ nguyên. Chắn thành công thì hiện "CHẮN!" thông qua sự kiện mới `VolleyballMatch.PlayerBlocked`. Sự kiện này phát sau khi đã cộng điểm, nên chữ "CHẮN!" đè lên chữ "GHI ĐIỂM!".
 
 ## 4. Cấu trúc code
 
@@ -92,11 +93,12 @@ Phát bóng, đỡ, chuyền, đỡ cứu, `OpponentPlan`, tốc độ/phản �
   - `PlayerBlocks` dùng `Player.IsAirborne`.
   - `PositionOpponentWhileDefending` dùng `SmashAim(move)`.
   - `public bool TryGetJumpCue(out float secondsToIdeal)`.
-  - `TryGetPlayerContactCue` khi tính có phải tình huống đập không: thêm điều kiện đang trên không **hoặc** còn trong `JumpCueLead` (để vòng đứng vẫn chỉ vị trí đập trước khi nhảy).
-- `ActionContext`: thêm `bool Airborne`.
+  - `TryGetPlayerContactCue` giữ nguyên: hàm này vốn đã chỉ điểm đập khi người chơi đứng gần lưới, và chuyển sang điểm đỡ khi hết cửa sổ đập.
+  - `public event Action PlayerBlocked`.
+- `ActionContext` không đổi: resolver đọc `context.Athlete.IsAirborne`.
 - `ActionResolver`
-  - Nhánh Smash yêu cầu `context.Airborne`.
-  - `Airborne` mà không đập được → `None`.
+  - Nhánh Smash yêu cầu `context.Athlete.IsAirborne`.
+  - Đang trên không mà không đập được → `None`.
   - Gỡ `ResolveBlock`; không có quyền chạm bóng → `None`.
 
 ### 4.2 Presentation
