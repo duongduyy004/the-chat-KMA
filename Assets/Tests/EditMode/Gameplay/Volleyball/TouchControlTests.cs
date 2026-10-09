@@ -29,8 +29,12 @@ namespace KMA.Tests.Gameplay.Volleyball
             joystick.Configure((RectTransform)root.transform, stickBase, knob, 100f, new Vector2(0f, -200f));
 
             Assert.That(stickBase.anchoredPosition, Is.EqualTo(new Vector2(0f, -200f)));
+            var fade = root.GetComponent<CanvasGroup>();
+            Assert.That(fade.alpha, Is.EqualTo(VirtualJoystick.RestAlpha), "See-through at rest.");
+            Assert.That(fade.blocksRaycasts, Is.True, "The fade must not stop touches.");
             joystick.Press(new Vector2(40f, 40f));
             Assert.That(joystick.IsHeld, Is.True);
+            Assert.That(fade.alpha, Is.EqualTo(VirtualJoystick.HeldAlpha));
             Assert.That(stickBase.anchoredPosition, Is.EqualTo(new Vector2(40f, 40f)));
 
             joystick.Drag(new Vector2(90f, 40f));
@@ -43,6 +47,7 @@ namespace KMA.Tests.Gameplay.Volleyball
             joystick.Release();
             Assert.That(joystick.IsHeld, Is.False);
             Assert.That(joystick.Value, Is.EqualTo(Vector2.zero));
+            Assert.That(fade.alpha, Is.EqualTo(VirtualJoystick.RestAlpha));
             Assert.That(knob.anchoredPosition, Is.EqualTo(new Vector2(0f, -200f)));
         }
 

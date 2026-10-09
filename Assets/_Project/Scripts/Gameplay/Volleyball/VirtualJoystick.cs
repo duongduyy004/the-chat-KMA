@@ -11,6 +11,9 @@ namespace KMA.Gameplay.Volleyball
     public sealed class VirtualJoystick : MonoBehaviour, IPointerDownHandler, IDragHandler, IPointerUpHandler
     {
         const int NoPointer = int.MinValue;
+        // See-through at rest so the court corner under the stick stays visible; firmer while held.
+        public const float RestAlpha = .45f;
+        public const float HeldAlpha = .85f;
 
         [SerializeField] RectTransform area;
         [SerializeField] RectTransform stickBase;
@@ -19,6 +22,7 @@ namespace KMA.Gameplay.Volleyball
         [SerializeField] Vector2 restPosition;
         [SerializeField] Image baseImage;
         [SerializeField] Image rimImage;
+        [SerializeField] CanvasGroup fade;
 
         int pointerId = NoPointer;
         Vector2 origin;
@@ -36,6 +40,9 @@ namespace KMA.Gameplay.Volleyball
             restPosition = rest;
             baseImage = stickBase ? stickBase.GetComponent<Image>() : null;
             rimImage = stickBase ? stickBase.Find("JoystickRim")?.GetComponent<Image>() : null;
+            // Alpha only: the group never blocks or passes through touches on the area.
+            fade = area ? area.GetComponent<CanvasGroup>() : null;
+            if (fade == null && area) fade = area.gameObject.AddComponent<CanvasGroup>();
             Release();
         }
 
@@ -67,6 +74,7 @@ namespace KMA.Gameplay.Volleyball
             if (stickBase)
                 stickBase.anchoredPosition = origin;
             KitControlState.Apply(baseImage, rimImage, ControlState.Hint);
+            if (fade) fade.alpha = HeldAlpha;
             Drag(local);
         }
 
@@ -92,6 +100,7 @@ namespace KMA.Gameplay.Volleyball
             if (knob)
                 knob.anchoredPosition = restPosition;
             KitControlState.Apply(baseImage, rimImage, ControlState.Rest);
+            if (fade) fade.alpha = RestAlpha;
         }
 
         void OnDisable() => Release();
