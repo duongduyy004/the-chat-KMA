@@ -217,8 +217,10 @@ namespace KMA.EditorTools
             contact.color = VolleyBallView.MarkerOutOfReachColor;
             SpriteRenderer aim = Renderer("AimMarker", shadowSprite, Vector3.zero, VolleyBallView.MarkerSortingOrder);
             aim.color = AimTint;
+            SpriteRenderer playerAim = Renderer("PlayerAimMarker", shadowSprite, Vector3.zero, VolleyBallView.MarkerSortingOrder);
+            playerAim.color = VolleyBallView.PlayerAimColor;
             var ballView = new GameObject("BallView").AddComponent<VolleyBallView>();
-            ballView.Configure(ball, shadow, contact, aim);
+            ballView.Configure(ball, shadow, contact, aim, playerAim);
 
             var eventSystem = new GameObject("EventSystem");
             eventSystem.AddComponent<EventSystem>();
@@ -320,6 +322,15 @@ namespace KMA.EditorTools
             var button = buttonRect.gameObject.AddComponent<ActionButton>();
             UiKit.RoundButton(buttonRect, "ĐÁNH", MinigameUiTheme.RoundButton * JoystickScale);
 
+            // NHẢY sits just inside ĐÁNH and a little higher, its hit area clear of ĐÁNH's.
+            RectTransform jumpRect = UiRect("JumpButton", controls, Vector2.one, Vector2.one);
+            jumpRect.anchorMin = jumpRect.anchorMax = jumpRect.pivot = new Vector2(1f, 0f);
+            jumpRect.sizeDelta = new Vector2(260f, 260f);
+            jumpRect.anchoredPosition = new Vector2(-428f, 120f);
+            jumpRect.gameObject.AddComponent<Image>().color = Color.clear;
+            var jump = jumpRect.gameObject.AddComponent<JumpButton>();
+            UiKit.RoundButton(jumpRect, "NHẢY", MinigameUiTheme.RoundButton * JoystickScale);
+
             Vector2 centre = new Vector2(.5f, .5f);
             Image scoreboard = UiKit.Panel(controls, "VolleyballScoreboard");
             UiKit.Place(scoreboard.rectTransform, new Vector2(.5f, 1f), new Vector2(.5f, 1f), new Vector2(0f, -12f),
@@ -352,7 +363,7 @@ namespace KMA.EditorTools
             UiKit.Place(feedback.rectTransform, new Vector2(.5f, .75f), centre, Vector2.zero, new Vector2(680f, 100f));
             ChipHandle hint = UiKit.Chip(controls, "HintBanner", VolleyballHud.HintText);
             hint.Label.name = "Hint";
-            UiKit.Place(hint.Background.rectTransform, new Vector2(.5f, .045f), centre, Vector2.zero, new Vector2(860f, 66f));
+            UiKit.Place(hint.Background.rectTransform, new Vector2(.5f, .045f), centre, Vector2.zero, new Vector2(1000f, 66f));
             var hud = controls.gameObject.AddComponent<VolleyballHud>();
             hud.Configure(score, feedback, hint.Label);
             hud.ConfigureHintBackdrop(hint.Background.gameObject);
@@ -366,10 +377,10 @@ namespace KMA.EditorTools
             }
 
             var controller = Object.FindFirstObjectByType<VolleyballController>();
-            controller.Input.Configure(joystick, button);
+            controller.Input.Configure(joystick, button, jump);
             controller.Configure(controller.PlayerView, controller.OpponentView, controller.BallView, controller.Input, hud);
 
-            foreach (Object dirty in new Object[] { joystick, button, hud, controller, controller.Input, hudRoot })
+            foreach (Object dirty in new Object[] { joystick, button, jump, hud, controller, controller.Input, hudRoot })
                 EditorUtility.SetDirty(dirty);
             EditorSceneManager.MarkSceneDirty(scene);
             EditorSceneManager.SaveScene(scene);

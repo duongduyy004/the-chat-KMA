@@ -130,6 +130,35 @@ namespace KMA.Tests.EditorTools
 
 
         [Test]
+        public void JumpButtonAndPlayerAimMarkerAreWired()
+        {
+            VolleyballSceneConfigurator.BuildScene();
+            EditorSceneManager.OpenScene(VolleyballSceneConfigurator.ScenePath, OpenSceneMode.Single);
+
+            var jump = Object.FindFirstObjectByType<JumpButton>();
+            Assert.That(jump, Is.Not.Null);
+            Assert.That(jump.GetComponentInChildren<TMPro.TMP_Text>().text, Is.EqualTo("NHẢY"));
+            Assert.That(jump.GetComponent<KitPressFeedback>(), Is.Not.Null);
+
+            var controller = Object.FindFirstObjectByType<VolleyballController>();
+            Assert.That(controller.Input.JumpButton, Is.SameAs(jump));
+            var aim = GameObject.Find("PlayerAimMarker").GetComponent<SpriteRenderer>();
+            Assert.That(controller.BallView.PlayerAimMarker, Is.SameAs(aim));
+            Assert.That(aim.color, Is.EqualTo(VolleyBallView.PlayerAimColor));
+
+            Rect WorldRect(RectTransform rect)
+            {
+                var corners = new Vector3[4];
+                rect.GetWorldCorners(corners);
+                return Rect.MinMaxRect(corners[0].x, corners[0].y, corners[2].x, corners[2].y);
+            }
+            Rect jumpArea = WorldRect((RectTransform)jump.transform);
+            Rect hitArea = WorldRect((RectTransform)Object.FindFirstObjectByType<ActionButton>().transform);
+            Assert.That(jumpArea.Overlaps(hitArea), Is.False, "two thumbs must not share a hit area");
+            Assert.That(jumpArea.center.x, Is.LessThan(hitArea.center.x), "NHẢY sits inside ĐÁNH");
+        }
+
+        [Test]
         public void ControlsScoreboardAndPauseAreDrawnWithTheUiKit()
         {
             VolleyballSceneConfigurator.BuildScene();
