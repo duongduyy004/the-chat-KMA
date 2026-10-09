@@ -17,7 +17,10 @@ namespace KMA.Tests.Gameplay.Volleyball
                 Object.Destroy(root);
         }
 
-        VolleyballInputBridge CreateBridge(out VirtualJoystick joystick, out ActionButton button)
+        VolleyballInputBridge CreateBridge(out VirtualJoystick joystick, out ActionButton button) =>
+            CreateBridge(out joystick, out button, out _);
+
+        VolleyballInputBridge CreateBridge(out VirtualJoystick joystick, out ActionButton button, out JumpButton jump)
         {
             root = new GameObject("Bridge", typeof(RectTransform));
             root.SetActive(false);
@@ -28,8 +31,10 @@ namespace KMA.Tests.Gameplay.Volleyball
             knob.SetParent(root.transform, false);
             joystick.Configure((RectTransform)root.transform, stickBase, knob, 100f, Vector2.zero);
             button = root.AddComponent<ActionButton>();
+            jump = new GameObject("Jump", typeof(RectTransform)).AddComponent<JumpButton>();
+            jump.transform.SetParent(root.transform, false);
             var bridge = root.AddComponent<VolleyballInputBridge>();
-            bridge.Configure(joystick, button);
+            bridge.Configure(joystick, button, jump);
             root.SetActive(true);
             return bridge;
         }
@@ -48,6 +53,38 @@ namespace KMA.Tests.Gameplay.Volleyball
             button.Press();
             bridge.ClearPresses();
             Assert.That(bridge.ConsumePresses(), Is.Zero);
+        }
+
+        [UnityTest]
+        public IEnumerator JumpPressesQueueSeparatelyFromHits()
+        {
+            VolleyballInputBridge bridge = CreateBridge(out _, out ActionButton button, out JumpButton jump);
+            yield return null;
+
+            Assert.That(bridge.JumpButton, Is.SameAs(jump));
+            jump.Press();
+            button.Press();
+            Assert.That(bridge.ConsumeJumps(), Is.EqualTo(1));
+            Assert.That(bridge.ConsumeJumps(), Is.Zero);
+            Assert.That(bridge.ConsumePresses(), Is.EqualTo(1));
+
+            jump.Press();
+            bridge.FeedJumpForTest();
+            bridge.ClearPresses();
+            Assert.That(bridge.ConsumeJumps(), Is.Zero, "pausing drops queued jumps too");
+        }
+
+        [UnityTest]
+        public IEnumerator JumpCuePulsesTheButtonAndRestsAtScaleOne()
+        {
+            CreateBridge(out _, out _, out JumpButton jump);
+            yield return null;
+
+            jump.SetCue(true);
+            Assert.That(jump.Cued, Is.True);
+            Assert.That(jump.transform.localScale.x, Is.InRange(1f, 1f + JumpButton.PulseAmount + 1e-4f));
+            jump.SetCue(false);
+            Assert.That(jump.transform.localScale, Is.EqualTo(Vector3.one));
         }
 
         [UnityTest]

@@ -118,6 +118,12 @@ namespace KMA.Gameplay.Volleyball
             Vector2 previousPosition = Match.Player.Position;
             if (challengeRules != null) challengeRules.SetMove(input.Move);
             else Match.SetMove(input.Move);
+            // Jumps first: two thumbs landing in one frame mean "take off, then hit".
+            for (int jumps = input.ConsumeJumps(); jumps > 0; jumps--)
+            {
+                if (challengeRules != null) challengeRules.PressJump();
+                else Match.PressJump();
+            }
             for (int presses = input.ConsumePresses(); presses > 0; presses--)
             {
                 if (challengeRules != null) challengeRules.PressAction();

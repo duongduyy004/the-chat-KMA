@@ -63,6 +63,31 @@ namespace KMA.Tests.Gameplay.Volleyball
             Assert.That(controller.PresentationPhase, Is.EqualTo(MinigamePhase.Resolve));
         }
 
+        [UnityTest]
+        public IEnumerator JumpPressesReachTheMatch()
+        {
+            root = new GameObject("Controller");
+            root.SetActive(false);
+            var input = root.AddComponent<VolleyballInputBridge>();
+            var controller = root.AddComponent<VolleyballController>();
+            VolleyAthleteView player = View("Player"), opponent = View("Opponent");
+            var ballView = new GameObject("BallView").AddComponent<VolleyBallView>();
+            ballView.transform.SetParent(root.transform);
+            var hud = root.AddComponent<VolleyballHud>();
+            controller.Configure(player, opponent, ballView, input, hud);
+            root.SetActive(true);
+            yield return null;
+
+            controller.SkipToPlayForTest();
+            controller.Match.ForceServerForTest(CourtSide.Opponent);
+            while (controller.Match.BallState != BallState.InPlay)
+                controller.Match.Tick(1f / 60f);
+
+            input.FeedJumpForTest();
+            yield return null;
+            Assert.That(controller.Match.Player.IsAirborne, Is.True);
+        }
+
         VolleyAthleteView View(string name)
         {
             var go = new GameObject(name);

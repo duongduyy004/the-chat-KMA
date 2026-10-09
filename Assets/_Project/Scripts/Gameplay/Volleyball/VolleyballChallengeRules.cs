@@ -35,6 +35,7 @@ namespace KMA.Gameplay.Volleyball
 
         public void SetMove(UnityEngine.Vector2 move) => Match.SetMove(move);
         public ActionDecision PressAction() => Match.PressAction();
+        public bool PressJump() => Match.PressJump();
         public void Tick(float dt) => Match.Tick(dt);
 
         public ChallengeAttemptResult BuildResult(ChallengeAttemptContext context)

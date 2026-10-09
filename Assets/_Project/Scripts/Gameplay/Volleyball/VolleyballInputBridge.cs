@@ -3,26 +3,34 @@ using UnityEngine.InputSystem;
 
 namespace KMA.Gameplay.Volleyball
 {
-    // Merges the touch controls with a keyboard fallback (WASD/arrows + Space). The keyboard
-    // actions live in code because KMA.inputactions' map list is pinned by InputAssetContractTests.
+    // Merges the touch controls with a keyboard fallback (WASD/arrows, Space to hit, J to jump).
+    // The keyboard actions live in code because KMA.inputactions' map list is pinned by
+    // InputAssetContractTests.
     public sealed class VolleyballInputBridge : MonoBehaviour
     {
         [SerializeField] VirtualJoystick joystick;
         [SerializeField] ActionButton actionButton;
+        [SerializeField] JumpButton jumpButton;
 
         InputAction moveAction;
         InputAction pressAction;
+        InputAction jumpAction;
         ActionButton subscribedButton;
+        JumpButton subscribedJump;
         int pendingPresses;
+        int pendingJumps;
         Vector2? testMove;
 
-        public void Configure(VirtualJoystick stick, ActionButton button)
+        public void Configure(VirtualJoystick stick, ActionButton button, JumpButton jump = null)
         {
             joystick = stick;
             actionButton = button;
+            jumpButton = jump;
             if (isActiveAndEnabled)
-                SubscribeButton();
+                SubscribeButtons();
         }
+
+        public JumpButton JumpButton => jumpButton;
 
         public Vector2 Move
         {
@@ -43,31 +51,47 @@ namespace KMA.Gameplay.Volleyball
             return presses;
         }
 
-        public void ClearPresses() => pendingPresses = 0;
+        public int ConsumeJumps()
+        {
+            int jumps = pendingJumps;
+            pendingJumps = 0;
+            return jumps;
+        }
+
+        public void ClearPresses()
+        {
+            pendingPresses = 0;
+            pendingJumps = 0;
+        }
 
         public void FeedMoveForTest(Vector2 move) => testMove = move;
 
         public void FeedActionForTest() => pendingPresses++;
+
+        public void FeedJumpForTest() => pendingJumps++;
 
         void OnEnable()
         {
             EnsureActions();
             moveAction.Enable();
             pressAction.Enable();
-            SubscribeButton();
+            jumpAction.Enable();
+            SubscribeButtons();
         }
 
         void OnDisable()
         {
             moveAction?.Disable();
             pressAction?.Disable();
-            UnsubscribeButton();
+            jumpAction?.Disable();
+            UnsubscribeButtons();
         }
 
         void OnDestroy()
         {
             moveAction?.Dispose();
             pressAction?.Dispose();
+            jumpAction?.Dispose();
         }
 
         void EnsureActions()
@@ -84,28 +108,43 @@ namespace KMA.Gameplay.Volleyball
                 .With("Left", "<Keyboard>/leftArrow").With("Right", "<Keyboard>/rightArrow");
             pressAction = new InputAction("VolleyballAction", InputActionType.Button, "<Keyboard>/space");
             pressAction.performed += _ => OnPressed();
+            jumpAction = new InputAction("VolleyballJump", InputActionType.Button, "<Keyboard>/j");
+            jumpAction.performed += _ => OnJumped();
         }
 
-        void SubscribeButton()
+        void SubscribeButtons()
         {
-            if (subscribedButton == actionButton)
-                return;
+            if (subscribedButton != actionButton)
+            {
+                if (subscribedButton)
+                    subscribedButton.Pressed -= OnPressed;
+                subscribedButton = actionButton;
+                if (actionButton)
+                    actionButton.Pressed += OnPressed;
+            }
 
-            UnsubscribeButton();
-            if (!actionButton)
-                return;
-
-            actionButton.Pressed += OnPressed;
-            subscribedButton = actionButton;
+            if (subscribedJump != jumpButton)
+            {
+                if (subscribedJump)
+                    subscribedJump.Pressed -= OnJumped;
+                subscribedJump = jumpButton;
+                if (jumpButton)
+                    jumpButton.Pressed += OnJumped;
+            }
         }
 
-        void UnsubscribeButton()
+        void UnsubscribeButtons()
         {
             if (subscribedButton)
                 subscribedButton.Pressed -= OnPressed;
+            if (subscribedJump)
+                subscribedJump.Pressed -= OnJumped;
             subscribedButton = null;
+            subscribedJump = null;
         }
 
         void OnPressed() => pendingPresses++;
+
+        void OnJumped() => pendingJumps++;
     }
 }

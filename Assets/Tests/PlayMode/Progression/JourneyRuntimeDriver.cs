@@ -113,6 +113,7 @@ namespace KMA.Tests.Gameplay.Progression
                             {
                                 match.Opponent.PlaceAt(new Vector2(8.5f, -3.5f));
                                 volley.Input.FeedMoveForTest(new Vector2(1f, 1f));
+                                volley.Input.FeedJumpForTest();
                             }
                             volley.Input.FeedActionForTest();
                         }
