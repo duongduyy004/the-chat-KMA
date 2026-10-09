@@ -73,5 +73,71 @@ namespace KMA.Tests.Gameplay.Volleyball
             athlete.Lunge(new Vector2(-5f, 3f), 1.2f);
             Assert.That(athlete.Position.y, Is.EqualTo(1.2f).Within(1e-4f));
         }
+
+        [Test]
+        public void JumpStaysAirborneForJumpSecondsThenLands()
+        {
+            var athlete = new VolleyAthlete(CourtSide.Player, 5f);
+            athlete.PlaceAt(new Vector2(-2f, 0f));
+            Assert.That(athlete.TryJump(AthleteAction.Smash), Is.True);
+            Assert.That(athlete.IsAirborne, Is.True);
+            Assert.That(athlete.Action, Is.EqualTo(AthleteAction.Smash));
+            Assert.That(athlete.JumpHeight, Is.EqualTo(0f).Within(1e-4f));
+
+            athlete.Tick(VolleyAthlete.JumpSeconds / 2f);
+            Assert.That(athlete.JumpHeight, Is.EqualTo(VolleyAthlete.JumpPeak).Within(1e-3f));
+
+            athlete.Tick(VolleyAthlete.JumpSeconds / 2f + .01f);
+            Assert.That(athlete.IsAirborne, Is.False);
+            Assert.That(athlete.JumpHeight, Is.Zero);
+            Assert.That(athlete.Action, Is.EqualTo(AthleteAction.Idle));
+        }
+
+        [Test]
+        public void AirborneAthleteCannotMoveOrJumpAgain()
+        {
+            var athlete = new VolleyAthlete(CourtSide.Player, 5f);
+            athlete.PlaceAt(new Vector2(-2f, 0f));
+            athlete.TryJump(AthleteAction.Smash);
+
+            athlete.Move(Vector2.up, .2f);
+            athlete.MoveToward(new Vector2(-5f, 3f), .2f);
+            Assert.That(athlete.Position, Is.EqualTo(new Vector2(-2f, 0f)));
+            Assert.That(athlete.Action, Is.EqualTo(AthleteAction.Smash), "holding the stick must not cancel the pose");
+            Assert.That(athlete.TryJump(AthleteAction.Smash), Is.False);
+        }
+
+        [Test]
+        public void LockedAthleteCannotJump()
+        {
+            var athlete = new VolleyAthlete(CourtSide.Player, 5f);
+            athlete.PlaceAt(new Vector2(-2f, 0f));
+            athlete.BeginAction(AthleteAction.Receive, .35f);
+            Assert.That(athlete.TryJump(AthleteAction.Smash), Is.False);
+            Assert.That(athlete.IsAirborne, Is.False);
+        }
+
+        [Test]
+        public void PlaceAtLandsAJumpingAthlete()
+        {
+            var athlete = new VolleyAthlete(CourtSide.Player, 5f);
+            athlete.PlaceAt(new Vector2(-2f, 0f));
+            athlete.TryJump(AthleteAction.Block);
+            athlete.PlaceAt(new Vector2(-5f, 0f));
+            Assert.That(athlete.IsAirborne, Is.False);
+            Assert.That(athlete.Action, Is.EqualTo(AthleteAction.Idle));
+        }
+
+        [Test]
+        public void ASmashLockEndingMidAirKeepsThePoseUntilLanding()
+        {
+            var athlete = new VolleyAthlete(CourtSide.Player, 5f);
+            athlete.PlaceAt(new Vector2(-2f, 0f));
+            athlete.TryJump(AthleteAction.Smash);
+            athlete.BeginAction(AthleteAction.Smash, .2f);
+            athlete.Tick(.3f);
+            Assert.That(athlete.IsAirborne, Is.True);
+            Assert.That(athlete.Action, Is.EqualTo(AthleteAction.Smash));
+        }
     }
 }
