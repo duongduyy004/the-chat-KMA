@@ -11,6 +11,22 @@ namespace KMA.Tests.Gameplay.Volleyball
         static VolleyballMatch TimedMatch() =>
             new VolleyballMatch(options: new VolleyballMatchOptions(VolleyballMatch.PointsToWin, VolleyballMatch.TimeLimit));
 
+        // Opponent serve received perfectly; returns with the set in the air and the player
+        // standing on the smash contact point.
+        static VolleyballMatch ReceivedAndUnderTheSet(out float smashIdeal)
+        {
+            var match = FrozenOpponentMatch();
+            match.ForceServerForTest(CourtSide.Opponent);
+            Assert.That(MatchDriver.AdvanceUntil(match, () => match.BallState == BallState.InPlay, 3f), Is.True);
+            float receiveIdeal = match.Flight.TimeAtHeightDescending(ActionResolver.ReceiveContactHeight);
+            match.Player.PlaceAt(match.Flight.GroundAt(receiveIdeal));
+            MatchDriver.AdvanceToFlightTime(match, receiveIdeal);
+            Assert.That(match.PressAction().Kind, Is.EqualTo(ActionKind.Receive));
+            smashIdeal = match.Flight.TimeAtHeightDescending(ActionResolver.SmashContactHeight);
+            match.Player.PlaceAt(match.Flight.GroundAt(smashIdeal));
+            return match;
+        }
+
         [Test]
         public void MatchStartsWithThePlayerHoldingTheServe()
         {
@@ -433,6 +449,99 @@ namespace KMA.Tests.Gameplay.Volleyball
             Assert.That(VolleyballMatch.AimAtOpponent(Vector2.zero), Is.EqualTo(new Vector2(7f, 0f)));
             Assert.That(VolleyballMatch.AimAtOpponent(new Vector2(-1f, 1f)), Is.EqualTo(new Vector2(3f, 3f)));
             Assert.That(VolleyballMatch.AimAtOpponent(new Vector2(1f, -1f)), Is.EqualTo(new Vector2(7f, -3f)));
+        }
+
+        [Test]
+        public void SmashAimMapsTheStickContinuouslyInsideTheOpponentCourt()
+        {
+            Assert.That(VolleyballMatch.SmashAim(Vector2.zero), Is.EqualTo(new Vector2(5.25f, 0f)));
+            Assert.That(VolleyballMatch.SmashAim(Vector2.right), Is.EqualTo(new Vector2(7.5f, 0f)));
+            Assert.That(VolleyballMatch.SmashAim(Vector2.left), Is.EqualTo(new Vector2(3f, 0f)));
+            Assert.That(VolleyballMatch.SmashAim(Vector2.up), Is.EqualTo(new Vector2(5.25f, 3.5f)));
+            Assert.That(VolleyballMatch.SmashAim(Vector2.down), Is.EqualTo(new Vector2(5.25f, -3.5f)));
+            Assert.That(VolleyballMatch.SmashAim(new Vector2(0f, .5f)).y, Is.EqualTo(2.5f).Within(1e-4f));
+            Assert.That(VolleyballMatch.SmashAim(new Vector2(5f, 0f)), Is.EqualTo(new Vector2(7.5f, 0f)), "stick is clamped to 1");
+
+            Vector2 diagonal = VolleyballMatch.SmashAim(new Vector2(1f, 1f));
+            Assert.That(diagonal.x, Is.EqualTo(5.25f + 2.25f * .70710678f).Within(1e-4f));
+            Assert.That(diagonal.y, Is.EqualTo(3.5f).Within(1e-4f), "a diagonal reaches the sideline");
+            Assert.That(CourtSpace.IsIn(diagonal), Is.True);
+        }
+
+        [Test]
+        public void PlayerAimFollowsTheStick()
+        {
+            var match = FrozenOpponentMatch();
+            match.SetMove(Vector2.up);
+            Assert.That(match.PlayerAim, Is.EqualTo(VolleyballMatch.SmashAim(Vector2.up)));
+        }
+
+        [Test]
+        public void JumpOnlyWorksWhileTheBallIsInPlay()
+        {
+            var match = FrozenOpponentMatch();
+            Assert.That(match.BallState, Is.EqualTo(BallState.Held));
+            Assert.That(match.PressJump(), Is.False);
+            match.PressAction();
+            Assert.That(match.BallState, Is.EqualTo(BallState.Toss));
+            Assert.That(match.PressJump(), Is.False);
+            Assert.That(match.Player.IsAirborne, Is.False);
+
+            VolleyballMatch rally = ReceivedAndUnderTheSet(out _);
+            Assert.That(rally.PressJump(), Is.True);
+            Assert.That(rally.Player.IsAirborne, Is.True);
+            Assert.That(rally.Player.Action, Is.EqualTo(AthleteAction.Smash));
+            Assert.That(rally.PressJump(), Is.False, "no double jump");
+
+            rally.SetScoreForTest(0, VolleyballMatch.PointsToWin - 1);
+            rally.Player.PlaceAt(new Vector2(-8f, 0f));
+            Assert.That(MatchDriver.AdvanceUntil(rally, () => rally.IsOver, 10f), Is.True);
+            Assert.That(rally.PressJump(), Is.False);
+        }
+
+        [Test]
+        public void JumpCueOpensHalfASecondBeforeTheSmashAndClosesOnceAirborne()
+        {
+            VolleyballMatch match = ReceivedAndUnderTheSet(out float smashIdeal);
+            MatchDriver.AdvanceToFlightTime(match, smashIdeal - .6f);
+            Assert.That(match.TryGetJumpCue(out _), Is.False, "too early");
+
+            MatchDriver.AdvanceToFlightTime(match, smashIdeal - .4f);
+            Assert.That(match.TryGetJumpCue(out float seconds), Is.True);
+            Assert.That(seconds, Is.EqualTo(.4f).Within(1e-3f));
+
+            match.PressJump();
+            Assert.That(match.TryGetJumpCue(out _), Is.False);
+        }
+
+        [Test]
+        public void NoJumpCueAwayFromTheNet()
+        {
+            VolleyballMatch match = ReceivedAndUnderTheSet(out float smashIdeal);
+            match.Player.PlaceAt(new Vector2(-5f, 0f));
+            MatchDriver.AdvanceToFlightTime(match, smashIdeal - .3f);
+            Assert.That(match.TryGetJumpCue(out _), Is.False);
+        }
+
+        [Test]
+        public void JumpCueAndBlockPoseWhenTheOpponentTelegraphsASmashAtTheNet()
+        {
+            var match = new VolleyballMatch();
+            MatchDriver.ServeGood(match);
+            Assert.That(MatchDriver.AdvanceUntil(match, () => match.OpponentSmashTell, 6f), Is.True);
+
+            match.Player.PlaceAt(new Vector2(-3f, 0f));
+            Assert.That(match.TryGetJumpCue(out _), Is.False, "too far from the net to block");
+
+            match.Player.PlaceAt(new Vector2(-.8f, 0f));
+            Assert.That(match.TryGetJumpCue(out _), Is.True);
+
+            ActionDecision acted = ActionDecision.None;
+            match.PlayerActed += d => acted = d;
+            Assert.That(match.PressJump(), Is.True);
+            Assert.That(match.Player.Action, Is.EqualTo(AthleteAction.Block));
+            Assert.That(acted.Kind, Is.EqualTo(ActionKind.Block));
+            Assert.That(acted.IsTimed, Is.False, "a block jump is not graded");
         }
     }
 }

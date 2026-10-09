@@ -39,6 +39,8 @@ namespace KMA.Gameplay.Volleyball
         public const float SmashSeconds = .45f;
         public const float BlockSeconds = .6f;
         public const float SmashRise = .2f;
+        public const float JumpCueLead = .5f;
+        public const float SmashAimMargin = .5f;
         const float ServeSeconds = .4f;
         const float DiveSeconds = .8f;
         const float DiveLunge = 1.2f;
@@ -117,6 +119,20 @@ namespace KMA.Gameplay.Volleyball
         public static Vector2 AimAtOpponent(Vector2 stick) =>
             new Vector2(stick.x < -.3f ? 3f : 7f, Mathf.Clamp(stick.y, -1f, 1f) * 3f);
 
+        // Where a jump smash lands: continuous, always inside the opponent's court. Full left is a
+        // short drop at x 3 (the shortest smash proven to clear the net), full right the deep line;
+        // a diagonal already reaches the sideline, so a short wide smash can swing past a block.
+        public static Vector2 SmashAim(Vector2 stick)
+        {
+            stick = Vector2.ClampMagnitude(stick, 1f);
+            float deep = CourtSpace.HalfLength - SmashAimMargin;
+            float wide = CourtSpace.HalfWidth - SmashAimMargin;
+            return new Vector2(Mathf.Clamp(5.25f + stick.x * 2.25f, 3f, deep),
+                Mathf.Clamp(stick.y * 5f, -wide, wide));
+        }
+
+        public Vector2 PlayerAim => SmashAim(move);
+
         public void SetMove(Vector2 stick) => move = Vector2.ClampMagnitude(stick, 1f);
 
         public ActionDecision PressAction()
@@ -156,6 +172,27 @@ namespace KMA.Gameplay.Volleyball
 
             PlayerActed?.Invoke(decision);
             return decision;
+        }
+
+        // A jump at the net while the opponent telegraphs a smash is a block; anywhere else it is
+        // the take-off for a smash. Either way the athlete hangs for JumpSeconds and the stick aims.
+        public bool PressJump()
+        {
+            if (IsOver || BallState != BallState.InPlay)
+                return false;
+
+            bool blocking = OpponentSmashTell && Mathf.Abs(Player.Position.x) <= ActionResolver.BlockNetDistance;
+            if (!Player.TryJump(blocking ? AthleteAction.Block : AthleteAction.Smash))
+                return false;
+
+            if (blocking)
+            {
+                var decision = new ActionDecision(ActionKind.Block, TimingGrade.Miss, 0f);
+                LastDecision = decision;
+                PlayerActed?.Invoke(decision);
+            }
+
+            return true;
         }
 
         public void Tick(float deltaTime)
@@ -263,6 +300,26 @@ namespace KMA.Gameplay.Volleyball
             secondsToIdeal = ideal - FlightTime;
             contactPoint = Flight.GroundAt(ideal);
             return secondsToIdeal >= -TimingWindows.Late;
+        }
+
+        // True while a jump now would pay off: a smash coming up near the net, or an opponent
+        // smash telegraphed while the player stands at the net.
+        public bool TryGetJumpCue(out float secondsToIdeal)
+        {
+            secondsToIdeal = 0f;
+            if (IsOver || BallState != BallState.InPlay || Flight == null || Player.IsAirborne)
+                return false;
+
+            if (Rally.Possession != CourtSide.Player)
+                return OpponentSmashTell && Mathf.Abs(Player.Position.x) <= ActionResolver.BlockNetDistance;
+
+            if (Rally.Touches < 1 || Rally.Touches > 2 ||
+                Mathf.Abs(Player.Position.x) > ActionResolver.SmashNetDistance ||
+                Flight.ApexHeight <= ActionResolver.SmashContactHeight)
+                return false;
+
+            secondsToIdeal = Flight.TimeAtHeightDescending(ActionResolver.SmashContactHeight) - FlightTime;
+            return secondsToIdeal <= JumpCueLead && secondsToIdeal >= -TimingWindows.SmashLate;
         }
 
         public bool PlayerInReachOf(Vector2 contactPoint) =>
