@@ -53,7 +53,7 @@ namespace KMA.Gameplay.Volleyball
             if (athlete == null || !body)
                 return;
 
-            transform.position = CourtSpace.ToWorld(athlete.Position, 0f);
+            transform.position = CourtSpace.ToWorld(athlete.Position, athlete.JumpHeight);
             body.sortingOrder = SortingOrderFor(athlete.Position.y);
             body.flipX = mirror;
             if (shown == athlete.Action)

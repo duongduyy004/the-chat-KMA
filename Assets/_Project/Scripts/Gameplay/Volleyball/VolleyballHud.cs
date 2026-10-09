@@ -6,7 +6,9 @@ namespace KMA.Gameplay.Volleyball
     public sealed class VolleyballHud : MonoBehaviour
     {
         public const float FeedbackSeconds = .8f;
-        public const string HintText = "Di chuyển bằng joystick  ·  Nhấn ĐÁNH để trả bóng";
+        public const string HintText = "Joystick: di chuyển  ·  NHẢY rồi kéo joystick để nhắm  ·  ĐÁNH để đập";
+        public const string PracticeHintFormat = "ĐỠ → CHUYỀN → NHẢY ĐẬP · {0}/{1} ĐIỂM";
+        public const string BlockText = "CHẮN!";
         public const float HintSeconds = 3.5f;
 
         [SerializeField] TMP_Text scoreLabel;
@@ -84,6 +86,15 @@ namespace KMA.Gameplay.Volleyball
             feedbackLeft = 1.15f;
         }
 
+        public void ShowBlock()
+        {
+            if (!feedbackLabel)
+                return;
+            feedbackLabel.text = VietText.Fix(BlockText);
+            feedbackLabel.enabled = true;
+            feedbackLeft = 1.15f;
+        }
+
         public void Render(VolleyballMatch match, MinigamePhase phase, float deltaTime)
         {
             if (match != null && scoreLabel)
@@ -107,7 +118,7 @@ namespace KMA.Gameplay.Volleyball
             {
                 string hint = challenge == null ? HintText
                     : challenge.Kind == ChallengeKind.Learn ? $"ĐỠ BÓNG {challengeRules.CompletedTargets}/{challenge.TargetCount}"
-                    : challenge.Kind == ChallengeKind.Practice ? $"ĐỠ → CHUYỀN → ĐẬP · {challengeRules.CompletedTargets}/{challenge.TargetCount} ĐIỂM"
+                    : challenge.Kind == ChallengeKind.Practice ? string.Format(PracticeHintFormat, challengeRules.CompletedTargets, challenge.TargetCount)
                     : HintText;
                 hintLabel.text = VietText.Fix(hint);
                 hintLabel.enabled = phase == MinigamePhase.Play && hintLeft > 0f;

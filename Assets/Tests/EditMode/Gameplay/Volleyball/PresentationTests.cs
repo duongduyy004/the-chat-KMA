@@ -230,5 +230,73 @@ namespace KMA.Tests.Gameplay.Volleyball
             Assert.That(hint.enabled, Is.False);
             Assert.That(hint.text, Is.EqualTo(VolleyballHud.HintText));
         }
+
+        [Test]
+        public void AthleteViewLiftsAJumpingAthlete()
+        {
+            SpriteRenderer body = Renderer("Jumper");
+            var book = body.gameObject.AddComponent<SpriteFlipbook>();
+            var view = body.gameObject.AddComponent<VolleyAthleteView>();
+            Sprite[] frames = Frames("f", 2);
+            view.Configure(body, book, false, frames, frames, frames, frames, frames, frames);
+
+            var athlete = new VolleyAthlete(CourtSide.Player, 5f);
+            athlete.PlaceAt(new Vector2(-2f, 1f));
+            athlete.TryJump(AthleteAction.Smash);
+            athlete.Tick(VolleyAthlete.JumpSeconds / 2f);
+            view.Render(athlete);
+            Assert.That(view.transform.position,
+                Is.EqualTo(CourtSpace.ToWorld(new Vector2(-2f, 1f), athlete.JumpHeight)));
+            Assert.That(athlete.JumpHeight, Is.GreaterThan(0f));
+        }
+
+        [Test]
+        public void PlayerAimRingShowsOnlyMidAirOnTheAimedSpot()
+        {
+            SpriteRenderer ball = Renderer("Ball"), shadow = Renderer("Shadow"),
+                contact = Renderer("Contact"), aim = Renderer("Aim"), playerAim = Renderer("PlayerAim");
+            var view = root.AddComponent<VolleyBallView>();
+            view.Configure(ball, shadow, contact, aim, playerAim);
+            Assert.That(view.PlayerAimMarker, Is.SameAs(playerAim));
+            var match = new VolleyballMatch(null, new OpponentTuning(0f, .25f));
+            match.ForceServerForTest(CourtSide.Opponent);
+            while (match.BallState != BallState.InPlay)
+                match.Tick(1f / 60f);
+
+            view.Render(match);
+            Assert.That(playerAim.enabled, Is.False);
+
+            Assert.That(match.PressJump(), Is.True);
+            match.SetMove(Vector2.up);
+            view.Render(match);
+            Assert.That(playerAim.enabled, Is.True);
+            Assert.That(Vector3.Distance(playerAim.transform.position,
+                CourtSpace.ToWorld(VolleyballMatch.SmashAim(Vector2.up), 0f)), Is.LessThan(1e-4f));
+            Assert.That(playerAim.sortingOrder, Is.EqualTo(VolleyBallView.MarkerSortingOrder));
+        }
+
+        [Test]
+        public void HudExplainsJumpingAndCallsOutABlock()
+        {
+            Assert.That(VolleyballHud.HintText,
+                Is.EqualTo("Joystick: di chuyển  ·  NHẢY rồi kéo joystick để nhắm  ·  ĐÁNH để đập"));
+            Assert.That(string.Format(VolleyballHud.PracticeHintFormat, 1, 3),
+                Is.EqualTo("ĐỠ → CHUYỀN → NHẢY ĐẬP · 1/3 ĐIỂM"));
+
+            var hud = root.AddComponent<VolleyballHud>();
+            TMP_Text score = new GameObject("Score").AddComponent<TextMeshPro>();
+            TMP_Text feedback = new GameObject("Feedback").AddComponent<TextMeshPro>();
+            TMP_Text hint = new GameObject("Hint").AddComponent<TextMeshPro>();
+            score.transform.SetParent(root.transform);
+            feedback.transform.SetParent(root.transform);
+            hint.transform.SetParent(root.transform);
+            hud.Configure(score, feedback, hint);
+            hud.ShowPoint(CourtSide.Player);
+            hud.ShowBlock();
+            hud.Render(new VolleyballMatch(), MinigamePhase.Play, .1f);
+            Assert.That(feedback.enabled, Is.True);
+            Assert.That(feedback.text, Is.EqualTo(VolleyballHud.BlockText));
+            Assert.That(VolleyballHud.BlockText, Is.EqualTo("CHẮN!"));
+        }
     }
 }

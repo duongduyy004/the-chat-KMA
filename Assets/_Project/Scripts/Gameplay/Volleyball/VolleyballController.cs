@@ -76,6 +76,7 @@ namespace KMA.Gameplay.Volleyball
             match.Completed += OnMatchCompleted;
             match.PlayerActed += OnPlayerActed;
             match.PointScored += OnPointScored;
+            match.PlayerBlocked += OnPlayerBlocked;
         }
 
         void UnsubscribeMatch(VolleyballMatch match)
@@ -84,6 +85,7 @@ namespace KMA.Gameplay.Volleyball
             match.Completed -= OnMatchCompleted;
             match.PlayerActed -= OnPlayerActed;
             match.PointScored -= OnPointScored;
+            match.PlayerBlocked -= OnPlayerBlocked;
         }
 
         void Start()
@@ -158,6 +160,8 @@ namespace KMA.Gameplay.Volleyball
             opponentView.Render(Match.Opponent);
             ballView.Render(Match);
             hud.Render(Match, PresentationPhase, Time.deltaTime);
+            if (input.JumpButton)
+                input.JumpButton.SetCue(PresentationPhase == MinigamePhase.Play && Match.TryGetJumpCue(out _));
         }
 
         protected override MinigameHudState BuildHudState() => new MinigameHudState(
@@ -185,6 +189,12 @@ namespace KMA.Gameplay.Volleyball
         {
             if (hud)
                 hud.ShowFeedback(decision);
+        }
+
+        void OnPlayerBlocked()
+        {
+            if (hud)
+                hud.ShowBlock();
         }
 
         void OnPointScored(CourtSide winner)

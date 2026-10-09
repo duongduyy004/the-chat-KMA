@@ -13,6 +13,7 @@ namespace KMA.Gameplay.Volleyball
         public const float ShadowFullHeight = 5f;
         public static readonly Color MarkerOutOfReachColor = new Color(1f, .9f, .2f, .85f);
         public static readonly Color MarkerInReachColor = new Color(.3f, 1f, .4f, .9f);
+        public static readonly Color PlayerAimColor = new Color(.25f, .85f, 1f, .9f);
         const float MarkerLeadSeconds = .6f;
         const float MarkerGrowth = 1.5f;
 
@@ -20,14 +21,18 @@ namespace KMA.Gameplay.Volleyball
         [SerializeField] SpriteRenderer shadow;
         [SerializeField] SpriteRenderer contactMarker;
         [SerializeField] SpriteRenderer aimMarker;
+        [SerializeField] SpriteRenderer playerAimMarker;
+
+        public SpriteRenderer PlayerAimMarker => playerAimMarker;
 
         public void Configure(SpriteRenderer ballRenderer, SpriteRenderer shadowRenderer,
-            SpriteRenderer contactRenderer, SpriteRenderer aimRenderer)
+            SpriteRenderer contactRenderer, SpriteRenderer aimRenderer, SpriteRenderer playerAimRenderer = null)
         {
             ball = ballRenderer;
             shadow = shadowRenderer;
             contactMarker = contactRenderer;
             aimMarker = aimRenderer;
+            playerAimMarker = playerAimRenderer;
         }
 
         // 1 while the server holds the ball beside his hand, fading to 0 as the toss carries it over
@@ -89,6 +94,18 @@ namespace KMA.Gameplay.Volleyball
                 {
                     aimMarker.transform.position = CourtSpace.ToWorld(match.OpponentAim, 0f);
                     aimMarker.sortingOrder = MarkerSortingOrder;
+                }
+            }
+
+            if (playerAimMarker)
+            {
+                // Mid-air the stick aims: this ring is where the smash will land.
+                bool aiming = match.Player.IsAirborne && match.BallState == BallState.InPlay;
+                playerAimMarker.enabled = aiming;
+                if (aiming)
+                {
+                    playerAimMarker.transform.position = CourtSpace.ToWorld(match.PlayerAim, 0f);
+                    playerAimMarker.sortingOrder = MarkerSortingOrder;
                 }
             }
         }
