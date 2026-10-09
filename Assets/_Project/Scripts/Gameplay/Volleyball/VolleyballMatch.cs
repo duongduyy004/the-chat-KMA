@@ -428,12 +428,12 @@ namespace KMA.Gameplay.Volleyball
                     }
                     else if (decision.Grade == TimingGrade.Late)
                     {
-                        target = AimAtOpponent(move);
+                        target = SmashAim(move);
                         apex = SetApexHeight;
                     }
                     else
                     {
-                        target = AimAtOpponent(move);
+                        target = SmashAim(move);
                         apex = startHeight + SmashRise;
                     }
                     animation = AthleteAction.Smash;

@@ -104,8 +104,9 @@ namespace KMA.Gameplay.Volleyball
 
             if (context.Flight == null || context.Rally == null)
                 return ActionDecision.None;
+            // Blocking is a jump now, so without possession the hit button has nothing to do.
             if (context.Rally.Possession != athlete.Side)
-                return ResolveBlock(context);
+                return ActionDecision.None;
 
             return ResolveTouch(context);
         }
@@ -123,24 +124,13 @@ namespace KMA.Gameplay.Volleyball
         static ActionDecision ResolveTouch(in ActionContext context)
         {
             VolleyAthlete athlete = context.Athlete;
+            // Mid-air the only touch is the smash; on the ground the ball is played low.
+            if (athlete.IsAirborne)
+                return ResolveSmash(context);
+
             BallFlight flight = context.Flight;
             int touches = context.Rally.Touches;
             float time = context.FlightTime;
-
-            if (touches >= 1 && touches <= 2 && Mathf.Abs(athlete.Position.x) <= SmashNetDistance &&
-                flight.ApexHeight > SmashContactHeight)
-            {
-                float smashIdeal = flight.TimeAtHeightDescending(SmashContactHeight);
-                float smashOffset = time - smashIdeal;
-                TimingGrade smashGrade = TimingWindows.Grade(smashOffset, lateWindow: TimingWindows.SmashLate);
-                // The height gate confirms the set was high enough to smash at all, judged at the
-                // fixed ideal contact moment - not at the actual press time, which would otherwise
-                // penalize a late-but-still-within-window press on top of the timing grade.
-                if (smashGrade != TimingGrade.Miss && flight.HeightAt(smashIdeal) >= SmashMinHeight &&
-                    Vector2.Distance(athlete.Position, flight.GroundAt(smashIdeal)) <= Reach)
-                    return new ActionDecision(ActionKind.Smash, smashGrade, smashOffset);
-            }
-
             if (touches > 2)
                 return ActionDecision.None;
 
@@ -158,15 +148,26 @@ namespace KMA.Gameplay.Volleyball
             return ActionDecision.None;
         }
 
-        static ActionDecision ResolveBlock(in ActionContext context)
+        static ActionDecision ResolveSmash(in ActionContext context)
         {
-            Vector2 position = context.Athlete.Position;
-            Vector2 from = context.Flight.GroundAt(context.FlightTime);
-            float netCrossY = NetCrossY(from, context.OpponentAim);
-            bool lined = context.OpponentSmashTell &&
-                         Mathf.Abs(position.x) <= BlockNetDistance &&
-                         Mathf.Abs(position.y - netCrossY) <= BlockLateral;
-            return lined ? new ActionDecision(ActionKind.Block, TimingGrade.Miss, 0f) : ActionDecision.None;
+            VolleyAthlete athlete = context.Athlete;
+            BallFlight flight = context.Flight;
+            int touches = context.Rally.Touches;
+            if (touches < 1 || touches > 2 || Mathf.Abs(athlete.Position.x) > SmashNetDistance ||
+                flight.ApexHeight <= SmashContactHeight)
+                return ActionDecision.None;
+
+            float smashIdeal = flight.TimeAtHeightDescending(SmashContactHeight);
+            float smashOffset = context.FlightTime - smashIdeal;
+            TimingGrade smashGrade = TimingWindows.Grade(smashOffset, lateWindow: TimingWindows.SmashLate);
+            // The height gate confirms the set was high enough to smash at all, judged at the
+            // fixed ideal contact moment - not at the actual press time, which would otherwise
+            // penalize a late-but-still-within-window press on top of the timing grade.
+            if (smashGrade != TimingGrade.Miss && flight.HeightAt(smashIdeal) >= SmashMinHeight &&
+                Vector2.Distance(athlete.Position, flight.GroundAt(smashIdeal)) <= Reach)
+                return new ActionDecision(ActionKind.Smash, smashGrade, smashOffset);
+
+            return ActionDecision.None;
         }
 
         // Where the ball's straight line from `from` to `target` crosses the net (x=0). A block

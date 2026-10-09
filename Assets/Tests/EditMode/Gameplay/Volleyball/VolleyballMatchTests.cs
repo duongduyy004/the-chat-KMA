@@ -149,12 +149,10 @@ namespace KMA.Tests.Gameplay.Volleyball
             float smashIdeal = match.Flight.TimeAtHeightDescending(ActionResolver.SmashContactHeight);
             match.Player.PlaceAt(match.Flight.GroundAt(smashIdeal));
             MatchDriver.AdvanceToFlightTime(match, smashIdeal);
-            match.SetMove(Vector2.right);
-            ActionDecision smash = match.PressAction();
-            match.SetMove(Vector2.zero);
+            ActionDecision smash = MatchDriver.JumpSmash(match, Vector2.right);
             Assert.That(smash.Kind, Is.EqualTo(ActionKind.Smash));
             Assert.That(smash.Grade, Is.EqualTo(TimingGrade.Perfect));
-            Assert.That(match.Flight.Target, Is.EqualTo(new Vector2(7f, 0f)));
+            Assert.That(match.Flight.Target, Is.EqualTo(new Vector2(7.5f, 0f)));
             Assert.That(match.Rally.Possession, Is.EqualTo(CourtSide.Opponent));
 
             Assert.That(MatchDriver.AdvanceUntil(match, () => match.BallState == BallState.Dead, 3f), Is.True);
@@ -176,7 +174,7 @@ namespace KMA.Tests.Gameplay.Volleyball
             float smashIdeal = match.Flight.TimeAtHeightDescending(ActionResolver.SmashContactHeight);
             match.Player.PlaceAt(match.Flight.GroundAt(smashIdeal));
             MatchDriver.AdvanceToFlightTime(match, smashIdeal - .25f);
-            ActionDecision smash = match.PressAction();
+            ActionDecision smash = MatchDriver.JumpSmash(match, Vector2.zero);
             Assert.That(smash.Kind, Is.EqualTo(ActionKind.Smash));
             Assert.That(smash.Grade, Is.EqualTo(TimingGrade.Late));
             Assert.That(CourtSpace.SideOf(match.Flight.Target), Is.EqualTo(CourtSide.Player));
@@ -202,13 +200,11 @@ namespace KMA.Tests.Gameplay.Volleyball
             float smashIdeal = match.Flight.TimeAtHeightDescending(ActionResolver.SmashContactHeight);
             match.Player.PlaceAt(match.Flight.GroundAt(smashIdeal));
             MatchDriver.AdvanceToFlightTime(match, smashIdeal + .25f);
-            match.SetMove(Vector2.right);
-            ActionDecision smash = match.PressAction();
-            match.SetMove(Vector2.zero);
+            ActionDecision smash = MatchDriver.JumpSmash(match, Vector2.right);
 
             Assert.That(smash.Kind, Is.EqualTo(ActionKind.Smash));
             Assert.That(smash.Grade, Is.EqualTo(TimingGrade.Late));
-            Assert.That(match.Flight.Target, Is.EqualTo(new Vector2(7f, 0f)));
+            Assert.That(match.Flight.Target, Is.EqualTo(new Vector2(7.5f, 0f)));
             Assert.That(CourtSpace.SideOf(match.Flight.Target), Is.EqualTo(CourtSide.Opponent));
         }
 
@@ -267,9 +263,7 @@ namespace KMA.Tests.Gameplay.Volleyball
             float smashIdeal = match.Flight.TimeAtHeightDescending(ActionResolver.SmashContactHeight);
             match.Player.PlaceAt(match.Flight.GroundAt(smashIdeal));
             MatchDriver.AdvanceToFlightTime(match, smashIdeal);
-            match.SetMove(Vector2.zero);
-            ActionDecision smash = match.PressAction();
-            match.SetMove(Vector2.zero);
+            ActionDecision smash = MatchDriver.JumpSmash(match, Vector2.zero);
             Assert.That(smash.Kind, Is.EqualTo(ActionKind.Smash));
             Assert.That(smash.Grade, Is.EqualTo(TimingGrade.Perfect));
             Assert.That(match.Rally.Possession, Is.EqualTo(CourtSide.Opponent));

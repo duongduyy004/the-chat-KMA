@@ -74,6 +74,10 @@ namespace KMA.Tests.Gameplay.Volleyball
             Assert.That(match.BuildResult().Pass, Is.True);
         }
 
+        // Jumps once the button cue lights and the ring is green, aims away from the AI, then
+        // hits on the ring's early side like every other touch.
+        const float JumpLead = .35f;
+
         static void FollowTheRing(VolleyballMatch match)
         {
             if (match.BallState != BallState.InPlay || match.FlightTime < ReactionSeconds ||
@@ -83,8 +87,19 @@ namespace KMA.Tests.Gameplay.Volleyball
                 return;
             }
 
-            Vector2 toContact = contact - match.Player.Position;
-            match.SetMove(toContact.magnitude > StopShort ? toContact.normalized : Vector2.zero);
+            if (match.Player.IsAirborne)
+            {
+                match.SetMove(new Vector2(1f, match.Opponent.Position.y >= 0f ? -1f : 1f));
+            }
+            else
+            {
+                Vector2 toContact = contact - match.Player.Position;
+                match.SetMove(toContact.magnitude > StopShort ? toContact.normalized : Vector2.zero);
+                if (match.Rally.Possession == CourtSide.Player && match.TryGetJumpCue(out float toJump) &&
+                    toJump <= JumpLead && match.PlayerInReachOf(contact))
+                    match.PressJump();
+            }
+
             if (secondsToIdeal <= EarlyPress)
                 match.PressAction();
         }

@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Linq;
 using KMA.Gameplay.Volleyball;
 using NUnit.Framework;
 using UnityEngine;
@@ -126,8 +127,7 @@ namespace KMA.Tests.Gameplay.Volleyball
         public void OpponentBlocksASmashDownItsLine()
         {
             VolleyballMatch match = PlayerReadyToSmashIntoABlock();
-            match.SetMove(Vector2.zero);
-            Assert.That(match.PressAction().Kind, Is.EqualTo(ActionKind.Smash));
+            Assert.That(MatchDriver.JumpSmash(match, Vector2.zero).Kind, Is.EqualTo(ActionKind.Smash));
             Assert.That(match.BallState, Is.EqualTo(BallState.Dead));
             Assert.That(match.OpponentPoints, Is.EqualTo(1));
             Assert.That(match.PlayerPoints, Is.Zero);
@@ -143,13 +143,17 @@ namespace KMA.Tests.Gameplay.Volleyball
             // needed to clear the AI's 1 m reach is much smaller than the eventual landing spread
             // suggests. A short, wide aim clears it; confirm that precondition directly so the
             // test stays meaningful if the tuning constants ever change.
-            var stick = new Vector2(-.31f, .95f);
-            match.SetMove(stick);
-            Vector2 aim = VolleyballMatch.AimAtOpponent(Vector2.ClampMagnitude(stick, 1f));
+            // The AI lined up on the zero-stick line (no tick has passed since the set), so a
+            // short wide smash to its far side must cross the net clear of its 1 m block.
+            Vector2 stick = new[] { new Vector2(-.71f, .71f), new Vector2(-.71f, -.71f) }
+                .OrderByDescending(s => Mathf.Abs(match.Opponent.Position.y -
+                    ActionResolver.NetCrossY(match.BallGround, VolleyballMatch.SmashAim(s))))
+                .First();
+            Vector2 aim = VolleyballMatch.SmashAim(stick);
             float netCrossY = ActionResolver.NetCrossY(match.BallGround, aim);
             Assert.That(Mathf.Abs(match.Opponent.Position.y - netCrossY), Is.GreaterThan(ActionResolver.BlockLateral));
 
-            Assert.That(match.PressAction().Kind, Is.EqualTo(ActionKind.Smash));
+            Assert.That(MatchDriver.JumpSmash(match, stick).Kind, Is.EqualTo(ActionKind.Smash));
             Assert.That(match.BallState, Is.EqualTo(BallState.InPlay));
             Assert.That(match.Flight.Target, Is.EqualTo(aim));
         }

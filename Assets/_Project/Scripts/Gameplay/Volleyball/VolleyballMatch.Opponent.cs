@@ -91,7 +91,7 @@ namespace KMA.Gameplay.Volleyball
                     // time), so predict where it would cross the net if hit right now: from the
                     // player's current contact point toward the current stick aim.
                     Vector2 contact = Flight.GroundAt(Flight.TimeAtHeightDescending(ActionResolver.SmashContactHeight));
-                    lineY = ActionResolver.NetCrossY(contact, AimAtOpponent(move));
+                    lineY = ActionResolver.NetCrossY(contact, SmashAim(move));
                 }
                 else
                 {

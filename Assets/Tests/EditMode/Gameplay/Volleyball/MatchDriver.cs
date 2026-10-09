@@ -56,5 +56,15 @@ namespace KMA.Tests.Gameplay.Volleyball
             AdvanceToFlightTime(match, match.Flight.ApexTime + .15f);
             return match.PressAction();
         }
+
+        // Take off, aim with the stick and hit, all at the current flight time.
+        public static ActionDecision JumpSmash(VolleyballMatch match, Vector2 stick)
+        {
+            match.PressJump();
+            match.SetMove(stick);
+            ActionDecision decision = match.PressAction();
+            match.SetMove(Vector2.zero);
+            return decision;
+        }
     }
 }

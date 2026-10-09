@@ -13,6 +13,12 @@ namespace KMA.Tests.Gameplay.Volleyball
             return athlete;
         }
 
+        static VolleyAthlete Airborne(VolleyAthlete athlete)
+        {
+            athlete.TryJump(AthleteAction.Smash);
+            return athlete;
+        }
+
         static RallyState PlayerPossession(int touches)
         {
             var rally = new RallyState();
@@ -121,11 +127,11 @@ namespace KMA.Tests.Gameplay.Volleyball
         }
 
         [Test]
-        public void SecondTouchNearTheNetSmashes()
+        public void SecondTouchNearTheNetSmashesMidAir()
         {
             var set = new BallFlight(new Vector2(-5f, 0f), 1f, new Vector2(-1.5f, 0f), 4f, CourtSide.Player);
             float ideal = set.TimeAtHeightDescending(ActionResolver.SmashContactHeight);
-            ActionDecision d = Resolve(PlayerAt(set.GroundAt(ideal)), BallState.InPlay, set, ideal, PlayerPossession(1));
+            ActionDecision d = Resolve(Airborne(PlayerAt(set.GroundAt(ideal))), BallState.InPlay, set, ideal, PlayerPossession(1));
             Assert.That(d.Kind, Is.EqualTo(ActionKind.Smash));
             Assert.That(d.Grade, Is.EqualTo(TimingGrade.Perfect));
         }
@@ -138,7 +144,7 @@ namespace KMA.Tests.Gameplay.Volleyball
             // moment, so a +0.15 s press (well inside the GOOD window) must still smash.
             var set = new BallFlight(new Vector2(-5f, 0f), 1f, new Vector2(-1.5f, 0f), 4f, CourtSide.Player);
             float ideal = set.TimeAtHeightDescending(ActionResolver.SmashContactHeight);
-            ActionDecision d = Resolve(PlayerAt(set.GroundAt(ideal)), BallState.InPlay, set, ideal + .15f,
+            ActionDecision d = Resolve(Airborne(PlayerAt(set.GroundAt(ideal))), BallState.InPlay, set, ideal + .15f,
                 PlayerPossession(1));
             Assert.That(d.Kind, Is.EqualTo(ActionKind.Smash));
             Assert.That(d.Grade, Is.EqualTo(TimingGrade.Good));
@@ -173,30 +179,43 @@ namespace KMA.Tests.Gameplay.Volleyball
         }
 
         [Test]
-        public void BlockNeedsTheTellTheNetAndTheLine()
+        public void WithoutPossessionTheHitButtonDoesNothingEvenOnTheBlockLine()
         {
             var rally = new RallyState();
             rally.BeginServe(CourtSide.Player);
             rally.RegisterServe(CourtSide.Player);
             var attack = new BallFlight(new Vector2(4f, 0f), 1f, new Vector2(1.5f, 0f), 4f, CourtSide.Opponent);
             var aim = new Vector2(-7f, -3f);
-            // The block is judged against where the smash would cross the net (x=0), not its
-            // landing spot (aim.y).
             float netCrossY = ActionResolver.NetCrossY(attack.GroundAt(.5f), aim);
-
             Assert.That(Resolve(PlayerAt(new Vector2(-.8f, netCrossY)), BallState.InPlay, attack, .5f, rally,
-                CourtSide.Player, true, aim).Kind, Is.EqualTo(ActionKind.Block));
-            Assert.That(Resolve(PlayerAt(new Vector2(-.8f, netCrossY + 2f)), BallState.InPlay, attack, .5f, rally,
                 CourtSide.Player, true, aim).Kind, Is.EqualTo(ActionKind.None));
-            Assert.That(Resolve(PlayerAt(new Vector2(-2.5f, netCrossY)), BallState.InPlay, attack, .5f, rally,
-                CourtSide.Player, true, aim).Kind, Is.EqualTo(ActionKind.None));
-            Assert.That(Resolve(PlayerAt(new Vector2(-.8f, netCrossY)), BallState.InPlay, attack, .5f, rally,
-                CourtSide.Player, false, aim).Kind, Is.EqualTo(ActionKind.None));
+        }
 
-            // The old (pre-fix) landing-spot position must now fail: it isn't where the ball
-            // actually crosses the net.
-            Assert.That(Resolve(PlayerAt(new Vector2(-.8f, aim.y)), BallState.InPlay, attack, .5f, rally,
-                CourtSide.Player, true, aim).Kind, Is.EqualTo(ActionKind.None));
+        [Test]
+        public void OnTheGroundAHighSetNearTheNetIsOnlyAReceive()
+        {
+            var set = new BallFlight(new Vector2(-5f, 0f), 1f, new Vector2(-1.5f, 0f), 4f, CourtSide.Player);
+            float smashIdeal = set.TimeAtHeightDescending(ActionResolver.SmashContactHeight);
+            Assert.That(Resolve(PlayerAt(set.GroundAt(smashIdeal)), BallState.InPlay, set, smashIdeal,
+                PlayerPossession(1)).Kind, Is.Not.EqualTo(ActionKind.Smash));
+
+            float receiveIdeal = set.TimeAtHeightDescending(ActionResolver.ReceiveContactHeight);
+            Assert.That(Resolve(PlayerAt(set.GroundAt(receiveIdeal)), BallState.InPlay, set, receiveIdeal,
+                PlayerPossession(1)).Kind, Is.EqualTo(ActionKind.Receive));
+        }
+
+        [Test]
+        public void MidAirWithNothingToSmashTheButtonDoesNothing()
+        {
+            BallFlight serve = OpponentServe();
+            float ideal = serve.TimeAtHeightDescending(ActionResolver.ReceiveContactHeight);
+            Assert.That(Resolve(Airborne(PlayerAt(serve.GroundAt(ideal))), BallState.InPlay, serve, ideal,
+                PlayerPossession(0)).Kind, Is.EqualTo(ActionKind.None), "first touch: no receive mid-air");
+
+            var set = new BallFlight(new Vector2(-6f, 0f), 1f, new Vector2(-4.5f, 0f), 4f, CourtSide.Player);
+            float smashIdeal = set.TimeAtHeightDescending(ActionResolver.SmashContactHeight);
+            Assert.That(Resolve(Airborne(PlayerAt(set.GroundAt(smashIdeal))), BallState.InPlay, set, smashIdeal,
+                PlayerPossession(1)).Kind, Is.EqualTo(ActionKind.None), "too far from the net to smash");
         }
 
         [Test]

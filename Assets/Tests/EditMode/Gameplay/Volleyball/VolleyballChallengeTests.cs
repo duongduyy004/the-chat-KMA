@@ -62,5 +62,32 @@ namespace KMA.Tests.Gameplay.Volleyball
             for (float t = 0f; t < 10f && match.OpponentPoints == 0; t += Step) match.Tick(Step);
             Assert.That(match.OpponentPoints, Is.EqualTo(1));
         }
+
+        [Test]
+        public void PracticeCountsReceiveReceiveJumpSmash()
+        {
+            var rules = new VolleyballChallengeRules(ChallengeCatalog.LoadDefault().Get("volleyball_practice"));
+            VolleyballMatch match = rules.Match;
+            Assert.That(MatchDriver.AdvanceUntil(match, () => match.BallState == BallState.InPlay, 3f), Is.True);
+            for (int touch = 0; touch < 2; touch++)
+            {
+                float ideal = match.Flight.TimeAtHeightDescending(ActionResolver.ReceiveContactHeight);
+                match.Player.PlaceAt(match.Flight.GroundAt(ideal));
+                MatchDriver.AdvanceToFlightTime(match, ideal);
+                Assert.That(rules.PressAction().Kind, Is.EqualTo(ActionKind.Receive), $"touch {touch + 1}");
+            }
+
+            float smashIdeal = match.Flight.TimeAtHeightDescending(ActionResolver.SmashContactHeight);
+            match.Player.PlaceAt(match.Flight.GroundAt(smashIdeal));
+            MatchDriver.AdvanceToFlightTime(match, smashIdeal);
+            Assert.That(rules.PressJump(), Is.True);
+            rules.SetMove(Vector2.up);
+            Assert.That(rules.PressAction().Kind, Is.EqualTo(ActionKind.Smash));
+            rules.SetMove(Vector2.zero);
+
+            Assert.That(MatchDriver.AdvanceUntil(match, () => match.BallState == BallState.Dead, 3f), Is.True);
+            Assert.That(match.PlayerPoints, Is.EqualTo(1));
+            Assert.That(rules.CompletedTargets, Is.EqualTo(1));
+        }
     }
 }
