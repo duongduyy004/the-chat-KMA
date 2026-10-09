@@ -7,17 +7,20 @@ namespace KMA.Tests.Gameplay.FrogJump
     {
         static readonly FrogJumpTuning Tuning = new FrogJumpTuning();
         const float Eps = 1e-3f;
+        const float Step = 1f / 60f;
 
         [TestCase(.5f, 3f)]
-        [TestCase(.1f, 1f)]
-        [TestCase(.9f, 1f)]
-        [TestCase(.3f, 2f)]
+        [TestCase(.3f, .5f)]
+        [TestCase(.7f, .5f)]
+        [TestCase(.4f, 1.75f)]
         public void JumpShrinksLinearlyFromCentreToTheSafeEdge(float needle, float metres)
         {
             Assert.That(FrogJumpRules.JumpMetres(needle, Tuning), Is.EqualTo(metres).Within(Eps));
         }
 
         [TestCase(.05f)]
+        [TestCase(.25f)]
+        [TestCase(.75f)]
         [TestCase(.97f)]
         [TestCase(0f)]
         [TestCase(1f)]
@@ -28,15 +31,25 @@ namespace KMA.Tests.Gameplay.FrogJump
         }
 
         [Test]
+        public void OnlyTheMiddleFortyPercentOfTheBarIsSafe()
+        {
+            int safe = 0;
+            const int samples = 1000;
+            for (int i = 0; i < samples; i++)
+                if (!FrogJumpRules.IsFall((i + .5f) / samples, Tuning)) safe++;
+            Assert.That(safe / (float)samples, Is.EqualTo(.4f).Within(.01f));
+        }
+
+        [Test]
         public void NeedleSweepsEdgeToEdgeAndBack()
         {
             var rules = new FrogJumpRules(Tuning);
             Assert.That(rules.Needle01, Is.Zero);
-            rules.Tick(.6f);
+            rules.Tick(.45f);
             Assert.That(rules.Needle01, Is.EqualTo(.5f).Within(Eps));
-            rules.Tick(.6f);
+            rules.Tick(.45f);
             Assert.That(rules.Needle01, Is.EqualTo(1f).Within(Eps));
-            rules.Tick(.6f);
+            rules.Tick(.45f);
             Assert.That(rules.Needle01, Is.EqualTo(.5f).Within(Eps));
         }
 
@@ -44,7 +57,7 @@ namespace KMA.Tests.Gameplay.FrogJump
         public void CentreStopJumpsThreeMetresAfterTheJumpTime()
         {
             var rules = new FrogJumpRules(Tuning);
-            rules.Tick(.6f);
+            rules.Tick(.45f);
             Assert.That(rules.Stop(), Is.True);
             Assert.That(rules.State, Is.EqualTo(FrogJumpState.Jumping));
             Assert.That(rules.Stop(), Is.False);
@@ -73,18 +86,18 @@ namespace KMA.Tests.Gameplay.FrogJump
         }
 
         [Test]
-        public void ReachingFortyMetresWinsAndClampsDistance()
+        public void ReachingFiftyMetresWinsAndClampsDistance()
         {
             var rules = new FrogJumpRules(Tuning);
-            for (int i = 0; i < 14 && !rules.IsOver; i++)
+            for (int i = 0; i < 20 && !rules.IsOver; i++)
             {
-                rules.Tick(.6f);
+                rules.Tick(.45f);
                 rules.Stop();
                 rules.Tick(.6f);
             }
             Assert.That(rules.State, Is.EqualTo(FrogJumpState.Finished));
             Assert.That(rules.ReachedFinish, Is.True);
-            Assert.That(rules.Distance, Is.EqualTo(40f));
+            Assert.That(rules.Distance, Is.EqualTo(50f));
             Assert.That(rules.Progress01, Is.EqualTo(1f));
         }
 
@@ -92,12 +105,12 @@ namespace KMA.Tests.Gameplay.FrogJump
         public void RunningOutOfTimeLoses()
         {
             var rules = new FrogJumpRules(Tuning);
-            rules.Tick(59.9f);
+            rules.Tick(44.9f);
             Assert.That(rules.IsOver, Is.False);
             rules.Tick(.2f);
             Assert.That(rules.State, Is.EqualTo(FrogJumpState.TimedOut));
             Assert.That(rules.ReachedFinish, Is.False);
-            Assert.That(rules.Elapsed, Is.EqualTo(60f).Within(Eps));
+            Assert.That(rules.Elapsed, Is.EqualTo(45f).Within(Eps));
             Assert.That(rules.TimeRemaining, Is.Zero);
             Assert.That(rules.Stop(), Is.False);
         }
@@ -105,12 +118,57 @@ namespace KMA.Tests.Gameplay.FrogJump
         [Test]
         public void LandingOnTheFinishExactlyAtTheLimitStillWins()
         {
-            var tuning = new FrogJumpTuning { trackMetres = 3f, timeLimitSeconds = 1.2f };
+            var tuning = new FrogJumpTuning { trackMetres = 3f, timeLimitSeconds = 1.05f };
             var rules = new FrogJumpRules(tuning);
-            rules.Tick(.6f);
+            rules.Tick(.45f);
             rules.Stop();
             rules.Tick(.6f);
             Assert.That(rules.State, Is.EqualTo(FrogJumpState.Finished));
+        }
+
+        // Balance: a player who aims for the centre (stops within 5% of it) finishes in time;
+        // one who taps as soon as the needle is anywhere near the green does not.
+        [Test]
+        public void ACentredPlayerFinishes()
+        {
+            Assert.That(Play(offsets: new[] { -.05f, .02f, .05f, -.03f, 0f }), Is.True);
+        }
+
+        [Test]
+        public void ACarelessPlayerFailsEvenWithoutFalling()
+        {
+            // Every stop lands inside the green but near its edge.
+            Assert.That(Play(offsets: new[] { -.18f, .17f, -.16f, .19f }), Is.False);
+        }
+
+        [Test]
+        public void TappingAtRandomFails()
+        {
+            Assert.That(Play(offsets: new[] { -.45f, .1f, .35f, -.3f, .22f, -.15f, .48f, -.4f }), Is.False);
+        }
+
+        // Stops each sweep where the needle first reaches .5 + offset (cycling through offsets).
+        static bool Play(float[] offsets)
+        {
+            var rules = new FrogJumpRules(Tuning);
+            int next = 0;
+            float previous = rules.Needle01;
+            bool wasAiming = true;
+            while (!rules.IsOver)
+            {
+                rules.Tick(Step);
+                bool aiming = rules.State == FrogJumpState.Aiming;
+                // A fresh sweep restarts at the left edge; don't read that reset as a crossing.
+                if (!aiming || !wasAiming) { previous = rules.Needle01; wasAiming = aiming; continue; }
+                float target = .5f + offsets[next % offsets.Length];
+                float needle = rules.Needle01;
+                bool crossed = (previous - target) * (needle - target) <= 0f && previous != needle;
+                previous = needle;
+                if (!crossed) continue;
+                rules.Stop();
+                next++;
+            }
+            return rules.ReachedFinish;
         }
     }
 }

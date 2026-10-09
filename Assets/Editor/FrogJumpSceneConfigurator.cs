@@ -164,7 +164,7 @@ namespace KMA.EditorTools
 
             // Sits above the power bar; same hint chip the volleyball court uses.
             ChipHandle hint = UiKit.Chip(parent, "HintBanner",
-                VietText.Fix("Chạm khi kim ở giữa để bật xa. Sát mép là ngã!"));
+                VietText.Fix("Chạm đúng lúc kim ở giữa vùng xanh. Chạm vùng đỏ là ngã!"));
             hint.Label.name = "Hint";
             hint.Label.raycastTarget = false;
             hint.Background.raycastTarget = false;

@@ -102,14 +102,15 @@ namespace KMA.Tests.Gameplay.Progression
             KMA.Gameplay.FrogJump.FrogJumpController frog = null;
             yield return EnterRealFrogJump(c => practice = c, f => frog = f);
 
-            // Every jump is stopped at the needle centre (0.6 s into a 1.2 s sweep) for the longest hop.
+            // Every jump is stopped at the needle centre (half a sweep) for the longest hop.
+            float toCentre = frog.Rules.Tuning.sweepSeconds * .5f;
             int guard = 0;
             while (!frog.Rules.IsOver)
             {
                 Assert.That(guard++, Is.LessThan(60), "The frog never reached the finish.");
-                frog.Rules.Tick(.6f);
+                frog.Rules.Tick(toCentre);
                 frog.Rules.Stop();
-                frog.Rules.Tick(.6f);
+                frog.Rules.Tick(frog.Rules.Tuning.jumpSeconds);
             }
             Assert.That(frog.Rules.ReachedFinish, Is.True);
             float deadline = Time.realtimeSinceStartup + 5f;
