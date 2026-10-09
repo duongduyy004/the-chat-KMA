@@ -37,6 +37,72 @@ namespace KMA.Tests.Gameplay.Running
         }
 
         [Test]
+        public void LongCombo_RaisesTopSpeedWithinTheBoostLimit()
+        {
+            SprintBalanceParameters tuning = SprintBalanceParameters.Default;
+            var plain = new SprintRules(60f, null, null, tuning);
+            var combo = new SprintRules(60f, null, null, tuning);
+            for (int tap = 0; tap < 60; tap++)
+            {
+                plain.Tap(tap % 3 == 0 ? Side.Right : Side.Left);
+                combo.Tap(tap % 2 == 0 ? Side.Left : Side.Right);
+                plain.Tick(.01f);
+                combo.Tick(.01f);
+            }
+
+            Assert.That(combo.IsComboBoosting, Is.True);
+            Assert.That(plain.IsComboBoosting, Is.False);
+            Assert.That(combo.Speed, Is.GreaterThan(tuning.SpeedCap));
+            Assert.That(combo.Speed, Is.LessThanOrEqualTo(tuning.SpeedCap * (1f + tuning.ComboBoostMax)));
+        }
+
+        [Test]
+        public void WrongTap_EndsTheComboBoost()
+        {
+            var rules = new SprintRules(60f, null, null, SprintBalanceParameters.Default);
+            for (int tap = 0; tap < 20; tap++) rules.Tap(tap % 2 == 0 ? Side.Left : Side.Right);
+            Assert.That(rules.IsComboBoosting, Is.True);
+
+            rules.Tap(Side.Right);
+
+            Assert.That(rules.IsComboBoosting, Is.False);
+        }
+
+        [Test]
+        public void StoppingTaps_BrakesTheRunnerToAHaltWithinASecond()
+        {
+            var rules = new SprintRules(60f, null, null, SprintBalanceParameters.Default);
+            for (int tap = 0; tap < 12; tap++)
+            {
+                rules.Tap(tap % 2 == 0 ? Side.Left : Side.Right);
+                rules.Tick(1f / 6f);
+            }
+            float top = rules.Speed;
+
+            rules.Tick(.2f);
+            Assert.That(rules.Speed, Is.GreaterThan(top * .9f), "a short pause between taps keeps momentum");
+            for (int i = 0; i < 20; i++) rules.Tick(1f / 60f);
+            Assert.That(rules.Speed, Is.GreaterThan(0f), "the runner still slides instead of freezing");
+            for (int i = 0; i < 30; i++) rules.Tick(1f / 60f);
+            Assert.That(rules.Speed, Is.EqualTo(0f));
+        }
+
+        [Test]
+        public void IdleBrake_DoesNotDependOnFrameRate()
+        {
+            var smooth = new SprintRules(60f, null, null, SprintBalanceParameters.Default);
+            var hitch = new SprintRules(60f, null, null, SprintBalanceParameters.Default);
+            smooth.Tap(Side.Left);
+            hitch.Tap(Side.Left);
+
+            for (int i = 0; i < 27; i++) smooth.Tick(1f / 60f);
+            hitch.Tick(.45f);
+
+            Assert.That(hitch.Speed, Is.EqualTo(smooth.Speed).Within(.01f));
+            Assert.That(hitch.Speed, Is.GreaterThan(0f));
+        }
+
+        [Test]
         public void TopTwoAfterTimeout_DoesNotPass()
         {
             var rules = SprintRules.ForTest(distance: 100f, elapsed: 14.1f, rank: 1);

@@ -10,7 +10,7 @@ namespace KMA.Tests.Gameplay.Running
     {
         const float MinSpeed = SprintController.DefaultMinRivalSpeed;
         const float MaxSpeed = SprintController.DefaultMaxRivalSpeed;
-        const float FastestFinish = 12.9f;
+        const float FastestFinish = 12.8f;
         const float SlowestFinish = 18.5f;
 
         // Each race rolls the rivals' pace, but never so fast that a rival runs away from a
@@ -21,10 +21,11 @@ namespace KMA.Tests.Gameplay.Running
             RivalPaceProfile[] authored = LoadAuthoredProfiles();
             for (int seed = 0; seed < 200; seed++)
             {
-                var random = new Random(seed);
-                foreach (RivalPaceProfile profile in authored)
+                RivalPaceProfile[] field = RivalPaceRandomizer.RollField(authored, MinSpeed, MaxSpeed, new Random(seed));
+                for (int i = 0; i < authored.Length; i++)
                 {
-                    RivalPaceProfile rolled = RivalPaceRandomizer.Roll(profile, MinSpeed, MaxSpeed, random);
+                    RivalPaceProfile profile = authored[i];
+                    RivalPaceProfile rolled = field[i];
                     Assert.That(rolled.SustainedSpeed, Is.InRange(MinSpeed, MaxSpeed));
                     Assert.That(rolled.Name, Is.EqualTo(profile.Name));
                     float finish = FinishTime(rolled);
@@ -63,6 +64,8 @@ namespace KMA.Tests.Gameplay.Running
 
             Assert.That(a.SustainedSpeed, Is.EqualTo(b.SustainedSpeed));
             Assert.That(a.OpeningSpeed, Is.EqualTo(b.OpeningSpeed));
+            Assert.That(a.SurgePeriod, Is.EqualTo(b.SurgePeriod));
+            Assert.That(a.SurgePhase, Is.EqualTo(b.SurgePhase));
         }
 
         [Test]
@@ -73,6 +76,49 @@ namespace KMA.Tests.Gameplay.Running
 
             Assert.That(rolled.SustainedSpeed, Is.InRange(5f, 7f));
             Assert.That(RivalPaceRandomizer.Roll(null, 5f, 7f, new Random(1)), Is.Null);
+        }
+
+        [Test]
+        public void FieldRollGivesEveryRivalTheirOwnSpeedBand()
+        {
+            RivalPaceProfile[] authored = LoadAuthoredProfiles();
+            float minGap = (MaxSpeed - MinSpeed) / authored.Length * .3f;
+            for (int seed = 0; seed < 200; seed++)
+            {
+                float[] speeds = RivalPaceRandomizer.RollField(authored, MinSpeed, MaxSpeed, new Random(seed))
+                    .Select(profile => profile.SustainedSpeed).OrderBy(speed => speed).ToArray();
+                Assert.That(speeds, Has.All.InRange(MinSpeed, MaxSpeed));
+                for (int i = 1; i < speeds.Length; i++)
+                    Assert.That(speeds[i] - speeds[i - 1], Is.GreaterThanOrEqualTo(minGap - 1e-4f), "seed " + seed);
+            }
+        }
+
+        [Test]
+        public void FieldRollLeavesEmptySlotsEmptyAndSpreadsTheRest()
+        {
+            var steady = new RivalPaceProfile("Steady", 6f, 6f);
+            RivalPaceProfile[] field = RivalPaceRandomizer.RollField(new[] { steady, null, steady }, 5f, 7f,
+                new Random(9));
+
+            Assert.That(field[1], Is.Null);
+            Assert.That(Math.Abs(field[0].SustainedSpeed - field[2].SustainedSpeed), Is.GreaterThan(.3f));
+        }
+
+        [Test]
+        public void RolledPaceSurgesAndFadesAroundTheSustainedSpeedAfterTheStart()
+        {
+            RivalPaceProfile rolled = RivalPaceRandomizer.Roll(new RivalPaceProfile("Steady", 6f, 6f), 6f, 6f,
+                new Random(5));
+            float fastest = float.MinValue, slowest = float.MaxValue;
+            for (float t = RivalPaceProfile.OpeningSeconds + .01f; t < 12f; t += .05f)
+            {
+                fastest = Math.Max(fastest, rolled.SpeedAt(t));
+                slowest = Math.Min(slowest, rolled.SpeedAt(t));
+            }
+
+            Assert.That(rolled.SpeedAt(1f), Is.EqualTo(6f));
+            Assert.That(fastest, Is.GreaterThan(6f * 1.15f));
+            Assert.That(slowest, Is.LessThan(6f * .85f));
         }
 
         static RivalPaceProfile[] LoadAuthoredProfiles() => SprintRivalMappings.Required

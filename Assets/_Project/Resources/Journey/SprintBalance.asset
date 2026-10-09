@@ -29,3 +29,9 @@ MonoBehaviour:
   fatigueSpeedCap: 90
   dragPerSecond: 15
   distanceScale: 0.08
+  comboBoostStartStreak: 10
+  comboBoostFullStreak: 30
+  comboBoostMax: 0.25
+  idleGraceSeconds: 0.35
+  idleBrakeRampSeconds: 0.25
+  idleBrakePerSecond: 240

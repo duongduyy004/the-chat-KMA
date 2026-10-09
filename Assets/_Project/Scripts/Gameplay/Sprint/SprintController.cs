@@ -48,6 +48,7 @@ namespace KMA.Gameplay
         public string RankText => "VỊ TRÍ " + Mathf.Clamp(Rank, 1, 4);
         public int CadenceCombo => cadenceCombo;
         public int CorrectStreak => rules == null ? 0 : rules.CorrectStreak;
+        public bool IsComboBoosting => rules != null && rules.IsComboBoosting;
         public float[] RivalDistances => rules == null ? System.Array.Empty<float>() : rules.RivalDistances;
         public SubjectId Subject => SubjectId.Sprint;
         public float TargetDistance => challengeDefinition != null && challengeDefinition.Distance > 0f
@@ -59,6 +60,7 @@ namespace KMA.Gameplay
         public event Action<ChallengeAttemptResult> ChallengeCompleted;
         public int RivalCount => rules == null ? 0 : rules.RivalCount;
         public float GetRivalDistance(int index) => rules == null ? 0f : rules.GetRivalDistance(index);
+        public bool IsRivalSurging(int index) => rules != null && rules.IsRivalSurging(index);
 
         protected override void Awake()
         {
@@ -294,12 +296,10 @@ namespace KMA.Gameplay
         RivalPaceProfile[] CreateRuntimeProfiles()
         {
             if (rivalProfiles == null || rivalProfiles.Length == 0) return Array.Empty<RivalPaceProfile>();
-            var random = new System.Random();
-            var runtimeProfiles = new RivalPaceProfile[rivalProfiles.Length];
+            var authored = new RivalPaceProfile[rivalProfiles.Length];
             for (var i = 0; i < rivalProfiles.Length; i++)
-                runtimeProfiles[i] = rivalProfiles[i] == null ? null
-                    : RivalPaceRandomizer.Roll(rivalProfiles[i].ToRuntime(), minRivalSpeed, maxRivalSpeed, random);
-            return runtimeProfiles;
+                authored[i] = rivalProfiles[i] == null ? null : rivalProfiles[i].ToRuntime();
+            return RivalPaceRandomizer.RollField(authored, minRivalSpeed, maxRivalSpeed, new System.Random());
         }
 
         void EvaluateTerminalOutcome()

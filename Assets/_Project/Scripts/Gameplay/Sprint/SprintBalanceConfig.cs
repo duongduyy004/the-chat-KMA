@@ -23,12 +23,20 @@ namespace KMA.Gameplay
         public float FatigueSpeedCap { get; }
         public float DragPerSecond { get; }
         public float DistanceScale { get; }
+        public int ComboBoostStartStreak { get; }
+        public int ComboBoostFullStreak { get; }
+        public float ComboBoostMax { get; }
+        public float IdleGraceSeconds { get; }
+        public float IdleBrakeRampSeconds { get; }
+        public float IdleBrakePerSecond { get; }
 
         public SprintBalanceParameters(float initialStamina, float maxStamina, float correctImpulse,
             float wrongImpulseFactor, float speedCap, float correctTapCost, float wrongTapCost,
             float burstRateThreshold, float burstExtraCost, float activeDrainSpeedThreshold,
             float activeDrainPerSpeed, float restRegenPerSecond, float fatigueThreshold,
-            float fatigueImpulseFactor, float fatigueSpeedCap, float dragPerSecond, float distanceScale)
+            float fatigueImpulseFactor, float fatigueSpeedCap, float dragPerSecond, float distanceScale,
+            int comboBoostStartStreak, int comboBoostFullStreak, float comboBoostMax,
+            float idleGraceSeconds, float idleBrakeRampSeconds, float idleBrakePerSecond)
         {
             InitialStamina = initialStamina;
             MaxStamina = maxStamina;
@@ -47,11 +55,17 @@ namespace KMA.Gameplay
             FatigueSpeedCap = fatigueSpeedCap;
             DragPerSecond = dragPerSecond;
             DistanceScale = distanceScale;
+            ComboBoostStartStreak = comboBoostStartStreak;
+            ComboBoostFullStreak = comboBoostFullStreak;
+            ComboBoostMax = comboBoostMax;
+            IdleGraceSeconds = idleGraceSeconds;
+            IdleBrakeRampSeconds = idleBrakeRampSeconds;
+            IdleBrakePerSecond = idleBrakePerSecond;
         }
 
         public static SprintBalanceParameters Default => new SprintBalanceParameters(
             100f, 100f, 18f, .4f, 120f, .25f, 1.5f, 6f, .75f, 20f, .02f,
-            6f, 30f, .75f, 90f, 15f, .08f);
+            6f, 30f, .75f, 90f, 15f, .08f, 10, 30, .25f, .35f, .25f, 240f);
 
         public bool Equals(SprintBalanceParameters other) =>
             InitialStamina.Equals(other.InitialStamina) && MaxStamina.Equals(other.MaxStamina) &&
@@ -65,7 +79,12 @@ namespace KMA.Gameplay
             FatigueThreshold.Equals(other.FatigueThreshold) &&
             FatigueImpulseFactor.Equals(other.FatigueImpulseFactor) &&
             FatigueSpeedCap.Equals(other.FatigueSpeedCap) && DragPerSecond.Equals(other.DragPerSecond) &&
-            DistanceScale.Equals(other.DistanceScale);
+            DistanceScale.Equals(other.DistanceScale) &&
+            ComboBoostStartStreak == other.ComboBoostStartStreak &&
+            ComboBoostFullStreak == other.ComboBoostFullStreak && ComboBoostMax.Equals(other.ComboBoostMax) &&
+            IdleGraceSeconds.Equals(other.IdleGraceSeconds) &&
+            IdleBrakeRampSeconds.Equals(other.IdleBrakeRampSeconds) &&
+            IdleBrakePerSecond.Equals(other.IdleBrakePerSecond);
 
         public override bool Equals(object obj) => obj is SprintBalanceParameters other && Equals(other);
         public override int GetHashCode() => InitialStamina.GetHashCode() ^ MaxStamina.GetHashCode() ^
@@ -92,6 +111,18 @@ namespace KMA.Gameplay
         [SerializeField] float fatigueSpeedCap = 90f;
         [SerializeField] float dragPerSecond = 15f;
         [SerializeField] float distanceScale = .08f;
+        [Tooltip("Correct-tap streak where the combo speed boost starts.")]
+        [SerializeField, Min(0)] int comboBoostStartStreak = 10;
+        [Tooltip("Correct-tap streak where the combo speed boost reaches its maximum.")]
+        [SerializeField, Min(0)] int comboBoostFullStreak = 30;
+        [Tooltip("Maximum extra impulse and speed cap from a long combo (.25 = +25%).")]
+        [SerializeField, Min(0f)] float comboBoostMax = .25f;
+        [Tooltip("Seconds without a tap before the runner starts braking hard.")]
+        [SerializeField, Min(0f)] float idleGraceSeconds = .35f;
+        [Tooltip("Seconds over which the hard brake eases in, so the stop keeps some inertia.")]
+        [SerializeField, Min(0f)] float idleBrakeRampSeconds = .25f;
+        [Tooltip("Extra deceleration once the runner has stopped tapping.")]
+        [SerializeField, Min(0f)] float idleBrakePerSecond = 240f;
 
         public SprintBalanceParameters ToRuntime()
         {
@@ -100,7 +131,9 @@ namespace KMA.Gameplay
             return new SprintBalanceParameters(initialStamina, maxStamina, correctImpulse,
                 wrongImpulseFactor, speedCap, correctTapCost, wrongTapCost, burstRateThreshold,
                 burstExtraCost, activeDrainSpeedThreshold, activeDrainPerSpeed, restRegenPerSecond,
-                fatigueThreshold, fatigueImpulseFactor, fatigueSpeedCap, dragPerSecond, distanceScale);
+                fatigueThreshold, fatigueImpulseFactor, fatigueSpeedCap, dragPerSecond, distanceScale,
+                comboBoostStartStreak, comboBoostFullStreak, comboBoostMax, idleGraceSeconds,
+                idleBrakeRampSeconds, idleBrakePerSecond);
         }
 
         public static SprintBalanceConfig LoadDefault()
@@ -126,6 +159,12 @@ namespace KMA.Gameplay
             config.fatigueSpeedCap = defaults.FatigueSpeedCap;
             config.dragPerSecond = defaults.DragPerSecond;
             config.distanceScale = defaults.DistanceScale;
+            config.comboBoostStartStreak = defaults.ComboBoostStartStreak;
+            config.comboBoostFullStreak = defaults.ComboBoostFullStreak;
+            config.comboBoostMax = defaults.ComboBoostMax;
+            config.idleGraceSeconds = defaults.IdleGraceSeconds;
+            config.idleBrakeRampSeconds = defaults.IdleBrakeRampSeconds;
+            config.idleBrakePerSecond = defaults.IdleBrakePerSecond;
             return config;
         }
     }

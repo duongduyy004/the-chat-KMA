@@ -22,6 +22,10 @@ namespace KMA.Tests.Gameplay.Running
                 value.FatigueImpulseFactor, value.FatigueSpeedCap, value.DragPerSecond,
                 value.DistanceScale }, Is.EqualTo(new[] { 100f, 100f, 18f, .4f, 120f, .25f,
                 1.5f, 6f, .75f, 20f, .02f, 6f, 30f, .75f, 90f, 15f, .08f }));
+            Assert.That(new[] { value.ComboBoostStartStreak, value.ComboBoostFullStreak },
+                Is.EqualTo(new[] { 10, 30 }));
+            Assert.That(new[] { value.ComboBoostMax, value.IdleGraceSeconds, value.IdleBrakeRampSeconds,
+                value.IdleBrakePerSecond }, Is.EqualTo(new[] { .25f, .35f, .25f, 240f }));
             Assert.That(SprintBalanceConfig.LoadDefault().ToRuntime(), Is.EqualTo(value));
         }
 

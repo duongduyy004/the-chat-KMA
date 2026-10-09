@@ -43,7 +43,8 @@ namespace KMA.Gameplay
                 ? $"NHỊP {controller.CorrectStreak} / {controller.TargetCount}"
                 : $"{Mathf.RoundToInt(snapshot.Distance)} / {controller.TargetDistance:0} m";
             RankText = controller.RankText;
-            CadenceText = $"CHUỖI ×{controller.CadenceCombo}";
+            CadenceText = controller.IsComboBoosting
+                ? $"BỨT TỐC ×{controller.CadenceCombo}" : $"CHUỖI ×{controller.CadenceCombo}";
             PipProgress = progress;
 
             if (distanceLabel != null) distanceLabel.text = VietText.Fix(DistanceText);

@@ -58,7 +58,8 @@ namespace KMA.Gameplay
 
             if (rivalIndex >= controller.RivalCount)
                 return;
-            Refresh(controller.GetRivalDistance(rivalIndex), controller.Snapshot.Distance, controller.Phase, controller.LastResult);
+            Refresh(controller.GetRivalDistance(rivalIndex), controller.Snapshot.Distance, controller.Phase,
+                controller.LastResult, controller.IsRivalSurging(rivalIndex));
         }
 
         public void Configure(RivalPaceProfileAsset value, int valueLane, int valueRivalIndex, SprintController owner)
@@ -72,10 +73,12 @@ namespace KMA.Gameplay
             if (animator == null) animator = GetComponentInChildren<Animator>();
         }
 
-        public void RefreshForTest(float rivalDistance, float playerDistance, MinigamePhase phase, MinigameResult result) =>
-            Refresh(rivalDistance, playerDistance, phase, result);
+        public void RefreshForTest(float rivalDistance, float playerDistance, MinigamePhase phase, MinigameResult result,
+            bool surging = false) =>
+            Refresh(rivalDistance, playerDistance, phase, result, surging);
 
-        void Refresh(float rivalDistance, float playerDistance, MinigamePhase phase, MinigameResult result)
+        void Refresh(float rivalDistance, float playerDistance, MinigamePhase phase, MinigameResult result,
+            bool surging)
         {
             VisualProgress01 = Mathf.Clamp01(rivalDistance / 100f);
             if (visual != null)
@@ -89,7 +92,7 @@ namespace KMA.Gameplay
                 State = result != null && result.Pass ? RivalRunnerState.Celebrate : RivalRunnerState.Fail;
             else if (phase != MinigamePhase.Play)
                 State = RivalRunnerState.Idle;
-            else if (playerDistance >= 70f)
+            else if (surging || playerDistance >= 70f)
                 State = RivalRunnerState.Burst;
             else
                 State = RivalRunnerState.Run;

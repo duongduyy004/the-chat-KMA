@@ -108,6 +108,8 @@ namespace KMA.Gameplay
         public float Elapsed => elapsed;
         public float TimeLimit => timeLimit;
         public int CorrectStreak => correctStreak;
+        public float ComboBoost => ComboBoostFor(correctStreak, Tuning);
+        public bool IsComboBoosting => ComboBoost > 0f;
         public float ValidTapRatio => total == 0 ? 0f : (float)valid / total;
         public int Rank => currentRank;
         public Side ExpectedSide => authoredSequence[sequenceIndex];
@@ -117,7 +119,22 @@ namespace KMA.Gameplay
         public float[] RivalDistances => (float[])rivalDistances.Clone();
         public int RivalCount => rivalDistances.Length;
         public float GetRivalDistance(int index) => index < 0 || index >= rivalDistances.Length ? 0f : rivalDistances[index];
+        public bool IsRivalSurging(int index) =>
+            index >= 0 && index < rivalProfiles.Length && rivalProfiles[index] != null &&
+            rivalProfiles[index].IsSurgingAt(elapsed);
         public SprintSnapshot Snapshot => new SprintSnapshot(distance, speed, stamina, elapsed);
+
+        // Combo boost and idle braking apply to every race; the legacy rules borrow the default tuning.
+        SprintBalanceParameters Tuning => balance ?? SprintBalanceParameters.Default;
+
+        // A long unbroken alternation lifts both the impulse and the speed cap, up to ComboBoostMax.
+        static float ComboBoostFor(int streak, SprintBalanceParameters tuning)
+        {
+            if (tuning.ComboBoostMax <= 0f || streak <= tuning.ComboBoostStartStreak) return 0f;
+            int span = tuning.ComboBoostFullStreak - tuning.ComboBoostStartStreak;
+            float t = span <= 0 ? 1f : Mathf.Clamp01((float)(streak - tuning.ComboBoostStartStreak) / span);
+            return tuning.ComboBoostMax * t;
+        }
 
         public static StaminaBand ClassifyStamina(float value) =>
             value < LowStaminaThreshold ? StaminaBand.Low :
@@ -144,16 +161,22 @@ namespace KMA.Gameplay
                 bool burst = hasTapped && elapsed > lastTapElapsed &&
                     1f / (elapsed - lastTapElapsed) > tuning.BurstRateThreshold;
                 if (burst) stamina = Mathf.Max(0f, stamina - tuning.BurstExtraCost);
-                lastTapElapsed = elapsed;
-                hasTapped = true;
-                float impulse = correct ? tuning.CorrectImpulse : tuning.CorrectImpulse * tuning.WrongImpulseFactor;
+                float boost = 1f + ComboBoostFor(correctStreak, tuning);
+                float impulse = (correct ? tuning.CorrectImpulse : tuning.CorrectImpulse * tuning.WrongImpulseFactor) * boost;
                 bool fatigued = stamina <= tuning.FatigueThreshold;
                 if (fatigued) impulse *= tuning.FatigueImpulseFactor;
-                float cap = fatigued ? Mathf.Min(tuning.SpeedCap, tuning.FatigueSpeedCap) : tuning.SpeedCap;
-                speed = Mathf.Min(cap, speed + impulse);
+                float cap = tuning.SpeedCap * boost;
+                if (fatigued) cap = Mathf.Min(cap, tuning.FatigueSpeedCap);
+                // Losing the combo stops further gains but lets drag bleed off the extra speed.
+                speed = fatigued ? Mathf.Min(cap, speed + impulse) : Mathf.Max(speed, Mathf.Min(cap, speed + impulse));
             }
             else
-                speed = Mathf.Min(SpeedCap, speed + FullImpulse * (correct ? 1f : .4f));
+            {
+                float boost = 1f + ComboBoost;
+                speed = Mathf.Max(speed, Mathf.Min(SpeedCap * boost, speed + FullImpulse * (correct ? 1f : .4f) * boost));
+            }
+            lastTapElapsed = elapsed;
+            hasTapped = true;
         }
 
         public void Tick(float dt)
@@ -161,7 +184,7 @@ namespace KMA.Gameplay
             if (dt <= 0f || float.IsNaN(dt) || float.IsInfinity(dt)) return;
             elapsed += dt;
             float drag = balance.HasValue ? balance.Value.DragPerSecond : 15f;
-            speed = Mathf.Max(0f, speed - drag * dt);
+            speed = Mathf.Max(0f, speed - drag * dt - IdleBrakeOver(elapsed - dt, elapsed));
             float scale = balance.HasValue ? balance.Value.DistanceScale : .08f;
             distance += speed * dt * scale;
             if (balance.HasValue)
@@ -179,8 +202,7 @@ namespace KMA.Gameplay
 
             for (int i = 0; i < rivalProfiles.Length; i++)
             {
-                float rivalSpeed = elapsed <= 3f ? rivalProfiles[i].OpeningSpeed : rivalProfiles[i].SustainedSpeed;
-                rivalDistances[i] += rivalSpeed * dt;
+                if (rivalProfiles[i] != null) rivalDistances[i] += rivalProfiles[i].SpeedAt(elapsed) * dt;
             }
 
             UpdateRank();
@@ -197,6 +219,30 @@ namespace KMA.Gameplay
             float placement = rivals == 0 ? 1f : Mathf.Clamp01((float)(rivals + 1 - currentRank) / rivals);
             float mastery = deadline <= 0f ? 0f : Mathf.Clamp01((deadline - elapsed) / 3f);
             return ScoreUtil.Build(pass, accuracy, placement, mastery);
+        }
+
+        // Once the player stops tapping, a hard brake eases in so the runner settles almost at once
+        // while still sliding to a stop instead of freezing.
+        // Speed the brake removes between two race times. The brake is integrated over the step, so
+        // a long frame never brakes the part of it that still sat inside the grace window.
+        float IdleBrakeOver(float from, float to)
+        {
+            if (!hasTapped || speed <= 0f) return 0f;
+            SprintBalanceParameters tuning = Tuning;
+            float start = lastTapElapsed + tuning.IdleGraceSeconds;
+            return tuning.IdleBrakePerSecond *
+                (RampedSeconds(to - start, tuning.IdleBrakeRampSeconds) -
+                 RampedSeconds(from - start, tuning.IdleBrakeRampSeconds));
+        }
+
+        // Integral of a 0..1 ramp that rises over rampSeconds and then holds at 1.
+        static float RampedSeconds(float seconds, float rampSeconds)
+        {
+            if (seconds <= 0f) return 0f;
+            if (rampSeconds <= 0f) return seconds;
+            return seconds <= rampSeconds
+                ? seconds * seconds / (2f * rampSeconds)
+                : rampSeconds * .5f + seconds - rampSeconds;
         }
 
         void UpdateRank()
