@@ -16,7 +16,7 @@ MonoBehaviour:
   displayName: Bóng chuyền
   icon: {fileID: 0}
   color: {r: 0.96, g: 0.62, b: 0.18, a: 1}
-  goalText: Thắng 5 điểm trước đối thủ trong 120 giây.
+  goalText: Thắng 5 điểm trước đối thủ.
   timeLimit: 120
   passThreshold: 0.6
   unlocked: 1

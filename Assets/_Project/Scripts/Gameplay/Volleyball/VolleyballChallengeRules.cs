@@ -21,7 +21,9 @@ namespace KMA.Gameplay.Volleyball
             VolleyballMatchOptions options = definition.Kind switch
             {
                 ChallengeKind.Learn => new VolleyballMatchOptions(0, 0f, true),
-                ChallengeKind.Practice => new VolleyballMatchOptions(0, definition.TimeLimit, true),
+                // Practice is won on combo points; letting the opponent reach five ends it as a fail.
+                ChallengeKind.Practice => new VolleyballMatchOptions(0, definition.TimeLimit, true,
+                    opponentPointLimit: VolleyballMatch.PointsToWin),
                 _ => new VolleyballMatchOptions(VolleyballMatch.PointsToWin, definition.TimeLimit,
                     requirePointsToWin: true)
             };

@@ -27,6 +27,7 @@ namespace KMA.Gameplay.Volleyball
         public const float TimeLimit = 120f;
         public const float PointPause = 1.2f;
         public const float OpponentServeDelay = 1f;
+        public const float PlayerServeTimeout = 5f;
         public const float PlayerSpeed = 6.5f;
         // The AI keeps its own base so a faster player doesn't also mean a faster opponent.
         public const float OpponentBaseSpeed = 5f;
@@ -67,7 +68,8 @@ namespace KMA.Gameplay.Volleyball
             VolleyballMatchOptions options = null)
         {
             this.tuning = tuning ?? OpponentTuning.Default;
-            this.options = options ?? new VolleyballMatchOptions(PointsToWin, TimeLimit);
+            // Matches end on points; TimeLimit is only an opt-in cap for a timed variant.
+            this.options = options ?? new VolleyballMatchOptions(PointsToWin, 0f);
             Plan = plan ?? OpponentPlan.Authored();
             Player = new VolleyAthlete(CourtSide.Player, PlayerSpeed);
             Opponent = new VolleyAthlete(CourtSide.Opponent, OpponentBaseSpeed * this.tuning.SpeedFactor);
@@ -179,6 +181,11 @@ namespace KMA.Gameplay.Volleyball
                     if (Server == CourtSide.Player)
                     {
                         Player.Move(new Vector2(0f, move.y), deltaTime);
+                        // A player who never serves can't stall the match: the ball goes up on its
+                        // own, and an unplayed toss is the opponent's point.
+                        serveTimer += deltaTime;
+                        if (serveTimer >= PlayerServeTimeout)
+                            StartToss();
                     }
                     else
                     {
@@ -467,6 +474,8 @@ namespace KMA.Gameplay.Volleyball
             if (options.OpponentAlwaysServes)
                 Server = CourtSide.Opponent;
             if (options.PointsToWin > 0 && (PlayerPoints >= options.PointsToWin || OpponentPoints >= options.PointsToWin))
+                Complete();
+            else if (options.OpponentPointLimit > 0 && OpponentPoints >= options.OpponentPointLimit)
                 Complete();
         }
 

@@ -21,10 +21,10 @@ namespace KMA.EditorTools
     {
         public const string ScenePath = "Assets/_Project/Scenes/MG_Volleyball.unity";
         public const string OpponentCharacter = "FemaleAdventurer";
-        // Character poses are 1.28 units tall; this matches the court scale the BVA2 athletes were tuned for.
-        public const float AthleteScale = 1.8f;
+        // Character poses are 1.28 units tall; scaled up so the athletes read clearly on a phone.
+        public const float AthleteScale = 2.3f;
         // Marker centre, in world units above the feet; its lowest point clears the tallest (jump) pose.
-        const float MarkerWorldHeight = 2.4f;
+        const float MarkerWorldHeight = 3.1f;
         const string EnvironmentDir = "Assets/_Project/Art/Environments/Volleyball";
         const string PixelPath = EnvironmentDir + "/Pixel.png";
         const string HudRootName = "S2_HUD_Minigame";
@@ -33,6 +33,7 @@ namespace KMA.EditorTools
         const float HorizonWorldY = 4.97f;
         const int HudSortingOrder = 500;
         const float NetWidth = .5f;
+        public const float JoystickScale = 1.35f;
         static readonly Color GroundColor = new Color32(0xcf, 0xc8, 0xb8, 0xff); // schoolyard concrete
         static readonly Color CourtColor = new Color32(0x3f, 0x8f, 0xcf, 0xff);  // painted court
         static readonly Color LineColor = new Color32(0xff, 0xfb, 0xea, 0xff);
@@ -53,13 +54,13 @@ namespace KMA.EditorTools
             }
         }
 
-        // World size 0.6 x 0.6 (ball) and about 0.77 x 0.34 (shadow) - the sizes the court was tuned for.
+        // World size 0.75 x 0.75 (ball) and about 0.96 x 0.42 (shadow), grown with the athletes.
         const string BallPath = EnvironmentDir + "/Ball.png";
         const string ShadowPath = EnvironmentDir + "/Shadow.png";
         const int BallPixels = 128;
-        const float BallPixelsPerUnit = BallPixels / .6f;
+        const float BallPixelsPerUnit = BallPixels / .75f;
         const int ShadowWidth = 128, ShadowHeight = 56;
-        const float ShadowPixelsPerUnit = ShadowWidth / .77f;
+        const float ShadowPixelsPerUnit = ShadowWidth / .96f;
         const float AttackLineMetres = 3f;
         static readonly Vector2 Centre = new Vector2(.5f, .5f);
 
@@ -256,13 +257,13 @@ namespace KMA.EditorTools
             edge.transform.SetParent(athlete, false);
             edge.transform.localPosition = new Vector3(0f, MarkerWorldHeight / AthleteScale, 0f);
             edge.transform.localRotation = Quaternion.Euler(0f, 0f, 45f);
-            edge.transform.localScale = new Vector3(.43f, .43f, 1f) / AthleteScale;
+            edge.transform.localScale = new Vector3(.52f, .52f, 1f) / AthleteScale;
             edge.color = MinigameUiTheme.Surface;
             SpriteRenderer centre = Renderer(name + "Marker", pixel, Vector3.zero, 291);
             centre.transform.SetParent(athlete, false);
             centre.transform.localPosition = edge.transform.localPosition;
             centre.transform.localRotation = edge.transform.localRotation;
-            centre.transform.localScale = new Vector3(.31f, .31f, 1f) / AthleteScale;
+            centre.transform.localScale = new Vector3(.38f, .38f, 1f) / AthleteScale;
             centre.color = accent;
         }
 
@@ -304,16 +305,20 @@ namespace KMA.EditorTools
             RectTransform area = UiRect("JoystickArea", controls, Vector2.zero, new Vector2(.38f, .52f));
             area.gameObject.AddComponent<Image>().color = Color.clear;
             JoystickHandle stick = UiKit.Joystick(area);
+            // The volleyball stick is the main control on a phone: larger than the kit default.
+            stick.Base.rectTransform.sizeDelta = Vector2.one * MinigameUiTheme.JoystickBase * JoystickScale;
+            stick.Knob.rectTransform.sizeDelta = Vector2.one * MinigameUiTheme.JoystickKnob * JoystickScale;
             var joystick = area.gameObject.AddComponent<VirtualJoystick>();
-            joystick.Configure(area, stick.Base.rectTransform, stick.Knob.rectTransform, 88f, new Vector2(-135f, -140f));
+            joystick.Configure(area, stick.Base.rectTransform, stick.Knob.rectTransform, 88f * JoystickScale,
+                new Vector2(-120f, -100f));
 
             RectTransform buttonRect = UiRect("ActionButton", controls, Vector2.one, Vector2.one);
             buttonRect.anchorMin = buttonRect.anchorMax = buttonRect.pivot = new Vector2(1f, 0f);
-            buttonRect.sizeDelta = new Vector2(310f, 310f);
+            buttonRect.sizeDelta = new Vector2(400f, 400f);
             buttonRect.anchoredPosition = new Vector2(-18f, 18f);
             buttonRect.gameObject.AddComponent<Image>().color = Color.clear;
             var button = buttonRect.gameObject.AddComponent<ActionButton>();
-            UiKit.RoundButton(buttonRect, "ĐÁNH");
+            UiKit.RoundButton(buttonRect, "ĐÁNH", MinigameUiTheme.RoundButton * JoystickScale);
 
             Vector2 centre = new Vector2(.5f, .5f);
             Image scoreboard = UiKit.Panel(controls, "VolleyballScoreboard");
@@ -329,7 +334,7 @@ namespace KMA.EditorTools
                 MinigameUiTheme.Energy);
             UiKit.Place(enemyTitle.rectTransform, new Vector2(1f, .5f), centre, new Vector2(-136f, 0f), new Vector2(225f, 65f));
 
-            // Practice and exam run against a clock; the generic HUD timer is hidden in this scene.
+            // Kept for timed variants; the HUD hides it when the match has no clock (the journey matches end on points).
             // It sits on a chip in the top-left corner, clear of the scoreboard and the net.
             ChipHandle timerChip = UiKit.Chip(controls, "TimerChip", "2:00");
             TMP_Text timer = timerChip.Label;

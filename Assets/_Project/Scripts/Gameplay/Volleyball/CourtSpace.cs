@@ -26,6 +26,9 @@ namespace KMA.Gameplay.Volleyball
         public const float PixelsPerMetreX = 22.875f;
         public const float PixelsPerMetreY = 33.5f;
         public const float HeightLift = .8f;
+        // On screen the court is drawn wider than the old background so it fills a phone in
+        // landscape; this stretches world x only and leaves the metre rules untouched.
+        public const float WorldStretchX = 1.6f;
 
         static readonly Vector2 CourtCentrePixel = new Vector2(200f, 279f);
         static readonly Vector2 BackgroundCentrePixel = new Vector2(200f, 215f);
@@ -45,7 +48,7 @@ namespace KMA.Gameplay.Volleyball
             CourtCentrePixel.y - ground.y * PixelsPerMetreY);
 
         public static Vector3 ToWorld(Vector2 ground, float height) => new Vector3(
-            ground.x * PixelsPerMetreX / BackgroundPixelsPerUnit,
+            ground.x * PixelsPerMetreX / BackgroundPixelsPerUnit * WorldStretchX,
             (ground.y + height * HeightLift) * PixelsPerMetreY / BackgroundPixelsPerUnit,
             0f);
     }

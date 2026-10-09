@@ -44,7 +44,7 @@ Football uses a custom result screen. A failed attempt offers Retry, which consu
 | Scene | Purpose |
 | --- | --- |
 | `MG_Sprint` | Sprint subject with rival pace, stamina, wind cue, and counterplay |
-| `MG_Volleyball` | 1v1 beach volleyball against an authored AI; first to 5 points within 120 s |
+| `MG_Volleyball` | 1v1 beach volleyball against an authored AI; first to 5 points, no clock |
 | `MG_Football` | Five-kick penalty shootout with cartoon field, goal, player, goalkeeper, and touch controls |
 | `MG_ChessFinal` | Course final exam: mate in 2 against Cô Thể Chất within 90 s, two recoverable mistakes, hints |
 | `Celebration` | Skippable course celebration with a results summary; opens on the first win of the final |

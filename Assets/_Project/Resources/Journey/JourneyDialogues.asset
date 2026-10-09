@@ -161,9 +161,8 @@ MonoBehaviour:
     lines:
     - characterId: co_the_chat
       pose: 0
-      text: "Thi \u0111\u1EA5u: ghi \u0111\u1EE7 5 \u0111i\u1EC3m tr\u01B0\u1EDBc
-        \u0111\u1ED1i th\u1EE7, trong 120 gi\xE2y :fire:"
-      sticker: "120 GI\xC2Y"
+      text: "Thi \u0111\u1EA5u: ai ghi \u0111\u1EE7 5 \u0111i\u1EC3m tr\u01B0\u1EDBc th\u00EC th\u1EAFng :fire:"
+      sticker: "5 \u0110I\u1EC2M"
     - characterId: mai_toang
       pose: 3
       text: "Tui \u0111\u1EE1 th\u1EADt \u0111\u1EB9p, \xF4ng lo c\xFA \u0111\u1EADp

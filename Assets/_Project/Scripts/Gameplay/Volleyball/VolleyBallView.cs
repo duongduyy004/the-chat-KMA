@@ -8,7 +8,7 @@ namespace KMA.Gameplay.Volleyball
         public const int ShadowSortingOrder = 5;
         public const int MarkerSortingOrder = 6;
         /// <summary>World units the held ball sits to the side of the server, clear of the 1.2-unit-wide body.</summary>
-        public const float HeldBallSideOffset = .8f;
+        public const float HeldBallSideOffset = 1f;
         public const float MinShadowScale = .6f;
         public const float ShadowFullHeight = 5f;
         public static readonly Color MarkerOutOfReachColor = new Color(1f, .9f, .2f, .85f);

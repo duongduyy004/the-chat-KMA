@@ -17,7 +17,8 @@ namespace KMA.Tests.Gameplay.Volleyball
         {
             yield return SceneManager.LoadSceneAsync("MG_Volleyball", LoadSceneMode.Single);
             yield return null;
-            Assert.That(Camera.main.orthographicSize, Is.EqualTo(VolleyballCameraFraming.Size).Within(1e-3f));
+            Assert.That(Camera.main.orthographicSize,
+                Is.EqualTo(VolleyballCameraFraming.SizeFor(Camera.main.aspect)).Within(1e-3f));
         }
 
         [UnityTest]

@@ -45,7 +45,7 @@ namespace KMA.Tests.EditorTools
             var camera = cameraObject.AddComponent<Camera>();
             camera.orthographic = true;
             VolleyballCameraFraming.Apply(camera);
-            Assert.That(camera.orthographicSize, Is.EqualTo(VolleyballCameraFraming.Size).Within(1e-3f));
+            Assert.That(camera.orthographicSize, Is.EqualTo(VolleyballCameraFraming.SizeFor(camera.aspect)).Within(1e-3f));
             Assert.That(camera.transform.position, Is.EqualTo(new Vector3(0f, VolleyballCameraFraming.Y, -10f)));
             float top = VolleyballCameraFraming.Y + VolleyballCameraFraming.Size;
             float bottom = VolleyballCameraFraming.Y - VolleyballCameraFraming.Size;

@@ -8,6 +8,8 @@ namespace KMA.Tests.Gameplay.Volleyball
     public sealed class VolleyballMatchTests
     {
         static VolleyballMatch FrozenOpponentMatch() => new VolleyballMatch(null, new OpponentTuning(0f, .25f));
+        static VolleyballMatch TimedMatch() =>
+            new VolleyballMatch(options: new VolleyballMatchOptions(VolleyballMatch.PointsToWin, VolleyballMatch.TimeLimit));
 
         [Test]
         public void MatchStartsWithThePlayerHoldingTheServe()
@@ -19,7 +21,7 @@ namespace KMA.Tests.Gameplay.Volleyball
             Assert.That(match.Opponent.Position, Is.EqualTo(VolleyballMatch.OpponentReadySpot));
             Assert.That(match.BallGround, Is.EqualTo(VolleyballMatch.PlayerServeSpot));
             Assert.That(match.BallHeight, Is.EqualTo(VolleyballMatch.TossStartHeight));
-            Assert.That(match.TimeRemaining, Is.EqualTo(VolleyballMatch.TimeLimit));
+            Assert.That(match.ClockLimit, Is.Zero, "A match is won on points, not on a clock.");
         }
 
         [Test]
@@ -300,11 +302,12 @@ namespace KMA.Tests.Gameplay.Volleyball
         [Test]
         public void TimeCapWithALeadPasses()
         {
-            var match = new VolleyballMatch();
+            var match = TimedMatch();
             int completions = 0;
             match.Completed += () => completions++;
             match.SetScoreForTest(2, 1);
-            MatchDriver.Advance(match, VolleyballMatch.TimeLimit + .5f);
+            // One long tick reaches the cap before the held serve can toss itself and change the score.
+            match.Tick(VolleyballMatch.TimeLimit + .5f);
 
             Assert.That(match.IsOver, Is.True);
             Assert.That(completions, Is.EqualTo(1));
@@ -315,9 +318,10 @@ namespace KMA.Tests.Gameplay.Volleyball
         [Test]
         public void TimeCapWithATieFails()
         {
-            var match = new VolleyballMatch();
+            var match = TimedMatch();
             match.SetScoreForTest(2, 2);
-            MatchDriver.Advance(match, VolleyballMatch.TimeLimit + .5f);
+            // One long tick reaches the cap before the held serve can toss itself and change the score.
+            match.Tick(VolleyballMatch.TimeLimit + .5f);
             MinigameResult result = match.BuildResult();
             Assert.That(result.Pass, Is.False);
             Assert.That(result.Score, Is.Zero);
@@ -327,11 +331,12 @@ namespace KMA.Tests.Gameplay.Volleyball
         [Test]
         public void FinishedMatchIgnoresInputAndTime()
         {
-            var match = new VolleyballMatch();
+            var match = TimedMatch();
             int completions = 0;
             match.Completed += () => completions++;
             match.SetScoreForTest(1, 0);
-            MatchDriver.Advance(match, VolleyballMatch.TimeLimit + .5f);
+            // One long tick reaches the cap before the held serve can toss itself and change the score.
+            match.Tick(VolleyballMatch.TimeLimit + .5f);
             float elapsed = match.Elapsed;
 
             Assert.That(match.PressAction().Kind, Is.EqualTo(ActionKind.None));

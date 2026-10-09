@@ -15,12 +15,12 @@ namespace KMA.Tests.Gameplay.Volleyball
         }
 
         [Test]
-        public void WorldPositionAgreesWithTheBackgroundSpritePlacement()
+        public void WorldPositionAgreesWithTheBackgroundPlacementStretchedAlongTheCourt()
         {
             var ground = new Vector2(-5.5f, 2.25f);
             Vector2 pixel = CourtSpace.ToBackgroundPixel(ground);
             Vector3 expected = CourtSpace.BackgroundWorldPosition + new Vector3(
-                (pixel.x - 200f) / CourtSpace.BackgroundPixelsPerUnit,
+                (pixel.x - 200f) / CourtSpace.BackgroundPixelsPerUnit * CourtSpace.WorldStretchX,
                 (215f - pixel.y) / CourtSpace.BackgroundPixelsPerUnit, 0f);
 
             Vector3 actual = CourtSpace.ToWorld(ground, 0f);
@@ -38,6 +38,25 @@ namespace KMA.Tests.Gameplay.Volleyball
             Assert.That(raised.x, Is.EqualTo(ground.x));
             Assert.That(raised.y - ground.y,
                 Is.EqualTo(2f * CourtSpace.HeightLift * CourtSpace.PixelsPerMetreY / CourtSpace.BackgroundPixelsPerUnit).Within(1e-4f));
+        }
+
+        [Test]
+        public void TheCourtFillsMostOfAPhoneWideView()
+        {
+            float aspect = 20f / 9f;
+            float viewWidth = 2f * VolleyballCameraFraming.SizeFor(aspect) * aspect;
+            float courtWidth = 2f * CourtSpace.ToWorld(new Vector2(CourtSpace.HalfLength, 0f), 0f).x;
+            Assert.That(courtWidth / viewWidth, Is.GreaterThan(.65f));
+        }
+
+        [TestCase(20f / 9f)]
+        [TestCase(16f / 9f)]
+        [TestCase(4f / 3f)]
+        public void ServersStayInViewAtEveryAspect(float aspect)
+        {
+            float halfWidth = VolleyballCameraFraming.SizeFor(aspect) * aspect;
+            float server = CourtSpace.ToWorld(VolleyballMatch.OpponentServeSpot, 0f).x;
+            Assert.That(server + 1f, Is.LessThanOrEqualTo(halfWidth), "The far server and the sprite's half width fit.");
         }
 
         [Test]

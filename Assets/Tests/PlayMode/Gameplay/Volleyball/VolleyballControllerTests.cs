@@ -52,13 +52,14 @@ namespace KMA.Tests.Gameplay.Volleyball
             yield return null;
             Assert.That(controller.Match.BallState, Is.EqualTo(BallState.Toss));
 
-            // The toss above is still in the air, so this one long tick also drops it (+1 to the
-            // opponent) before the cap: 3-1 becomes 3-2, still a winning lead.
-            controller.Match.SetScoreForTest(3, 1);
-            controller.Match.Tick(VolleyballMatch.TimeLimit + 1f);
+            // The toss above is still in the air, so this one long tick drops it: the opponent's
+            // fifth point ends the match (there is no clock).
+            controller.Match.SetScoreForTest(1, 4);
+            controller.Match.Tick(10f);
+            controller.Match.Tick(10f);
             yield return null;
             Assert.That(completions, Is.EqualTo(1));
-            Assert.That(controller.LastResult.Pass, Is.True);
+            Assert.That(controller.LastResult.Pass, Is.False);
             Assert.That(controller.PresentationPhase, Is.EqualTo(MinigamePhase.Resolve));
         }
 
