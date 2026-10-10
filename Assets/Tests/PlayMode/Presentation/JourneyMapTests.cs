@@ -89,6 +89,7 @@ namespace KMA.Tests.Presentation
             screen.ChallengeRequested += (_, mode) => selectedMode = mode;
             screen.SelectSubject(SubjectId.Sprint);
             screen.LessonList.transform.Find("Lesson1").GetComponent<Button>().onClick.Invoke();
+            Play(screen);
             Assert.That(selectedMode, Is.EqualTo(ChallengeAttemptMode.Review));
             Assert.That(session.Journey.CheckpointChallengeId, Is.EqualTo("volleyball_learn"));
 
@@ -98,19 +99,20 @@ namespace KMA.Tests.Presentation
             screen.RefreshJourney(session);
 
             Assert.That(screen.LessonList.CurrentChallengeId, Is.EqualTo("volleyball_exam"));
-            Transform exam = screen.LessonList.transform.Find("Lesson3");
-            Assert.That(exam.GetComponent<Button>().interactable, Is.False);
-            Assert.That(exam.Find("Objective").GetComponent<TMP_Text>().text, Is.EqualTo(VietText.Fix("Hết lượt thi")));
+            Assert.That(screen.LessonList.SelectedLessonIndex, Is.EqualTo(2), "The current exam is preselected.");
+            Assert.That(PlayButton(screen).interactable, Is.False);
+            Assert.That(screen.LessonList.transform.Find("DetailCard/Status").GetComponent<TMP_Text>().text,
+                Does.Contain(VietText.Fix("Hết lượt thi")));
 
             var fresh = new GameSession();
             fresh.Journey.SetAttemptsRemaining(0);
             screen.RefreshJourney(fresh);
             Assert.That(screen.LessonList.CurrentChallengeId, Is.EqualTo("sprint_learn"));
-            Assert.That(screen.LessonList.transform.Find("Lesson1").GetComponent<Button>().interactable, Is.True);
+            Assert.That(PlayButton(screen).interactable, Is.True);
         }
 
         [UnityTest]
-        public IEnumerator OutOfLivesContinueButtonUsesTheReadableDisabledTokens()
+        public IEnumerator OutOfLivesPlayButtonUsesTheReadableDisabledTokens()
         {
             var session = new GameSession();
             Play(session, "sprint_learn", true);
@@ -121,7 +123,7 @@ namespace KMA.Tests.Presentation
             screen.SelectSubject(SubjectId.Sprint);
             yield return null;
 
-            Transform continueButton = screen.LessonList.transform.Find("ContinueCheckpoint");
+            Transform continueButton = PlayButton(screen).transform;
             Assert.That(continueButton.gameObject.activeSelf, Is.True);
             Assert.That(continueButton.GetComponent<Button>().interactable, Is.False);
             Assert.That(continueButton.GetComponent<Image>().color, Is.EqualTo(KMA.UI.Kit.MinigameUiTheme.DisabledSurface));
@@ -146,8 +148,42 @@ namespace KMA.Tests.Presentation
             ChallengeAttemptMode mode = default;
             screen.ChallengeRequested += (_, requested) => mode = requested;
             screen.LessonList.transform.Find("Lesson1").GetComponent<Button>().onClick.Invoke();
+            Play(screen);
             Assert.That(mode, Is.EqualTo(ChallengeAttemptMode.FreePlay));
         }
+
+        [Test]
+        public void TappingAStageOnlySelectsItAndALockedStageCannotBePlayed()
+        {
+            MapPresentationBuilder.Build(screen, new GameSession());
+            string requested = null;
+            ChallengeAttemptMode requestedMode = default;
+            screen.ChallengeRequested += (id, mode) => { requested = id; requestedMode = mode; };
+            screen.SelectSubject(SubjectId.Sprint);
+            Transform panel = screen.LessonList.transform;
+            Assert.That(screen.LessonList.SelectedLessonIndex, Is.EqualTo(0), "The next lesson opens preselected.");
+
+            panel.Find("Lesson2").GetComponent<Button>().onClick.Invoke();
+            Assert.That(requested, Is.Null, "Tapping a stage selects it; it does not start it.");
+            Assert.That(screen.LessonList.SelectedLessonIndex, Is.EqualTo(1));
+            Assert.That(panel.Find("Lesson2/StageIcon/SelectedRing").gameObject.activeSelf, Is.True);
+            Assert.That(panel.Find("Lesson1/StageIcon/SelectedRing").gameObject.activeSelf, Is.False);
+            Assert.That(PlayButton(screen).interactable, Is.False, "A locked stage cannot be played.");
+            Assert.That(panel.Find("DetailCard/Status").GetComponent<TMP_Text>().text,
+                Does.Contain(VietText.Fix("HỌC")), "A locked stage explains which stage opens it.");
+
+            screen.LessonList.Close();
+            screen.SelectSubject(SubjectId.Sprint);
+            Assert.That(screen.LessonList.SelectedLessonIndex, Is.EqualTo(0), "Reopening returns to the next lesson.");
+            Play(screen);
+            Assert.That(requested, Is.EqualTo("sprint_learn"));
+            Assert.That(requestedMode, Is.EqualTo(ChallengeAttemptMode.Journey));
+        }
+
+        static Button PlayButton(MapScreen screen) =>
+            screen.LessonList.transform.Find("DetailCard/PlayButton").GetComponent<Button>();
+
+        static void Play(MapScreen screen) => PlayButton(screen).onClick.Invoke();
 
         sealed class TestClock : IClock
         {
@@ -169,7 +205,8 @@ namespace KMA.Tests.Presentation
             int persists = 0;
             screen.ConfigureLifePersistence(() => { persists++; return true; });
             screen.SelectSubject(SubjectId.Sprint);
-            Button exam = screen.LessonList.transform.Find("Lesson3").GetComponent<Button>();
+            Assert.That(screen.LessonList.SelectedLessonIndex, Is.EqualTo(2));
+            Button exam = PlayButton(screen);
             Assert.That(exam.interactable, Is.False);
             Assert.That(screen.BudgetLabel.text, Is.EqualTo("Lượt thi: 0/5"));
             yield return null;

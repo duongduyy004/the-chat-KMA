@@ -228,7 +228,7 @@ namespace KMA.Tests.Gameplay.Progression
                     Is.EqualTo(new[] { "sprint_learn", "sprint_practice", "sprint_exam" }));
                 Assert.That(screen.Nodes, Has.Length.EqualTo(4));
                 screen.SelectSubject(SubjectId.Sprint);
-                screen.LessonList.GetComponentInChildren<Button>(true).onClick.Invoke();
+                screen.LessonList.transform.Find("DetailCard/PlayButton").GetComponent<Button>().onClick.Invoke();
                 Assert.That(requested, Is.EqualTo(new[] { SubjectId.Sprint }),
                     "Course selection only changes the displayed lesson list.");
                 Assert.That(challenges, Has.Count.EqualTo(1));

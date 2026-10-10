@@ -53,30 +53,29 @@ MonoBehaviour:
     volleyball: {r: 0.9607843, g: 0.61960787, b: 0.18039216, a: 1}
     football: {r: 0.20784314, g: 0.6627451, b: 0.35686275, a: 1}
     chess: {r: 0.9098039, g: 0.3529412, b: 0.28235295, a: 1}
-    completedSurface: {r: 0.88235295, g: 0.95686275, b: 0.87058824, a: 1}
     panelAnchorMin: {x: 0.06, y: 0.2}
     panelAnchorMax: {x: 0.94, y: 0.7}
     courseAnchorMin: {x: 0, y: 0.41}
     courseAnchorMax: {x: 1, y: 0.915}
     summaryAnchorMin: {x: 0.05, y: 0.84}
     summaryAnchorMax: {x: 0.95, y: 0.915}
-    cardLeft: 0.025
-    cardWidth: 0.295
-    cardGap: 0.0325
-    cardBottom: 0.04
-    cardTop: 0.72
     borderWidth: 3
     headingSize: 36
     stageSize: 36
     bodySize: 28
     captionSize: 26
     objectiveSize: 26
-    iconSize: 76
-    cardInset: 14
-    cardSpacing: 8
-    cardBadgeHeight: 38
-    cardStepHeight: 32
-    cardActionHeight: 42
+    nodeRowBottom: 0.36
+    nodeRowTop: 0.82
+    nodeHalfWidth: 0.12
+    nodeLineY: 0.64
+    detailAnchorMin: {x: 0.04, y: 0.04}
+    detailAnchorMax: {x: 0.96, y: 0.33}
+    nodeSize: 124
+    nodeCurrentScale: 1.16
+    nodeBadgeSize: 46
+    nodeLabelHeight: 52
+    lessonDotSize: 14
     revealDuration: 0.2
     revealStagger: 0.05
     revealScale: 0.94

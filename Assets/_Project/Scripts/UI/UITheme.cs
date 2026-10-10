@@ -100,7 +100,6 @@ namespace KMA.Gameplay.UI
             public Color volleyball = new Color32(245, 158, 46, 255);
             public Color football = new Color32(53, 169, 91, 255);
             public Color chess = new Color32(232, 90, 72, 255);
-            public Color completedSurface = new Color32(225, 244, 222, 255);
             // The lesson panel is a popup centred over the map, opened by tapping a stop.
             public Vector2 panelAnchorMin = new Vector2(.06f, .20f);
             public Vector2 panelAnchorMax = new Vector2(.94f, .70f);
@@ -108,24 +107,25 @@ namespace KMA.Gameplay.UI
             public Vector2 courseAnchorMax = new Vector2(1f, .915f);
             public Vector2 summaryAnchorMin = new Vector2(.05f, .84f);
             public Vector2 summaryAnchorMax = new Vector2(.95f, .915f);
-            public float cardLeft = .025f;
-            public float cardWidth = .295f;
-            public float cardGap = .0325f;
-            public float cardBottom = .04f;
-            public float cardTop = .72f;
             public float borderWidth = 3f;
             public float headingSize = 36f;
             public float stageSize = 36f;
             public float bodySize = 28f;
             public float captionSize = 26f;
             public float objectiveSize = 26f;
-            public float iconSize = 76f;
-            // Lesson card spacing, in canvas pixels: edge inset, gap between rows, row heights.
-            public float cardInset = 14f;
-            public float cardSpacing = 8f;
-            public float cardBadgeHeight = 38f;
-            public float cardStepHeight = 32f;
-            public float cardActionHeight = 42f;
+            // Level-select layout, in panel fractions: stage nodes on a dotted road, details below.
+            public float nodeRowBottom = .36f;
+            public float nodeRowTop = .82f;
+            public float nodeHalfWidth = .12f;
+            public float nodeLineY = .64f;
+            public Vector2 detailAnchorMin = new Vector2(.04f, .04f);
+            public Vector2 detailAnchorMax = new Vector2(.96f, .33f);
+            // Stage node sizes, in canvas pixels.
+            public float nodeSize = 124f;
+            public float nodeCurrentScale = 1.16f;
+            public float nodeBadgeSize = 46f;
+            public float nodeLabelHeight = 52f;
+            public float lessonDotSize = 14f;
             public float revealDuration = .20f;
             public float revealStagger = .05f;
             public float revealScale = .94f;

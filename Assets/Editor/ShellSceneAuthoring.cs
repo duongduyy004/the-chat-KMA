@@ -170,9 +170,9 @@ namespace KMA.EditorTools
                 string challenge = null;
                 KMA.Gameplay.ChallengeAttemptMode? mode = null;
                 screen.ChallengeRequested += (id, attemptMode) => { challenge = id; mode = attemptMode; };
-                screen.LessonList.transform.Find("Lesson1")?.GetComponent<Button>()?.onClick.Invoke();
+                screen.LessonList.transform.Find("DetailCard/PlayButton")?.GetComponent<Button>()?.onClick.Invoke();
                 Check(challenge == "sprint_learn" && mode == KMA.Gameplay.ChallengeAttemptMode.Journey,
-                    "Map lesson button must request the current challenge in Journey mode");
+                    "Map play button must request the current challenge in Journey mode");
             });
             ValidateScene("GameOver", scene =>
             {

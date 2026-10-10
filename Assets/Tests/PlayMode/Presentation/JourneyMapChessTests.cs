@@ -50,10 +50,9 @@ namespace KMA.Tests.Presentation
             screen.RefreshJourney(session);
             Assert.That(screen.LessonList.CurrentChallengeId, Is.EqualTo("chess_final"));
             screen.SelectSubject(SubjectId.Chess);
-            Button card = screen.LessonList.GetComponentsInChildren<Button>()
-                .First(b => b.gameObject.activeInHierarchy && b.name.StartsWith("Lesson"));
-            Assert.That(card.interactable, Is.True);
-            Assert.That(screen.LessonList.transform.Find("JourneyHint").GetComponent<TMPro.TMP_Text>().text,
+            Button play = screen.LessonList.transform.Find("DetailCard/PlayButton").GetComponent<Button>();
+            Assert.That(play.interactable, Is.True);
+            Assert.That(screen.LessonList.transform.Find("DetailCard/Status").GetComponent<TMPro.TMP_Text>().text,
                 Does.Not.Contain(VietText.Fix("Hết lượt thi")));
         }
 

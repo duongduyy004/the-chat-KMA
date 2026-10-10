@@ -57,8 +57,17 @@ namespace KMA.Gameplay.UI
                 ApplySharedBackground(existing, sharedBackground);
                 Transform oldFutureRow = existing.Find("Content/FutureRow");
                 if (oldFutureRow != null) oldFutureRow.gameObject.SetActive(false);
-                var lessonList = existing.GetComponentInChildren<JourneyLessonList>(true) ??
-                    JourneyLessonList.Create(existing.Find("Content"));
+                var lessonList = existing.GetComponentInChildren<JourneyLessonList>(true);
+                // Panels baked before the level-select layout carry lesson cards, not stage nodes.
+                if (lessonList != null && lessonList.transform.Find("DetailCard") == null)
+                {
+                    GameObject stale = lessonList.gameObject;
+                    stale.transform.SetParent(null, false);
+                    if (Application.isPlaying) UnityEngine.Object.Destroy(stale);
+                    else UnityEngine.Object.DestroyImmediate(stale);
+                    lessonList = null;
+                }
+                if (lessonList == null) lessonList = JourneyLessonList.Create(existing.Find("Content"));
                 EnsureCourseSummary(screen, existing.Find("Content"));
                 // Scenes baked before the popup carry the panel docked under the map.
                 JourneyLessonPresentation.EnsurePopup((RectTransform)lessonList.transform);

@@ -266,11 +266,16 @@ namespace KMA.Tests.Presentation
                 var screen = root.AddComponent<MapScreen>();
                 MapPresentationBuilder.Build(screen, new GameSession());
 
-                Transform lesson = root.transform.Find("S5MapPresentation/Content/JourneyLessons/Lesson1");
-                Color foreground = lesson.GetComponentInChildren<TMP_Text>(true).color;
-                Color background = lesson.GetComponent<Image>().color;
-                Assert.That(ContrastRatio(foreground, background), Is.GreaterThanOrEqualTo(4.5f),
-                    "Unlocked lesson copy must remain readable on its bright card surface.");
+                Transform panel = root.transform.Find("S5MapPresentation/Content/JourneyLessons");
+                Color panelSurface = panel.GetComponent<Image>().color;
+                Assert.That(ContrastRatio(panel.Find("Lesson1/StageTitle").GetComponent<TMP_Text>().color,
+                    panelSurface), Is.GreaterThanOrEqualTo(4.5f), "Stage names must read on the popup surface.");
+                Color detail = panel.Find("DetailCard").GetComponent<Image>().color;
+                Assert.That(ContrastRatio(panel.Find("DetailCard/Objective").GetComponent<TMP_Text>().color, detail),
+                    Is.GreaterThanOrEqualTo(4.5f), "The objective must read on the detail card.");
+                Assert.That(ContrastRatio(panel.Find("DetailCard/PlayButton/Label").GetComponent<TMP_Text>().color,
+                    panel.Find("DetailCard/PlayButton").GetComponent<Image>().color), Is.GreaterThanOrEqualTo(4.5f),
+                    "The play label must read on its button.");
             }
             finally
             {
@@ -291,8 +296,11 @@ namespace KMA.Tests.Presentation
                 var progress = panel.Find("CourseProgress")?.GetComponent<TMP_Text>();
                 Assert.That(progress, Is.Not.Null, "The chapter must show its lesson completion count.");
                 Assert.That(progress.text, Is.EqualTo("0/3 bài hoàn thành"));
-                Assert.That(panel.Find("Lesson2/Status").GetComponent<TMP_Text>().text,
-                    Does.Contain("HỌC"), "A locked practice must explain which stage opens it.");
+                TMP_Text status = panel.Find("DetailCard/Status").GetComponent<TMP_Text>();
+                Button play = panel.Find("DetailCard/PlayButton").GetComponent<Button>();
+                panel.Find("Lesson2").GetComponent<Button>().onClick.Invoke();
+                Assert.That(status.text, Does.Contain("HỌC"), "A locked practice must explain which stage opens it.");
+                Assert.That(play.interactable, Is.False);
 
                 var definition = session.Journey.Catalog.Get("sprint_learn");
                 Assert.That(session.TryStartChallenge(definition.Id, ChallengeAttemptMode.Journey,
@@ -302,17 +310,19 @@ namespace KMA.Tests.Presentation
                 screen.RefreshJourney(session);
 
                 Assert.That(progress.text, Is.EqualTo("1/3 bài hoàn thành"));
-                Assert.That(panel.Find("Lesson1").GetComponent<Button>().interactable, Is.True);
-                Assert.That(panel.Find("Lesson2").GetComponent<Button>().interactable, Is.True);
-                Assert.That(panel.Find("Lesson3").GetComponent<Button>().interactable, Is.False);
-                Assert.That(panel.Find("Lesson3/Status").GetComponent<TMP_Text>().text,
-                    Does.Contain("LUYỆN"));
+                panel.Find("Lesson1").GetComponent<Button>().onClick.Invoke();
+                Assert.That(play.interactable, Is.True, "A finished lesson can be reviewed.");
+                panel.Find("Lesson2").GetComponent<Button>().onClick.Invoke();
+                Assert.That(play.interactable, Is.True, "The next lesson can be played.");
+                panel.Find("Lesson3").GetComponent<Button>().onClick.Invoke();
+                Assert.That(play.interactable, Is.False);
+                Assert.That(status.text, Does.Contain("LUYỆN"));
             }
             finally { Object.DestroyImmediate(root); }
         }
 
         [Test]
-        public void LessonJourneyKeepsThreeReadableCardsInSequence(
+        public void LessonJourneyKeepsThreeReadableStagesInSequence(
             [Values(1440f, 1920f, 2400f)] float width, [Values(0, 1, 2)] int chapter)
         {
             const float height = 1080f;
@@ -341,20 +351,30 @@ namespace KMA.Tests.Presentation
                     Vector3[] corners = new Vector3[4];
                     card.GetWorldCorners(corners);
                     var bounds = new Rect(corners[0], corners[2] - corners[0]);
-                    Assert.That(card.rect.width, Is.GreaterThan(width * .22f));
+                    Assert.That(card.rect.width, Is.GreaterThan(width * .15f));
                     Assert.That(card.rect.height, Is.GreaterThan(height * .13f),
-                        "Each stage needs room for icon, title, objective and action.");
+                        "Each stage needs room for its disc and name.");
                     if (i > 0) Assert.That(bounds.xMin, Is.GreaterThan(previous.xMax));
                     previous = bounds;
-                    foreach (TMP_Text label in card.GetComponentsInChildren<TMP_Text>(true))
-                    {
-                        label.ForceMeshUpdate(true);
-                        Assert.That(label.preferredHeight,
-                            Is.LessThanOrEqualTo(label.rectTransform.rect.height + 1f), label.name);
-                    }
+                    AssertLabelsFit(card);
+                }
+                for (int i = 0; i < 3; i++)
+                {
+                    panel.Find($"Lesson{i + 1}").GetComponent<Button>().onClick.Invoke();
+                    AssertLabelsFit(panel.Find("DetailCard"));
                 }
             }
             finally { Object.DestroyImmediate(root); }
+        }
+
+        static void AssertLabelsFit(Transform root)
+        {
+            foreach (TMP_Text label in root.GetComponentsInChildren<TMP_Text>(true))
+            {
+                label.ForceMeshUpdate(true);
+                Assert.That(label.preferredHeight,
+                    Is.LessThanOrEqualTo(label.rectTransform.rect.height + 1f), label.name);
+            }
         }
 
         static float ContrastRatio(Color foreground, Color background)
@@ -565,11 +585,15 @@ namespace KMA.Tests.Presentation
             {
                 var screen = root.AddComponent<MapScreen>();
                 MapPresentationBuilder.Build(screen, new GameSession());
-                Transform locked = screen.LessonList.transform.Find("Lesson3");
-                Color background = locked.GetComponent<Image>().color;
-                Assert.That(ContrastRatio(locked.Find("Objective").GetComponent<TMP_Text>().color, background),
+                Transform panel = screen.LessonList.transform;
+                Transform locked = panel.Find("Lesson3");
+                Assert.That(ContrastRatio(locked.Find("StageTitle").GetComponent<TMP_Text>().color,
+                    panel.GetComponent<Image>().color), Is.GreaterThanOrEqualTo(4.5f));
+                locked.GetComponent<Button>().onClick.Invoke();
+                Color detail = panel.Find("DetailCard").GetComponent<Image>().color;
+                Assert.That(ContrastRatio(panel.Find("DetailCard/Status").GetComponent<TMP_Text>().color, detail),
                     Is.GreaterThanOrEqualTo(4.5f));
-                Assert.That(ContrastRatio(locked.Find("StageTitle").GetComponent<TMP_Text>().color, background),
+                Assert.That(ContrastRatio(panel.Find("DetailCard/Objective").GetComponent<TMP_Text>().color, detail),
                     Is.GreaterThanOrEqualTo(4.5f));
             }
             finally { Object.DestroyImmediate(root); }
