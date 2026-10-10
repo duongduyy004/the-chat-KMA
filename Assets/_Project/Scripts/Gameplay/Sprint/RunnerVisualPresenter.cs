@@ -9,7 +9,7 @@ namespace KMA.Gameplay
         [SerializeField] Animator animator;
         [SerializeField] Transform raceRoot;
         [SerializeField] float trackStartX = -9.6f;
-        [SerializeField] float trackLength = 19.2f;
+        [SerializeField] float trackLength = 16.32f;  // 85% of the 19.2 view: ends on the finish ribbon
         // Hysteresis so the runner does not flicker between running and resting around one speed.
         const float RestBelowSpeed = 10f;
         const float RunAboveSpeed = 25f;

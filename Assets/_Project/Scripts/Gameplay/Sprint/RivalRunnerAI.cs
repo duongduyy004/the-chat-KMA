@@ -21,7 +21,7 @@ namespace KMA.Gameplay
         [SerializeField] Transform visual;
         [SerializeField] Animator animator;
         [SerializeField] float trackStartX;
-        [SerializeField] float trackLength = 19.2f;
+        [SerializeField] float trackLength = 16.32f;  // 85% of the 19.2 view: ends on the finish ribbon
 
         RivalPaceProfile profile;
 
