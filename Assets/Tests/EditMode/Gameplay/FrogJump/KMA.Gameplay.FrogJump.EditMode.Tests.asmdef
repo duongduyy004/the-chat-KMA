@@ -5,7 +5,8 @@
         "UnityEngine.TestRunner",
         "UnityEditor.TestRunner",
         "KMA.Gameplay",
-        "KMA.Gameplay.FrogJump"
+        "KMA.Gameplay.FrogJump",
+        "KMA.Gameplay.UI"
     ],
     "includePlatforms": [
         "Editor"

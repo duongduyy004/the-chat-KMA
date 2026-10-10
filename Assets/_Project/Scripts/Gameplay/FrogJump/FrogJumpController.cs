@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using System.Globalization;
 using KMA.Gameplay.Core;
 using KMA.Gameplay.UI;
@@ -6,7 +7,7 @@ using UnityEngine;
 
 namespace KMA.Gameplay.FrogJump
 {
-    public sealed class FrogJumpController : MinigameBase
+    public sealed class FrogJumpController : MinigameBase, IMinigameGuideSource
     {
         /// The tutorial copy lives in the hint chip above the power bar, not the shared card.
         public override bool UsesSharedTutorial => false;
@@ -26,6 +27,14 @@ namespace KMA.Gameplay.FrogJump
 
         public FrogJumpRules Rules => rules;
         public bool IsWired => view != null && powerBar != null && tapArea != null && feedback != null;
+        public string GuideKey => FrogJumpGuide.Key;
+        public IReadOnlyList<TutorialStep> BuildGuide() => FrogJumpGuide.Build(rules.Tuning, PendingJumpSavesLife());
+
+        static bool PendingJumpSavesLife()
+        {
+            GameManager manager = GameManager.Instance;
+            return manager != null && manager.IsInitialized && manager.Session?.PendingFrogJump?.SavesLife == true;
+        }
 
         public void Configure(FrogJumpBalanceConfig config, FrogJumpView frogView, FrogJumpPowerBar bar,
             FrogJumpTapArea tap, TMP_Text feedbackLabel)
