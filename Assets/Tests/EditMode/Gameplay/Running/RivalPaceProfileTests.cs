@@ -10,7 +10,7 @@ namespace KMA.Tests.Gameplay.Running
     {
         const float MinSpeed = SprintController.DefaultMinRivalSpeed;
         const float MaxSpeed = SprintController.DefaultMaxRivalSpeed;
-        const float FastestFinish = 20f;
+        const float FastestFinish = 19f;
         const float SlowestFinish = 28f;
 
         // Each race rolls the rivals' pace, but never so fast that a rival runs away from a
