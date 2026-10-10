@@ -16,7 +16,7 @@ MonoBehaviour:
   subject: 0
   kind: 2
   distance: 150
-  timeLimit: 22
+  timeLimit: 15
   targetCount: 0
   attemptLimit: 0
   keeperEnabled: 0
