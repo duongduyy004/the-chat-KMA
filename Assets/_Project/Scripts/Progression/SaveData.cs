@@ -19,6 +19,8 @@ namespace KMA.Gameplay
         public int visitAttempt;
         public bool awaitingPunishment;
         public bool[] tutorialSeen;
+        // The frog jump has no SubjectId, so its guide flag lives outside tutorialSeen.
+        public bool frogJumpTutorialSeen;
         public Settings settings;
         public JourneyStateData journey = new JourneyStateData();
 

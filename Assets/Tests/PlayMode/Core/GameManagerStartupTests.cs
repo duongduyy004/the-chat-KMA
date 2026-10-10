@@ -324,6 +324,48 @@ namespace KMA.Tests.Gameplay.Core
             Assert.That(fallback.HasSeen(nameof(SubjectId.Sprint)), Is.False);
         }
 
+        [Test]
+        public void SaveDataTutorialSeenStore_MarksFrogJumpInTheAuthoritativeSave()
+        {
+            SceneRouter router = CreateRouter();
+            SaveData persisted = SaveData.CreateDefault();
+            var saves = 0;
+            GameManager manager = CreateInactiveManager();
+            manager.ConfigureStartup(
+                () => persisted,
+                data =>
+                {
+                    saves++;
+                    persisted = data;
+                },
+                router,
+                _ => { });
+            manager.gameObject.SetActive(true);
+            var fallback = new MemoryTutorialSeenStore();
+            var store = new SaveDataTutorialSeenStore(fallback);
+
+            Assert.That(store.HasSeen(SaveDataTutorialSeenStore.FrogJumpKey), Is.False);
+            store.MarkSeen(SaveDataTutorialSeenStore.FrogJumpKey);
+
+            Assert.That(manager.HasSeenFrogJumpTutorial, Is.True);
+            Assert.That(store.HasSeen(SaveDataTutorialSeenStore.FrogJumpKey), Is.True);
+            Assert.That(persisted.frogJumpTutorialSeen, Is.True);
+            Assert.That(saves, Is.EqualTo(1));
+            Assert.That(fallback.HasSeen(SaveDataTutorialSeenStore.FrogJumpKey), Is.False);
+            Assert.That(persisted.tutorialSeen, Has.None.True, "the frog flag must not touch subject flags");
+        }
+
+        [Test]
+        public void Migrate_KeepsTheFrogJumpTutorialFlag()
+        {
+            SaveData data = SaveData.CreateDefault();
+            data.frogJumpTutorialSeen = true;
+
+            SaveData migrated = new SaveSystem().Migrate(data);
+
+            Assert.That(migrated.frogJumpTutorialSeen, Is.True);
+        }
+
         [UnityTest]
         public IEnumerator DuplicateManager_DoesNotInitializeOrLoadMenu()
         {

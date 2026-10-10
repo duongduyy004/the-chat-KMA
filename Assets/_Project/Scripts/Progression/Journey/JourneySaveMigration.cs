@@ -148,6 +148,7 @@ namespace KMA.Gameplay
                 visitAttempt = source.visitAttempt,
                 awaitingPunishment = source.awaitingPunishment,
                 tutorialSeen = tutorials,
+                frogJumpTutorialSeen = source.frogJumpTutorialSeen,
                 settings = settings,
                 journey = source.journey
             };

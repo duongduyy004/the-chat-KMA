@@ -25,10 +25,16 @@ namespace KMA.Gameplay.UI
             this.fallback = fallback ?? new MemoryTutorialSeenStore();
         }
 
+        public const string FrogJumpKey = "FrogJump";
+
         public bool HasSeen(string subjectId)
         {
             var manager = GameManager.Instance;
-            return manager != null && manager.IsInitialized && TryParseSubject(subjectId, out var subject)
+            if (manager == null || !manager.IsInitialized)
+                return fallback.HasSeen(subjectId);
+            if (IsFrogJump(subjectId))
+                return manager.HasSeenFrogJumpTutorial;
+            return TryParseSubject(subjectId, out var subject)
                 ? manager.HasSeenTutorial(subject)
                 : fallback.HasSeen(subjectId);
         }
@@ -36,11 +42,18 @@ namespace KMA.Gameplay.UI
         public void MarkSeen(string subjectId)
         {
             var manager = GameManager.Instance;
-            if (manager != null && manager.IsInitialized && TryParseSubject(subjectId, out var subject))
+            if (manager == null || !manager.IsInitialized)
+                fallback.MarkSeen(subjectId);
+            else if (IsFrogJump(subjectId))
+                manager.MarkFrogJumpTutorialSeen();
+            else if (TryParseSubject(subjectId, out var subject))
                 manager.MarkTutorialSeen(subject);
             else
                 fallback.MarkSeen(subjectId);
         }
+
+        static bool IsFrogJump(string value) =>
+            string.Equals(value, FrogJumpKey, System.StringComparison.OrdinalIgnoreCase);
 
         static bool TryParseSubject(string value, out SubjectId subject) =>
             System.Enum.TryParse(value, true, out subject) && System.Enum.IsDefined(typeof(SubjectId), subject);

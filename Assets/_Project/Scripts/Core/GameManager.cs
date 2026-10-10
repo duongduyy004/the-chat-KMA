@@ -29,6 +29,7 @@ namespace KMA.Gameplay.Core
         GameSession session;
         Settings settings;
         bool[] tutorialSeen;
+        bool frogJumpTutorialSeen;
         bool startupConfigured;
         bool initialized;
         bool journeySaveInProgress;
@@ -164,6 +165,18 @@ namespace KMA.Gameplay.Core
             SaveCurrentState();
         }
 
+        public bool HasSeenFrogJumpTutorial => frogJumpTutorialSeen;
+
+        public void MarkFrogJumpTutorialSeen()
+        {
+            if (!initialized)
+                throw new InvalidOperationException("GameManager has not initialized.");
+            if (frogJumpTutorialSeen)
+                return;
+            frogJumpTutorialSeen = true;
+            SaveCurrentState();
+        }
+
         void ConfigureProductionStartup()
         {
             saveSystem = new SaveSystem();
@@ -191,6 +204,7 @@ namespace KMA.Gameplay.Core
             session.Restore(loaded);
             settings = loaded.settings ?? Settings.CreateDefault();
             tutorialSeen = CloneTutorialFlags(loaded.tutorialSeen);
+            frogJumpTutorialSeen = loaded.frogJumpTutorialSeen;
             HasSavedCampaign = hasExistingSave != null && hasExistingSave() && !loaded.settingsOnly;
 
             router.LoadSession(session);
@@ -235,6 +249,7 @@ namespace KMA.Gameplay.Core
                 current.settingsOnly = false;
                 current.settings = settings;
                 current.tutorialSeen = CloneTutorialFlags(tutorialSeen);
+                current.frogJumpTutorialSeen = frogJumpTutorialSeen;
                 saveData(current);
                 HasSavedCampaign = true;
                 return true;
@@ -290,6 +305,7 @@ namespace KMA.Gameplay.Core
             current.settingsOnly = !HasSavedCampaign;
             current.settings = settings;
             current.tutorialSeen = CloneTutorialFlags(tutorialSeen);
+            current.frogJumpTutorialSeen = frogJumpTutorialSeen;
             saveData(current);
 
         }
