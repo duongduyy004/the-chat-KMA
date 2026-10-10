@@ -195,7 +195,7 @@ namespace KMA.Tests.Presentation
             controller.AdvanceToDistance(SprintRules.RaceDistance / 2f);
             yield return null;
 
-            Assert.That(player.transform.position.x, Is.EqualTo(0f).Within(.001f),
+            Assert.That(player.transform.position.x, Is.EqualTo(SprintTrackLayout.TrackStartX + SprintTrackLayout.TrackLength * .5f).Within(.001f),
                 "At half race distance the player must be halfway across the authored track.");
             Assert.That(player.transform.position.y,
                 Is.EqualTo(SprintTrackLayout.LaneCenterYForAuthoredLane(2)).Within(.001f),

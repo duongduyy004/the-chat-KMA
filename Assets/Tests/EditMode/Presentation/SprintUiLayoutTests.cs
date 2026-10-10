@@ -8,8 +8,6 @@ namespace KMA.Tests.Presentation
 {
     public sealed class SprintUiLayoutTests
     {
-        const float ExpectedFinishAnchorWidth = .03f;
-
         static IEnumerable<TestCaseData> LandscapeSafeAreas()
         {
             yield return new TestCaseData(new Rect(0f, 0f, 1920f, 1080f)).SetName("16x9");
@@ -84,40 +82,37 @@ namespace KMA.Tests.Presentation
             Assert.That(SprintUiLayout.FinishReveal01(distance), Is.EqualTo(expected).Within(.0001f));
 
         [Test]
-        public void FinishRibbonStartsOffTheRightEdgeSoItNeverPopsIn()
+        public void FinishLineStartsAtTheEntryPointSoItNeverPopsIn()
         {
-            Assert.That(SprintUiLayout.FinishAnchorMinX(SprintUiLayout.FinishRevealDistance),
-                Is.GreaterThanOrEqualTo(1f),
-                "At the reveal distance the ribbon must still be off-screen, not sitting on the track.");
+            const float entryX = 12f;
+            Assert.That(SprintTrackLayout.FinishLineX(0f, entryX), Is.EqualTo(entryX).Within(.0001f),
+                "At the reveal distance the line must still be off-screen, not sitting on the track.");
         }
 
         [Test]
-        public void FinishRibbonSlidesInMonotonicallyAndKeepsItsWidth()
+        public void FinishLineSlidesInMonotonically()
         {
+            const float entryX = 12f;
             float previous = float.MaxValue;
             for (float distance = 70f; distance <= 100f; distance += 2.5f)
             {
-                float min = SprintUiLayout.FinishAnchorMinX(distance);
-                float max = SprintUiLayout.FinishAnchorMaxX(distance);
-
-                Assert.That(min, Is.LessThan(previous), $"The ribbon must keep approaching at {distance} m.");
-                Assert.That(max - min,
-                    Is.EqualTo(SprintUiLayout.FinishAnchorMaxX(70f) - SprintUiLayout.FinishAnchorMinX(70f))
-                        .Within(.0001f),
-                    "Sliding must not stretch or squash the ribbon.");
-                previous = min;
+                float x = SprintTrackLayout.FinishLineX(SprintUiLayout.FinishReveal01(distance), entryX);
+                Assert.That(x, Is.LessThan(previous), $"The line must keep approaching at {distance} m.");
+                previous = x;
             }
         }
 
         [Test]
-        public void FinishRibbonComesToRestWhereTheRunnerReachesIt()
+        public void FinishLineComesToRestWhereTheRunnerFinishes()
         {
-            Assert.That(SprintUiLayout.FinishAnchorMinX(100f), Is.EqualTo(.84f).Within(.0001f));
-            Assert.That(SprintUiLayout.FinishAnchorMaxX(100f), Is.EqualTo(.87f).Within(.0001f));
-            Assert.That(SprintUiLayout.FinishAnchorMaxX(100f) - SprintUiLayout.FinishAnchorMinX(100f),
-                Is.EqualTo(ExpectedFinishAnchorWidth).Within(.0001f));
-            Assert.That(SprintUiLayout.FinishAnchorMinY, Is.EqualTo(.12f).Within(.0001f));
-            Assert.That(SprintUiLayout.FinishAnchorMaxY, Is.EqualTo(.66f).Within(.0001f));
+            Assert.That(SprintTrackLayout.FinishLineX(1f, 12f), Is.EqualTo(SprintTrackLayout.FinishX).Within(.0001f));
+            Assert.That(SprintTrackLayout.TrackStartX + SprintTrackLayout.TrackLength,
+                Is.EqualTo(SprintTrackLayout.FinishX).Within(.0001f),
+                "A runner at full distance must stand on the line.");
+            // The narrowest supported view (16:10 at ortho 5.4) is 8.64 units either side of centre.
+            Assert.That(SprintTrackLayout.FinishX + SprintTrackLayout.FinishWidth * .5f, Is.LessThan(8.64f),
+                "The line must be on screen at 16:10.");
+            Assert.That(SprintTrackLayout.FinishTopY, Is.GreaterThan(SprintTrackLayout.FinishBottomY));
         }
 
         [TestCaseSource(nameof(LandscapeSafeAreas))]

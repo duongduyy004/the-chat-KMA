@@ -21,7 +21,6 @@ namespace KMA.Gameplay
         [SerializeField] Transform visual;
         [SerializeField] Animator animator;
         [SerializeField] float trackStartX;
-        [SerializeField] float trackLength = 16.32f;  // 85% of the 19.2 view: ends on the finish ribbon
 
         RivalPaceProfile profile;
 
@@ -89,7 +88,7 @@ namespace KMA.Gameplay
                 // own root instead, so divide the scale out or the rival would out-run the same distance.
                 float parentScaleX = visual.parent == null ? 1f : Mathf.Abs(visual.parent.lossyScale.x);
                 var position = visual.localPosition;
-                position.x = (trackStartX + trackLength * VisualProgress01) / Mathf.Max(.0001f, parentScaleX);
+                position.x = (trackStartX + SprintTrackLayout.TrackLength * VisualProgress01) / Mathf.Max(.0001f, parentScaleX);
                 visual.localPosition = position;
             }
 

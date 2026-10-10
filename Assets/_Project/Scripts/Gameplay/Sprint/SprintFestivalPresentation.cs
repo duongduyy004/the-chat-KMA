@@ -123,8 +123,12 @@ namespace KMA.Gameplay
                     : $"CHẠY {definition.Distance:0} M TRONG {definition.TimeLimit:0} GIÂY");
             Transform staminaBar = chrome.Find("Scoreboard/StaminaBar");
             if (staminaBar != null) staminaBar.gameObject.SetActive(!learn);
-            Transform finishLine = chrome.Find("FinishLine");
-            if (finishLine != null) finishLine.gameObject.SetActive(!learn);
+            var finishLine = chrome.GetComponent<SprintFinishLinePresenter>();
+            if (finishLine != null)
+            {
+                finishLine.enabled = !learn;
+                if (learn && finishLine.FinishRoot != null) finishLine.FinishRoot.SetActive(false);
+            }
         }
 
         /// Positions a RectTransform from an absolute rect expressed in the safe area's own space.
@@ -147,31 +151,36 @@ namespace KMA.Gameplay
         static Rect SafeRect(RectTransform safeArea) =>
             new Rect(0f, 0f, safeArea.rect.width, safeArea.rect.height);
 
+        /// The finish line is drawn on the track in world space, beside the runners, so where it rests
+        /// is exactly where they finish whatever the screen aspect.
         static void EnsureFinishLine(RectTransform root)
         {
-            RectTransform finish = UiKit.Rect(root, "FinishLine");
-            finish.anchorMin = new Vector2(
-                SprintUiLayout.FinishAnchorMinX(SprintUiLayout.FinishDistance),
-                SprintUiLayout.FinishAnchorMinY);
-            finish.anchorMax = new Vector2(
-                SprintUiLayout.FinishAnchorMaxX(SprintUiLayout.FinishDistance),
-                SprintUiLayout.FinishAnchorMaxY);
-            finish.offsetMin = Vector2.zero;
-            finish.offsetMax = Vector2.zero;
-
+            const string name = "SprintFinishLine";
             const int squareCount = 10;
-            for (int i = 0; i < squareCount; i++)
+            const int sortingOrder = 5;   // over the track backdrop, under the runners (11+)
+
+            GameObject finish = GameObject.Find(name);
+            if (finish == null)
             {
-                RectTransform square = UiKit.Rect(finish, $"Square{i}");
-                UiKit.Anchor(square, new Vector2(0f, (float)i / squareCount), new Vector2(1f, (float)(i + 1) / squareCount));
-                Image image = square.gameObject.AddComponent<Image>();
-                image.color = i % 2 == 0 ? Color.black : Color.white;
-                image.raycastTarget = false;
+                finish = new GameObject(name);
+                var texture = new Texture2D(1, squareCount) { filterMode = FilterMode.Point, wrapMode = TextureWrapMode.Clamp };
+                for (int i = 0; i < squareCount; i++)
+                    texture.SetPixel(0, i, i % 2 == 0 ? Color.black : Color.white);
+                texture.Apply();
+
+                // One pixel per unit: the sprite is 1 x squareCount units, then scaled onto the lanes.
+                var renderer = finish.AddComponent<SpriteRenderer>();
+                renderer.sprite = Sprite.Create(texture, new Rect(0f, 0f, 1f, squareCount), new Vector2(.5f, 0f), 1f);
+                renderer.sortingOrder = sortingOrder;
             }
+
+            float height = SprintTrackLayout.FinishTopY - SprintTrackLayout.FinishBottomY;
+            finish.transform.position = new Vector3(SprintTrackLayout.FinishX, SprintTrackLayout.FinishBottomY, 0f);
+            finish.transform.localScale = new Vector3(SprintTrackLayout.FinishWidth, height / squareCount, 1f);
 
             var presenter = root.GetComponent<SprintFinishLinePresenter>()
                 ?? root.gameObject.AddComponent<SprintFinishLinePresenter>();
-            presenter.Configure(Object.FindFirstObjectByType<SprintController>(), finish.gameObject);
+            presenter.Configure(Object.FindFirstObjectByType<SprintController>(), finish);
         }
 
         static void EnsureResultPresentation()

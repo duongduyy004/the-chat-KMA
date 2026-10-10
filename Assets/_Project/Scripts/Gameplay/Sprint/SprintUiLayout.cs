@@ -10,15 +10,6 @@ namespace KMA.Gameplay
         public const float FinishRevealDistance = 70f;
         public const float FinishDistance = 100f;
 
-        const float FinishRestAnchorX = .84f;   // where the ribbon ends up, fraction of width
-        const float FinishAnchorWidth = .03f;
-        const float FinishEntryAnchorX = 1f;    // just past the right edge, so it slides in unseen
-
-        // SprintTrack.png has transparent sky above the painted lanes. Keep the checkerboard inside the
-        // four-lane band instead of stretching it over the whole camera presentation.
-        public const float FinishAnchorMinY = .12f;
-        public const float FinishAnchorMaxY = .66f;
-
         const float EdgeX = .02f;   // horizontal inset, fraction of width
         const float RailInsetX = .03f;
         const float RailTop = .985f;
@@ -61,17 +52,10 @@ namespace KMA.Gameplay
 
         public static bool FinishVisible(float distance) => distance >= FinishRevealDistance;
 
-        /// How far the finish ribbon has travelled in from the right edge: 0 the moment it is
-        /// revealed, 1 when the runner reaches the line.
+        /// How far the finish line has travelled in from the right edge: 0 the moment it is
+        /// revealed, 1 when the runner reaches the line. See <see cref="SprintTrackLayout.FinishLineX"/>.
         public static float FinishReveal01(float distance) =>
             Mathf.Clamp01(Mathf.InverseLerp(FinishRevealDistance, FinishDistance, distance));
-
-        /// The ribbon enters from beyond the right edge rather than appearing on the track, and
-        /// slides to its resting place as the runner closes on the line.
-        public static float FinishAnchorMinX(float distance) =>
-            Mathf.Lerp(FinishEntryAnchorX, FinishRestAnchorX, FinishReveal01(distance));
-
-        public static float FinishAnchorMaxX(float distance) => FinishAnchorMinX(distance) + FinishAnchorWidth;
 
         // The one deliberate exception to height-only sizing: the rail spans the screen
         // because it maps 0-100 m onto the same left-right axis the runner moves along.

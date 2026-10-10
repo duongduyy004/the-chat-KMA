@@ -570,18 +570,13 @@ namespace KMA.Tests.Presentation
             var scene = SceneManager.GetActiveScene();
             var controller = SceneObjects<SprintController>(scene)[0];
             var finish = SceneObjects<SprintFinishLinePresenter>(scene)[0];
-            Transform chrome = GameObject.Find("SprintBroadcastChrome").transform;
-            Transform finishLine = chrome.Find("FinishLine");
+            Transform finishLine = finish.FinishRoot != null ? finish.FinishRoot.transform : null;
             Assert.That(finishLine, Is.Not.Null);
 
-            RectTransform finishRect = finishLine.GetComponent<RectTransform>();
-            Assert.That(finishRect.anchorMin.y, Is.EqualTo(.12f).Within(.0001f));
-            Assert.That(finishRect.anchorMax.y, Is.EqualTo(.66f).Within(.0001f));
-
-            Image[] squares = finishLine.GetComponentsInChildren<Image>(true);
-            Assert.That(squares.Length, Is.GreaterThan(1));
-            for (int i = 0; i < squares.Length; i++)
-                Assert.That(squares[i].raycastTarget, Is.False);
+            // World-space sprite on the track: never a UI graphic, so it cannot block taps.
+            Assert.That(finishLine.GetComponent<SpriteRenderer>(), Is.Not.Null);
+            Assert.That(finishLine.GetComponentsInChildren<Graphic>(true), Is.Empty);
+            Assert.That(finishLine.position.y, Is.EqualTo(SprintTrackLayout.FinishBottomY).Within(.0001f));
 
             controller.ConfigureForTest();
             controller.AdvanceToDistance(SprintRules.RaceDistance * .699f);
@@ -598,6 +593,8 @@ namespace KMA.Tests.Presentation
             finish.RefreshForTest();
             Assert.That(finish.IsVisible, Is.True);
             Assert.That(finishLine.gameObject.activeSelf, Is.True);
+            Assert.That(finishLine.position.x, Is.EqualTo(SprintTrackLayout.FinishX).Within(.0001f),
+                "At the finish distance the line rests where the runner stops.");
         }
 
         [UnityTest]
