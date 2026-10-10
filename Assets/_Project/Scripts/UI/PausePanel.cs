@@ -22,7 +22,6 @@ namespace KMA.Gameplay.UI
         public event Action RestartRequested;
         public event Action ExitToMapRequested;
         public bool IsOpen { get; private set; }
-        float previousTimeScale = 1f;
 
         void Awake()
         {
@@ -40,11 +39,7 @@ namespace KMA.Gameplay.UI
         {
             if (IsOpen)
                 return;
-            previousTimeScale = Time.timeScale;
-            foreach (var behaviour in FindObjectsByType<MonoBehaviour>(FindObjectsInactive.Include, FindObjectsSortMode.None))
-                if (behaviour is IPauseAware pauseAware)
-                    pauseAware.SetPaused(true);
-            Time.timeScale = 0f;
+            GameFreeze.Acquire(this);
             IsOpen = true;
             SetMenuVisible(true);
         }
@@ -53,13 +48,13 @@ namespace KMA.Gameplay.UI
         {
             if (!IsOpen)
                 return;
-            foreach (var behaviour in FindObjectsByType<MonoBehaviour>(FindObjectsInactive.Include, FindObjectsSortMode.None))
-                if (behaviour is IPauseAware pauseAware)
-                    pauseAware.SetPaused(false);
-            Time.timeScale = previousTimeScale;
+            GameFreeze.Release(this);
             IsOpen = false;
             SetMenuVisible(false);
         }
+
+        // A scene change while paused must not carry timeScale 0 into the next scene.
+        void OnDestroy() => GameFreeze.Release(this);
 
         public void Restart()
         {
