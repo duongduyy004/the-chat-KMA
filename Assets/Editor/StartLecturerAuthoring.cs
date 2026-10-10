@@ -82,8 +82,8 @@ namespace KMA.EditorTools
                 CharacterArt.Load(CharacterArt.Boss, "count"),
                 CharacterArt.Load(CharacterArt.Boss, "command"),
                 CharacterArt.Load(CharacterArt.Boss, "strictLook"),
-                CharacterArt.Load(CharacterArt.Boss, "taunt"),
-                CharacterArt.Load(CharacterArt.Boss, "cheer0"),
+                CharacterArt.Load(CharacterArt.Boss, "angry"),
+                CharacterArt.Load(CharacterArt.Boss, "congratulate"),
                 CharacterArt.Load(CharacterArt.Boss, "cheer1"),
                 CharacterArt.Load(CharacterArt.Boss, "penalty0"),
                 CharacterArt.Load(CharacterArt.Boss, "penalty1"));

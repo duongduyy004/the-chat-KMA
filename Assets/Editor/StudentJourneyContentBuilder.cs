@@ -177,6 +177,16 @@ namespace KMA.EditorTools
             (DialoguePose.Jump, "jump"), (DialoguePose.Duck, "duck")
         };
 
+        // The hero and the teacher have their own reaction art; everyone else draws the shared poses.
+        static readonly Dictionary<string, Dictionary<DialoguePose, string>> OwnPoseFiles =
+            new Dictionary<string, Dictionary<DialoguePose, string>>
+            {
+                [CharacterArt.Hero] = new Dictionary<DialoguePose, string>
+                    { [DialoguePose.Cheer] = "celebrate", [DialoguePose.Hurt] = "disappointed" },
+                [CharacterArt.Boss] = new Dictionary<DialoguePose, string>
+                    { [DialoguePose.Cheer] = "congratulate", [DialoguePose.Hurt] = "angry" }
+            };
+
         const string EmojiSourceFolder = "Assets/_Project/Art/Emoji/Source~";
         const string EmojiFolder = "Assets/_Project/Art/Emoji";
         const string EmojiAtlasPath = EmojiFolder + "/JourneyEmojiAtlas.png";
@@ -262,6 +272,8 @@ namespace KMA.EditorTools
         [MenuItem("KMA/Journey/Build Dialogue Library")]
         public static void BuildDialogues()
         {
+            // New dialogue art must be imported as sprites before it can be loaded below.
+            CharacterArt.ImportAll();
             EnsureFolder(ResourcesFolder);
             BuildEmojiSpriteAsset();
             JourneyDialogueLibrary library = AssetDatabase.LoadAssetAtPath<JourneyDialogueLibrary>(DialoguePath);
@@ -345,7 +357,9 @@ namespace KMA.EditorTools
             var poses = new List<JourneyPoseSprite>();
             foreach ((DialoguePose pose, string suffix) in PoseFiles)
             {
-                string path = $"{CharacterArtFolder}/{spriteSet}/{spriteSet}_{suffix}.png";
+                string file = OwnPoseFiles.TryGetValue(spriteSet, out var own) && own.TryGetValue(pose, out string mine)
+                    ? mine : suffix;
+                string path = $"{CharacterArtFolder}/{spriteSet}/{spriteSet}_{file}.png";
                 Sprite sprite = AssetDatabase.LoadAssetAtPath<Sprite>(path);
                 if (sprite == null) throw new InvalidOperationException("Missing dialogue sprite: " + path);
                 poses.Add(new JourneyPoseSprite(pose, sprite));

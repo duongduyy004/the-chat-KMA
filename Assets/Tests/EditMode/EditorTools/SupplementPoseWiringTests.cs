@@ -150,6 +150,36 @@ namespace KMA.Tests.EditorTools
                 .Select(i => PoseName((Sprite)frames.GetArrayElementAtIndex(i).objectReferenceValue)).ToArray();
         }
 
+        [TestCase("MG_Sprint")]
+        [TestCase("MG_Volleyball")]
+        [TestCase("MG_Football")]
+        [TestCase("MG_FrogJump")]
+        public void StartLecturerReactsWithTheSupplementGestures(string scene)
+        {
+            EditorSceneManager.OpenScene($"Assets/_Project/Scenes/{scene}.unity", OpenSceneMode.Single);
+            var lecturer = new SerializedObject(Object.FindFirstObjectByType<StartLecturer>());
+            Assert.That(Wired(lecturer, "taunt"), Is.EqualTo("BossPE_angry"));
+            Assert.That(Wired(lecturer, "cheer"), Is.EqualTo("BossPE_congratulate"));
+            Assert.That(Wired(lecturer, "cheerBothArms"), Is.EqualTo("BossPE_cheer1"));
+            Assert.That(Wired(lecturer, "penalty"), Is.EqualTo("BossPE_penalty0"));
+        }
+
+        [Test]
+        public void JourneyHeroAndTeacherReactWithTheSupplementExpressions()
+        {
+            var library = AssetDatabase.LoadAssetAtPath<JourneyDialogueLibrary>(
+                "Assets/_Project/Resources/Journey/JourneyDialogues.asset");
+            JourneyCharacter Cast(string id) => library.Cast.Single(character => character.Id == id);
+
+            Assert.That(PoseName(Cast("anh_khoa_tren").GetPose(DialoguePose.Cheer)), Is.EqualTo("MaleAdventurer_celebrate"));
+            Assert.That(PoseName(Cast("anh_khoa_tren").GetPose(DialoguePose.Hurt)), Is.EqualTo("MaleAdventurer_disappointed"));
+            Assert.That(PoseName(Cast("anh_khoa_tren").GetPose(DialoguePose.Idle)), Is.EqualTo("MaleAdventurer_idle"));
+            Assert.That(PoseName(Cast("co_the_chat").GetPose(DialoguePose.Cheer)), Is.EqualTo("BossPE_congratulate"));
+            Assert.That(PoseName(Cast("co_the_chat").GetPose(DialoguePose.Hurt)), Is.EqualTo("BossPE_angry"));
+            Assert.That(PoseName(Cast("tan_thu").GetPose(DialoguePose.Cheer)), Does.EndWith("_cheer0"));
+            Assert.That(PoseName(Cast("mai_toang").GetPose(DialoguePose.Hurt)), Does.EndWith("_hurt"));
+        }
+
         internal static string PoseName(Sprite sprite) =>
             sprite == null ? "<null>" : Path.GetFileNameWithoutExtension(AssetDatabase.GetAssetPath(sprite));
 
