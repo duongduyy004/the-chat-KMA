@@ -101,7 +101,7 @@ namespace KMA.Gameplay.FrogJump
             if (haptics != null) { if (metres <= 0f) haptics.Fail(); else haptics.Light(); }
             if (feedback == null) return;
             feedback.text = VietText.Fix(metres <= 0f ? "NGÃ!"
-                : metres >= rules.Tuning.maxJumpMetres - .3f ? $"ĐẸP! {Metres(metres)} m" : $"{Metres(metres)} m");
+                : metres >= rules.Tuning.maxJumpMetres * .9f ? $"ĐẸP! {Metres(metres)} m" : $"{Metres(metres)} m");
             feedbackUntil = Time.time + .8f;
         }
     }
