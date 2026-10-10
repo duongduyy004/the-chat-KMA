@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 using KMA.Gameplay.UI;
 using KMA.Gameplay.Core;
@@ -8,7 +9,7 @@ using UnityEngine;
 
 namespace KMA.Gameplay
 {
-    public sealed class FootballController : MinigameBase, IChallengeController
+    public sealed class FootballController : MinigameBase, IChallengeController, IMinigameGuideSource
     {
         public override bool UsesSharedTutorial => false;
         public override bool OwnsStartGate => true;
@@ -38,6 +39,11 @@ namespace KMA.Gameplay
         ChallengeAttemptContext challengeContext;
 
         public FootballRules Rules => rules;
+        public string GuideKey => FootballGuide.Key;
+        // Read from the live rules, because OptionsFor hardcodes the learn and exam numbers.
+        public IReadOnlyList<TutorialStep> BuildGuide() => rules == null
+            ? System.Array.Empty<TutorialStep>()
+            : FootballGuide.Build(challengeDefinition?.Kind, rules.RequiredGoals, rules.MaximumKicks, rules.KeeperEnabled);
         public MinigameResult LastResult => lastResult;
         public SubjectId Subject => SubjectId.Football;
         public event Action<ChallengeAttemptResult> ChallengeCompleted;
