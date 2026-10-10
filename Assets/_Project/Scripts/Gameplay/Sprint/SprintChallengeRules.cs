@@ -14,7 +14,8 @@ namespace KMA.Gameplay
             if (definition.Subject != SubjectId.Sprint)
                 throw new ArgumentException("Sprint challenge rules require a Sprint definition.", nameof(definition));
             Race = new SprintRules(definition.TimeLimit, rivals,
-                new[] { Side.Left, Side.Right }, balance);
+                new[] { Side.Left, Side.Right }, balance,
+                definition.Distance > 0f ? definition.Distance : SprintRules.RaceDistance);
         }
 
         public SprintRules Race { get; }
@@ -63,7 +64,7 @@ namespace KMA.Gameplay
 
             return new ChallengeAttemptResult(context, passed, new ChallengeMetrics(
                 distance: Race.Distance, elapsed: Race.Elapsed, completedTargets: completedTargets,
-                stamina: Race.Stamina, placement: Race.Rank), examResult);
+                placement: Race.Rank), examResult);
         }
     }
 }

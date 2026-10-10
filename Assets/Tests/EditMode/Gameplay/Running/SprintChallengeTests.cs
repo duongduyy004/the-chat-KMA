@@ -15,13 +15,8 @@ namespace KMA.Tests.Gameplay.Running
         public void BalanceDefaultsMatchTheAuthoredTuningContract()
         {
             SprintBalanceParameters value = SprintBalanceParameters.Default;
-            Assert.That(new[] { value.InitialStamina, value.MaxStamina, value.CorrectImpulse,
-                value.WrongImpulseFactor, value.SpeedCap, value.CorrectTapCost, value.WrongTapCost,
-                value.BurstRateThreshold, value.BurstExtraCost, value.ActiveDrainSpeedThreshold,
-                value.ActiveDrainPerSpeed, value.RestRegenPerSecond, value.FatigueThreshold,
-                value.FatigueImpulseFactor, value.FatigueSpeedCap, value.DragPerSecond,
-                value.DistanceScale }, Is.EqualTo(new[] { 100f, 100f, 18f, .4f, 150f, .25f,
-                1.5f, 6f, .75f, 20f, .02f, 6f, 30f, .75f, 90f, 15f, .08f }));
+            Assert.That(new[] { value.CorrectImpulse, value.WrongImpulseFactor, value.SpeedCap,
+                value.DragPerSecond, value.DistanceScale }, Is.EqualTo(new[] { 18f, .4f, 150f, 15f, .08f }));
             Assert.That(new[] { value.ComboBoostStartStreak, value.ComboBoostFullStreak },
                 Is.EqualTo(new[] { 10, 30 }));
             Assert.That(new[] { value.ComboBoostMax, value.IdleGraceSeconds, value.IdleBrakeRampSeconds,
@@ -38,9 +33,9 @@ namespace KMA.Tests.Gameplay.Running
             Assert.That(learn.Kind, Is.EqualTo(ChallengeKind.Learn));
             Assert.That(learn.TargetCount, Is.EqualTo(12));
             Assert.That(practice.Distance, Is.EqualTo(150f));
-            Assert.That(practice.TimeLimit, Is.EqualTo(30f));
+            Assert.That(practice.TimeLimit, Is.EqualTo(20f));
             Assert.That(exam.Distance, Is.EqualTo(150f));
-            Assert.That(exam.TimeLimit, Is.EqualTo(22f));
+            Assert.That(exam.TimeLimit, Is.EqualTo(15f));
         }
 
         [Test]
@@ -61,59 +56,17 @@ namespace KMA.Tests.Gameplay.Running
         }
 
         [Test]
-        public void StaminaCostsBurstDrainRestRegenerationAndFatigueCapsAreApplied()
-        {
-            SprintBalanceParameters tuning = SprintBalanceParameters.Default;
-            var race = new SprintRules(14f, null, null, tuning);
-            race.Tap(Side.Left);
-            Assert.That(race.Stamina, Is.EqualTo(99.75f).Within(.001f));
-            race.Tap(Side.Left);
-            Assert.That(race.Stamina, Is.EqualTo(98.25f).Within(.001f));
-
-            var rest = new SprintRules(14f, null, null, tuning);
-            rest.Tap(Side.Right);
-            rest.Tick(.1f);
-            Assert.That(rest.Stamina, Is.EqualTo(99.1f).Within(.001f));
-
-            var burst = new SprintRules(14f, null, null, tuning);
-            burst.Tap(Side.Left);
-            burst.Tick(.1f);
-            float beforeSecond = burst.Stamina;
-            burst.Tap(Side.Right);
-            Assert.That(beforeSecond - burst.Stamina, Is.EqualTo(1f).Within(.001f),
-                "a 10 Hz tap adds the .75 burst cost to the .25 correct-tap cost");
-
-            var fatigued = new SprintRules(14f, null, null, tuning);
-            for (int tap = 0; tap < 48; tap++) fatigued.Tap(Side.Right);
-            Assert.That(fatigued.Stamina, Is.LessThanOrEqualTo(tuning.FatigueThreshold));
-            Assert.That(fatigued.Speed, Is.LessThanOrEqualTo(tuning.FatigueSpeedCap));
-            float stableStamina = fatigued.Stamina;
-            fatigued.Tick(float.PositiveInfinity);
-            Assert.That(fatigued.Stamina, Is.EqualTo(stableStamina));
-        }
-
-        [Test]
         public void SixHertzRaceFinishesExamAndPracticeHasLongerDeadline()
         {
             var practice = RunAtCadence("sprint_practice", 6f);
             var exam = RunAtCadence("sprint_exam", 6f);
             Assert.That(exam.Pass, Is.True);
             Assert.That(exam.Metrics.Distance, Is.GreaterThanOrEqualTo(150f));
-            Assert.That(exam.Metrics.Elapsed, Is.LessThanOrEqualTo(22f));
+            Assert.That(exam.Metrics.Elapsed, Is.LessThanOrEqualTo(15f));
             Assert.That(exam.ExamResult, Is.Not.Null);
             Assert.That(practice.Pass, Is.True);
             Assert.That(practice.ExamResult, Is.Not.Null);
             Assert.That(practice.ExamResult.Score, Is.GreaterThan(0f));
-        }
-
-        [Test]
-        public void HighCadenceConsumesStaminaAndSlowsFinishComparedWithSixHertz()
-        {
-            ChallengeAttemptResult regular = RunAtCadence("sprint_exam", 6f);
-            ChallengeAttemptResult excessive = RunAtCadence("sprint_exam", 10f);
-            // Over the full 150 m both runners end up exhausted, so compare stamina at the same early moment.
-            Assert.That(StaminaAfter(10f, 4f), Is.LessThan(StaminaAfter(6f, 4f)));
-            Assert.That(excessive.Metrics.Elapsed, Is.GreaterThan(regular.Metrics.Elapsed));
         }
 
         [Test]
@@ -131,15 +84,6 @@ namespace KMA.Tests.Gameplay.Running
             ChallengeAttemptResult result = challenge.BuildResult(new ChallengeAttemptContext(
                 "exam-rank", "sprint_exam", ChallengeAttemptMode.Journey, ChallengeDifficulty.Normal));
             Assert.That(result.Pass, Is.True);
-        }
-
-        static float StaminaAfter(float hertz, float seconds)
-        {
-            var catalog = ChallengeCatalog.LoadDefault();
-            var challenge = new SprintChallengeRules(catalog.Get("sprint_exam"),
-                SprintBalanceParameters.Default, Array.Empty<RivalPaceProfile>());
-            Simulate(challenge, hertz, seconds);
-            return challenge.Race.Stamina;
         }
 
         static ChallengeAttemptResult RunAtCadence(string challengeId, float hertz)

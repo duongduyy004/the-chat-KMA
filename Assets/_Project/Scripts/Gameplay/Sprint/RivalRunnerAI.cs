@@ -94,7 +94,7 @@ namespace KMA.Gameplay
 
             if (phase == MinigamePhase.Resolve)
                 State = result != null && result.Pass ? RivalRunnerState.Celebrate : RivalRunnerState.Fail;
-            else if (phase != MinigamePhase.Play)
+            else if (phase != MinigamePhase.Play || VisualProgress01 >= 1f)
                 State = RivalRunnerState.Idle;
             else if (surging || playerDistance >= SprintRules.RaceDistance * .7f)
                 State = RivalRunnerState.Burst;

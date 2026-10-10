@@ -12,9 +12,6 @@ namespace KMA.Gameplay
         [SerializeField] TMP_Text rankLabel;
         [SerializeField] TMP_Text cadenceLabel;
         [SerializeField] KitBar distanceBar;
-        [SerializeField] KitBar staminaBar;
-
-        static readonly Color LowStaminaColor = new Color(.9f, .27f, .22f);
 
         public string DistanceText { get; private set; } = string.Empty;
         public string RankText { get; private set; } = string.Empty;
@@ -55,20 +52,8 @@ namespace KMA.Gameplay
             if (rankLabel != null) rankLabel.text = VietText.Fix(RankText);
             if (cadenceLabel != null) cadenceLabel.text = VietText.Fix(CadenceText);
             if (distanceBar != null) distanceBar.SetValue(progress);
-            if (staminaBar != null)
-            {
-                staminaBar.SetValue(snapshot.Stamina / 100f);
-                staminaBar.SetFillColor(StaminaColor(snapshot.Stamina));
-            }
         }
 
-        static Color StaminaColor(float stamina) =>
-            SprintRules.ClassifyStamina(stamina) switch
-            {
-                StaminaBand.Low => LowStaminaColor,
-                StaminaBand.Mid => MinigameUiTheme.Energy,
-                _ => MinigameUiTheme.Success
-            };
 
         public bool HasBoundVisuals => metricsRoot != null && distanceLabel != null && rankLabel != null &&
             cadenceLabel != null && distanceBar != null;
@@ -91,7 +76,6 @@ namespace KMA.Gameplay
             rankLabel = metricsRoot.Find("RankBadge/RankLabel")?.GetComponent<TMP_Text>();
             cadenceLabel = metricsRoot.Find("Combo")?.GetComponent<TMP_Text>();
             distanceBar = chrome.Find("ProgressRail")?.GetComponent<KitBar>();
-            staminaBar = metricsRoot.Find("StaminaBar")?.GetComponent<KitBar>();
         }
     }
 }

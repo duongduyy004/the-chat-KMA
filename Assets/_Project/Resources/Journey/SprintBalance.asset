@@ -12,21 +12,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 55b699ab5c889a464b6002746e02273d, type: 3}
   m_Name: SprintBalance
   m_EditorClassIdentifier: KMA.Gameplay.Sprint::KMA.Gameplay.SprintBalanceConfig
-  initialStamina: 100
-  maxStamina: 100
   correctImpulse: 18
   wrongImpulseFactor: 0.4
   speedCap: 150
-  correctTapCost: 0.25
-  wrongTapCost: 1.5
-  burstRateThreshold: 6
-  burstExtraCost: 0.75
-  activeDrainSpeedThreshold: 20
-  activeDrainPerSpeed: 0.02
-  restRegenPerSecond: 6
-  fatigueThreshold: 30
-  fatigueImpulseFactor: 0.75
-  fatigueSpeedCap: 90
   dragPerSecond: 15
   distanceScale: 0.08
   comboBoostStartStreak: 10

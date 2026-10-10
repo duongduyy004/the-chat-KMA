@@ -146,21 +146,9 @@ namespace KMA.EditorTools
 
             SprintBalanceParameters value = SprintBalanceParameters.Default;
             SerializedObject serialized = new SerializedObject(config);
-            serialized.FindProperty("initialStamina").floatValue = value.InitialStamina;
-            serialized.FindProperty("maxStamina").floatValue = value.MaxStamina;
             serialized.FindProperty("correctImpulse").floatValue = value.CorrectImpulse;
             serialized.FindProperty("wrongImpulseFactor").floatValue = value.WrongImpulseFactor;
             serialized.FindProperty("speedCap").floatValue = value.SpeedCap;
-            serialized.FindProperty("correctTapCost").floatValue = value.CorrectTapCost;
-            serialized.FindProperty("wrongTapCost").floatValue = value.WrongTapCost;
-            serialized.FindProperty("burstRateThreshold").floatValue = value.BurstRateThreshold;
-            serialized.FindProperty("burstExtraCost").floatValue = value.BurstExtraCost;
-            serialized.FindProperty("activeDrainSpeedThreshold").floatValue = value.ActiveDrainSpeedThreshold;
-            serialized.FindProperty("activeDrainPerSpeed").floatValue = value.ActiveDrainPerSpeed;
-            serialized.FindProperty("restRegenPerSecond").floatValue = value.RestRegenPerSecond;
-            serialized.FindProperty("fatigueThreshold").floatValue = value.FatigueThreshold;
-            serialized.FindProperty("fatigueImpulseFactor").floatValue = value.FatigueImpulseFactor;
-            serialized.FindProperty("fatigueSpeedCap").floatValue = value.FatigueSpeedCap;
             serialized.FindProperty("dragPerSecond").floatValue = value.DragPerSecond;
             serialized.FindProperty("distanceScale").floatValue = value.DistanceScale;
             serialized.ApplyModifiedPropertiesWithoutUndo();

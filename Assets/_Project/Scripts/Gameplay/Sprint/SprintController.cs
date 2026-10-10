@@ -13,7 +13,7 @@ namespace KMA.Gameplay
         public override bool UsesSharedCountdown => false;
         public override bool OwnsStartGate => true;
 
-        // Fastest roll lets the quickest rival finish around 18 s, slowest keeps the last one near 24 s.
+        // Fastest roll lets the quickest rival finish around 16 s, slowest keeps the last one near 20 s.
         public const float DefaultMinRivalSpeed = 7.25f;
         public const float DefaultMaxRivalSpeed = 8.75f;
         public const float MaxRivalWaitSeconds = 8f;
@@ -262,7 +262,7 @@ namespace KMA.Gameplay
             progress01: challengeDefinition != null && challengeDefinition.Kind == ChallengeKind.Learn
                 ? Mathf.Clamp01((rules == null ? 0f : (float)rules.CorrectStreak) / Mathf.Max(1, TargetCount))
                 : Mathf.Clamp01((rules == null ? 0f : rules.Snapshot.Distance) / TargetDistance),
-            stamina01: Mathf.Clamp01((rules == null ? 0f : rules.Stamina) / 100f),
+            stamina01: 0f,
             score: 0f,
             statusText: IsWaitingForRivals ? WaitForRivalsText : challengeDefinition == null ? "TAP LEFT / RIGHT"
                 : challengeDefinition.Kind == ChallengeKind.Learn

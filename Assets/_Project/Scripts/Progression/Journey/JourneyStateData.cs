@@ -98,7 +98,6 @@ namespace KMA.Gameplay
         public float elapsed;
         public int completedTargets;
         public int kicks;
-        public float stamina;
         public int placement;
         public MinigameResult examResult;
 
@@ -116,14 +115,13 @@ namespace KMA.Gameplay
                 elapsed = metrics.Elapsed,
                 completedTargets = metrics.CompletedTargets,
                 kicks = metrics.Kicks,
-                stamina = metrics.Stamina,
                 placement = metrics.Placement,
                 examResult = Copy(result.ExamResult)
             };
         }
 
         public ChallengeAttemptResult ToResult() => new ChallengeAttemptResult(context?.ToContext(), pass,
-            new ChallengeMetrics(distance, elapsed, completedTargets, kicks, stamina, placement), Copy(examResult));
+            new ChallengeMetrics(distance, elapsed, completedTargets, kicks, placement), Copy(examResult));
 
         internal JourneyResultData Copy() => new JourneyResultData
         {
@@ -139,7 +137,6 @@ namespace KMA.Gameplay
             elapsed = elapsed,
             completedTargets = completedTargets,
             kicks = kicks,
-            stamina = stamina,
             placement = placement,
             examResult = Copy(examResult)
         };

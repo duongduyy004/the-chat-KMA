@@ -82,11 +82,6 @@ namespace KMA.Gameplay
             combo.alignment = TextAlignmentOptions.Left;
             combo.text = VietText.Fix("CHUỖI ×0");
 
-            // Stamina: running out drops the runner to the fatigue speed cap, so the player needs to see it.
-            KitBar stamina = UiKit.Bar(scoreboard.transform, "StaminaBar");
-            UiKit.Anchor(stamina.Track.rectTransform, new Vector2(.66f, .16f), new Vector2(.95f, .36f));
-            stamina.SetFillColor(MinigameUiTheme.Success);
-
             // Mode chip
             ChipHandle mode = UiKit.Chip(root, "ModeLabel", $"CHẠY NƯỚC RÚT · {SprintRules.RaceDistance:0}M");
             ApplyRect(mode.Background.rectTransform, safe, SprintUiLayout.ModeChipRect(safe));
@@ -121,8 +116,6 @@ namespace KMA.Gameplay
                 instruction.text = VietText.Fix(learn
                     ? $"BẤM TRÁI, PHẢI LUÂN PHIÊN {definition.TargetCount} LẦN"
                     : $"CHẠY {definition.Distance:0} M TRONG {definition.TimeLimit:0} GIÂY");
-            Transform staminaBar = chrome.Find("Scoreboard/StaminaBar");
-            if (staminaBar != null) staminaBar.gameObject.SetActive(!learn);
             var finishLine = chrome.GetComponent<SprintFinishLinePresenter>();
             if (finishLine != null)
             {

@@ -59,7 +59,7 @@ namespace KMA.Tests.Gameplay.Running
         }
 
         [UnityTest]
-        public IEnumerator TimeLimit_EmitsOneFailureResultWithoutStaminaDepletion()
+        public IEnumerator TimeLimit_EmitsOneFailureResult()
         {
             var controller = CreateSprintController();
             MinigameResult result = null;
@@ -69,7 +69,6 @@ namespace KMA.Tests.Gameplay.Running
             Assert.That(result, Is.Not.Null);
             Assert.That(result.Pass, Is.False);
             Assert.That(completions, Is.EqualTo(1));
-            Assert.That(controller.Snapshot.Stamina, Is.GreaterThan(0f));
             DestroyController(controller);
             yield return null;
         }
@@ -240,6 +239,17 @@ namespace KMA.Tests.Gameplay.Running
             Assert.That(resultAfter.Score, Is.EqualTo(resultBefore.Score));
             Object.DestroyImmediate(runner.gameObject);
             Object.DestroyImmediate(profile);
+        }
+
+        [Test]
+        public void Rival_StopsRunningOnceAcrossTheLine()
+        {
+            var runner = new GameObject("Rival").AddComponent<RivalRunnerAI>();
+
+            runner.RefreshForTest(SprintRules.RaceDistance, SprintRules.RaceDistance * .5f, MinigamePhase.Play, null);
+
+            Assert.That(runner.State, Is.EqualTo(RivalRunnerState.Idle));
+            Object.DestroyImmediate(runner.gameObject);
         }
 
         [Test]

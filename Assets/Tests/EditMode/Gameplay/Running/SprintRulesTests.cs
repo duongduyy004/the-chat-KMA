@@ -143,17 +143,6 @@ namespace KMA.Tests.Gameplay.Running
             Assert.That(rules.Snapshot.Distance, Is.EqualTo(0f));
         }
 
-        [TestCase(0f, StaminaBand.Low)]
-        [TestCase(29.999f, StaminaBand.Low)]
-        [TestCase(30f, StaminaBand.Mid)]
-        [TestCase(69.999f, StaminaBand.Mid)]
-        [TestCase(70f, StaminaBand.High)]
-        [TestCase(100f, StaminaBand.High)]
-        public void StaminaBand_UsesExplicitDeterministicBoundaries(float stamina, StaminaBand expected)
-        {
-            Assert.That(SprintRules.ClassifyStamina(stamina), Is.EqualTo(expected));
-        }
-
         [Test]
         public void RivalProfiles_DetermineDeterministicRankAndDistance()
         {
@@ -184,14 +173,6 @@ namespace KMA.Tests.Gameplay.Running
         }
 
         [Test]
-        public void EmptyStamina_DoesNotCreateAnotherPassGate()
-        {
-            var rules = SprintRules.ForTest(distance: 150f, elapsed: 21.9f, rank: 4, stamina: 0f);
-
-            Assert.That(rules.BuildResult().Pass, Is.True);
-        }
-
-        [Test]
         public void FinishingFirst_ScoresAboveFinishingLast_ForTheSameRun()
         {
             RivalPaceProfile[] Rivals(float speed) => new[]
@@ -212,20 +193,39 @@ namespace KMA.Tests.Gameplay.Running
         }
 
         [Test]
-        public void LeftoverStamina_DoesNotChangeTheScore()
-        {
-            var spent = SprintRules.ForTest(distance: 150f, elapsed: 12f, rank: 1, stamina: 0f);
-            var saved = SprintRules.ForTest(distance: 150f, elapsed: 12f, rank: 1, stamina: 100f);
-
-            Assert.That(spent.BuildResult().Score, Is.EqualTo(saved.BuildResult().Score));
-        }
-
-        [Test]
         public void CompletionIsTheOnlyPrimaryObjective()
         {
             var rules = SprintRules.ForTest(distance: 99.9f, elapsed: 1f, rank: 1);
 
             Assert.That(rules.BuildResult().Pass, Is.False);
+        }
+
+        [Test]
+        public void Rival_StopsAtTheFinishLineInsteadOfRunningOn()
+        {
+            var rules = new SprintRules(rivalProfiles: new[] { new RivalPaceProfile("Fast", 100f, 100f) },
+                goalDistance: 50f);
+
+            rules.Tick(.4f);
+            Assert.That(rules.GetRivalDistance(0), Is.EqualTo(40f).Within(.001f));
+            rules.Tick(.4f);
+            Assert.That(rules.GetRivalDistance(0), Is.EqualTo(50f));
+            rules.Tick(5f);
+            Assert.That(rules.GetRivalDistance(0), Is.EqualTo(50f));
+            Assert.That(rules.AllRivalsReached(50f), Is.True);
+        }
+
+        [Test]
+        public void Rival_StaysAtTheLineWhileThePlayerRunsIn()
+        {
+            var rules = new SprintRules(rivalProfiles: new[] { new RivalPaceProfile("Fast", 100f, 100f) },
+                goalDistance: 50f);
+            rules.Tick(1f);
+            rules.FinishRace();
+
+            rules.Tick(3f);
+
+            Assert.That(rules.GetRivalDistance(0), Is.EqualTo(50f));
         }
     }
 }

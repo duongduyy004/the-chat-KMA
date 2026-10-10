@@ -9,31 +9,21 @@ namespace KMA.Gameplay
         Right
     }
 
-    public enum StaminaBand
-    {
-        Low,
-        Mid,
-        High
-    }
-
     public readonly struct SprintSnapshot : System.IEquatable<SprintSnapshot>
     {
         public float Distance { get; }
         public float Speed { get; }
-        public float Stamina { get; }
         public float Elapsed { get; }
 
-        public SprintSnapshot(float distance, float speed, float stamina, float elapsed)
+        public SprintSnapshot(float distance, float speed, float elapsed)
         {
             Distance = distance;
             Speed = speed;
-            Stamina = stamina;
             Elapsed = elapsed;
         }
 
         public bool Equals(SprintSnapshot other) =>
-            Distance.Equals(other.Distance) && Speed.Equals(other.Speed) &&
-            Stamina.Equals(other.Stamina) && Elapsed.Equals(other.Elapsed);
+            Distance.Equals(other.Distance) && Speed.Equals(other.Speed) && Elapsed.Equals(other.Elapsed);
 
         public override bool Equals(object obj) => obj is SprintSnapshot other && Equals(other);
 
@@ -43,7 +33,6 @@ namespace KMA.Gameplay
             {
                 int hash = Distance.GetHashCode();
                 hash = hash * 397 ^ Speed.GetHashCode();
-                hash = hash * 397 ^ Stamina.GetHashCode();
                 return hash * 397 ^ Elapsed.GetHashCode();
             }
         }
@@ -51,14 +40,11 @@ namespace KMA.Gameplay
 
     public sealed class SprintRules
     {
-        const float FullImpulse = 18f;
-        const float SpeedCap = 150f;
         public const float RaceDistance = 150f;
         public const float DefaultTimeLimit = 22f;
-        public const float LowStaminaThreshold = 30f;
-        public const float HighStaminaThreshold = 70f;
 
         readonly float timeLimit;
+        readonly float goalDistance;
         readonly Side[] authoredSequence;
         readonly RivalPaceProfile[] rivalProfiles;
         readonly float[] rivalDistances;
@@ -72,17 +58,17 @@ namespace KMA.Gameplay
         bool hasTapped;
         float distance;
         float speed;
-        float stamina;
         float elapsed;
         float rivalClock;
         bool finished;
 
         public SprintRules(float timeLimit = DefaultTimeLimit, RivalPaceProfile[] rivalProfiles = null,
-            Side[] authoredSequence = null, SprintBalanceParameters? balance = null)
+            Side[] authoredSequence = null, SprintBalanceParameters? balance = null,
+            float goalDistance = RaceDistance)
         {
             this.timeLimit = timeLimit;
             this.balance = balance;
-            stamina = balance.HasValue ? Mathf.Clamp(balance.Value.InitialStamina, 0f, balance.Value.MaxStamina) : 100f;
+            this.goalDistance = goalDistance;
             this.authoredSequence = authoredSequence == null ? new[] { Side.Left, Side.Right } : (Side[])authoredSequence.Clone();
             if (this.authoredSequence.Length == 0)
                 throw new System.ArgumentException("Sprint authored sequence must contain at least one side.", nameof(authoredSequence));
@@ -93,21 +79,19 @@ namespace KMA.Gameplay
 
         public static SprintRules Default() => new SprintRules(DefaultTimeLimit);
 
-        public static SprintRules ForTest(float distance, float elapsed, int rank, float stamina = 100f,
+        public static SprintRules ForTest(float distance, float elapsed, int rank,
             RivalPaceProfile[] rivalProfiles = null, Side[] authoredSequence = null)
         {
             _ = rank;
             var value = new SprintRules(DefaultTimeLimit, rivalProfiles, authoredSequence);
             value.distance = distance;
             value.elapsed = elapsed;
-            value.stamina = Mathf.Clamp(stamina, 0f, 100f);
             value.UpdateRank();
             return value;
         }
 
         public float Distance => distance;
         public float Speed => speed;
-        public float Stamina => stamina;
         public float Elapsed => elapsed;
         /// The player crossed the line: their numbers and rank are frozen while rivals keep running.
         public bool IsFinished => finished;
@@ -120,7 +104,6 @@ namespace KMA.Gameplay
         public int Rank => currentRank;
         public Side ExpectedSide => authoredSequence[sequenceIndex];
         public Side[] AuthoredSequence => (Side[])authoredSequence.Clone();
-        public StaminaBand StaminaBand => ClassifyStamina(stamina);
         public RivalPaceProfile[] RivalProfiles => (RivalPaceProfile[])rivalProfiles.Clone();
         public float[] RivalDistances => (float[])rivalDistances.Clone();
         public int RivalCount => rivalDistances.Length;
@@ -131,9 +114,9 @@ namespace KMA.Gameplay
         public bool IsRivalSlowing(int index) =>
             index >= 0 && index < rivalProfiles.Length && rivalProfiles[index] != null &&
             rivalProfiles[index].IsSlowingAt(RivalTime);
-        public SprintSnapshot Snapshot => new SprintSnapshot(distance, speed, stamina, elapsed);
+        public SprintSnapshot Snapshot => new SprintSnapshot(distance, speed, elapsed);
 
-        // Combo boost and idle braking apply to every race; the legacy rules borrow the default tuning.
+        // Races without an authored balance asset use the default tuning.
         SprintBalanceParameters Tuning => balance ?? SprintBalanceParameters.Default;
 
         // A long unbroken alternation lifts both the impulse and the speed cap, up to ComboBoostMax.
@@ -144,10 +127,6 @@ namespace KMA.Gameplay
             float t = span <= 0 ? 1f : Mathf.Clamp01((float)(streak - tuning.ComboBoostStartStreak) / span);
             return tuning.ComboBoostMax * t;
         }
-
-        public static StaminaBand ClassifyStamina(float value) =>
-            value < LowStaminaThreshold ? StaminaBand.Low :
-            value < HighStaminaThreshold ? StaminaBand.Mid : StaminaBand.High;
 
         public void FinishRace()
         {
@@ -180,28 +159,12 @@ namespace KMA.Gameplay
             else
                 correctStreak = 0;
 
-            if (balance.HasValue)
-            {
-                SprintBalanceParameters tuning = balance.Value;
-                stamina = Mathf.Clamp(stamina - (correct ? tuning.CorrectTapCost : tuning.WrongTapCost),
-                    0f, tuning.MaxStamina);
-                bool burst = hasTapped && elapsed > lastTapElapsed &&
-                    1f / (elapsed - lastTapElapsed) > tuning.BurstRateThreshold;
-                if (burst) stamina = Mathf.Max(0f, stamina - tuning.BurstExtraCost);
-                float boost = 1f + ComboBoostFor(correctStreak, tuning);
-                float impulse = (correct ? tuning.CorrectImpulse : tuning.CorrectImpulse * tuning.WrongImpulseFactor) * boost;
-                bool fatigued = stamina <= tuning.FatigueThreshold;
-                if (fatigued) impulse *= tuning.FatigueImpulseFactor;
-                float cap = tuning.SpeedCap * boost;
-                if (fatigued) cap = Mathf.Min(cap, tuning.FatigueSpeedCap);
-                // Losing the combo stops further gains but lets drag bleed off the extra speed.
-                speed = fatigued ? Mathf.Min(cap, speed + impulse) : Mathf.Max(speed, Mathf.Min(cap, speed + impulse));
-            }
-            else
-            {
-                float boost = 1f + ComboBoost;
-                speed = Mathf.Max(speed, Mathf.Min(SpeedCap * boost, speed + FullImpulse * (correct ? 1f : .4f) * boost));
-            }
+            SprintBalanceParameters tuning = Tuning;
+            float boost = 1f + ComboBoostFor(correctStreak, tuning);
+            float impulse = (correct ? tuning.CorrectImpulse : tuning.CorrectImpulse * tuning.WrongImpulseFactor) * boost;
+            float cap = tuning.SpeedCap * boost;
+            // Losing the combo stops further gains but lets drag bleed off the extra speed.
+            speed = Mathf.Max(speed, Mathf.Min(cap, speed + impulse));
             lastTapElapsed = elapsed;
             hasTapped = true;
         }
@@ -214,35 +177,26 @@ namespace KMA.Gameplay
                 rivalClock += dt;
                 for (int i = 0; i < rivalProfiles.Length; i++)
                 {
-                    if (rivalProfiles[i] != null) rivalDistances[i] += rivalProfiles[i].SpeedAt(rivalClock) * dt;
+                    if (rivalProfiles[i] != null) AdvanceRival(i, rivalClock, dt);
                 }
                 return;
             }
             elapsed += dt;
-            float drag = balance.HasValue ? balance.Value.DragPerSecond : 15f;
-            speed = Mathf.Max(0f, speed - drag * dt - IdleBrakeOver(elapsed - dt, elapsed));
-            float scale = balance.HasValue ? balance.Value.DistanceScale : .08f;
-            distance += speed * dt * scale;
-            if (balance.HasValue)
-            {
-                SprintBalanceParameters tuning = balance.Value;
-                float staminaDelta = speed > tuning.ActiveDrainSpeedThreshold
-                    ? -(speed - tuning.ActiveDrainSpeedThreshold) * tuning.ActiveDrainPerSpeed
-                    : tuning.RestRegenPerSecond;
-                stamina = Mathf.Clamp(stamina + staminaDelta * dt, 0f, tuning.MaxStamina);
-                if (stamina <= tuning.FatigueThreshold)
-                    speed = Mathf.Min(speed, tuning.FatigueSpeedCap);
-            }
-            else
-                stamina = Mathf.Clamp(stamina + (speed > 20f ? -speed * .25f : 6f) * dt, 0f, 100f);
+            SprintBalanceParameters tuning = Tuning;
+            speed = Mathf.Max(0f, speed - tuning.DragPerSecond * dt - IdleBrakeOver(elapsed - dt, elapsed));
+            distance += speed * dt * tuning.DistanceScale;
 
             for (int i = 0; i < rivalProfiles.Length; i++)
             {
-                if (rivalProfiles[i] != null) rivalDistances[i] += rivalProfiles[i].SpeedAt(elapsed) * dt;
+                if (rivalProfiles[i] != null) AdvanceRival(i, elapsed, dt);
             }
 
             UpdateRank();
         }
+
+        // A rival who has crossed the line stops there instead of running on past it.
+        void AdvanceRival(int index, float time, float dt) =>
+            rivalDistances[index] = Mathf.Min(goalDistance, rivalDistances[index] + rivalProfiles[index].SpeedAt(time) * dt);
 
         public MinigameResult BuildResult() => BuildResult(RaceDistance, timeLimit);
 
@@ -250,7 +204,7 @@ namespace KMA.Gameplay
         {
             bool pass = distance >= Mathf.Max(0f, goalDistance) && elapsed <= deadline;
             float accuracy = total == 0 ? 0f : 2f * valid / total;
-            // 1st place earns the full bonus and last place none; leftover stamina earns nothing.
+            // 1st place earns the full bonus and last place none.
             int rivals = rivalDistances.Length;
             float placement = rivals == 0 ? 1f : Mathf.Clamp01((float)(rivals + 1 - currentRank) / rivals);
             float mastery = deadline <= 0f ? 0f : Mathf.Clamp01((deadline - elapsed) / 3f);
@@ -286,7 +240,7 @@ namespace KMA.Gameplay
             currentRank = 1;
             for (int i = 0; i < rivalDistances.Length; i++)
             {
-                if (rivalDistances[i] > distance)
+                if (rivalDistances[i] > distance || rivalDistances[i] >= goalDistance)
                     currentRank++;
             }
         }
