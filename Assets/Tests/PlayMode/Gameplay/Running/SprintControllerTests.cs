@@ -230,7 +230,7 @@ namespace KMA.Tests.Gameplay.Running
             var before = rules.RivalDistances;
             var rankBefore = rules.Rank;
             var resultBefore = rules.BuildResult();
-            runner.RefreshForTest(before[0], 70f, MinigamePhase.Play, null);
+            runner.RefreshForTest(before[0], SprintRules.RaceDistance * .7f, MinigamePhase.Play, null);
 
             Assert.That(runner.State, Is.EqualTo(RivalRunnerState.Burst));
             Assert.That(rules.RivalDistances, Is.EqualTo(before));

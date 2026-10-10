@@ -58,7 +58,7 @@ namespace KMA.Tests.Gameplay.Progression
             if (controller is SprintController sprint)
             {
                 var input = Object.FindFirstObjectByType<KMA.Input.GameplayInputRouter>();
-                for (int frame = 0; frame < 22 * 240 && !completed; frame++)
+                for (int frame = 0; frame < 31 * 240 && !completed; frame++)
                 {
                     if (pass && frame % 40 == 0)
                         input.FeedSprintTapForTest((frame / 40) % 2 == 0 ? KMA.Input.Side.Left : KMA.Input.Side.Right,

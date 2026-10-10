@@ -105,7 +105,7 @@ namespace KMA.Tests.Gameplay.Running
         [Test]
         public void TopTwoAfterTimeout_DoesNotPass()
         {
-            var rules = SprintRules.ForTest(distance: 100f, elapsed: 14.1f, rank: 1);
+            var rules = SprintRules.ForTest(distance: 150f, elapsed: 14.1f, rank: 1);
 
             Assert.That(rules.BuildResult().Pass, Is.False);
         }
@@ -186,7 +186,7 @@ namespace KMA.Tests.Gameplay.Running
         [Test]
         public void EmptyStamina_DoesNotCreateAnotherPassGate()
         {
-            var rules = SprintRules.ForTest(distance: 100f, elapsed: 13.9f, rank: 4, stamina: 0f);
+            var rules = SprintRules.ForTest(distance: 150f, elapsed: 13.9f, rank: 4, stamina: 0f);
 
             Assert.That(rules.BuildResult().Pass, Is.True);
         }
@@ -200,8 +200,8 @@ namespace KMA.Tests.Gameplay.Running
                 new RivalPaceProfile("B", speed, speed),
                 new RivalPaceProfile("C", speed, speed)
             };
-            var first = SprintRules.ForTest(distance: 100f, elapsed: 11f, rank: 1, rivalProfiles: Rivals(0f));
-            var last = SprintRules.ForTest(distance: 100f, elapsed: 11f, rank: 4, rivalProfiles: Rivals(200f));
+            var first = SprintRules.ForTest(distance: 150f, elapsed: 11f, rank: 1, rivalProfiles: Rivals(0f));
+            var last = SprintRules.ForTest(distance: 150f, elapsed: 11f, rank: 4, rivalProfiles: Rivals(200f));
             first.Tick(1f);
             last.Tick(1f);
 
@@ -214,8 +214,8 @@ namespace KMA.Tests.Gameplay.Running
         [Test]
         public void LeftoverStamina_DoesNotChangeTheScore()
         {
-            var spent = SprintRules.ForTest(distance: 100f, elapsed: 12f, rank: 1, stamina: 0f);
-            var saved = SprintRules.ForTest(distance: 100f, elapsed: 12f, rank: 1, stamina: 100f);
+            var spent = SprintRules.ForTest(distance: 150f, elapsed: 12f, rank: 1, stamina: 0f);
+            var saved = SprintRules.ForTest(distance: 150f, elapsed: 12f, rank: 1, stamina: 100f);
 
             Assert.That(spent.BuildResult().Score, Is.EqualTo(saved.BuildResult().Score));
         }

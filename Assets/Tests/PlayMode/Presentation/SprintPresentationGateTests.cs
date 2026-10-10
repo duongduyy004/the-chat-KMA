@@ -260,7 +260,7 @@ namespace KMA.Tests.Presentation
             Assert.That(distanceBar, Is.Not.Null);
             Assert.That(distanceBar.Fill.name, Is.EqualTo("RailFill"));
             Assert.That(chrome.GetComponentInParent<SafeAreaFitter>(), Is.Not.Null);
-            Assert.That(distance.text, Is.EqualTo("0 / 100 m"));
+            Assert.That(distance.text, Is.EqualTo("0 / 150 m"));
             Assert.That(rank.text, Is.EqualTo("VỊ TRÍ 1"));
             Assert.That(cadence.text, Is.EqualTo("CHUỖI ×0"));
 
@@ -268,11 +268,11 @@ namespace KMA.Tests.Presentation
             controller.AdvanceToDistance(42f);
             sprintHud.Refresh();
 
-            Assert.That(distance.text, Is.EqualTo("42 / 100 m"));
+            Assert.That(distance.text, Is.EqualTo("42 / 150 m"));
             Assert.That(rank.text, Is.EqualTo("VỊ TRÍ 1"));
             Assert.That(cadence.text, Is.EqualTo("CHUỖI ×0"));
-            Assert.That(distanceBar.Value, Is.EqualTo(.42f).Within(.001f));
-            Assert.That(distanceBar.Fill.rectTransform.anchorMax.x, Is.EqualTo(.42f).Within(.001f));
+            Assert.That(distanceBar.Value, Is.EqualTo(42f / SprintRules.RaceDistance).Within(.001f));
+            Assert.That(distanceBar.Fill.rectTransform.anchorMax.x, Is.EqualTo(42f / SprintRules.RaceDistance).Within(.001f));
 
             controller.OnLeftTap();
             controller.OnRightTap();
@@ -665,7 +665,7 @@ namespace KMA.Tests.Presentation
             Transform chrome = GameObject.Find("SprintBroadcastChrome").transform;
             Assert.That(chrome.GetComponentInParent<KMA.Gameplay.UI.SafeAreaFitter>(), Is.Not.Null);
 
-            Assert.That(chrome.Find("Scoreboard/Distance").GetComponent<TMP_Text>().text, Is.EqualTo("0 / 100 m"));
+            Assert.That(chrome.Find("Scoreboard/Distance").GetComponent<TMP_Text>().text, Is.EqualTo("0 / 150 m"));
             TMP_Text rankChip = chrome.Find("Scoreboard/RankBadge/RankLabel").GetComponent<TMP_Text>();
             Assert.That(rankChip.text, Is.EqualTo("VỊ TRÍ 1"));
             rankChip.ForceMeshUpdate();
@@ -673,7 +673,7 @@ namespace KMA.Tests.Presentation
             Assert.That(rankChip.textBounds.size.x, Is.LessThanOrEqualTo(rankChip.rectTransform.rect.width + .5f),
                 "VỊ TRÍ 1 must fit inside its chip");
             Assert.That(chrome.Find("Scoreboard/Combo").GetComponent<TMP_Text>().text, Is.EqualTo("CHUỖI ×0"));
-            Assert.That(chrome.Find("ModeLabel/Label").GetComponent<TMP_Text>().text, Is.EqualTo("CHẠY NƯỚC RÚT · 100M"));
+            Assert.That(chrome.Find("ModeLabel/Label").GetComponent<TMP_Text>().text, Is.EqualTo("CHẠY NƯỚC RÚT · 150M"));
 
             KitBar rail = chrome.Find("ProgressRail").GetComponent<KitBar>();
             Assert.That(rail.Value, Is.EqualTo(0f).Within(.001f));
@@ -704,11 +704,11 @@ namespace KMA.Tests.Presentation
             hud.Refresh();
 
             Transform chrome = GameObject.Find("SprintBroadcastChrome").transform;
-            Assert.That(chrome.Find("Scoreboard/Distance").GetComponent<TMP_Text>().text, Is.EqualTo("42 / 100 m"));
-            Assert.That(chrome.Find("ProgressRail").GetComponent<KitBar>().Value, Is.EqualTo(.42f).Within(.001f));
+            Assert.That(chrome.Find("Scoreboard/Distance").GetComponent<TMP_Text>().text, Is.EqualTo("42 / 150 m"));
+            Assert.That(chrome.Find("ProgressRail").GetComponent<KitBar>().Value, Is.EqualTo(42f / SprintRules.RaceDistance).Within(.001f));
             // Anchors collapse to 0 under batchmode's zero-sized safe rect (see CONTROLLER RULING #1),
             // so progress is asserted through the dedicated field instead of the anchor position.
-            Assert.That(hud.PipProgress, Is.EqualTo(.42f).Within(.001f));
+            Assert.That(hud.PipProgress, Is.EqualTo(42f / SprintRules.RaceDistance).Within(.001f));
         }
 
         [UnityTest]

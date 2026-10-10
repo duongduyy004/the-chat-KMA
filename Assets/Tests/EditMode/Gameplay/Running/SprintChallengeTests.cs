@@ -110,7 +110,8 @@ namespace KMA.Tests.Gameplay.Running
         {
             ChallengeAttemptResult regular = RunAtCadence("sprint_exam", 6f);
             ChallengeAttemptResult excessive = RunAtCadence("sprint_exam", 10f);
-            Assert.That(excessive.Metrics.Stamina, Is.LessThan(regular.Metrics.Stamina));
+            // Over the full 150 m both runners end up exhausted, so compare stamina at the same early moment.
+            Assert.That(StaminaAfter(10f, 4f), Is.LessThan(StaminaAfter(6f, 4f)));
             Assert.That(excessive.Metrics.Elapsed, Is.GreaterThan(regular.Metrics.Elapsed));
         }
 
@@ -124,11 +125,20 @@ namespace KMA.Tests.Gameplay.Running
             };
             var challenge = new SprintChallengeRules(catalog.Get("sprint_exam"),
                 SprintBalanceParameters.Default, rivals);
-            Simulate(challenge, 6f, 14f);
+            Simulate(challenge, 6f, 22f);
             Assert.That(challenge.Race.Rank, Is.EqualTo(4));
             ChallengeAttemptResult result = challenge.BuildResult(new ChallengeAttemptContext(
                 "exam-rank", "sprint_exam", ChallengeAttemptMode.Journey, ChallengeDifficulty.Normal));
             Assert.That(result.Pass, Is.True);
+        }
+
+        static float StaminaAfter(float hertz, float seconds)
+        {
+            var catalog = ChallengeCatalog.LoadDefault();
+            var challenge = new SprintChallengeRules(catalog.Get("sprint_exam"),
+                SprintBalanceParameters.Default, Array.Empty<RivalPaceProfile>());
+            Simulate(challenge, hertz, seconds);
+            return challenge.Race.Stamina;
         }
 
         static ChallengeAttemptResult RunAtCadence(string challengeId, float hertz)
