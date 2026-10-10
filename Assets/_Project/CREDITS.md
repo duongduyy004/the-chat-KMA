@@ -35,6 +35,14 @@ every minigame and is never tinted.
 Each folder holds the same poses: `idle run0 run1 run2 hit cheer0 cheer1 fallDown back
 climb0 climb1 hurt duck hold jump attack1 slide fall`.
 
+### Sports supplement (2026-10-10)
+
+`chay-tron-the-chat-sports-supplement.zip`, project-generated with image generation from the same
+art brief, cut to 192 × 256 RGBA PNGs: 36 extra hero poses (sprint, falls, frog jump, volleyball,
+back-view football, expressions) in `Characters/MaleAdventurer/`, 8 extra teacher gestures in
+`Characters/BossPE/`, the football goalkeeper `Characters/StudentKeeper/` (12 poses, a different
+student from the hero), and 12 256 × 256 portraits in `UI/Portraits/` (not used yet).
+
 ## Project-generated Volleyball art
 
 The court, net, court lines, ball and ball/marker shadow in `MG_Volleyball` are flat shapes
