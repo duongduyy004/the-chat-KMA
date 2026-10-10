@@ -179,3 +179,13 @@ EditMode:
 - Asset Sprint: `objective` khớp `distance`/`timeLimit`.
 
 Trực quan: dùng skill `testing-unity-ui-with-screenshots` chụp bảng hướng dẫn (trang 1 và trang cuối) ở cả 5 game, và menu tạm dừng có nút HƯỚNG DẪN (bản đầy đủ và bản Nhảy ếch), ở tỉ lệ màn hình điện thoại dọc/ngang mà game đang dùng.
+
+## 5. Điều chỉnh khi lập kế hoạch
+
+- **Nhảy ếch khi `!SavesLife`:** không thêm câu nào. `JourneyProgress` chỉ trừ mạng khi `SavesLife && !reachedFinish`; khi `!SavesLife` kết quả nhảy không đổi gì.
+- **Cách đi quân cờ:** `ChessBoardView.ClickSquare` là chạm-chạm, nên trang ĐIỀU KHIỂN viết "Chạm quân của bạn, rồi chạm ô muốn đi tới."
+- **Trang LUẬT của Sprint ở bài Học:** câu "hết giờ" không áp dụng (bài Học không tính giờ), nên bài Học dùng "Bấm sai bên thì chuỗi về 0 và phải đếm lại từ đầu."
+- **Chơi tự do (mở thẳng scene, không có bài):** `kind` là `null`; mục tiêu dùng số mặc định của luật, không có trang "NẾU TRƯỢT".
+- **Gỡ `TutorialOverlay`:** chỉ gỡ component và lớp. Cây `TutorialRoot` ở lại trong prefab vì `PhaseOverlay` vẫn hiện nó cho minigame dùng tutorial chung (`PlaceholderMinigameController`, `PhaseOverlayPresentationFlagsTests`). `TutorialStep` chuyển sang file riêng.
+- **Test PlayMode:** mỗi assembly test PlayMode có `[SetUpFixture]` tắt `MinigameGuideHost.AutoOpenEnabled`, vì bảng lần đầu đặt `timeScale = 0` sẽ làm treo `WaitForSeconds` trong các test đang có.
+- **Test MonoBehaviour** (bảng, host, menu tạm dừng) đặt ở PlayMode vì EditMode không gọi `Awake`.
