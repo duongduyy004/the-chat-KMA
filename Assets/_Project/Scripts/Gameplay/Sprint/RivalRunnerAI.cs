@@ -83,8 +83,11 @@ namespace KMA.Gameplay
             VisualProgress01 = Mathf.Clamp01(rivalDistance / 100f);
             if (visual != null)
             {
+                // The rival root is scaled, which stretches a child's local offset. The player moves its
+                // own root instead, so divide the scale out or the rival would out-run the same distance.
+                float parentScaleX = visual.parent == null ? 1f : Mathf.Abs(visual.parent.lossyScale.x);
                 var position = visual.localPosition;
-                position.x = trackStartX + trackLength * VisualProgress01;
+                position.x = (trackStartX + trackLength * VisualProgress01) / Mathf.Max(.0001f, parentScaleX);
                 visual.localPosition = position;
             }
 
