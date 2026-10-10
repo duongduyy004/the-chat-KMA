@@ -11,7 +11,7 @@ namespace KMA.EditorTools
 {
     /// <summary>
     /// Stands the red-shirted lecturer (BossPE) in each sports minigame so she starts it with her
-    /// whistle. Every placement says which way she faces: the art looks right, so a lecturer to the
+    /// whistle and gestures through the rest of it. Every placement says which way she faces: the art looks right, so a lecturer to the
     /// right of the athletes is flipped to look left at them.
     /// </summary>
     public static class StartLecturerAuthoring
@@ -78,6 +78,15 @@ namespace KMA.EditorTools
                 CharacterArt.Load(CharacterArt.Boss, "whistle0"),
                 CharacterArt.Load(CharacterArt.Boss, "whistle1"),
                 placement.FaceLeft, placement.LeaveAfterSeconds);
+            lecturer.ConfigureGestures(
+                CharacterArt.Load(CharacterArt.Boss, "count"),
+                CharacterArt.Load(CharacterArt.Boss, "command"),
+                CharacterArt.Load(CharacterArt.Boss, "strictLook"),
+                CharacterArt.Load(CharacterArt.Boss, "taunt"),
+                CharacterArt.Load(CharacterArt.Boss, "cheer0"),
+                CharacterArt.Load(CharacterArt.Boss, "cheer1"),
+                CharacterArt.Load(CharacterArt.Boss, "penalty0"),
+                CharacterArt.Load(CharacterArt.Boss, "penalty1"));
             body.flipX = placement.FaceLeft;
             EditorUtility.SetDirty(go);
             return lecturer;

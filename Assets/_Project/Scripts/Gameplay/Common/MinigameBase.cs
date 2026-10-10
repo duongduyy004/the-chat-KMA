@@ -7,6 +7,8 @@ namespace KMA.Gameplay
     {
         public event System.Action<MinigameResult> Completed;
         public event System.Action<MinigamePhase> PhaseChanged;
+        /// Raised the moment the outcome is known, before any minigame-specific delay holds back Completed.
+        public event System.Action<bool> ResultDecided;
         [SerializeField] float tutorialSeconds = 2f;
         [SerializeField] float countdownSeconds = 3f;
         MinigameLifecycle lifecycle;
@@ -75,6 +77,7 @@ namespace KMA.Gameplay
             if (TryBeginResolve(result.Pass))
             {
                 GameAudio.Play(result.Pass ? GameSound.Win : GameSound.Lose);
+                ResultDecided?.Invoke(result.Pass);
                 OnResultResolved(result);
             }
         }
