@@ -18,7 +18,7 @@ namespace KMA.Gameplay.Volleyball
         public const float NetGap = .3f;
         public const float BackMargin = 1.5f;
         public const float SideMargin = 1f;
-        public const float JumpSeconds = .7f;
+        public const float JumpSeconds = 1f;
         public const float JumpPeak = .8f;
 
         public VolleyAthlete(CourtSide side, float speed)

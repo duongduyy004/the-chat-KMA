@@ -18,11 +18,17 @@ namespace KMA.Tests.Gameplay.Volleyball
             Assert.That(TimingWindows.Grade(offset), Is.EqualTo(expected));
         }
 
-        [Test]
-        public void SmashKeepsTheNarrowerLateEdge()
+        [TestCase(.14f, TimingGrade.Perfect)]
+        [TestCase(-.15f, TimingGrade.Perfect)]
+        [TestCase(.28f, TimingGrade.Good)]
+        [TestCase(-.3f, TimingGrade.Good)]
+        [TestCase(.35f, TimingGrade.Late)]
+        [TestCase(-.4f, TimingGrade.Late)]
+        [TestCase(.401f, TimingGrade.Miss)]
+        public void SmashUsesWiderPerfectAndGoodWindows(float offset, TimingGrade expected)
         {
-            Assert.That(TimingWindows.Grade(.35f), Is.EqualTo(TimingGrade.Late));
-            Assert.That(TimingWindows.Grade(.35f, lateWindow: TimingWindows.SmashLate), Is.EqualTo(TimingGrade.Miss));
+            Assert.That(TimingWindows.Grade(offset, TimingWindows.SmashPerfect, TimingWindows.SmashGood),
+                Is.EqualTo(expected));
         }
 
         [Test]

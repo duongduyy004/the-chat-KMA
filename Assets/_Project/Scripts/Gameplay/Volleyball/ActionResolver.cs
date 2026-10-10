@@ -159,7 +159,7 @@ namespace KMA.Gameplay.Volleyball
 
             float smashIdeal = flight.TimeAtHeightDescending(SmashContactHeight);
             float smashOffset = context.FlightTime - smashIdeal;
-            TimingGrade smashGrade = TimingWindows.Grade(smashOffset, lateWindow: TimingWindows.SmashLate);
+            TimingGrade smashGrade = TimingWindows.Grade(smashOffset, TimingWindows.SmashPerfect, TimingWindows.SmashGood);
             // The height gate confirms the set was high enough to smash at all, judged at the
             // fixed ideal contact moment - not at the actual press time, which would otherwise
             // penalize a late-but-still-within-window press on top of the timing grade.

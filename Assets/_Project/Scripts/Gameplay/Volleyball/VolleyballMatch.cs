@@ -39,7 +39,7 @@ namespace KMA.Gameplay.Volleyball
         public const float SmashSeconds = .45f;
         public const float BlockSeconds = .6f;
         public const float SmashRise = .2f;
-        public const float JumpCueLead = .5f;
+        public const float JumpCueLead = .8f;
         public const float SmashAimMargin = .5f;
         const float ServeSeconds = .4f;
         const float DiveSeconds = .8f;
@@ -291,7 +291,7 @@ namespace KMA.Gameplay.Volleyball
                              Flight.ApexHeight > ActionResolver.SmashContactHeight;
                 ideal = Flight.TimeAtHeightDescending(ActionResolver.SmashContactHeight);
                 // Past the smash's late edge the ball can still be played low as a receive.
-                if (!smash || FlightTime - ideal > TimingWindows.SmashLate)
+                if (!smash || FlightTime - ideal > TimingWindows.Late)
                     ideal = Flight.TimeAtHeightDescending(ActionResolver.ReceiveContactHeight);
             }
             else
@@ -326,7 +326,7 @@ namespace KMA.Gameplay.Volleyball
                 return false;
 
             secondsToIdeal = smashIdeal - FlightTime;
-            return secondsToIdeal <= JumpCueLead && secondsToIdeal >= -TimingWindows.SmashLate;
+            return secondsToIdeal <= JumpCueLead && secondsToIdeal >= -TimingWindows.Late;
         }
 
         public bool PlayerInReachOf(Vector2 contactPoint) =>

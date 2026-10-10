@@ -17,15 +17,16 @@ namespace KMA.Gameplay.Volleyball
         public const float Good = .24f;
         public const float Late = .4f;
         public const float ServePerfect = .12f;
-        // A smash keeps the narrower late edge so that, on a second touch near the net, a press
-        // around the low receive moment still plays the ball as a receive.
-        public const float SmashLate = .30f;
+        // A smash already took a timed jump to set up, so its hit is graded more generously.
+        public const float SmashPerfect = .15f;
+        public const float SmashGood = .30f;
 
-        public static TimingGrade Grade(float offset, float perfectWindow = Perfect, float lateWindow = Late)
+        public static TimingGrade Grade(float offset, float perfectWindow = Perfect, float goodWindow = Good,
+            float lateWindow = Late)
         {
             float distance = Mathf.Abs(offset);
             if (distance <= perfectWindow) return TimingGrade.Perfect;
-            if (distance <= Good) return TimingGrade.Good;
+            if (distance <= goodWindow) return TimingGrade.Good;
             if (distance <= lateWindow) return TimingGrade.Late;
             return TimingGrade.Miss;
         }

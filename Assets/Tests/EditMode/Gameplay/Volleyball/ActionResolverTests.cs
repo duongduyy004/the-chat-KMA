@@ -141,13 +141,26 @@ namespace KMA.Tests.Gameplay.Volleyball
         {
             // The height gate must be judged at the fixed ideal moment (2.6 m), not at the actual
             // press time: the ball drops below the 2.2 m minimum only ~0.065 s after the ideal
-            // moment, so a +0.15 s press (well inside the GOOD window) must still smash.
+            // moment, so a +0.2 s press (well inside the GOOD window) must still smash.
             var set = new BallFlight(new Vector2(-5f, 0f), 1f, new Vector2(-1.5f, 0f), 4f, CourtSide.Player);
             float ideal = set.TimeAtHeightDescending(ActionResolver.SmashContactHeight);
-            ActionDecision d = Resolve(Airborne(PlayerAt(set.GroundAt(ideal))), BallState.InPlay, set, ideal + .15f,
+            ActionDecision d = Resolve(Airborne(PlayerAt(set.GroundAt(ideal))), BallState.InPlay, set, ideal + .2f,
                 PlayerPossession(1));
             Assert.That(d.Kind, Is.EqualTo(ActionKind.Smash));
             Assert.That(d.Grade, Is.EqualTo(TimingGrade.Good));
+        }
+
+        [TestCase(.14f, TimingGrade.Perfect)]
+        [TestCase(-.28f, TimingGrade.Good)]
+        [TestCase(.28f, TimingGrade.Good)]
+        public void MidAirSmashGradesOnTheWiderSmashWindows(float offset, TimingGrade expected)
+        {
+            var set = new BallFlight(new Vector2(-5f, 0f), 1f, new Vector2(-1.5f, 0f), 4f, CourtSide.Player);
+            float ideal = set.TimeAtHeightDescending(ActionResolver.SmashContactHeight);
+            ActionDecision d = Resolve(Airborne(PlayerAt(set.GroundAt(ideal))), BallState.InPlay, set, ideal + offset,
+                PlayerPossession(1));
+            Assert.That(d.Kind, Is.EqualTo(ActionKind.Smash));
+            Assert.That(d.Grade, Is.EqualTo(expected));
         }
 
         [Test]

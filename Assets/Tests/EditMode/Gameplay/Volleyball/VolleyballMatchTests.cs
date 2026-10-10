@@ -173,7 +173,7 @@ namespace KMA.Tests.Gameplay.Volleyball
 
             float smashIdeal = match.Flight.TimeAtHeightDescending(ActionResolver.SmashContactHeight);
             match.Player.PlaceAt(match.Flight.GroundAt(smashIdeal));
-            MatchDriver.AdvanceToFlightTime(match, smashIdeal - .25f);
+            MatchDriver.AdvanceToFlightTime(match, smashIdeal - .35f);
             ActionDecision smash = MatchDriver.JumpSmash(match, Vector2.zero);
             Assert.That(smash.Kind, Is.EqualTo(ActionKind.Smash));
             Assert.That(smash.Grade, Is.EqualTo(TimingGrade.Late));
@@ -194,12 +194,12 @@ namespace KMA.Tests.Gameplay.Volleyball
             MatchDriver.AdvanceToFlightTime(match, receiveIdeal);
             match.PressAction();
 
-            // Pressed +0.25 s past the ideal smash moment: still within the LATE window (<=0.30 s)
+            // Pressed +0.33 s past the ideal smash moment: inside the LATE window (<=0.40 s)
             // but, before the fix, HeightAt(pressTime) had already dropped below SmashMinHeight,
             // silently falling through instead of smashing.
             float smashIdeal = match.Flight.TimeAtHeightDescending(ActionResolver.SmashContactHeight);
             match.Player.PlaceAt(match.Flight.GroundAt(smashIdeal));
-            MatchDriver.AdvanceToFlightTime(match, smashIdeal + .25f);
+            MatchDriver.AdvanceToFlightTime(match, smashIdeal + .33f);
             ActionDecision smash = MatchDriver.JumpSmash(match, Vector2.right);
 
             Assert.That(smash.Kind, Is.EqualTo(ActionKind.Smash));
@@ -442,21 +442,25 @@ namespace KMA.Tests.Gameplay.Volleyball
             var match = FrozenOpponentMatch();
             match.ForceServerForTest(CourtSide.Opponent);
             Assert.That(MatchDriver.AdvanceUntil(match, () => match.BallState == BallState.InPlay, 3f), Is.True);
-            float receiveIdeal = match.Flight.TimeAtHeightDescending(ActionResolver.ReceiveContactHeight);
-            match.Player.PlaceAt(match.Flight.GroundAt(receiveIdeal));
-            MatchDriver.AdvanceToFlightTime(match, receiveIdeal);
-            Assert.That(match.PressAction().Kind, Is.EqualTo(ActionKind.Receive));
+            // A dive sets low (apex 3 m): the ball is still up once the smash window has passed.
+            // A regular 4.5 m set lands before the window's late edge.
+            float serveReceiveIdeal = match.Flight.TimeAtHeightDescending(ActionResolver.ReceiveContactHeight);
+            match.Player.PlaceAt(match.Flight.Target + new Vector2(0f, 1.6f));
+            MatchDriver.AdvanceToFlightTime(match, serveReceiveIdeal + .05f);
+            Assert.That(match.PressAction().Kind, Is.EqualTo(ActionKind.Dive));
 
             float smashIdeal = match.Flight.TimeAtHeightDescending(ActionResolver.SmashContactHeight);
-            receiveIdeal = match.Flight.TimeAtHeightDescending(ActionResolver.ReceiveContactHeight);
+            float receiveIdeal = match.Flight.TimeAtHeightDescending(ActionResolver.ReceiveContactHeight);
             match.Player.PlaceAt(match.Flight.GroundAt(smashIdeal));
+            Assert.That(Mathf.Abs(match.Player.Position.x), Is.LessThanOrEqualTo(ActionResolver.SmashNetDistance));
             MatchDriver.AdvanceToFlightTime(match, smashIdeal);
             // The ring only times the smash once the player is up for it.
             Assert.That(match.PressJump(), Is.True);
             Assert.That(match.TryGetPlayerContactCue(out float toSmash, out _), Is.True);
             Assert.That(toSmash, Is.EqualTo(0f).Within(1e-3f));
 
-            MatchDriver.AdvanceToFlightTime(match, smashIdeal + TimingWindows.SmashLate + .01f);
+            MatchDriver.AdvanceToFlightTime(match, smashIdeal + TimingWindows.Late + .01f);
+            Assert.That(match.BallState, Is.EqualTo(BallState.InPlay));
             Assert.That(match.TryGetPlayerContactCue(out float toReceive, out Vector2 point), Is.True);
             Assert.That(toReceive, Is.EqualTo(receiveIdeal - match.FlightTime).Within(1e-3f));
             Assert.That(Vector2.Distance(point, match.Flight.GroundAt(receiveIdeal)), Is.LessThan(1e-3f));
@@ -539,18 +543,34 @@ namespace KMA.Tests.Gameplay.Volleyball
         }
 
         [Test]
-        public void JumpCueOpensHalfASecondBeforeTheSmashAndClosesOnceAirborne()
+        public void JumpCueOpensEightTenthsBeforeTheSmashAndClosesOnceAirborne()
         {
             VolleyballMatch match = ReceivedAndUnderTheSet(out float smashIdeal);
-            MatchDriver.AdvanceToFlightTime(match, smashIdeal - .6f);
+            MatchDriver.AdvanceToFlightTime(match, smashIdeal - .9f);
             Assert.That(match.TryGetJumpCue(out _), Is.False, "too early");
 
-            MatchDriver.AdvanceToFlightTime(match, smashIdeal - .4f);
+            MatchDriver.AdvanceToFlightTime(match, smashIdeal - .7f);
             Assert.That(match.TryGetJumpCue(out float seconds), Is.True);
-            Assert.That(seconds, Is.EqualTo(.4f).Within(1e-3f));
+            Assert.That(seconds, Is.EqualTo(.7f).Within(1e-3f));
 
             match.PressJump();
             Assert.That(match.TryGetJumpCue(out _), Is.False);
+        }
+
+        // Jumping the moment the cue lights still leaves the player up for a PERFECT hit.
+        [Test]
+        public void AJumpAtTheFirstCueStillHangsThroughThePerfectWindow()
+        {
+            VolleyballMatch match = ReceivedAndUnderTheSet(out float smashIdeal);
+            MatchDriver.AdvanceToFlightTime(match, smashIdeal - VolleyballMatch.JumpCueLead);
+            Assert.That(match.TryGetJumpCue(out _), Is.True);
+            Assert.That(match.PressJump(), Is.True);
+
+            MatchDriver.AdvanceToFlightTime(match, smashIdeal + .14f);
+            Assert.That(match.Player.IsAirborne, Is.True);
+            ActionDecision smash = match.PressAction();
+            Assert.That(smash.Kind, Is.EqualTo(ActionKind.Smash));
+            Assert.That(smash.Grade, Is.EqualTo(TimingGrade.Perfect));
         }
 
         [Test]
