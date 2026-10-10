@@ -72,6 +72,8 @@ Không đổi trạng thái hay logic; chỉ đổi file mà configurator nạp 
 
 Thủ môn **chỉ dùng tư thế không vẽ bóng**: `FootballPresentation` không ẩn quả bóng riêng khi cản phá, nên `holdBall`/`catch*Ball` sẽ hiện hai quả bóng. Pha nghiêng/bay hiện có do `KeeperAngle` xoay renderer, không cần sprite theo hướng.
 
+**Vùng cản phá khớp lại theo hình mới (người dùng duyệt khi lập kế hoạch).** `KeeperCapsules` trong `FootballFlightSimulation.cs` mô phỏng hình thủ môn đang vẽ; `KeeperSilhouetteTests` yêu cầu độ khớp ≥ 0,85. Bộ capsule hiện tại chỉ khớp `StudentKeeper_ready` ở mức recall 0,63 / precision 0,55, nên được thay bằng bộ khớp lại theo `ready` (0,91 / 0,91, ngang thủ môn cũ). Vùng cản nhỏ hơn khoảng 13 % và không còn tay giơ cao, nên góc cao dễ ghi bàn hơn. Đây là thay đổi script runtime duy nhất.
+
 ### 4.2 Bóng chuyền (`VolleyballSceneConfigurator.Athlete`)
 
 Chỉ cầu thủ (`CharacterArt.Hero`); đối thủ `OpponentCharacter` giữ bộ cũ. Cần tách danh sách tư thế theo nhân vật, ví dụ truyền bộ tên tư thế vào `Athlete`.
@@ -84,6 +86,8 @@ Chỉ cầu thủ (`CharacterArt.Hero`); đối thủ `OpponentCharacter` giữ 
 | `smashFrames` | `jump, attack1` | `volleySpikeWindup, volleySpikeContact` |
 | `blockFrames` | `jump, cheer1` | `volleyJumpLoad, volleySet` |
 | `diveFrames` | `fall, slide` | `fallForwardRight, fallSitRight` |
+
+`MarkerWorldHeight` 3,1 → 3,25: `volleySpikeContact` cao 246 px (2,83 đơn vị ở `AthleteScale` 2,3), cao hơn điểm thấp nhất của dấu chỉ người chơi hiện tại (2,73).
 
 **Rủi ro:** hai khung shuffle xen kẽ có thể giật khi chạy. Nếu ảnh chụp kiểm tra cho thấy xấu, `runFrames` quay về `run0, run1, run2, run1` và ghi lại trong commit.
 
@@ -131,16 +135,15 @@ Chỉ nhân vật chính:
 
 ### 4.6 Màn ăn mừng (`CelebrationSceneConfigurator.cs`)
 
-Cùng cơ chế bảng khóa → file như 4.5.
+`CelebrationSceneController` nhận mảng sprite theo vị trí (đến, cổ vũ A, cổ vũ B); configurator tách bộ tên riêng cho sinh viên, bạn cùng lớp và cô giáo.
 
-| Vai | Khóa | Mới |
+| Vai | Ô | Mới |
 |---|---|---|
-| Sinh viên | `idle` | `happy` |
-| Sinh viên | `cheer0` | `celebrate` |
-| Sinh viên | `cheer1` | giữ nguyên |
-| Cô giáo | `taunt` | `clap0` |
-| Cô giáo | `cheer0` | `congratulate` |
-| Cô giáo | `idleBoss` | giữ nguyên |
+| Sinh viên | 0 (`idle`) | `happy` |
+| Sinh viên | 1, 2 (`cheer0`, `cheer1`) | giữ nguyên: hai ô luân phiên mỗi 0,35 giây, đổi một ô sang `celebrate` sẽ nháy giữa hai hình không liên quan |
+| Cô giáo | 1 (`taunt`) | `clap0` |
+| Cô giáo | 2 (`cheer0`) | `congratulate` |
+| Cô giáo | 0 (`idleBoss`) | giữ nguyên |
 | Bạn cùng lớp (`FemalePerson`) | tất cả | giữ nguyên |
 
 ### 4.7 Cô giáo thổi còi đầu màn (`StartLecturerAuthoring.cs`)
@@ -165,6 +168,8 @@ Cùng cơ chế bảng khóa → file như 4.5.
 
 Idle, Jump, Duck giữ nguyên cho mọi nhân vật.
 
+`BuildDialogues` gọi `CharacterArt.ImportAll()` trước tiên, vì file mới phải được nhập thành sprite trước khi `AssetDatabase.LoadAssetAtPath<Sprite>` tìm thấy.
+
 ## 5. Tạo lại scene và asset
 
 Sau khi sửa configurator, chạy lại các configurator bị ảnh hưởng ở Unity batchmode để ghi lại scene/asset: `MG_Football`, `MG_Volleyball`, `MG_FrogJump`, `MG_Sprint` (clip `MaleAdventurer_*.anim`), `MG_ChessFinal`, `Celebration`, scene có `StartLecturer`, và thư viện thoại hành trình. Commit cả `.png.meta` mới sinh.
@@ -178,5 +183,5 @@ Sau khi sửa configurator, chạy lại các configurator bị ảnh hưởng �
 
 - 68 PNG (56 tư thế + 12 chân dung) nằm đúng thư mục ở mục 2, có `.meta`, nhập đúng cài đặt.
 - Mọi scene ở mục 4 dùng tư thế mới như bảng; đối thủ và bạn chạy không đổi.
-- Không file cũ nào bị xóa; không thay đổi script runtime ngoài phạm vi trên (runtime không cần sửa).
+- Không file cũ nào bị xóa; script runtime chỉ đổi `KeeperCapsules` (mục 4.1).
 - EditMode xanh; ảnh chụp đạt các điểm ở mục 6.
