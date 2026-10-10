@@ -21,10 +21,37 @@ namespace KMA.EditorTools
     {
         public const string ScenePath = "Assets/_Project/Scenes/MG_Volleyball.unity";
         public const string OpponentCharacter = "FemaleAdventurer";
+
+        /// <summary>Pose names per action, in VolleyAthleteView.Configure order.</summary>
+        sealed class AthletePoses
+        {
+            public string[] Idle, Run, Receive, Smash, Block, Dive;
+        }
+
+        /// The hero has dedicated volleyball art; the opponent keeps the shared poses.
+        static readonly AthletePoses HeroVolleyPoses = new AthletePoses
+        {
+            Idle = new[] { "volleyReady" },
+            Run = new[] { "volleyShuffleRight", "volleyShuffleLeft" },
+            Receive = new[] { "volleyDig", "volleyRecover" },
+            Smash = new[] { "volleySpikeWindup", "volleySpikeContact" },
+            Block = new[] { "volleyJumpLoad", "volleySet" },
+            Dive = new[] { "fallForwardRight", "fallSitRight" }
+        };
+
+        static readonly AthletePoses SharedVolleyPoses = new AthletePoses
+        {
+            Idle = new[] { "idle" },
+            Run = new[] { "run0", "run1", "run2", "run1" },
+            Receive = new[] { "duck", "hold" },
+            Smash = new[] { "jump", "attack1" },
+            Block = new[] { "jump", "cheer1" },
+            Dive = new[] { "fall", "slide" }
+        };
         // Character poses are 1.28 units tall; scaled up so the athletes read clearly on a phone.
         public const float AthleteScale = 2.3f;
-        // Marker centre, in world units above the feet; its lowest point clears the tallest (jump) pose.
-        const float MarkerWorldHeight = 3.1f;
+        // Marker centre, in world units above the feet; its lowest point clears the tallest (spike contact) pose.
+        const float MarkerWorldHeight = 3.25f;
         const string EnvironmentDir = "Assets/_Project/Art/Environments/Volleyball";
         const string PixelPath = EnvironmentDir + "/Pixel.png";
         const string HudRootName = "S2_HUD_Minigame";
@@ -205,8 +232,8 @@ namespace KMA.EditorTools
                     new Vector3(0f, side * courtY, 0f), new Vector2(courtX * 2f, .09f), -9);
             }
 
-            VolleyAthleteView player = Athlete("Player", false, CharacterArt.Hero);
-            VolleyAthleteView opponent = Athlete("Opponent", true, OpponentCharacter);
+            VolleyAthleteView player = Athlete("Player", false, CharacterArt.Hero, HeroVolleyPoses);
+            VolleyAthleteView opponent = Athlete("Opponent", true, OpponentCharacter, SharedVolleyPoses);
             AddAthleteMarker(player.transform, pixel, "Player", MinigameUiTheme.Player);
             AddAthleteMarker(opponent.transform, pixel, "Enemy", MinigameUiTheme.Energy);
 
@@ -235,21 +262,17 @@ namespace KMA.EditorTools
             EditorSceneManager.SaveScene(scene, ScenePath);
         }
 
-        static VolleyAthleteView Athlete(string name, bool mirror, string character)
+        static VolleyAthleteView Athlete(string name, bool mirror, string character, AthletePoses poses)
         {
-            Sprite[] Poses(params string[] poses) => CharacterArt.Frames(character, poses);
-            Sprite[] idle = Poses("idle");
+            Sprite[] Poses(string[] names) => CharacterArt.Frames(character, names);
+            Sprite[] idle = Poses(poses.Idle);
             SpriteRenderer body = Renderer(name, idle[0], Vector3.zero, 0);
             body.transform.localScale = Vector3.one * AthleteScale;
             var book = body.gameObject.AddComponent<SpriteFlipbook>();
             book.Configure(body, idle, true, 12f);
             var view = body.gameObject.AddComponent<VolleyAthleteView>();
-            view.Configure(body, book, mirror, idle,
-                Poses("run0", "run1", "run2", "run1"),
-                Poses("duck", "hold"),
-                Poses("jump", "attack1"),
-                Poses("jump", "cheer1"),
-                Poses("fall", "slide"));
+            view.Configure(body, book, mirror, idle, Poses(poses.Run), Poses(poses.Receive), Poses(poses.Smash),
+                Poses(poses.Block), Poses(poses.Dive));
             return view;
         }
 
