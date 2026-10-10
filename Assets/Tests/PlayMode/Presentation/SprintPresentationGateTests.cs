@@ -154,6 +154,27 @@ namespace KMA.Tests.Presentation
         }
 
         [UnityTest]
+        public IEnumerator SprintStart_HoldsTheGateWhileTheGameIsFrozen()
+        {
+            yield return LoadSprint();
+            var controller = SceneObjects<SprintController>(SceneManager.GetActiveScene())[0];
+            var holder = new object();
+            GameFreeze.Acquire(holder);
+            try
+            {
+                float until = Time.realtimeSinceStartup + 2f;
+                while (Time.realtimeSinceStartup < until)
+                    yield return null;
+                Assert.That(controller.PresentationPhase, Is.EqualTo(MinigamePhase.Tutorial),
+                    "the 1.5 s start gate must not run under the guide or the pause menu");
+            }
+            finally
+            {
+                GameFreeze.Release(holder);
+            }
+        }
+
+        [UnityTest]
         public IEnumerator SprintStart_CountsDownThreeTwoOneThenGo()
         {
             yield return LoadSprint();

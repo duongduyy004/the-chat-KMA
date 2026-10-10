@@ -57,6 +57,9 @@ namespace KMA.Gameplay
 
         void Update()
         {
+            // Runs on unscaled time, so it must stop by itself while the guide or pause menu freezes the game.
+            if (Time.timeScale == 0f)
+                return;
             if (automaticTicksToSuppress > 0)
             {
                 automaticTicksToSuppress--;

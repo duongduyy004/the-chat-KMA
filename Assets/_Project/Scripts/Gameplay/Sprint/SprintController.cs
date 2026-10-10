@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using System;
 using KMA.Gameplay.Core;
 using KMA.Gameplay.UI;
@@ -7,7 +8,7 @@ using UnityEngine.InputSystem;
 
 namespace KMA.Gameplay
 {
-    public sealed class SprintController : MinigameBase, IChallengeController
+    public sealed class SprintController : MinigameBase, IChallengeController, IMinigameGuideSource
     {
         public override bool UsesSharedTutorial => false;
         public override bool UsesSharedCountdown => false;
@@ -63,6 +64,9 @@ namespace KMA.Gameplay
         public bool IsLearnChallenge => challengeDefinition != null && challengeDefinition.Kind == ChallengeKind.Learn;
         public event Action<ChallengeAttemptResult> ChallengeCompleted;
         public int RivalCount => rules == null ? 0 : rules.RivalCount;
+        public string GuideKey => SprintGuide.Key;
+        public IReadOnlyList<TutorialStep> BuildGuide() =>
+            SprintGuide.Build(challengeDefinition?.Kind, TargetCount, TargetDistance, TargetTime, RivalCount);
         public float GetRivalDistance(int index) => rules == null ? 0f : rules.GetRivalDistance(index);
         public bool IsRivalSurging(int index) => rules != null && rules.IsRivalSurging(index);
         public bool IsRivalSlowing(int index) => rules != null && rules.IsRivalSlowing(index);
