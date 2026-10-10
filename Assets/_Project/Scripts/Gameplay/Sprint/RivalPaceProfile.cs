@@ -7,6 +7,8 @@ namespace KMA.Gameplay
         public const float OpeningSeconds = 3f;
         // A rival counts as surging once their pace runs this far above their sustained speed.
         const float SurgingRatio = 1.06f;
+        // Below this fraction of their sustained speed a rival is flagging and visibly catching breath.
+        const float SlowingRatio = .9f;
 
         public string Name { get; }
         public float OpeningSpeed { get; }
@@ -38,5 +40,8 @@ namespace KMA.Gameplay
 
         public bool IsSurgingAt(float elapsed) =>
             elapsed > OpeningSeconds && SpeedAt(elapsed) > SustainedSpeed * SurgingRatio;
+
+        public bool IsSlowingAt(float elapsed) =>
+            elapsed > OpeningSeconds && SpeedAt(elapsed) < SustainedSpeed * SlowingRatio;
     }
 }

@@ -53,7 +53,7 @@ namespace KMA.Gameplay
     {
         const float FullImpulse = 18f;
         const float SpeedCap = 150f;
-        const float FinishDistance = 100f;
+        public const float RaceDistance = 150f;
         public const float LowStaminaThreshold = 30f;
         public const float HighStaminaThreshold = 70f;
 
@@ -122,6 +122,9 @@ namespace KMA.Gameplay
         public bool IsRivalSurging(int index) =>
             index >= 0 && index < rivalProfiles.Length && rivalProfiles[index] != null &&
             rivalProfiles[index].IsSurgingAt(elapsed);
+        public bool IsRivalSlowing(int index) =>
+            index >= 0 && index < rivalProfiles.Length && rivalProfiles[index] != null &&
+            rivalProfiles[index].IsSlowingAt(elapsed);
         public SprintSnapshot Snapshot => new SprintSnapshot(distance, speed, stamina, elapsed);
 
         // Combo boost and idle braking apply to every race; the legacy rules borrow the default tuning.
@@ -208,7 +211,7 @@ namespace KMA.Gameplay
             UpdateRank();
         }
 
-        public MinigameResult BuildResult() => BuildResult(FinishDistance, timeLimit);
+        public MinigameResult BuildResult() => BuildResult(RaceDistance, timeLimit);
 
         public MinigameResult BuildResult(float goalDistance, float deadline)
         {

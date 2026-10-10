@@ -21,6 +21,12 @@ namespace KMA.Tests.Presentation
             controller.Simulate(0f);
             controller.Simulate(2.01f);
             Assert.That(controller.Phase, Is.EqualTo(MinigamePhase.Play));
+            // A runner who is not moving now rests and breathes, so get the player up to speed first.
+            for (int i = 0; i < 4; i++)
+            {
+                controller.OnLeftTap();
+                controller.OnRightTap();
+            }
             yield return null;
             yield return null;
             var player = GameObject.Find("Player").GetComponentInChildren<Animator>();
@@ -170,7 +176,7 @@ namespace KMA.Tests.Presentation
             Assert.That(marker.position.x, Is.GreaterThan(-trackEdge),
                 "at the starting line the marker must stay inside the track, not off the left edge");
 
-            controller.AdvanceToDistance(100f);
+            controller.AdvanceToDistance(SprintRules.RaceDistance);
             yield return null;
             yield return null;
             Assert.That(marker.position.x, Is.LessThan(trackEdge),
@@ -186,7 +192,7 @@ namespace KMA.Tests.Presentation
             controller.enabled = false;
             var player = GameObject.Find("Player");
 
-            controller.AdvanceToDistance(50f);
+            controller.AdvanceToDistance(SprintRules.RaceDistance / 2f);
             yield return null;
 
             Assert.That(player.transform.position.x, Is.EqualTo(0f).Within(.001f),

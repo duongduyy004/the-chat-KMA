@@ -37,10 +37,10 @@ namespace KMA.Tests.Gameplay.Running
             ChallengeDefinition exam = catalog.Get("sprint_exam");
             Assert.That(learn.Kind, Is.EqualTo(ChallengeKind.Learn));
             Assert.That(learn.TargetCount, Is.EqualTo(12));
-            Assert.That(practice.Distance, Is.EqualTo(100f));
-            Assert.That(practice.TimeLimit, Is.EqualTo(20f));
-            Assert.That(exam.Distance, Is.EqualTo(100f));
-            Assert.That(exam.TimeLimit, Is.EqualTo(14f));
+            Assert.That(practice.Distance, Is.EqualTo(150f));
+            Assert.That(practice.TimeLimit, Is.EqualTo(30f));
+            Assert.That(exam.Distance, Is.EqualTo(150f));
+            Assert.That(exam.TimeLimit, Is.EqualTo(22f));
         }
 
         [Test]
@@ -98,8 +98,8 @@ namespace KMA.Tests.Gameplay.Running
             var practice = RunAtCadence("sprint_practice", 6f);
             var exam = RunAtCadence("sprint_exam", 6f);
             Assert.That(exam.Pass, Is.True);
-            Assert.That(exam.Metrics.Distance, Is.GreaterThanOrEqualTo(100f));
-            Assert.That(exam.Metrics.Elapsed, Is.LessThanOrEqualTo(14f));
+            Assert.That(exam.Metrics.Distance, Is.GreaterThanOrEqualTo(150f));
+            Assert.That(exam.Metrics.Elapsed, Is.LessThanOrEqualTo(22f));
             Assert.That(exam.ExamResult, Is.Not.Null);
             Assert.That(practice.Pass, Is.True);
             Assert.That(practice.ExamResult, Is.Null);

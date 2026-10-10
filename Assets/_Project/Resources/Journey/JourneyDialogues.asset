@@ -119,9 +119,9 @@ MonoBehaviour:
     lines:
     - characterId: co_the_chat
       pose: 0
-      text: "B\xE0i thi: 100 m\xE9t trong 14 gi\xE2y. Gi\u1EEF s\u1EE9c, \u0111\u1EEBng
+      text: "B\xE0i thi: 150 m\xE9t trong 22 gi\xE2y. Gi\u1EEF s\u1EE9c, \u0111\u1EEBng
         bung h\u1EBFt t\u1EEB v\u1EA1ch xu\u1EA5t ph\xE1t nha :fire:"
-      sticker: "14 GI\xC2Y"
+      sticker: "22 GI\xC2Y"
     - characterId: tan_thu
       pose: 3
       text: "T\u1EADp r\u1ED3i, gi\u1EDD thi th\xF4i. \u0110\u01B0\u1EDDng \u0111ua

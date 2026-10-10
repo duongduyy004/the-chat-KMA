@@ -15,12 +15,12 @@ MonoBehaviour:
   id: sprint_practice
   subject: 0
   kind: 1
-  distance: 100
-  timeLimit: 20
+  distance: 150
+  timeLimit: 30
   targetCount: 0
   attemptLimit: 0
   keeperEnabled: 0
   difficulty: 1
   timingHelp: 1
-  objective: "Ch\u1EA1y 100 m trong t\u1ED1i \u0111a 20 gi\xE2y. B\xE0i luy\u1EC7n
+  objective: "Ch\u1EA1y 150 m trong t\u1ED1i \u0111a 30 gi\xE2y. B\xE0i luy\u1EC7n
     kh\xF4ng gi\u1EDBi h\u1EA1n th\u1EC3 l\u1EF1c."

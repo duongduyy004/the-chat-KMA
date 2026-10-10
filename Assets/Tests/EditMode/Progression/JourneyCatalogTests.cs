@@ -27,10 +27,10 @@ namespace KMA.Tests.Gameplay.Progression
                 SubjectId.Sprint, SubjectId.Volleyball, SubjectId.Football, SubjectId.Chess
             }));
             Assert.That(catalog.Get("sprint_learn").TargetCount, Is.EqualTo(12));
-            Assert.That(catalog.Get("sprint_practice").Distance, Is.EqualTo(100f));
-            Assert.That(catalog.Get("sprint_practice").TimeLimit, Is.EqualTo(20f));
-            Assert.That(catalog.Get("sprint_exam").Distance, Is.EqualTo(100f));
-            Assert.That(catalog.Get("sprint_exam").TimeLimit, Is.EqualTo(14f));
+            Assert.That(catalog.Get("sprint_practice").Distance, Is.EqualTo(150f));
+            Assert.That(catalog.Get("sprint_practice").TimeLimit, Is.EqualTo(30f));
+            Assert.That(catalog.Get("sprint_exam").Distance, Is.EqualTo(150f));
+            Assert.That(catalog.Get("sprint_exam").TimeLimit, Is.EqualTo(22f));
             Assert.That(catalog.Get("sprint_practice").TimeLimit,
                 Is.GreaterThan(catalog.Get("sprint_exam").TimeLimit));
             Assert.That(catalog.Get("volleyball_learn").TargetCount, Is.EqualTo(3));

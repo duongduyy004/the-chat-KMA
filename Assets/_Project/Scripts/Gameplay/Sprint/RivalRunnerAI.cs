@@ -40,6 +40,7 @@ namespace KMA.Gameplay
         static readonly int CelebrateHash = Animator.StringToHash("Celebrate");
         static readonly int FailHash = Animator.StringToHash("Fail");
         static readonly int IdleHash = Animator.StringToHash("Idle");
+        RunnerBreathing breathing;
         RivalRunnerState lastPlayedState;
         bool hasPlayedState;
 
@@ -49,6 +50,7 @@ namespace KMA.Gameplay
             if (animator == null) animator = GetComponentInChildren<Animator>();
             if (profileAsset != null) profile = profileAsset.ToRuntime();
             if (controller == null) controller = Object.FindFirstObjectByType<SprintController>();
+            breathing = RunnerBreathing.Attach(visual);
         }
 
         void Update()
@@ -59,7 +61,7 @@ namespace KMA.Gameplay
             if (rivalIndex >= controller.RivalCount)
                 return;
             Refresh(controller.GetRivalDistance(rivalIndex), controller.Snapshot.Distance, controller.Phase,
-                controller.LastResult, controller.IsRivalSurging(rivalIndex));
+                controller.LastResult, controller.IsRivalSurging(rivalIndex), controller.IsRivalSlowing(rivalIndex));
         }
 
         public void Configure(RivalPaceProfileAsset value, int valueLane, int valueRivalIndex, SprintController owner)
@@ -74,13 +76,13 @@ namespace KMA.Gameplay
         }
 
         public void RefreshForTest(float rivalDistance, float playerDistance, MinigamePhase phase, MinigameResult result,
-            bool surging = false) =>
-            Refresh(rivalDistance, playerDistance, phase, result, surging);
+            bool surging = false, bool slowing = false) =>
+            Refresh(rivalDistance, playerDistance, phase, result, surging, slowing);
 
         void Refresh(float rivalDistance, float playerDistance, MinigamePhase phase, MinigameResult result,
-            bool surging)
+            bool surging, bool slowing = false)
         {
-            VisualProgress01 = Mathf.Clamp01(rivalDistance / 100f);
+            VisualProgress01 = Mathf.Clamp01(rivalDistance / SprintRules.RaceDistance);
             if (visual != null)
             {
                 // The rival root is scaled, which stretches a child's local offset. The player moves its
@@ -95,10 +97,15 @@ namespace KMA.Gameplay
                 State = result != null && result.Pass ? RivalRunnerState.Celebrate : RivalRunnerState.Fail;
             else if (phase != MinigamePhase.Play)
                 State = RivalRunnerState.Idle;
-            else if (surging || playerDistance >= 70f)
+            else if (surging || playerDistance >= SprintRules.RaceDistance * .7f)
                 State = RivalRunnerState.Burst;
             else
                 State = RivalRunnerState.Run;
+
+            // Waiting on the grid, flagging mid-race or already across the line: catch a breath.
+            if (breathing != null)
+                breathing.SetResting(phase == MinigamePhase.Tutorial || phase == MinigamePhase.Countdown ||
+                    (phase == MinigamePhase.Play && (slowing || rivalDistance >= SprintRules.RaceDistance)));
 
             if (animator != null && (!hasPlayedState || lastPlayedState != State))
             {

@@ -65,7 +65,7 @@ namespace KMA.Gameplay
             TMP_Text distance = Metric(scoreboard.transform, "Distance", MinigameUiTheme.Title,
                 MinigameUiTheme.TextPrimary, new Vector2(.05f, .46f), new Vector2(.62f, .92f));
             distance.alignment = TextAlignmentOptions.Left;
-            distance.text = VietText.Fix("0 / 100 m");
+            distance.text = VietText.Fix($"0 / {SprintRules.RaceDistance:0} m");
 
             Image rankBadge = UiKit.Shape(scoreboard.transform, "RankBadge", MinigameUiTheme.RadiusPanel,
                 MinigameUiTheme.WithAlpha(MinigameUiTheme.Accent, .22f));
@@ -88,7 +88,7 @@ namespace KMA.Gameplay
             stamina.SetFillColor(MinigameUiTheme.Success);
 
             // Mode chip
-            ChipHandle mode = UiKit.Chip(root, "ModeLabel", "CHẠY NƯỚC RÚT · 100M");
+            ChipHandle mode = UiKit.Chip(root, "ModeLabel", $"CHẠY NƯỚC RÚT · {SprintRules.RaceDistance:0}M");
             ApplyRect(mode.Background.rectTransform, safe, SprintUiLayout.ModeChipRect(safe));
             chromeLayout.Register(mode.Background.rectTransform, SprintUiLayout.ModeChipRect);
 

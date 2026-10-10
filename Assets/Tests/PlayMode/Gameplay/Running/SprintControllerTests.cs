@@ -44,7 +44,7 @@ namespace KMA.Tests.Gameplay.Running
             MinigameResult result = null;
             int completions = 0;
             controller.Completed += value => { result = value; completions++; };
-            controller.AdvanceToDistance(100f);
+            controller.AdvanceToDistance(SprintRules.RaceDistance);
             controller.Simulate(0f);
             Assert.That(result, Is.Not.Null);
             Assert.That(result.Pass, Is.True);

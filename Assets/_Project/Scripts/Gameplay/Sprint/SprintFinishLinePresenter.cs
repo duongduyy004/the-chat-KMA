@@ -18,7 +18,9 @@ namespace KMA.Gameplay
 
         public void RefreshForTest()
         {
-            float distance = controller == null ? 0f : controller.Snapshot.Distance;
+            // The ribbon layout is authored on a 0-100 scale; map the real race distance onto it.
+            float distance = controller == null ? 0f
+                : controller.Snapshot.Distance * SprintUiLayout.FinishDistance / Mathf.Max(1f, controller.TargetDistance);
             IsVisible = controller != null && SprintUiLayout.FinishVisible(distance);
             if (finishRoot == null)
                 return;

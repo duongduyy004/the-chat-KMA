@@ -584,17 +584,17 @@ namespace KMA.Tests.Presentation
                 Assert.That(squares[i].raycastTarget, Is.False);
 
             controller.ConfigureForTest();
-            controller.AdvanceToDistance(69.9f);
+            controller.AdvanceToDistance(SprintRules.RaceDistance * .699f);
             finish.RefreshForTest();
             Assert.That(finish.IsVisible, Is.False);
             Assert.That(finishLine.gameObject.activeSelf, Is.False);
 
-            controller.AdvanceToDistance(70f);
+            controller.AdvanceToDistance(SprintRules.RaceDistance * .7f);
             finish.RefreshForTest();
             Assert.That(finish.IsVisible, Is.True);
             Assert.That(finishLine.gameObject.activeSelf, Is.True);
 
-            controller.AdvanceToDistance(100f);
+            controller.AdvanceToDistance(SprintRules.RaceDistance);
             finish.RefreshForTest();
             Assert.That(finish.IsVisible, Is.True);
             Assert.That(finishLine.gameObject.activeSelf, Is.True);

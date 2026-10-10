@@ -52,7 +52,7 @@ namespace KMA.Gameplay
         public float[] RivalDistances => rules == null ? System.Array.Empty<float>() : rules.RivalDistances;
         public SubjectId Subject => SubjectId.Sprint;
         public float TargetDistance => challengeDefinition != null && challengeDefinition.Distance > 0f
-            ? challengeDefinition.Distance : 100f;
+            ? challengeDefinition.Distance : SprintRules.RaceDistance;
         public float TargetTime => challengeDefinition != null && challengeDefinition.TimeLimit > 0f
             ? challengeDefinition.TimeLimit : 14f;
         public int TargetCount => challengeDefinition == null ? 0 : challengeDefinition.TargetCount;
@@ -61,6 +61,7 @@ namespace KMA.Gameplay
         public int RivalCount => rules == null ? 0 : rules.RivalCount;
         public float GetRivalDistance(int index) => rules == null ? 0f : rules.GetRivalDistance(index);
         public bool IsRivalSurging(int index) => rules != null && rules.IsRivalSurging(index);
+        public bool IsRivalSlowing(int index) => rules != null && rules.IsRivalSlowing(index);
 
         protected override void Awake()
         {

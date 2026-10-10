@@ -15,11 +15,11 @@ MonoBehaviour:
   id: sprint_exam
   subject: 0
   kind: 2
-  distance: 100
-  timeLimit: 14
+  distance: 150
+  timeLimit: 22
   targetCount: 0
   attemptLimit: 0
   keeperEnabled: 0
   difficulty: 1
   timingHelp: 0
-  objective: "Ch\u1EA1y 100 m trong t\u1ED1i \u0111a 14 gi\xE2y."
+  objective: "Ch\u1EA1y 150 m trong t\u1ED1i \u0111a 22 gi\xE2y."
