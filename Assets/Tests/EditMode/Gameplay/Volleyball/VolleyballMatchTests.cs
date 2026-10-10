@@ -208,6 +208,49 @@ namespace KMA.Tests.Gameplay.Volleyball
             Assert.That(CourtSpace.SideOf(match.Flight.Target), Is.EqualTo(CourtSide.Opponent));
         }
 
+        // The set falls fast past the contact height: a press graded PERFECT or GOOD on the late
+        // side must still be hit from the jump's reach, not from the ball's lower height, or it
+        // would bury itself in the net under a PERFECT/GOOD call-out.
+        [TestCase(.09f, 1f, TimingGrade.Perfect)]
+        [TestCase(.09f, -1f, TimingGrade.Perfect)]
+        [TestCase(.2f, 1f, TimingGrade.Good)]
+        [TestCase(.2f, -1f, TimingGrade.Good)]
+        public void LateSidePerfectOrGoodSmashClearsTheNetAndLandsOnTheAim(float offset, float stickX,
+            TimingGrade expected)
+        {
+            var match = ReceivedAndUnderTheSet(out float smashIdeal);
+            MatchDriver.AdvanceToFlightTime(match, smashIdeal + offset);
+            var stick = new Vector2(stickX, 0f);
+            ActionDecision smash = MatchDriver.JumpSmash(match, stick);
+
+            Assert.That(smash.Kind, Is.EqualTo(ActionKind.Smash));
+            Assert.That(smash.Grade, Is.EqualTo(expected));
+            Assert.That(match.Flight.Target, Is.EqualTo(VolleyballMatch.SmashAim(stick)));
+            Assert.That(match.Flight.ClearsNet, Is.True);
+
+            Assert.That(MatchDriver.AdvanceUntil(match, () => match.BallState == BallState.Dead, 3f), Is.True);
+            Assert.That(match.PlayerPoints, Is.EqualTo(1));
+            Assert.That(match.OpponentPoints, Is.Zero);
+        }
+
+        [Test]
+        public void OnTheGroundAtTheNetTheRingTimesTheReceiveAndMidAirTheSmash()
+        {
+            var match = ReceivedAndUnderTheSet(out float smashIdeal);
+            float receiveIdeal = match.Flight.TimeAtHeightDescending(ActionResolver.ReceiveContactHeight);
+            MatchDriver.AdvanceToFlightTime(match, smashIdeal - .3f);
+
+            // Grounded, ĐÁNH plays the ball low, so the ring must close on the receive moment.
+            Assert.That(match.TryGetPlayerContactCue(out float grounded, out Vector2 receivePoint), Is.True);
+            Assert.That(grounded, Is.EqualTo(receiveIdeal - match.FlightTime).Within(1e-3f));
+            Assert.That(Vector2.Distance(receivePoint, match.Flight.GroundAt(receiveIdeal)), Is.LessThan(1e-3f));
+
+            Assert.That(match.PressJump(), Is.True);
+            Assert.That(match.TryGetPlayerContactCue(out float airborne, out Vector2 smashPoint), Is.True);
+            Assert.That(airborne, Is.EqualTo(smashIdeal - match.FlightTime).Within(1e-3f));
+            Assert.That(Vector2.Distance(smashPoint, match.Flight.GroundAt(smashIdeal)), Is.LessThan(1e-3f));
+        }
+
         [Test]
         public void ThirdTouchDiveSendsAWeakFreeBallOverTheNetInsteadOfAlwaysLosingThePoint()
         {
@@ -408,6 +451,8 @@ namespace KMA.Tests.Gameplay.Volleyball
             receiveIdeal = match.Flight.TimeAtHeightDescending(ActionResolver.ReceiveContactHeight);
             match.Player.PlaceAt(match.Flight.GroundAt(smashIdeal));
             MatchDriver.AdvanceToFlightTime(match, smashIdeal);
+            // The ring only times the smash once the player is up for it.
+            Assert.That(match.PressJump(), Is.True);
             Assert.That(match.TryGetPlayerContactCue(out float toSmash, out _), Is.True);
             Assert.That(toSmash, Is.EqualTo(0f).Within(1e-3f));
 

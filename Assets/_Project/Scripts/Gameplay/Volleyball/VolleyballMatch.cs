@@ -285,7 +285,8 @@ namespace KMA.Gameplay.Volleyball
             }
             else if (BallState == BallState.InPlay && Rally.Possession == CourtSide.Player)
             {
-                bool smash = Rally.Touches >= 1 &&
+                // Only a jump can smash, so a grounded player is timed for the low receive.
+                bool smash = Player.IsAirborne && Rally.Touches >= 1 &&
                              Mathf.Abs(Player.Position.x) <= ActionResolver.SmashNetDistance &&
                              Flight.ApexHeight > ActionResolver.SmashContactHeight;
                 ideal = Flight.TimeAtHeightDescending(ActionResolver.SmashContactHeight);
@@ -439,6 +440,9 @@ namespace KMA.Gameplay.Volleyball
                     }
                     else
                     {
+                        // The jump reaches the ball at contact height: a late-side PERFECT/GOOD
+                        // press would otherwise hit from below the net, the set falls that fast.
+                        startHeight = Mathf.Max(startHeight, ActionResolver.SmashContactHeight);
                         target = SmashAim(move);
                         apex = startHeight + SmashRise;
                     }
@@ -480,7 +484,7 @@ namespace KMA.Gameplay.Volleyball
                 return;
 
             lastHitWasPlayerSmash = decision.Kind == ActionKind.Smash && sendsOver && decision.Grade != TimingGrade.Late;
-            Launch(target, apex, CourtSide.Player);
+            Launch(target, apex, CourtSide.Player, startHeight);
         }
 
         Vector2 SetTarget(TimingGrade grade, float offset)
@@ -490,9 +494,9 @@ namespace KMA.Gameplay.Volleyball
             return new Vector2(Mathf.Clamp(x, -7.5f, -.5f), Mathf.Clamp(Player.Position.y, -3f, 3f));
         }
 
-        void Launch(Vector2 target, float apex, CourtSide hitter)
+        void Launch(Vector2 target, float apex, CourtSide hitter, float? fromHeight = null)
         {
-            float startHeight = BallHeight;
+            float startHeight = fromHeight ?? BallHeight;
             Vector2 from = BallGround;
             Flight = new BallFlight(from, startHeight, target, Mathf.Max(apex, startHeight + .01f), hitter);
             FlightTime = 0f;
