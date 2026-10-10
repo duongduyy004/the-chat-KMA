@@ -105,7 +105,7 @@ namespace KMA.Tests.Gameplay.Running
         [Test]
         public void TopTwoAfterTimeout_DoesNotPass()
         {
-            var rules = SprintRules.ForTest(distance: 150f, elapsed: 14.1f, rank: 1);
+            var rules = SprintRules.ForTest(distance: 150f, elapsed: 22.1f, rank: 1);
 
             Assert.That(rules.BuildResult().Pass, Is.False);
         }
@@ -186,7 +186,7 @@ namespace KMA.Tests.Gameplay.Running
         [Test]
         public void EmptyStamina_DoesNotCreateAnotherPassGate()
         {
-            var rules = SprintRules.ForTest(distance: 150f, elapsed: 13.9f, rank: 4, stamina: 0f);
+            var rules = SprintRules.ForTest(distance: 150f, elapsed: 21.9f, rank: 4, stamina: 0f);
 
             Assert.That(rules.BuildResult().Pass, Is.True);
         }
@@ -200,15 +200,15 @@ namespace KMA.Tests.Gameplay.Running
                 new RivalPaceProfile("B", speed, speed),
                 new RivalPaceProfile("C", speed, speed)
             };
-            var first = SprintRules.ForTest(distance: 150f, elapsed: 11f, rank: 1, rivalProfiles: Rivals(0f));
-            var last = SprintRules.ForTest(distance: 150f, elapsed: 11f, rank: 4, rivalProfiles: Rivals(200f));
+            var first = SprintRules.ForTest(distance: 150f, elapsed: 20f, rank: 1, rivalProfiles: Rivals(0f));
+            var last = SprintRules.ForTest(distance: 150f, elapsed: 20f, rank: 4, rivalProfiles: Rivals(200f));
             first.Tick(1f);
             last.Tick(1f);
 
             Assert.That(first.Rank, Is.EqualTo(1));
             Assert.That(last.Rank, Is.EqualTo(4));
-            Assert.That(first.BuildResult().Score, Is.EqualTo(7.7f).Within(.001f));
-            Assert.That(last.BuildResult().Score, Is.EqualTo(6.7f).Within(.001f));
+            Assert.That(first.BuildResult().Score, Is.EqualTo(7.3f).Within(.001f));
+            Assert.That(last.BuildResult().Score, Is.EqualTo(6.3f).Within(.001f));
         }
 
         [Test]

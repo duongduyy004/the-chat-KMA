@@ -54,7 +54,7 @@ namespace KMA.Gameplay
         public float TargetDistance => challengeDefinition != null && challengeDefinition.Distance > 0f
             ? challengeDefinition.Distance : SprintRules.RaceDistance;
         public float TargetTime => challengeDefinition != null && challengeDefinition.TimeLimit > 0f
-            ? challengeDefinition.TimeLimit : 14f;
+            ? challengeDefinition.TimeLimit : SprintRules.DefaultTimeLimit;
         public int TargetCount => challengeDefinition == null ? 0 : challengeDefinition.TargetCount;
         public bool IsLearnChallenge => challengeDefinition != null && challengeDefinition.Kind == ChallengeKind.Learn;
         public event Action<ChallengeAttemptResult> ChallengeCompleted;
@@ -291,7 +291,7 @@ namespace KMA.Gameplay
         {
             RivalPaceProfile[] runtimeProfiles = CreateRuntimeProfiles();
             if (runtimeProfiles.Length == 0) return SprintRules.Default();
-            return new SprintRules(14f, runtimeProfiles);
+            return new SprintRules(SprintRules.DefaultTimeLimit, runtimeProfiles);
         }
 
         RivalPaceProfile[] CreateRuntimeProfiles()

@@ -65,7 +65,7 @@ namespace KMA.Tests.Gameplay.Running
             MinigameResult result = null;
             int completions = 0;
             controller.Completed += value => { result = value; completions++; };
-            controller.Simulate(14f);
+            controller.Simulate(SprintRules.DefaultTimeLimit);
             Assert.That(result, Is.Not.Null);
             Assert.That(result.Pass, Is.False);
             Assert.That(completions, Is.EqualTo(1));

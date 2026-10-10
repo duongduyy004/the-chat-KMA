@@ -16,8 +16,8 @@ MonoBehaviour:
   displayName: Chạy nước rút
   icon: {fileID: 0}
   color: {r: 1, g: 0.35, b: 0.37, a: 1}
-  goalText: Hoàn thành 100 m trong 14 giây.
-  timeLimit: 14
+  goalText: Hoàn thành 150 m trong 22 giây.
+  timeLimit: 22
   passThreshold: 0.6
   unlocked: 1
   comingSoon: 0

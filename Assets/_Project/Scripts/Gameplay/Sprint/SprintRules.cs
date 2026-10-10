@@ -54,6 +54,7 @@ namespace KMA.Gameplay
         const float FullImpulse = 18f;
         const float SpeedCap = 150f;
         public const float RaceDistance = 150f;
+        public const float DefaultTimeLimit = 22f;
         public const float LowStaminaThreshold = 30f;
         public const float HighStaminaThreshold = 70f;
 
@@ -74,7 +75,7 @@ namespace KMA.Gameplay
         float stamina;
         float elapsed;
 
-        public SprintRules(float timeLimit = 14f, RivalPaceProfile[] rivalProfiles = null,
+        public SprintRules(float timeLimit = DefaultTimeLimit, RivalPaceProfile[] rivalProfiles = null,
             Side[] authoredSequence = null, SprintBalanceParameters? balance = null)
         {
             this.timeLimit = timeLimit;
@@ -88,13 +89,13 @@ namespace KMA.Gameplay
             rivalDistances = new float[this.rivalProfiles.Length];
         }
 
-        public static SprintRules Default() => new SprintRules(14f);
+        public static SprintRules Default() => new SprintRules(DefaultTimeLimit);
 
         public static SprintRules ForTest(float distance, float elapsed, int rank, float stamina = 100f,
             RivalPaceProfile[] rivalProfiles = null, Side[] authoredSequence = null)
         {
             _ = rank;
-            var value = new SprintRules(14f, rivalProfiles, authoredSequence);
+            var value = new SprintRules(DefaultTimeLimit, rivalProfiles, authoredSequence);
             value.distance = distance;
             value.elapsed = elapsed;
             value.stamina = Mathf.Clamp(stamina, 0f, 100f);
