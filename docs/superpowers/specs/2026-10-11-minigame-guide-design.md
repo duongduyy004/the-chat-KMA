@@ -189,3 +189,5 @@ Trực quan: dùng skill `testing-unity-ui-with-screenshots` chụp bảng hư�
 - **Gỡ `TutorialOverlay`:** chỉ gỡ component và lớp. Cây `TutorialRoot` ở lại trong prefab vì `PhaseOverlay` vẫn hiện nó cho minigame dùng tutorial chung (`PlaceholderMinigameController`, `PhaseOverlayPresentationFlagsTests`). `TutorialStep` chuyển sang file riêng.
 - **Test PlayMode:** mỗi assembly test PlayMode có `[SetUpFixture]` tắt `MinigameGuideHost.AutoOpenEnabled`, vì bảng lần đầu đặt `timeScale = 0` sẽ làm treo `WaitForSeconds` trong các test đang có.
 - **Test MonoBehaviour** (bảng, host, menu tạm dừng) đặt ở PlayMode vì EditMode không gọi `Awake`.
+- **Bóng chuyền, bài Luyện:** trang MỤC TIÊU thêm câu "Đối thủ luôn giao bóng." (đúng với `VolleyballChallengeRules`, nơi Luyện giữ giao bóng cho đối thủ); bài Thi dùng "Hai bên luân phiên giao bóng."
+- **Bảng hướng dẫn:** thẻ đục hoàn toàn (alpha 1) trên scrim 0,92 để thẻ Bắt đầu của game không lộ ra phía sau; chữ thân trang tự xuống dòng, canh trên-trái; `CanvasScaler` khớp theo chiều cao như các canvas gameplay.
