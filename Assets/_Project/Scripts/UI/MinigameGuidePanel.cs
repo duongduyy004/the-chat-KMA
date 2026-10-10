@@ -1,0 +1,163 @@
+using System;
+using System.Collections.Generic;
+using KMA.UI.Kit;
+using TMPro;
+using UnityEngine;
+using UnityEngine.UI;
+
+namespace KMA.Gameplay.UI
+{
+    /// The how-to-play card. Its own overlay canvas sorts above the pause menu (900), so it can
+    /// open from there; the scrim blocks every control underneath.
+    public sealed class MinigameGuidePanel : MonoBehaviour
+    {
+        public const int SortingOrder = 950;
+        static readonly Vector2 Centre = new Vector2(.5f, .5f);
+
+        GameObject scrim;
+        TMP_Text titleLabel;
+        TMP_Text progressLabel;
+        TMP_Text bodyLabel;
+        Button skipButton;
+        Button backButton;
+        Button primaryButton;
+        TMP_Text primaryLabel;
+        GuideNavigator navigator;
+
+        public event Action<GuideMode> Closed;
+
+        public bool IsOpen => navigator != null;
+        public GuideMode Mode => navigator?.Mode ?? GuideMode.Review;
+        public int PageIndex => navigator?.Index ?? -1;
+        public TutorialStep CurrentPage => navigator?.Current;
+        public string PrimaryText => primaryLabel != null ? primaryLabel.text : string.Empty;
+        public string ProgressText => progressLabel != null ? progressLabel.text : string.Empty;
+        public bool SkipVisible => skipButton != null && skipButton.gameObject.activeSelf;
+        public bool BackInteractable => backButton != null && backButton.interactable;
+
+        public static MinigameGuidePanel Create(Transform parent)
+        {
+            var root = new GameObject(nameof(MinigameGuidePanel), typeof(RectTransform));
+            root.transform.SetParent(parent, false);
+            var panel = root.AddComponent<MinigameGuidePanel>();
+            panel.Build();
+            return panel;
+        }
+
+        void Build()
+        {
+            var canvas = gameObject.AddComponent<Canvas>();
+            canvas.renderMode = RenderMode.ScreenSpaceOverlay;
+            canvas.sortingOrder = SortingOrder;
+            var scaler = gameObject.AddComponent<CanvasScaler>();
+            scaler.uiScaleMode = CanvasScaler.ScaleMode.ScaleWithScreenSize;
+            scaler.referenceResolution = new Vector2(1920f, 1080f);
+            scaler.matchWidthOrHeight = .5f;
+            gameObject.AddComponent<GraphicRaycaster>();
+
+            RectTransform scrimRect = UiKit.Rect(transform, "Scrim");
+            UiKit.Stretch(scrimRect);
+            Image scrimImage = scrimRect.gameObject.AddComponent<Image>();
+            scrimImage.color = MinigameUiTheme.Scrim;
+            scrimImage.raycastTarget = true;
+            scrim = scrimRect.gameObject;
+
+            Image card = UiKit.Panel(scrimRect, "Card");
+            card.raycastTarget = true;
+            UiKit.Place(card.rectTransform, Centre, Centre, Vector2.zero, new Vector2(1200f, 720f));
+
+            titleLabel = UiKit.Label(card.transform, "Title", string.Empty, MinigameUiTheme.Title,
+                MinigameUiTheme.TextPrimary);
+            UiKit.Place(titleLabel.rectTransform, Centre, Centre, new Vector2(-80f, 280f), new Vector2(900f, 80f));
+
+            progressLabel = UiKit.Label(card.transform, "Progress", string.Empty, MinigameUiTheme.Caption,
+                MinigameUiTheme.Accent, TextAlignmentOptions.Right);
+            UiKit.Place(progressLabel.rectTransform, Centre, Centre, new Vector2(470f, 280f), new Vector2(180f, 60f));
+
+            bodyLabel = UiKit.Label(card.transform, "Body", string.Empty, MinigameUiTheme.BodyLarge,
+                MinigameUiTheme.TextPrimary, TextAlignmentOptions.Left);
+            UiKit.Place(bodyLabel.rectTransform, Centre, Centre, new Vector2(0f, 20f), new Vector2(1080f, 400f));
+            UiKit.FitLabel(bodyLabel, MinigameUiTheme.BodyLarge);
+
+            skipButton = CreateButton(card.transform, "SkipButton", GuideNavigator.SkipLabel, -380f,
+                ButtonVariant.Secondary).Button;
+            backButton = CreateButton(card.transform, "BackButton", GuideNavigator.BackLabel, 0f,
+                ButtonVariant.Secondary).Button;
+            ButtonHandle primary = CreateButton(card.transform, "PrimaryButton", GuideNavigator.NextLabel, 380f,
+                ButtonVariant.Primary);
+            primaryButton = primary.Button;
+            primaryLabel = primary.Label;
+
+            skipButton.onClick.AddListener(PressSkip);
+            backButton.onClick.AddListener(PressBack);
+            primaryButton.onClick.AddListener(PressPrimary);
+            scrim.SetActive(false);
+        }
+
+        static ButtonHandle CreateButton(Transform parent, string name, string label, float x, ButtonVariant variant)
+        {
+            ButtonHandle handle = UiKit.Button(parent, name, label, variant);
+            UiKit.Place((RectTransform)handle.Button.transform, Centre, Centre, new Vector2(x, -270f),
+                new Vector2(320f, MinigameUiTheme.ButtonHeight));
+            return handle;
+        }
+
+        public void Open(IReadOnlyList<TutorialStep> pages, GuideMode mode)
+        {
+            if (IsOpen || pages == null || pages.Count == 0)
+                return;
+            navigator = new GuideNavigator(pages, mode);
+            if (mode == GuideMode.FirstRun)
+                GameFreeze.Acquire(this);
+            scrim.transform.SetAsLastSibling();
+            scrim.SetActive(true);
+            Refresh();
+        }
+
+        public void PressPrimary()
+        {
+            if (navigator == null)
+                return;
+            if (navigator.Primary())
+                Close();
+            else
+                Refresh();
+        }
+
+        public void PressBack()
+        {
+            if (navigator == null)
+                return;
+            navigator.Back();
+            Refresh();
+        }
+
+        public void PressSkip()
+        {
+            if (navigator != null && navigator.ShowsSkip)
+                Close();
+        }
+
+        void Close()
+        {
+            GuideMode mode = navigator.Mode;
+            navigator = null;
+            scrim.SetActive(false);
+            GameFreeze.Release(this);
+            Closed?.Invoke(mode);
+        }
+
+        void OnDestroy() => GameFreeze.Release(this);
+
+        void Refresh()
+        {
+            TutorialStep page = navigator.Current;
+            titleLabel.text = VietText.Fix(page.Title);
+            bodyLabel.text = VietText.Fix(page.Instruction);
+            progressLabel.text = VietText.Fix(navigator.Progress);
+            primaryLabel.text = VietText.Fix(navigator.PrimaryLabel);
+            backButton.interactable = navigator.CanGoBack;
+            skipButton.gameObject.SetActive(navigator.ShowsSkip);
+        }
+    }
+}
