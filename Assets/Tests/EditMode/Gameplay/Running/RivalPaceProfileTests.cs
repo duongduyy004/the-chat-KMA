@@ -10,7 +10,7 @@ namespace KMA.Tests.Gameplay.Running
     {
         const float MinSpeed = SprintController.DefaultMinRivalSpeed;
         const float MaxSpeed = SprintController.DefaultMaxRivalSpeed;
-        const float FastestFinish = 15f;
+        const float FastestFinish = 12f;
         const float SlowestFinish = 28f;
 
         // Each race rolls the rivals' pace, but never so fast that a rival runs away from a
@@ -41,9 +41,9 @@ namespace KMA.Tests.Gameplay.Running
             float fastest = authored.Min(profile => FinishTime(AtSpeed(profile, MaxSpeed)));
             float slowest = authored.Max(profile => FinishTime(AtSpeed(profile, MinSpeed)));
 
-            // A rival may occasionally beat the 15 s exam deadline, but only just.
-            Assert.That(fastest, Is.InRange(FastestFinish, 17f));
-            Assert.That(slowest, Is.InRange(20f, SlowestFinish));
+            // A rival may occasionally beat the 15 s exam deadline, but not by much.
+            Assert.That(fastest, Is.InRange(FastestFinish, 16f));
+            Assert.That(slowest, Is.InRange(16f, SlowestFinish));
         }
 
         [Test]

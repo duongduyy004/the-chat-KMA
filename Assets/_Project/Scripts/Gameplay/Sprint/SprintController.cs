@@ -13,9 +13,9 @@ namespace KMA.Gameplay
         public override bool UsesSharedCountdown => false;
         public override bool OwnsStartGate => true;
 
-        // Fastest roll lets the quickest rival finish around 16 s, slowest keeps the last one near 20 s.
-        public const float DefaultMinRivalSpeed = 7.25f;
-        public const float DefaultMaxRivalSpeed = 8.75f;
+        // Fastest roll lets the quickest rival finish around 15 s, slowest keeps the last one near 18 s.
+        public const float DefaultMinRivalSpeed = 8.5f;
+        public const float DefaultMaxRivalSpeed = 10f;
         public const float MaxRivalWaitSeconds = 8f;
         public const string WaitForRivalsText = "VỀ ĐÍCH! ĐỢI CÁC BẠN VỀ ĐÍCH...";
 

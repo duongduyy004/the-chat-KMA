@@ -169,8 +169,8 @@ MonoBehaviour:
   - {fileID: 11400000, guid: d7c6f5e43a8b49aac3d4e5f60718293a, type: 2}
   - {fileID: 11400000, guid: e8d7a6f54b9c4abbd4e5f60718293a4b, type: 2}
   - {fileID: 11400000, guid: f9e8b7a65cad4bcce5f60718293a4b5c, type: 2}
-  minRivalSpeed: 7.25
-  maxRivalSpeed: 8.75
+  minRivalSpeed: 8.5
+  maxRivalSpeed: 10
   inputActions: {fileID: -944628639613478452, guid: d46f75ba2f2f880a0b0e362887ee15e9, type: 3}
   directInputEnabled: 0
   inputRouter: {fileID: 500013}

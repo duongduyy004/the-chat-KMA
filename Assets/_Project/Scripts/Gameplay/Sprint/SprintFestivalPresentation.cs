@@ -82,6 +82,11 @@ namespace KMA.Gameplay
             combo.alignment = TextAlignmentOptions.Left;
             combo.text = VietText.Fix("CHUỖI ×0");
 
+            TMP_Text timer = Metric(scoreboard.transform, "RaceTimer", MinigameUiTheme.Headline,
+                MinigameUiTheme.TextPrimary, new Vector2(.66f, .06f), new Vector2(.95f, .42f));
+            timer.alignment = TextAlignmentOptions.Center;
+            timer.text = VietText.Fix($"{SprintRules.DefaultTimeLimit:0}s");
+
             // Mode chip
             ChipHandle mode = UiKit.Chip(root, "ModeLabel", $"CHẠY NƯỚC RÚT · {SprintRules.RaceDistance:0}M");
             ApplyRect(mode.Background.rectTransform, safe, SprintUiLayout.ModeChipRect(safe));

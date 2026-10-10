@@ -11,11 +11,13 @@ namespace KMA.Gameplay
         [SerializeField] TMP_Text distanceLabel;
         [SerializeField] TMP_Text rankLabel;
         [SerializeField] TMP_Text cadenceLabel;
+        [SerializeField] TMP_Text timerLabel;
         [SerializeField] KitBar distanceBar;
 
         public string DistanceText { get; private set; } = string.Empty;
         public string RankText { get; private set; } = string.Empty;
         public string CadenceText { get; private set; } = string.Empty;
+        public string TimerText { get; private set; } = string.Empty;
         public float PipProgress { get; private set; }
 
         void Awake()
@@ -46,11 +48,14 @@ namespace KMA.Gameplay
             CadenceText = controller.IsWaitingForRivals ? SprintController.WaitForRivalsText
                 : controller.IsComboBoosting
                     ? $"BỨT TỐC ×{controller.CadenceCombo}" : $"CHUỖI ×{controller.CadenceCombo}";
+            TimerText = controller.IsLearnChallenge ? string.Empty
+                : $"{Mathf.CeilToInt(Mathf.Max(0f, controller.TargetTime - snapshot.Elapsed))}s";
             PipProgress = progress;
 
             if (distanceLabel != null) distanceLabel.text = VietText.Fix(DistanceText);
             if (rankLabel != null) rankLabel.text = VietText.Fix(RankText);
             if (cadenceLabel != null) cadenceLabel.text = VietText.Fix(CadenceText);
+            if (timerLabel != null) timerLabel.text = VietText.Fix(TimerText);
             if (distanceBar != null) distanceBar.SetValue(progress);
         }
 
@@ -75,6 +80,7 @@ namespace KMA.Gameplay
             distanceLabel = metricsRoot.Find("Distance")?.GetComponent<TMP_Text>();
             rankLabel = metricsRoot.Find("RankBadge/RankLabel")?.GetComponent<TMP_Text>();
             cadenceLabel = metricsRoot.Find("Combo")?.GetComponent<TMP_Text>();
+            timerLabel = metricsRoot.Find("RaceTimer")?.GetComponent<TMP_Text>();
             distanceBar = chrome.Find("ProgressRail")?.GetComponent<KitBar>();
         }
     }
