@@ -7,7 +7,7 @@ using UnityEngine;
 
 namespace KMA.Gameplay.Chess
 {
-    public sealed class ChessFinalController : MinigameBase, IChallengeMetricsSource
+    public sealed class ChessFinalController : MinigameBase, IChallengeMetricsSource, IMinigameGuideSource
     {
         [SerializeField] ChessBoardView board;
         [SerializeField] ChessFinalHud hud;
@@ -23,6 +23,9 @@ namespace KMA.Gameplay.Chess
         public override bool UsesSharedCountdown => false;
         public override bool OwnsStartGate => true;
         public override bool OwnsCameraBackground => true;
+        public string GuideKey => ChessGuide.Key;
+        public IReadOnlyList<TutorialStep> BuildGuide() =>
+            ChessGuide.Build(Machine.MaxPlayerMoves, Machine.Clock.Limit, Machine.MaxMistakes);
 
         public void Configure(ChessBoardView boardView, ChessFinalHud hudView, ChessCastView castView,
             PromotionPicker picker)
@@ -63,7 +66,7 @@ namespace KMA.Gameplay.Chess
             board.Render(Machine.Position, null);
             cast.SetStudent("idle");
             cast.SetTeacher("idleBoss");
-            cast.Say($"Chiếu hết trong {CountWord(Machine.MaxPlayerMoves)} nước. Em có {TimeWords(Machine.Clock.Limit)}.", 6f);
+            cast.Say($"Chiếu hết trong {CountWord(Machine.MaxPlayerMoves)} nước. Em có {ChessGuide.TimeWords(Machine.Clock.Limit)}.", 6f);
             RefreshInput();
         }
 
@@ -227,13 +230,5 @@ namespace KMA.Gameplay.Chess
         }
 
         static string CountWord(int n) => n switch { 1 => "một", 2 => "hai", 3 => "ba", _ => n.ToString(CultureInfo.InvariantCulture) };
-
-        static string TimeWords(float seconds) => Mathf.RoundToInt(seconds) switch
-        {
-            60 => "một phút",
-            90 => "một phút rưỡi",
-            120 => "hai phút",
-            int s => $"{s} giây"
-        };
     }
 }

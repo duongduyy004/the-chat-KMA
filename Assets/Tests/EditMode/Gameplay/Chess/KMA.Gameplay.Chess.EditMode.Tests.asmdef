@@ -7,7 +7,8 @@
         "KMA.Gameplay.Chess.Core",
         "KMA.Gameplay",
         "KMA.Gameplay.Chess",
-        "KMA.Gameplay.Progression"
+        "KMA.Gameplay.Progression",
+        "KMA.Gameplay.UI"
     ],
     "includePlatforms": ["Editor"],
     "excludePlatforms": [],
