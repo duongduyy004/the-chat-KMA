@@ -35,6 +35,9 @@
 - The Unity Editor must be closed while `tools/run-unity-tests.sh` runs. Batch mode cannot open an already-open project.
 - Unity creates `.meta` files for new `.cs` files during the first test run. `git add` each new file's `.meta` alongside it.
 - Never commit `Assets/_Project/Scripts/Gameplay/Sprint/RunnerBreathing.cs.meta`. It is the user's untracked file.
+- **Python on this machine:** only the `py` launcher works; `python`/`python3` are Microsoft Store stubs. `tools/run-unity-tests.sh` calls `python3` to print its summary, so first create a shim in the git-ignored `Builds/` folder and put it on `PATH` for every test command:
+  `mkdir -p Builds/shim && printf '#!/bin/sh\nexec py "$@"\n' > Builds/shim/python3 && chmod +x Builds/shim/python3 && export PATH="$PWD/Builds/shim:$PATH"`
+  Use `py` instead of `python3` in Task 13, Step 4.
 
 ## Review Focus
 
@@ -256,7 +259,7 @@ namespace KMA.Tests.Presentation
 
 - [ ] **Step 2: Run the tests to verify they fail**
 
-Run: `tools/run-unity-tests.sh EditMode "KMA.Tests.Presentation.GuideNavigatorTests|KMA.Tests.Presentation.MinigameGuidePagesTests" t1-guide`
+Run: `tools/run-unity-tests.sh EditMode "KMA.Tests.Presentation.GuideNavigatorTests;KMA.Tests.Presentation.MinigameGuidePagesTests" t1-guide`
 
 Expected: no results file, with `error CS0246` for `GuideNavigator` and `MinigameGuidePages` (compile failure).
 
@@ -416,7 +419,7 @@ namespace KMA.Gameplay.UI
 
 - [ ] **Step 4: Run the tests to verify they pass**
 
-Run: `tools/run-unity-tests.sh EditMode "KMA.Tests.Presentation.GuideNavigatorTests|KMA.Tests.Presentation.MinigameGuidePagesTests|KMA.Tests.Presentation.TutorialOverlayTests" t1-guide`
+Run: `tools/run-unity-tests.sh EditMode "KMA.Tests.Presentation.GuideNavigatorTests;KMA.Tests.Presentation.MinigameGuidePagesTests;KMA.Tests.Presentation.TutorialOverlayTests" t1-guide`
 
 Expected: `failed=0`. `TutorialOverlayTests` still compiles and passes because `TutorialStep` only moved.
 
@@ -793,7 +796,7 @@ Keep the existing `TryParseSubject` helper.
 Run:
 
 ```bash
-tools/run-unity-tests.sh PlayMode "KMA.Tests.Gameplay.Core.GameManagerStartupTests|KMA.Tests.Gameplay.Core.S4BootstrapPersistenceGateTests" t3-frog-flag
+tools/run-unity-tests.sh PlayMode "KMA.Tests.Gameplay.Core.GameManagerStartupTests;KMA.Tests.Gameplay.Core.S4BootstrapPersistenceGateTests" t3-frog-flag
 tools/run-unity-tests.sh EditMode "KMA.Tests.Presentation.UIThemeTests" t3-store
 ```
 
@@ -1469,6 +1472,9 @@ Add to `PauseFlowTests`:
 
         static (GameObject canvas, PausePanel panel) CreatePause()
         {
+            // A minigame scene loaded by an earlier test may have left its host behind.
+            if (MinigameGuideHost.Current != null)
+                Object.DestroyImmediate(MinigameGuideHost.Current.gameObject);
             var canvasObject = new GameObject("Canvas", typeof(RectTransform), typeof(Canvas));
             var root = new GameObject("PausePanel", typeof(RectTransform));
             root.transform.SetParent(canvasObject.transform, false);
@@ -2613,16 +2619,16 @@ In `Assets/_Project/Scripts/UI/PhaseOverlay.cs`:
 - Replace `ConfigureTutorial`, `UnsubscribeTutorialCompletion` and `ReleaseTutorialGate` with:
 
 ```csharp
-        // Minigames that own their start gate open it themselves; every other gate opens at once and
-        // shared-tutorial minigames advance on the lifecycle timer. The how-to-play guide is
-        // MinigameGuideHost's job.
+        // Minigames that own their start gate open it themselves; custom-tutorial minigames are released
+        // at once; shared-tutorial minigames advance on the lifecycle timer (releasing their gate would
+        // skip straight to the countdown). The how-to-play guide is MinigameGuideHost's job.
         void ConfigureTutorial()
         {
             if (source == null)
                 return;
             if (source.OwnsStartGate)
                 FindSprintStartPresentation()?.Bind(source);
-            else
+            else if (!source.UsesSharedTutorial)
                 source.SetTutorialGate(false);
         }
 ```
@@ -2632,7 +2638,7 @@ In `Assets/_Project/Scripts/UI/PhaseOverlay.cs`:
 Run from the repo root:
 
 ```bash
-python3 - <<'PY'
+py - <<'PY'
 import re
 path = "Assets/_Project/Prefabs/UI/PhaseOverlay.prefab"
 text = open(path, encoding="utf-8", newline="").read()
