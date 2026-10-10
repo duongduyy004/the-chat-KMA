@@ -44,7 +44,7 @@ namespace KMA.Tests.Presentation
 
             yield return new WaitForSecondsRealtime(1.5f);
 
-            Assert.That(score.text, Is.EqualTo("8"));
+            Assert.That(score.text, Is.EqualTo("8.4"));
             Assert.That(content.GetComponent<CanvasGroup>().alpha, Is.EqualTo(1f));
             Assert.That(content.transform.localScale, Is.EqualTo(Vector3.one));
             Assert.That(rank.rectTransform.localScale, Is.EqualTo(Vector3.one));
@@ -60,7 +60,7 @@ namespace KMA.Tests.Presentation
 
             yield return new WaitForSecondsRealtime(1.5f);
 
-            Assert.That(score.text, Is.EqualTo("3"));
+            Assert.That(score.text, Is.EqualTo("3.0"));
             Assert.That(status.text, Is.EqualTo("THẤT BẠI"));
             Assert.That(status.color.r, Is.EqualTo(MinigameUiTheme.Energy.r).Within(.001f));
             Assert.That(status.color.a, Is.EqualTo(1f));

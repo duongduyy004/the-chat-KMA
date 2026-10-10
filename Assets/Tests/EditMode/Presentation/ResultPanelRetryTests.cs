@@ -111,7 +111,7 @@ namespace KMA.Tests.Presentation
             panel.Show(new MinigameResult(true, 8.4f, Rank.A), "Map");
             Assert.That(status.text, Is.EqualTo("HOÀN THÀNH!"));
             Assert.That(status.color, Is.EqualTo(MinigameUiTheme.Success));
-            Assert.That(score.text, Is.EqualTo("8"));
+            Assert.That(score.text, Is.EqualTo("8.4"));
             Assert.That(rank.text, Is.EqualTo("XẾP HẠNG A"));
             panel.Show(new MinigameResult(false, 0f, Rank.F), "Map");
             Assert.That(status.text, Is.EqualTo("THẤT BẠI"));
@@ -141,7 +141,7 @@ namespace KMA.Tests.Presentation
             panel.Show(new MinigameResult(true, 8.4f, Rank.A), "Map");
             Assert.That(content.localScale, Is.EqualTo(Vector3.one));
             Assert.That(group.alpha, Is.EqualTo(1f), "the snap path must leave the modal fully opaque");
-            Assert.That(score.text, Is.EqualTo("8"));
+            Assert.That(score.text, Is.EqualTo("8.4"));
         }
 
         static TMP_Text Text(GameObject parent, string name)

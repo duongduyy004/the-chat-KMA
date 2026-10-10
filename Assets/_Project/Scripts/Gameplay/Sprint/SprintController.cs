@@ -258,7 +258,7 @@ namespace KMA.Gameplay
                 ? Mathf.Clamp01((rules == null ? 0f : (float)rules.CorrectStreak) / Mathf.Max(1, TargetCount))
                 : Mathf.Clamp01((rules == null ? 0f : rules.Snapshot.Distance) / TargetDistance),
             stamina01: Mathf.Clamp01((rules == null ? 0f : rules.Stamina) / 100f),
-            score: rules == null ? 0f : rules.BuildResult().Score,
+            score: 0f,
             statusText: challengeDefinition == null ? "TAP LEFT / RIGHT"
                 : challengeDefinition.Kind == ChallengeKind.Learn
                     ? $"CHUỖI {rules.CorrectStreak}/{TargetCount}" : $"{TargetDistance:0} M · {TargetTime:0} S");

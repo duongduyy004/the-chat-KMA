@@ -639,7 +639,7 @@ namespace KMA.Tests.Presentation
             yield return new WaitForSecondsRealtime(1.5f);
             Assert.That(title.text, Is.EqualTo("THẤT BẠI"));
             AssertColor32(title.color, (Color32)MinigameUiTheme.Energy);
-            Assert.That(score.text, Is.EqualTo("0"));
+            Assert.That(score.text, Is.EqualTo("0.0"));
             Assert.That(rank.text, Is.EqualTo("XẾP HẠNG F"));
             Assert.That(action.interactable, Is.True);
             Assert.That(content.Find("RetryButton").gameObject.activeSelf, Is.False);
@@ -652,7 +652,7 @@ namespace KMA.Tests.Presentation
             yield return new WaitForSecondsRealtime(1.5f);
             Assert.That(title.text, Is.EqualTo("HOÀN THÀNH!"));
             AssertColor32(title.color, (Color32)MinigameUiTheme.Success);
-            Assert.That(score.text, Is.EqualTo("8"), "the count-up ends on the final score");
+            Assert.That(score.text, Is.EqualTo("8.4"), "the count-up ends on the final score");
             Assert.That(rank.text, Is.EqualTo("XẾP HẠNG A"));
         }
 

@@ -121,7 +121,7 @@ namespace KMA.Tests.Presentation
                     .Where(label => label.name != "Label") // the action and retry buttons each have one
                     .ToDictionary(label => label.name, label => label.text);
                 Assert.That(labels["StatusLabel"], Is.EqualTo("THẤT BẠI"));
-                Assert.That(labels["ScoreLabel"], Is.EqualTo("988"));
+                Assert.That(labels["ScoreLabel"], Is.EqualTo("987.6"));
                 Assert.That(labels["RankLabel"], Is.EqualTo("XẾP HẠNG B"));
             }
             finally

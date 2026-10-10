@@ -51,15 +51,15 @@ namespace KMA.Gameplay.UI
                 float score = best == null ? record.BestScore : best.Score;
                 Rank rank = best == null ? record.BestRank : best.Rank;
                 scoreRows.Add(new JourneyScoreRow(CourseOrder[index], score, rank));
-                scores.Add($"{Labels[index]}: {score:0} · {rank}");
+                scores.Add($"{Labels[index]}: {score.ToString("0.0", System.Globalization.CultureInfo.InvariantCulture)} · {rank}");
             }
             SupplementaryRounds = session.Journey.SupplementaryRounds;
             if (summaryText != null)
             {
                 // Two lines in the short strip, kept clear of the replay button on the right.
                 summaryText.rectTransform.offsetMax = new Vector2(-(ReplayWidth + 20f), summaryText.rectTransform.offsetMax.y);
-                summaryText.fontSize = UITheme.Shared.LessonJourney.captionSize - 6f;
-                summaryText.text = VietText.Fix("HOÀN TẤT HỌC PHẦN\n" + string.Join("  |  ", scores));
+                summaryText.fontSize = UITheme.Shared.LessonJourney.captionSize - 8f;
+                summaryText.text = VietText.Fix("HOÀN TẤT HỌC PHẦN\n" + string.Join(" | ", scores));
             }
             gameObject.SetActive(true);
             EnsureReplayButton();

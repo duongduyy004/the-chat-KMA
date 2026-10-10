@@ -143,7 +143,7 @@ namespace KMA.Gameplay.UI
                 statusLabel.text = VietText.Fix(result.Pass ? successTitle : failureTitle);
                 statusLabel.color = result.Pass ? MinigameUiTheme.Success : MinigameUiTheme.Energy;
             }
-            finalScoreText = Mathf.RoundToInt(result.Score).ToString();
+            finalScoreText = FormatScore(result.Score);
             if (scoreLabel != null)
                 scoreLabel.text = VietText.Fix(finalScoreText);
             if (rankLabel != null)
@@ -230,7 +230,7 @@ namespace KMA.Gameplay.UI
             }
             finalScoreText = result.ExamResult == null
                 ? result.Metrics.CompletedTargets.ToString()
-                : Mathf.RoundToInt(result.ExamResult.Score).ToString();
+                : FormatScore(result.ExamResult.Score);
             if (scoreLabel != null) scoreLabel.text = VietText.Fix(finalScoreText);
             if (rankLabel != null)
             {
@@ -559,6 +559,10 @@ namespace KMA.Gameplay.UI
             label.color = target;
         }
 
+        // One decimal, like the stored score, so the number never disagrees with the rank beside it.
+        static string FormatScore(float score) =>
+            score.ToString("0.0", System.Globalization.CultureInfo.InvariantCulture);
+
         IEnumerator CountUpScore(float finalScore)
         {
             if (scoreLabel == null)
@@ -568,7 +572,9 @@ namespace KMA.Gameplay.UI
             {
                 elapsed += Time.unscaledDeltaTime;
                 float t = Mathf.Clamp01(elapsed / ScoreDuration);
-                scoreLabel.text = VietText.Fix(Mathf.RoundToInt(Mathf.Lerp(0f, finalScore, t)).ToString());
+                float shown = Mathf.Lerp(0f, finalScore, t);
+                scoreLabel.text = VietText.Fix(finalScoreText.Contains(".")
+                    ? FormatScore(shown) : Mathf.RoundToInt(shown).ToString());
                 yield return null;
             }
             scoreLabel.text = VietText.Fix(finalScoreText);
