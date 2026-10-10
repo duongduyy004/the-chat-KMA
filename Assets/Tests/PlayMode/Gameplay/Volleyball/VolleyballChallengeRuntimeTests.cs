@@ -43,11 +43,10 @@ namespace KMA.Tests.Gameplay.Volleyball
             yield return null;
             controller.SkipToPlayForTest();
 
-            // An idle player loses every rally; the exam ends on the opponent's fifth point.
-            for (int i = 0; i < 300 * 60 && !controller.Match.IsOver; i++) controller.Match.Tick(1f / 60f);
+            // An idle player loses every rally; the exam ends on the opponent's tenth point.
+            for (int i = 0; i < 600 * 60 && !controller.Match.IsOver; i++) controller.Match.Tick(1f / 60f);
             yield return null;
-            Assert.That(controller.Match.OpponentPoints, Is.EqualTo(VolleyballMatch.PointsToWin));
-            Assert.That(controller.Match.Elapsed, Is.LessThan(120f));
+            Assert.That(controller.Match.OpponentPoints, Is.EqualTo(10));
             Assert.That(typed, Is.EqualTo(1));
             Assert.That(result.Pass, Is.False);
             Assert.That(result.ExamResult, Is.Not.Null);

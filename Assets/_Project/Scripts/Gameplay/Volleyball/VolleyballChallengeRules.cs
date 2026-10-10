@@ -19,10 +19,10 @@ namespace KMA.Gameplay.Volleyball
             VolleyballMatchOptions options = definition.Kind switch
             {
                 ChallengeKind.Learn => new VolleyballMatchOptions(0, 0f, true),
-                // Practice is a race to five against the clock; the opponent keeps the serve.
-                ChallengeKind.Practice => new VolleyballMatchOptions(VolleyballMatch.PointsToWin, definition.TimeLimit,
+                // Practice is a race to its target against the clock; the opponent keeps the serve.
+                ChallengeKind.Practice => new VolleyballMatchOptions(definition.TargetCount, definition.TimeLimit,
                     true, requirePointsToWin: true),
-                _ => new VolleyballMatchOptions(VolleyballMatch.PointsToWin, definition.TimeLimit,
+                _ => new VolleyballMatchOptions(definition.TargetCount, definition.TimeLimit,
                     requirePointsToWin: true)
             };
             Match = new VolleyballMatch(options: options);
@@ -40,7 +40,7 @@ namespace KMA.Gameplay.Volleyball
                 throw new System.ArgumentException("Volleyball challenge context does not match its definition.");
             bool pass = definition.Kind == ChallengeKind.Learn
                 ? completedTargets >= definition.TargetCount
-                : Match.IsOver && Match.PlayerPoints >= VolleyballMatch.PointsToWin;
+                : Match.IsOver && Match.PlayerPoints >= Match.WinningPoints;
             MinigameResult score = definition.Kind == ChallengeKind.Exam ? Match.BuildResult() : null;
             return new ChallengeAttemptResult(context, pass, new ChallengeMetrics(elapsed: Match.Elapsed,
                 completedTargets: CompletedTargets), score);

@@ -54,18 +54,17 @@ namespace KMA.Tests.Gameplay.Volleyball
             ChallengeAttemptMode.Journey, ChallengeDifficulty.Easy);
 
         [Test]
-        public void ExamHasNoClockAndEndsWhenEitherSideReachesFivePoints()
+        public void ExamHasNoClockAndEndsWhenEitherSideReachesTenPoints()
         {
             var rules = new VolleyballChallengeRules(ChallengeCatalog.LoadDefault().Get("volleyball_exam"));
-            Assert.That(rules.Match.WinningPoints, Is.EqualTo(5));
+            Assert.That(rules.Match.WinningPoints, Is.EqualTo(10));
             Assert.That(rules.Match.ClockLimit, Is.EqualTo(0f));
 
             // The player serves first; standing still must not hold the ball until a deadline.
-            for (float t = 0f; t < 300f && !rules.IsComplete; t += Step) rules.Tick(Step);
+            for (float t = 0f; t < 600f && !rules.IsComplete; t += Step) rules.Tick(Step);
 
             Assert.That(rules.Match.IsOver, Is.True);
-            Assert.That(rules.Match.OpponentPoints, Is.EqualTo(VolleyballMatch.PointsToWin));
-            Assert.That(rules.Match.Elapsed, Is.LessThan(120f), "The match ends on points, not on a clock.");
+            Assert.That(rules.Match.OpponentPoints, Is.EqualTo(10), "The match ends on points, not on a clock.");
             Assert.That(rules.BuildResult(new ChallengeAttemptContext("attempt", "volleyball_exam",
                 ChallengeAttemptMode.Journey, ChallengeDifficulty.Normal)).Pass, Is.False);
         }

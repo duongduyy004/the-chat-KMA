@@ -17,9 +17,9 @@ MonoBehaviour:
   kind: 2
   distance: 0
   timeLimit: 0
-  targetCount: 5
+  targetCount: 10
   attemptLimit: 0
   keeperEnabled: 0
   difficulty: 1
   timingHelp: 0
-  objective: "Đạt năm điểm trước đối thủ."
+  objective: "Đạt mười điểm trước đối thủ."

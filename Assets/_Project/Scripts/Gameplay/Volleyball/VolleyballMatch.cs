@@ -338,8 +338,9 @@ namespace KMA.Gameplay.Volleyball
                 ? PlayerPoints >= options.PointsToWin
                 : PlayerPoints > OpponentPoints);
             float accuracy = TimedPresses == 0 ? 0f : 2f * QualitySum / TimedPresses;
-            float efficiency = 1f - OpponentPoints / (float)PointsToWin;
-            float mastery = Mathf.Min(Winners, PointsToWin) / (float)PointsToWin;
+            int target = options.PointsToWin > 0 ? options.PointsToWin : PointsToWin;
+            float efficiency = 1f - OpponentPoints / (float)target;
+            float mastery = Mathf.Min(Winners, target) / (float)target;
             return ScoreUtil.Build(pass, accuracy, efficiency, mastery);
         }
 

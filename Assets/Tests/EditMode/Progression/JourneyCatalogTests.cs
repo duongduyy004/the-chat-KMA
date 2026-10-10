@@ -35,7 +35,7 @@ namespace KMA.Tests.Gameplay.Progression
                 Is.GreaterThan(catalog.Get("sprint_exam").TimeLimit));
             Assert.That(catalog.Get("volleyball_learn").TargetCount, Is.EqualTo(3));
             Assert.That(catalog.Get("volleyball_practice").TargetCount, Is.EqualTo(5));
-            Assert.That(catalog.Get("volleyball_exam").TargetCount, Is.EqualTo(5));
+            Assert.That(catalog.Get("volleyball_exam").TargetCount, Is.EqualTo(10));
             Assert.That(catalog.Get("volleyball_practice").TimeLimit, Is.EqualTo(120f), "Practice is a race to five inside two minutes.");
             Assert.That(catalog.Get("volleyball_exam").TimeLimit, Is.Zero, "Volleyball is won on points, not on a clock.");
             Assert.That(catalog.Get("soccer_learn").TargetCount, Is.EqualTo(3));
