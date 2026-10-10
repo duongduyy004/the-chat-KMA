@@ -16,10 +16,10 @@ MonoBehaviour:
   subject: 7
   kind: 1
   distance: 0
-  timeLimit: 0
-  targetCount: 2
+  timeLimit: 120
+  targetCount: 5
   attemptLimit: 0
   keeperEnabled: 0
   difficulty: 0
   timingHelp: 1
-  objective: "Ghi hai điểm bằng chuỗi đỡ, chuyền rồi đập trước khi đối thủ có 5 điểm."
+  objective: "Đạt năm điểm trước đối thủ trong 2 phút."

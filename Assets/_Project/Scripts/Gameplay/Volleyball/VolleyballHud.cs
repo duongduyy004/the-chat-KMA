@@ -7,7 +7,7 @@ namespace KMA.Gameplay.Volleyball
     {
         public const float FeedbackSeconds = .8f;
         public const string HintText = "Joystick: di chuyển  ·  NHẢY rồi kéo joystick để nhắm  ·  ĐÁNH để đập";
-        public const string PracticeHintFormat = "ĐỠ → CHUYỀN → NHẢY ĐẬP · {0}/{1} ĐIỂM";
+        public const string PracticeHintFormat = "ĐẠT {1} ĐIỂM TRƯỚC ĐỐI THỦ · {0}/{1}";
         public const string BlockText = "CHẮN!";
         public const float HintSeconds = 3.5f;
 

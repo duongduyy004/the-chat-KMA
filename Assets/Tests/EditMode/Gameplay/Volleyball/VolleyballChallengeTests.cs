@@ -19,20 +19,39 @@ namespace KMA.Tests.Gameplay.Volleyball
         }
 
         [Test]
-        public void PracticeHasNoClockAndFailsOnceTheOpponentReachesFivePoints()
+        public void PracticeRunsATwoMinuteClockAndFailsOnceTheOpponentReachesFivePoints()
         {
             var rules = new VolleyballChallengeRules(ChallengeCatalog.LoadDefault().Get("volleyball_practice"));
-            Assert.That(rules.Match.ClockLimit, Is.EqualTo(0f));
+            Assert.That(rules.Match.WinningPoints, Is.EqualTo(VolleyballMatch.PointsToWin));
+            Assert.That(rules.Match.ClockLimit, Is.EqualTo(120f));
 
             // An idle player hands every rally to the opponent.
             for (float t = 0f; t < 300f && !rules.IsComplete; t += Step) rules.Tick(Step);
 
             Assert.That(rules.IsComplete, Is.True);
             Assert.That(rules.Match.OpponentPoints, Is.EqualTo(VolleyballMatch.PointsToWin));
-            Assert.That(rules.Match.Elapsed, Is.LessThan(120f), "The match ends on points, not on a clock.");
-            Assert.That(rules.BuildResult(new ChallengeAttemptContext("attempt", "volleyball_practice",
-                ChallengeAttemptMode.Journey, ChallengeDifficulty.Easy)).Pass, Is.False);
+            Assert.That(rules.Match.Elapsed, Is.LessThan(120f), "The opponent's fifth point ends it before the clock.");
+            Assert.That(rules.BuildResult(Practice()).Pass, Is.False);
         }
+
+        [Test]
+        public void PracticeFailsWhenTheClockRunsOutShortOfFivePointsEvenWhileLeading()
+        {
+            var rules = new VolleyballChallengeRules(ChallengeCatalog.LoadDefault().Get("volleyball_practice"));
+            // Hold the player one point short so only the clock can end the match.
+            for (float t = 0f; t < 300f && !rules.IsComplete; t += Step)
+            {
+                rules.Match.SetScoreForTest(VolleyballMatch.PointsToWin - 1, 0);
+                rules.Tick(Step);
+            }
+
+            Assert.That(rules.IsComplete, Is.True);
+            Assert.That(rules.Match.Elapsed, Is.GreaterThanOrEqualTo(120f));
+            Assert.That(rules.BuildResult(Practice()).Pass, Is.False);
+        }
+
+        static ChallengeAttemptContext Practice() => new ChallengeAttemptContext("attempt", "volleyball_practice",
+            ChallengeAttemptMode.Journey, ChallengeDifficulty.Easy);
 
         [Test]
         public void ExamHasNoClockAndEndsWhenEitherSideReachesFivePoints()
@@ -64,10 +83,11 @@ namespace KMA.Tests.Gameplay.Volleyball
         }
 
         [Test]
-        public void PracticeCountsReceiveReceiveJumpSmash()
+        public void PracticePassesOnTheFifthPlayerPoint()
         {
             var rules = new VolleyballChallengeRules(ChallengeCatalog.LoadDefault().Get("volleyball_practice"));
             VolleyballMatch match = rules.Match;
+            match.SetScoreForTest(VolleyballMatch.PointsToWin - 1, 0);
             Assert.That(MatchDriver.AdvanceUntil(match, () => match.BallState == BallState.InPlay, 3f), Is.True);
             for (int touch = 0; touch < 2; touch++)
             {
@@ -86,8 +106,10 @@ namespace KMA.Tests.Gameplay.Volleyball
             rules.SetMove(Vector2.zero);
 
             Assert.That(MatchDriver.AdvanceUntil(match, () => match.BallState == BallState.Dead, 3f), Is.True);
-            Assert.That(match.PlayerPoints, Is.EqualTo(1));
-            Assert.That(rules.CompletedTargets, Is.EqualTo(1));
+            Assert.That(match.PlayerPoints, Is.EqualTo(VolleyballMatch.PointsToWin));
+            Assert.That(rules.CompletedTargets, Is.EqualTo(VolleyballMatch.PointsToWin));
+            Assert.That(rules.IsComplete, Is.True);
+            Assert.That(rules.BuildResult(Practice()).Pass, Is.True);
         }
     }
 }

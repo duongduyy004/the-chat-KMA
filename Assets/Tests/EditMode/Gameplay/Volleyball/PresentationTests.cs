@@ -281,7 +281,7 @@ namespace KMA.Tests.Gameplay.Volleyball
             Assert.That(VolleyballHud.HintText,
                 Is.EqualTo("Joystick: di chuyển  ·  NHẢY rồi kéo joystick để nhắm  ·  ĐÁNH để đập"));
             Assert.That(string.Format(VolleyballHud.PracticeHintFormat, 1, 3),
-                Is.EqualTo("ĐỠ → CHUYỀN → NHẢY ĐẬP · 1/3 ĐIỂM"));
+                Is.EqualTo("ĐẠT 3 ĐIỂM TRƯỚC ĐỐI THỦ · 1/3"));
 
             var hud = root.AddComponent<VolleyballHud>();
             TMP_Text score = new GameObject("Score").AddComponent<TextMeshPro>();
