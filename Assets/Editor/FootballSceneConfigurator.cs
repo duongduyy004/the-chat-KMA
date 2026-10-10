@@ -27,7 +27,7 @@ namespace KMA.EditorTools
         const int HudSortingOrder = 500;
         static readonly Color Sky = new Color32(120, 207, 235, 255);
         public const string KeeperCharacter = CharacterArt.Keeper;
-        public const string KeeperReadyPose = "idle";
+        public const string KeeperReadyPose = "ready";
         // The kicker stands nearest the camera: 186x248 preview px, feet just below the penalty spot row.
         const float KickerDisplayWidth = 186f;
         public const float KickerDisplayHeight = 248f;

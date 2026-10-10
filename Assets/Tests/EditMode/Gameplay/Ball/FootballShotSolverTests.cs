@@ -55,7 +55,8 @@ namespace KMA.Tests.Gameplay.Ball
             Assert.That(f.KeeperX, Is.Zero);
             for (int i = 0; i < 48; i++) f.Step();
             Assert.That(f.KeeperX, Is.GreaterThan(0f));
-            Assert.That(Finish(0f, .5f, true).Outcome, Is.EqualTo(FootballOutcome.Saved));
+            // Power .4 meets the crouched keeper at chest height; a harder centre shot clears her head.
+            Assert.That(Finish(0f, .4f, true).Outcome, Is.EqualTo(FootballOutcome.Saved));
         }
         [Test]
         public void PredictionMatchesLiveFlightWithoutKeeper()

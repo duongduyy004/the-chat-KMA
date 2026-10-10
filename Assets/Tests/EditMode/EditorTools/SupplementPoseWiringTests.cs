@@ -34,11 +34,11 @@ namespace KMA.Tests.EditorTools
                     "MaleAdventurer_footballBackKick", "MaleAdventurer_footballBackCelebrate"
                 }));
             string[] keeper = PoseNames(new[] { poses.keeperReady, poses.keeperSave, poses.keeperBeaten });
-            Assert.That(keeper, Is.EqualTo(new[] { "StudentKeeper_idle", "StudentKeeper_cheer", "StudentKeeper_recover" }));
+            Assert.That(keeper, Is.EqualTo(new[] { "StudentKeeper_ready", "StudentKeeper_cheer", "StudentKeeper_recover" }));
             // The live ball stays visible on a save, so a keeper drawn holding one would show two balls.
             Assert.That(keeper, Has.None.EndWith("Ball"));
             Assert.That(PoseName(GameObject.Find("FootballWorld/Goalkeeper").GetComponent<SpriteRenderer>().sprite),
-                Is.EqualTo("StudentKeeper_idle"));
+                Is.EqualTo("StudentKeeper_ready"));
         }
 
         [Test]

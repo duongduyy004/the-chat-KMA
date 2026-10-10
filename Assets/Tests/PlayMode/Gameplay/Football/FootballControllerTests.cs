@@ -82,7 +82,8 @@ namespace KMA.Tests.Gameplay.Football
                 Assert.That(fixture.controller.Rules.State, Is.EqualTo(FootballState.Aiming));
                 fixture.controller.Rules.SetAim(0f);
                 fixture.controller.Rules.BeginCharge();
-                fixture.controller.Rules.Tick(.7f);
+                // .9 s charges to power ~.4: a centre shot at chest height that the crouched keeper saves.
+                fixture.controller.Rules.Tick(.9f);
                 fixture.controller.Rules.ReleaseShot();
                 Assert.That(completed, Is.Zero);
                 TickPlay(20f);

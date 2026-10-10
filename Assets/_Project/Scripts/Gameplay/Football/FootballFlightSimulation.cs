@@ -148,14 +148,14 @@ namespace KMA.Gameplay
             public Capsule(float ax, float ay, float bx, float by, float r)
             { a = new Vector2(ax, ay); b = new Vector2(bx, by); radius = r; }
         }
-        // `StudentKeeper` `idle` pose (standing, arms at the sides) drawn FootballPresentation.KeeperDisplayWidth x Height,
-        // feet KeeperFeetDrop px below the hip. Head, torso, arms, gloves, legs.
+        // `StudentKeeper` `ready` pose (crouched, gloves out wide) drawn FootballPresentation.KeeperDisplayWidth x Height,
+        // feet KeeperFeetDrop px below the hip. Head, torso, arms, gloves, legs, right shoe.
         static readonly Capsule[] KeeperCapsules = {
-            new Capsule(0,-80,5,-68,12),
-            new Capsule(0,-50,1,-20,17),
-            new Capsule(-17,-44,-16,-15,3), new Capsule(19,-35,18,-14,3),
-            new Capsule(-18,-28,-21,-15,4), new Capsule(20,-17,21,-19,5),
-            new Capsule(-8,-11,-13,10,6), new Capsule(8,-6,15,11,8)
+            new Capsule(5,-66,8,-59,14),
+            new Capsule(-2,-40,-3,-22,19),
+            new Capsule(-18,-41,-22,-32,5), new Capsule(17,-40,19,-29,6),
+            new Capsule(-18,-32,-19,-27,4), new Capsule(28,-30,26,-26,7),
+            new Capsule(-16,-24,-31,11,4), new Capsule(19,-16,16,8,5), new Capsule(19,9,30,10,4)
         };
 
         public static int KeeperCapsuleCount => KeeperCapsules.Length;
