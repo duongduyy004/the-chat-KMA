@@ -1,5 +1,6 @@
 using KMA.Gameplay.UI;
 using NUnit.Framework;
+using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -114,6 +115,30 @@ namespace KMA.Tests.Presentation
             panel.Open(Pages, GuideMode.FirstRun);
             Object.DestroyImmediate(host);
             Assert.That(Time.timeScale, Is.EqualTo(1f));
+        }
+
+        [Test]
+        public void LongBodyTextWrapsInsideItsRectAndDoesNotOverflow()
+        {
+            panel.Open(new[] { new TutorialStep("BÓNG", "Bấm đúng nhịp: HOÀN HẢO, rồi TỐT, rồi SỚM/MUỘN. Mỗi bên chạm tối đa 3 lần. Bóng không qua lưới là mất điểm.") }, GuideMode.Review);
+            Canvas.ForceUpdateCanvases();
+            TMP_Text body = panel.transform.Find("Scrim/Card/Body").GetComponent<TMP_Text>();
+            body.ForceMeshUpdate();
+            Rect rect = body.rectTransform.rect;
+
+            Assert.That(body.textWrappingMode, Is.EqualTo(TextWrappingModes.Normal));
+            Assert.That(body.alignment, Is.EqualTo(TextAlignmentOptions.TopLeft));
+            Assert.That(body.textBounds.size.x, Is.LessThanOrEqualTo(rect.width + .5f), "wraps instead of running past the card");
+            Assert.That(body.textBounds.size.y, Is.LessThanOrEqualTo(rect.height + .5f));
+        }
+
+        [Test]
+        public void CardIsOpaqueAndTitleIsCentred()
+        {
+            Image card = panel.transform.Find("Scrim/Card").GetComponent<Image>();
+            Assert.That(card.color.a, Is.EqualTo(1f).Within(.001f));
+            var title = (RectTransform)panel.transform.Find("Scrim/Card/Title");
+            Assert.That(title.anchoredPosition.x, Is.EqualTo(0f).Within(.01f));
         }
     }
 }

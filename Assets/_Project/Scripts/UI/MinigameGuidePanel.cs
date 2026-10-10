@@ -58,26 +58,29 @@ namespace KMA.Gameplay.UI
             RectTransform scrimRect = UiKit.Rect(transform, "Scrim");
             UiKit.Stretch(scrimRect);
             Image scrimImage = scrimRect.gameObject.AddComponent<Image>();
-            scrimImage.color = MinigameUiTheme.Scrim;
+            scrimImage.color = MinigameUiTheme.WithAlpha(MinigameUiTheme.Scrim, .92f); // hides the game's own start card
             scrimImage.raycastTarget = true;
             scrim = scrimRect.gameObject;
 
-            Image card = UiKit.Panel(scrimRect, "Card");
+            Image card = UiKit.Panel(scrimRect, "Card", alpha: 1f);
             card.raycastTarget = true;
             UiKit.Place(card.rectTransform, Centre, Centre, Vector2.zero, new Vector2(1200f, 720f));
 
             titleLabel = UiKit.Label(card.transform, "Title", string.Empty, MinigameUiTheme.Title,
                 MinigameUiTheme.TextPrimary);
-            UiKit.Place(titleLabel.rectTransform, Centre, Centre, new Vector2(-80f, 280f), new Vector2(900f, 80f));
+            UiKit.Place(titleLabel.rectTransform, Centre, Centre, new Vector2(0f, 280f), new Vector2(700f, 80f));
 
             progressLabel = UiKit.Label(card.transform, "Progress", string.Empty, MinigameUiTheme.Caption,
                 MinigameUiTheme.Accent, TextAlignmentOptions.Right);
             UiKit.Place(progressLabel.rectTransform, Centre, Centre, new Vector2(470f, 280f), new Vector2(180f, 60f));
 
             bodyLabel = UiKit.Label(card.transform, "Body", string.Empty, MinigameUiTheme.BodyLarge,
-                MinigameUiTheme.TextPrimary, TextAlignmentOptions.Left);
+                MinigameUiTheme.TextPrimary, TextAlignmentOptions.TopLeft);
             UiKit.Place(bodyLabel.rectTransform, Centre, Centre, new Vector2(0f, 20f), new Vector2(1080f, 400f));
             UiKit.FitLabel(bodyLabel, MinigameUiTheme.BodyLarge);
+            // Code-built TMP labels default to NoWrap; the body must wrap inside its rect.
+            bodyLabel.textWrappingMode = TextWrappingModes.Normal;
+            bodyLabel.overflowMode = TextOverflowModes.Overflow;
 
             skipButton = CreateButton(card.transform, "SkipButton", GuideNavigator.SkipLabel, -380f,
                 ButtonVariant.Secondary).Button;
