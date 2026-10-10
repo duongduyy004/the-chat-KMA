@@ -4,6 +4,7 @@
     "references": [
         "UnityEngine.TestRunner",
         "KMA.Gameplay",
+        "KMA.Gameplay.UI",
         "KMA.Gameplay.Ball"
     ],
     "includePlatforms": [],
