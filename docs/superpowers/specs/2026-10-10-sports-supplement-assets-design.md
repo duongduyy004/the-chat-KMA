@@ -64,15 +64,15 @@ Không đổi trạng thái hay logic; chỉ đổi file mà configurator nạp 
 | `kickerRunUp` | Hero `climb0` | Hero `footballBackApproach` |
 | `kickerStrike` | Hero `climb1` | Hero `footballBackKick` |
 | `kickerCelebrate` | Hero `cheer1` | Hero `footballBackCelebrate` |
-| `keeperReady` | MalePerson `cheer1` | StudentKeeper `ready` |
+| `keeperReady` | MalePerson `cheer1` | StudentKeeper `idle` |
 | `keeperSave` | MalePerson `hold` | StudentKeeper `cheer` |
 | `keeperBeaten` | MalePerson `hurt` | StudentKeeper `recover` |
 
-`KeeperCharacter` đổi thành `CharacterArt.Keeper`, `KeeperReadyPose` thành `"ready"`.
+`KeeperCharacter` đổi thành `CharacterArt.Keeper`, `KeeperReadyPose` thành `"idle"`.
 
 Thủ môn **chỉ dùng tư thế không vẽ bóng**: `FootballPresentation` không ẩn quả bóng riêng khi cản phá, nên `holdBall`/`catch*Ball` sẽ hiện hai quả bóng. Pha nghiêng/bay hiện có do `KeeperAngle` xoay renderer, không cần sprite theo hướng.
 
-**Vùng cản phá khớp lại theo hình mới (người dùng duyệt khi lập kế hoạch).** `KeeperCapsules` trong `FootballFlightSimulation.cs` mô phỏng hình thủ môn đang vẽ; `KeeperSilhouetteTests` yêu cầu độ khớp ≥ 0,85. Bộ capsule hiện tại chỉ khớp `StudentKeeper_ready` ở mức recall 0,63 / precision 0,55, nên được thay bằng bộ khớp lại theo `ready` (0,91 / 0,91, ngang thủ môn cũ). Vùng cản nhỏ hơn khoảng 13 % và không còn tay giơ cao, nên góc cao dễ ghi bàn hơn. Đây là thay đổi script runtime duy nhất.
+**Vùng cản phá khớp lại theo hình mới (đã chốt khi triển khai).** `KeeperCapsules` trong `FootballFlightSimulation.cs` mô phỏng hình thủ môn đang vẽ; `KeeperSilhouetteTests` yêu cầu độ khớp ≥ 0,85. Kế hoạch ban đầu dùng `ready` (thủ môn khom, hai tay dang ngang) với bộ capsule khớp lại, nhưng khi chạy test thì cú sút giữa, lực 0,5 (bay cao 1,87 m) bay qua đầu thủ môn đang khom và thành bàn thắng, làm hỏng `FootballShotSolverTests.KeeperReactsAfterDelayAndSavesActualContact` và `FootballControllerTests.FiveResolvedShotsEmitOneCampaignResultAfterTheFeedbackPhase` (bài thi bóng đá trở nên quá dễ). Vì vậy `keeperReady` dùng `idle` (đứng thẳng, cao ngang thủ môn cũ; hướng dẫn của bộ asset cũng nêu chuỗi `idle → ready`), và capsule được khớp lại theo `idle` (recall/precision 0,917/0,916). Hệ quả: không còn vùng tay giơ cao nên ở độ cao đầu, cú sút lực 0,5 chỉ còn bị cản khi |aim| ≤ ~0,10 (trước đây ≤ ~0,40). Đây là thay đổi cân bằng duy nhất và là thay đổi script runtime duy nhất.
 
 ### 4.2 Bóng chuyền (`VolleyballSceneConfigurator.Athlete`)
 
