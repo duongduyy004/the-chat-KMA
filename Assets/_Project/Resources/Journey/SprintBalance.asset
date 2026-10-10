@@ -16,7 +16,7 @@ MonoBehaviour:
   maxStamina: 100
   correctImpulse: 18
   wrongImpulseFactor: 0.4
-  speedCap: 120
+  speedCap: 150
   correctTapCost: 0.25
   wrongTapCost: 1.5
   burstRateThreshold: 6

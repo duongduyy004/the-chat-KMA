@@ -52,7 +52,7 @@ namespace KMA.Gameplay
     public sealed class SprintRules
     {
         const float FullImpulse = 18f;
-        const float SpeedCap = 120f;
+        const float SpeedCap = 150f;
         const float FinishDistance = 100f;
         public const float LowStaminaThreshold = 30f;
         public const float HighStaminaThreshold = 70f;

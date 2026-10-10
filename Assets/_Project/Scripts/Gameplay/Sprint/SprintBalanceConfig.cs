@@ -64,7 +64,7 @@ namespace KMA.Gameplay
         }
 
         public static SprintBalanceParameters Default => new SprintBalanceParameters(
-            100f, 100f, 18f, .4f, 120f, .25f, 1.5f, 6f, .75f, 20f, .02f,
+            100f, 100f, 18f, .4f, 150f, .25f, 1.5f, 6f, .75f, 20f, .02f,
             6f, 30f, .75f, 90f, 15f, .08f, 10, 30, .25f, .35f, .25f, 240f);
 
         public bool Equals(SprintBalanceParameters other) =>
@@ -98,7 +98,7 @@ namespace KMA.Gameplay
         [SerializeField] float maxStamina = 100f;
         [SerializeField] float correctImpulse = 18f;
         [SerializeField] float wrongImpulseFactor = .4f;
-        [SerializeField] float speedCap = 120f;
+        [SerializeField] float speedCap = 150f;
         [SerializeField] float correctTapCost = .25f;
         [SerializeField] float wrongTapCost = 1.5f;
         [SerializeField] float burstRateThreshold = 6f;
