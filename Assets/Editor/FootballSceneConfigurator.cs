@@ -26,8 +26,8 @@ namespace KMA.EditorTools
         const string HudRootName = "S2_HUD_Minigame";
         const int HudSortingOrder = 500;
         static readonly Color Sky = new Color32(120, 207, 235, 255);
-        public const string KeeperCharacter = "MalePerson";
-        public const string KeeperReadyPose = "cheer1";
+        public const string KeeperCharacter = CharacterArt.Keeper;
+        public const string KeeperReadyPose = "idle";
         // The kicker stands nearest the camera: 186x248 preview px, feet just below the penalty spot row.
         const float KickerDisplayWidth = 186f;
         public const float KickerDisplayHeight = 248f;
@@ -137,16 +137,17 @@ namespace KMA.EditorTools
             presentation.ConfigurePoses(poses);
         }
 
-        /// <summary>The hero kicks, seen from behind; the keeper faces him.</summary>
+        /// <summary>The hero kicks, seen from behind; the student keeper faces him.</summary>
+        // Keeper poses never have a ball drawn in: the live ball stays visible on a save.
         static FootballPoseSprites LoadPoses() => new FootballPoseSprites
         {
-            kickerReady = CharacterArt.Load(CharacterArt.Hero, "back"),
-            kickerRunUp = CharacterArt.Load(CharacterArt.Hero, "climb0"),
-            kickerStrike = CharacterArt.Load(CharacterArt.Hero, "climb1"),
-            kickerCelebrate = CharacterArt.Load(CharacterArt.Hero, "cheer1"),
+            kickerReady = CharacterArt.Load(CharacterArt.Hero, "footballBackIdle"),
+            kickerRunUp = CharacterArt.Load(CharacterArt.Hero, "footballBackApproach"),
+            kickerStrike = CharacterArt.Load(CharacterArt.Hero, "footballBackKick"),
+            kickerCelebrate = CharacterArt.Load(CharacterArt.Hero, "footballBackCelebrate"),
             keeperReady = CharacterArt.Load(KeeperCharacter, KeeperReadyPose),
-            keeperSave = CharacterArt.Load(KeeperCharacter, "hold"),
-            keeperBeaten = CharacterArt.Load(KeeperCharacter, "hurt")
+            keeperSave = CharacterArt.Load(KeeperCharacter, "cheer"),
+            keeperBeaten = CharacterArt.Load(KeeperCharacter, "recover")
         };
 
         static void ImportGoalViewArt()
