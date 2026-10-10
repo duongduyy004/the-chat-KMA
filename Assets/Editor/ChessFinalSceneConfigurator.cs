@@ -1,5 +1,6 @@
 #if UNITY_EDITOR
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using KMA.Gameplay;
 using KMA.Gameplay.Chess;
@@ -29,6 +30,15 @@ namespace KMA.EditorTools
         static readonly string[] StudentPoses = { "idle", "hurt", "cheer0", "cheer1" };
         static readonly string[] TeacherPoses =
             { "idleBoss", "strictLook", "chessThink", "chessMove", "whistle0", "whistle1", "taunt", "cheer0" };
+        // Pose keys the controller asks for → the supplement art drawing them; other keys draw the file of the same name.
+        static readonly Dictionary<string, string> StudentArt = new Dictionary<string, string>
+        {
+            { "idle", "think" }, { "hurt", "disappointed" }, { "cheer0", "celebrate" }, { "cheer1", "happy" }
+        };
+        static readonly Dictionary<string, string> TeacherArt = new Dictionary<string, string>
+        {
+            { "idleBoss", "handsOnHips" }, { "taunt", "angry" }, { "chessThink", "think" }, { "cheer0", "congratulate" }
+        };
 
         [MenuItem("KMA/Chess Final/Build Scene")]
         public static void BuildScene()
@@ -110,8 +120,8 @@ namespace KMA.EditorTools
             toast.gameObject.SetActive(false);
 
             // Side columns: avatars bottom-anchored below the name and counters.
-            Image student = Avatar(parent, "Student", StudentX, CharacterArt.Load(CharacterArt.Hero, "idle"));
-            Image teacher = Avatar(parent, "Teacher", TeacherX, CharacterArt.Load(CharacterArt.Boss, "idleBoss"));
+            Image student = Avatar(parent, "Student", StudentX, Art(CharacterArt.Hero, StudentArt, "idle"));
+            Image teacher = Avatar(parent, "Teacher", TeacherX, Art(CharacterArt.Boss, TeacherArt, "idleBoss"));
             // The art looks right; she stands right of the board, so mirror her to look at it.
             teacher.rectTransform.localScale = new Vector3(-1f, 1f, 1f);
             NameTag(parent, "StudentName", "Tân Thủ", StudentX);
@@ -152,8 +162,8 @@ namespace KMA.EditorTools
             hud.Configure(objective.Label, clock.Label, mistakes.Label, turn, toast, intro.gameObject, start.Button,
                 hint.Button);
             var cast = parent.gameObject.AddComponent<ChessCastView>();
-            cast.Configure(student, teacher, Poses(CharacterArt.Hero, StudentPoses),
-                Poses(CharacterArt.Boss, TeacherPoses), bubble.gameObject, bubbleText);
+            cast.Configure(student, teacher, Poses(CharacterArt.Hero, StudentPoses, StudentArt),
+                Poses(CharacterArt.Boss, TeacherPoses, TeacherArt), bubble.gameObject, bubbleText);
 
             var pause = Object.FindFirstObjectByType<PausePanel>(FindObjectsInactive.Include);
             if (pause != null)
@@ -174,9 +184,12 @@ namespace KMA.EditorTools
             EditorSceneManager.SaveScene(scene);
         }
 
-        static ChessCastView.Pose[] Poses(string character, string[] names) => names
-            .Select(name => new ChessCastView.Pose { name = name, sprite = CharacterArt.Load(character, name) })
+        static ChessCastView.Pose[] Poses(string character, string[] names, IReadOnlyDictionary<string, string> art) => names
+            .Select(name => new ChessCastView.Pose { name = name, sprite = Art(character, art, name) })
             .ToArray();
+
+        static Sprite Art(string character, IReadOnlyDictionary<string, string> art, string key) =>
+            CharacterArt.Load(character, art.TryGetValue(key, out string file) ? file : key);
 
         static Image Avatar(RectTransform parent, string name, float x, Sprite sprite)
         {

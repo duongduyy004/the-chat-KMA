@@ -20,8 +20,11 @@ namespace KMA.EditorTools
         public const string ScenePath = "Assets/_Project/Scenes/Celebration.unity";
         const string Classmate = "FemalePerson";
         static readonly Vector2 AvatarSize = new Vector2(300f, 400f);
-        static readonly string[] CheerPoses = { "idle", "cheer0", "cheer1" };
-        static readonly string[] TeacherPoses = { "idleBoss", "taunt", "cheer0" };
+        // Slot order: arrive, cheer A, cheer B. Slots 1 and 2 alternate, so they stay the designed cheer pair.
+        static readonly string[] HeroPoses = { "happy", "cheer0", "cheer1" };
+        static readonly string[] ClassmatePoses = { "idle", "cheer0", "cheer1" };
+        // Slot order: waiting, first reaction, final cheer.
+        static readonly string[] TeacherPoses = { "idleBoss", "clap0", "congratulate" };
 
         [MenuItem("KMA/Celebration/Build Scene")]
         public static void BuildScene()
@@ -49,7 +52,7 @@ namespace KMA.EditorTools
 
             Image classmate = Avatar(parent, "Classmate", .33f, CharacterArt.Load(Classmate, "idle"));
             classmate.rectTransform.localScale = Vector3.one * .9f;
-            Image student = Avatar(parent, "Student", .5f, CharacterArt.Load(CharacterArt.Hero, "idle"));
+            Image student = Avatar(parent, "Student", .5f, CharacterArt.Load(CharacterArt.Hero, HeroPoses[0]));
             Image teacher = Avatar(parent, "Teacher", .78f, CharacterArt.Load(CharacterArt.Boss, "idleBoss"));
             // The art looks right; she stands right of the students, so mirror her to look at them.
             teacher.rectTransform.localScale = new Vector3(-1f, 1f, 1f);
@@ -98,8 +101,8 @@ namespace KMA.EditorTools
             fade.raycastTarget = false;
 
             var controller = canvasObject.AddComponent<CelebrationSceneController>();
-            controller.Configure(student, classmate, teacher, Poses(CharacterArt.Hero, CheerPoses),
-                Poses(Classmate, CheerPoses), Poses(CharacterArt.Boss, TeacherPoses), bubble.gameObject, bubbleText,
+            controller.Configure(student, classmate, teacher, Poses(CharacterArt.Hero, HeroPoses),
+                Poses(Classmate, ClassmatePoses), Poses(CharacterArt.Boss, TeacherPoses), bubble.gameObject, bubbleText,
                 confetti, summaryGroup, title, rows, footnote, skip.Button, menu.Button, replay.Button);
             controller.SetFade(fade);
             EditorUtility.SetDirty(controller);

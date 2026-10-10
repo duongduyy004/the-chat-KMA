@@ -4,6 +4,8 @@ using System.IO;
 using System.Linq;
 using KMA.EditorTools;
 using KMA.Gameplay;
+using KMA.Gameplay.Celebration;
+using KMA.Gameplay.Chess;
 using KMA.Gameplay.FrogJump;
 using KMA.Gameplay.Volleyball;
 using NUnit.Framework;
@@ -96,6 +98,56 @@ namespace KMA.Tests.EditorTools
             return AnimationUtility.GetObjectReferenceCurveBindings(clip)
                 .SelectMany(binding => AnimationUtility.GetObjectReferenceCurve(clip, binding))
                 .Select(key => PoseName(key.value as Sprite)).ToArray();
+        }
+
+        [Test]
+        public void ChessCastShowsTheSupplementExpressions()
+        {
+            EditorSceneManager.OpenScene(ChessFinalSceneConfigurator.ScenePath, OpenSceneMode.Single);
+            var cast = new SerializedObject(Object.FindFirstObjectByType<ChessCastView>());
+            Assert.That(CastPose(cast, "studentPoses", "idle"), Is.EqualTo("MaleAdventurer_think"));
+            Assert.That(CastPose(cast, "studentPoses", "hurt"), Is.EqualTo("MaleAdventurer_disappointed"));
+            Assert.That(CastPose(cast, "studentPoses", "cheer0"), Is.EqualTo("MaleAdventurer_celebrate"));
+            Assert.That(CastPose(cast, "studentPoses", "cheer1"), Is.EqualTo("MaleAdventurer_happy"));
+            Assert.That(CastPose(cast, "teacherPoses", "idleBoss"), Is.EqualTo("BossPE_handsOnHips"));
+            Assert.That(CastPose(cast, "teacherPoses", "taunt"), Is.EqualTo("BossPE_angry"));
+            Assert.That(CastPose(cast, "teacherPoses", "chessThink"), Is.EqualTo("BossPE_think"));
+            Assert.That(CastPose(cast, "teacherPoses", "cheer0"), Is.EqualTo("BossPE_congratulate"));
+            Assert.That(CastPose(cast, "teacherPoses", "chessMove"), Is.EqualTo("BossPE_chessMove"));
+            Assert.That(CastPose(cast, "teacherPoses", "strictLook"), Is.EqualTo("BossPE_strictLook"));
+        }
+
+        [Test]
+        public void CelebrationCastShowsTheSupplementExpressions()
+        {
+            EditorSceneManager.OpenScene(CelebrationSceneConfigurator.ScenePath, OpenSceneMode.Single);
+            var controller = new SerializedObject(Object.FindFirstObjectByType<CelebrationSceneController>());
+            // Slots 1 and 2 alternate every 0.35 s, so they stay the designed cheer0/cheer1 pair.
+            Assert.That(Frames(controller, "studentFrames"),
+                Is.EqualTo(new[] { "MaleAdventurer_happy", "MaleAdventurer_cheer0", "MaleAdventurer_cheer1" }));
+            Assert.That(Frames(controller, "classmateFrames"),
+                Is.EqualTo(new[] { "FemalePerson_idle", "FemalePerson_cheer0", "FemalePerson_cheer1" }));
+            Assert.That(Frames(controller, "teacherFrames"),
+                Is.EqualTo(new[] { "BossPE_idleBoss", "BossPE_clap0", "BossPE_congratulate" }));
+        }
+
+        static string CastPose(SerializedObject cast, string list, string key)
+        {
+            SerializedProperty poses = cast.FindProperty(list);
+            for (int i = 0; i < poses.arraySize; i++)
+            {
+                SerializedProperty pose = poses.GetArrayElementAtIndex(i);
+                if (pose.FindPropertyRelative("name").stringValue == key)
+                    return PoseName((Sprite)pose.FindPropertyRelative("sprite").objectReferenceValue);
+            }
+            return "<no pose " + key + ">";
+        }
+
+        static string[] Frames(SerializedObject component, string field)
+        {
+            SerializedProperty frames = component.FindProperty(field);
+            return Enumerable.Range(0, frames.arraySize)
+                .Select(i => PoseName((Sprite)frames.GetArrayElementAtIndex(i).objectReferenceValue)).ToArray();
         }
 
         internal static string PoseName(Sprite sprite) =>
