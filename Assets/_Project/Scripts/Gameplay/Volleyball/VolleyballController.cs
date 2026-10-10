@@ -1,10 +1,11 @@
 using System;
+using System.Collections.Generic;
 using KMA.Gameplay.UI;
 using UnityEngine;
 
 namespace KMA.Gameplay.Volleyball
 {
-    public sealed class VolleyballController : MinigameBase, IChallengeController
+    public sealed class VolleyballController : MinigameBase, IChallengeController, IMinigameGuideSource
     {
         public override bool UsesSharedTutorial => false;
 
@@ -29,6 +30,9 @@ namespace KMA.Gameplay.Volleyball
         public VolleyballHud Hud => hud;
         public bool HasAllReferences => playerView && opponentView && ballView && input && hud;
         public SubjectId Subject => SubjectId.Volleyball;
+        public string GuideKey => VolleyballGuide.Key;
+        public IReadOnlyList<TutorialStep> BuildGuide() => VolleyballGuide.Build(challengeDefinition?.Kind,
+            challengeDefinition?.TargetCount ?? 0, Match.WinningPoints, Match.ClockLimit);
         public event Action<ChallengeAttemptResult> ChallengeCompleted;
 
         public void Configure(VolleyAthleteView player, VolleyAthleteView opponent, VolleyBallView ball,

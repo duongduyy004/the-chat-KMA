@@ -7,6 +7,7 @@
         "KMA.Gameplay",
         "KMA.Gameplay.Volleyball",
         "KMA.Gameplay.Progression",
+        "KMA.Gameplay.UI",
         "UnityEngine.UI",
         "Unity.TextMeshPro"
     ],
