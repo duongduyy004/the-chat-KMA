@@ -29,6 +29,7 @@ namespace KMA.Gameplay
 
         public void Tick(float dt)
         {
+            if (Race.IsFinished) { Race.Tick(dt); return; }
             if (IsComplete || dt <= 0f || float.IsNaN(dt) || float.IsInfinity(dt)) return;
             float bounded = definition.TimeLimit > 0f
                 ? Mathf.Min(dt, Mathf.Max(0f, definition.TimeLimit - Race.Elapsed)) : dt;
@@ -54,7 +55,10 @@ namespace KMA.Gameplay
                 examResult = Race.BuildResult(definition.Distance, definition.TimeLimit);
                 passed = examResult.Pass;
                 completedTargets = passed ? definition.TargetCount : 0;
-                if (definition.Kind != ChallengeKind.Exam) examResult = null;
+                // Practice saves no score, but a win still shows the score it earned.
+                bool showScore = definition.Kind == ChallengeKind.Exam ||
+                    (definition.Kind == ChallengeKind.Practice && passed);
+                if (!showScore) examResult = null;
             }
 
             return new ChallengeAttemptResult(context, passed, new ChallengeMetrics(

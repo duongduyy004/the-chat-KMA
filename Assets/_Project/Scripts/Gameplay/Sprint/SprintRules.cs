@@ -74,6 +74,8 @@ namespace KMA.Gameplay
         float speed;
         float stamina;
         float elapsed;
+        float rivalClock;
+        bool finished;
 
         public SprintRules(float timeLimit = DefaultTimeLimit, RivalPaceProfile[] rivalProfiles = null,
             Side[] authoredSequence = null, SprintBalanceParameters? balance = null)
@@ -107,6 +109,9 @@ namespace KMA.Gameplay
         public float Speed => speed;
         public float Stamina => stamina;
         public float Elapsed => elapsed;
+        /// The player crossed the line: their numbers and rank are frozen while rivals keep running.
+        public bool IsFinished => finished;
+        float RivalTime => finished ? rivalClock : elapsed;
         public float TimeLimit => timeLimit;
         public int CorrectStreak => correctStreak;
         public float ComboBoost => ComboBoostFor(correctStreak, Tuning);
@@ -122,10 +127,10 @@ namespace KMA.Gameplay
         public float GetRivalDistance(int index) => index < 0 || index >= rivalDistances.Length ? 0f : rivalDistances[index];
         public bool IsRivalSurging(int index) =>
             index >= 0 && index < rivalProfiles.Length && rivalProfiles[index] != null &&
-            rivalProfiles[index].IsSurgingAt(elapsed);
+            rivalProfiles[index].IsSurgingAt(RivalTime);
         public bool IsRivalSlowing(int index) =>
             index >= 0 && index < rivalProfiles.Length && rivalProfiles[index] != null &&
-            rivalProfiles[index].IsSlowingAt(elapsed);
+            rivalProfiles[index].IsSlowingAt(RivalTime);
         public SprintSnapshot Snapshot => new SprintSnapshot(distance, speed, stamina, elapsed);
 
         // Combo boost and idle braking apply to every race; the legacy rules borrow the default tuning.
@@ -144,8 +149,26 @@ namespace KMA.Gameplay
             value < LowStaminaThreshold ? StaminaBand.Low :
             value < HighStaminaThreshold ? StaminaBand.Mid : StaminaBand.High;
 
+        public void FinishRace()
+        {
+            if (finished) return;
+            finished = true;
+            rivalClock = elapsed;
+            speed = 0f;
+        }
+
+        public bool AllRivalsReached(float goalDistance)
+        {
+            for (int i = 0; i < rivalDistances.Length; i++)
+            {
+                if (rivalProfiles[i] != null && rivalDistances[i] < goalDistance) return false;
+            }
+            return true;
+        }
+
         public void Tap(Side side)
         {
+            if (finished) return;
             bool correct = side == ExpectedSide;
             total++;
             if (correct)
@@ -186,6 +209,15 @@ namespace KMA.Gameplay
         public void Tick(float dt)
         {
             if (dt <= 0f || float.IsNaN(dt) || float.IsInfinity(dt)) return;
+            if (finished)
+            {
+                rivalClock += dt;
+                for (int i = 0; i < rivalProfiles.Length; i++)
+                {
+                    if (rivalProfiles[i] != null) rivalDistances[i] += rivalProfiles[i].SpeedAt(rivalClock) * dt;
+                }
+                return;
+            }
             elapsed += dt;
             float drag = balance.HasValue ? balance.Value.DragPerSecond : 15f;
             speed = Mathf.Max(0f, speed - drag * dt - IdleBrakeOver(elapsed - dt, elapsed));

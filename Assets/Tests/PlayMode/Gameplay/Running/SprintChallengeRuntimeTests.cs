@@ -83,6 +83,44 @@ namespace KMA.Tests.Gameplay.Running
         }
 
         [UnityTest]
+        public IEnumerator CrossingTheLineWaitsForRivalsThenResolvesWithTheFrozenRank()
+        {
+            var controller = controllerObject.AddComponent<SprintController>();
+            ChallengeDefinition definition = ChallengeCatalog.LoadDefault().Get("sprint_practice");
+            controller.ConfigureChallenge(definition, new ChallengeAttemptContext(
+                "wait", definition.Id, ChallengeAttemptMode.Journey, ChallengeDifficulty.Normal));
+            var challenge = new SprintChallengeRules(definition, SprintBalanceParameters.Default,
+                new[] { new RivalPaceProfile("Slow", 5f, 5f) });
+            const BindingFlags flags = BindingFlags.Instance | BindingFlags.NonPublic;
+            typeof(SprintController).GetField("challengeRules", flags).SetValue(controller, challenge);
+            typeof(SprintController).GetField("rules", flags).SetValue(controller, challenge.Race);
+            controller.SetTutorialGate(false);
+            for (int frame = 0; frame < 301; frame++) controller.Simulate(.01f);
+            typeof(SprintRules).GetField("distance", flags).SetValue(challenge.Race, 149.99f);
+            typeof(SprintRules).GetField("speed", flags).SetValue(challenge.Race, 100f);
+            ChallengeAttemptResult received = null;
+            controller.ChallengeCompleted += result => received = result;
+
+            controller.Simulate(.05f);
+            Assert.That(controller.IsWaitingForRivals, Is.True);
+            Assert.That(received, Is.Null);
+            float frozen = controller.Snapshot.Distance;
+            controller.OnLeftTap();
+            controller.Simulate(.5f);
+            Assert.That(controller.Snapshot.Distance, Is.EqualTo(frozen));
+            Assert.That(controller.GetRivalDistance(0), Is.GreaterThan(0f));
+
+            for (int i = 0; i < 100 && received == null; i++) controller.Simulate(.5f);
+            Assert.That(received, Is.Not.Null);
+            Assert.That(received.Pass, Is.True);
+            Assert.That(received.ExamResult, Is.Not.Null);
+            Assert.That(received.ExamResult.Score, Is.GreaterThan(0f));
+            Assert.That(received.Metrics.Placement, Is.EqualTo(1));
+            Assert.That(controller.IsWaitingForRivals, Is.False);
+            yield return null;
+        }
+
+        [UnityTest]
         public IEnumerator PassingSprintExamRaisesScoreResultAndUnlocksVolleyball()
         {
             var session = new GameSession();

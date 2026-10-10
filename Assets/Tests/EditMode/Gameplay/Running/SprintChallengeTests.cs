@@ -102,7 +102,8 @@ namespace KMA.Tests.Gameplay.Running
             Assert.That(exam.Metrics.Elapsed, Is.LessThanOrEqualTo(22f));
             Assert.That(exam.ExamResult, Is.Not.Null);
             Assert.That(practice.Pass, Is.True);
-            Assert.That(practice.ExamResult, Is.Null);
+            Assert.That(practice.ExamResult, Is.Not.Null);
+            Assert.That(practice.ExamResult.Score, Is.GreaterThan(0f));
         }
 
         [Test]
@@ -149,6 +150,44 @@ namespace KMA.Tests.Gameplay.Running
             Simulate(challenge, hertz, catalog.Get(challengeId).TimeLimit);
             return challenge.BuildResult(new ChallengeAttemptContext("attempt", challengeId,
                 ChallengeAttemptMode.Journey, ChallengeDifficulty.Normal));
+        }
+
+        static ChallengeAttemptContext ContextFor(string id) =>
+            new ChallengeAttemptContext("ctx-" + id, id, ChallengeAttemptMode.Journey, ChallengeDifficulty.Normal);
+
+        [Test]
+        public void PassingPracticeShowsTheEarnedScoreButFailingDoesNot()
+        {
+            ChallengeDefinition practice = catalog.Get("sprint_practice");
+            var challenge = new SprintChallengeRules(practice, SprintBalanceParameters.Default,
+                Array.Empty<RivalPaceProfile>());
+            Assert.That(challenge.BuildResult(ContextFor(practice.Id)).ExamResult, Is.Null);
+
+            typeof(SprintRules).GetField("distance", System.Reflection.BindingFlags.Instance |
+                System.Reflection.BindingFlags.NonPublic).SetValue(challenge.Race, practice.Distance);
+            ChallengeAttemptResult won = challenge.BuildResult(ContextFor(practice.Id));
+            Assert.That(won.Pass, Is.True);
+            Assert.That(won.ExamResult, Is.Not.Null);
+            Assert.That(won.ExamResult.Score, Is.GreaterThan(0f));
+        }
+
+        [Test]
+        public void FinishedRacerFreezesWhileRivalsKeepRunning()
+        {
+            var rival = new RivalPaceProfile("Steady", 6f, 6f);
+            var rules = SprintRules.ForTest(150f, 20f, 1, rivalProfiles: new[] { rival });
+            rules.FinishRace();
+            int rank = rules.Rank;
+            rules.Tap(Side.Left);
+            rules.Tick(1f);
+            Assert.That(rules.Elapsed, Is.EqualTo(20f));
+            Assert.That(rules.Distance, Is.EqualTo(150f));
+            Assert.That(rules.Speed, Is.Zero);
+            Assert.That(rules.GetRivalDistance(0), Is.GreaterThan(0f));
+            Assert.That(rules.AllRivalsReached(150f), Is.False);
+            for (int i = 0; i < 40; i++) rules.Tick(1f);
+            Assert.That(rules.AllRivalsReached(150f), Is.True);
+            Assert.That(rules.Rank, Is.EqualTo(rank));
         }
 
         static void Simulate(SprintChallengeRules challenge, float hertz, float maxSeconds)

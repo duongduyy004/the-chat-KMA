@@ -124,7 +124,8 @@ namespace KMA.Gameplay
 
             bool pressed = pressRemaining > 0f && pressedSide == side;
             bool expected = HighlightedSide == side;
-            bool finished = controller != null && controller.PresentationPhase == MinigamePhase.Resolve;
+            bool finished = controller != null && (controller.PresentationPhase == MinigamePhase.Resolve ||
+                controller.IsWaitingForRivals);
 
             ControlState state = pressed ? ControlState.Pressed
                 : finished ? ControlState.Disabled
@@ -139,7 +140,8 @@ namespace KMA.Gameplay
                 return;
 
             Side restingSide = HighlightedSide == Side.Left ? Side.Right : Side.Left;
-            bool finished = controller != null && controller.PresentationPhase == MinigamePhase.Resolve;
+            bool finished = controller != null && (controller.PresentationPhase == MinigamePhase.Resolve ||
+                controller.IsWaitingForRivals);
             if (finished)
             {
                 SetScaleIfChanged(HighlightedSide, 1f);

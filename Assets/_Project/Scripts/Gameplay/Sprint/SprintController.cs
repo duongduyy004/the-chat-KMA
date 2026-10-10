@@ -16,6 +16,8 @@ namespace KMA.Gameplay
         // Fastest roll lets the quickest rival finish around 13 s, slowest keeps the last one near 18 s.
         public const float DefaultMinRivalSpeed = 5.7f;
         public const float DefaultMaxRivalSpeed = 6.9f;
+        public const float MaxRivalWaitSeconds = 8f;
+        public const string WaitForRivalsText = "VỀ ĐÍCH! ĐỢI CÁC BẠN VỀ ĐÍCH...";
 
         [SerializeField] RivalPaceProfileAsset[] rivalProfiles;
         [SerializeField, Min(0f)] float minRivalSpeed = DefaultMinRivalSpeed;
@@ -36,7 +38,9 @@ namespace KMA.Gameplay
         bool inputRouterSubscribed;
         int cadenceCombo;
         float stepDistance;
+        float rivalWaitElapsed;
 
+        public bool IsWaitingForRivals => rules != null && rules.IsFinished && !terminalResolved;
         public bool InputActionsReady => directInputEnabled && leftAction != null && rightAction != null;
         public Side ExpectedSide => rules == null ? Side.Left : rules.ExpectedSide;
         public SprintSnapshot Snapshot => rules == null ? default : rules.Snapshot;
@@ -85,6 +89,7 @@ namespace KMA.Gameplay
                 CreateRuntimeProfiles());
             rules = challengeRules.Race;
             terminalResolved = false;
+            rivalWaitElapsed = 0f;
             cadenceCombo = 0;
             stepDistance = 0f;
             LastResult = null;
@@ -259,7 +264,7 @@ namespace KMA.Gameplay
                 : Mathf.Clamp01((rules == null ? 0f : rules.Snapshot.Distance) / TargetDistance),
             stamina01: Mathf.Clamp01((rules == null ? 0f : rules.Stamina) / 100f),
             score: 0f,
-            statusText: challengeDefinition == null ? "TAP LEFT / RIGHT"
+            statusText: IsWaitingForRivals ? WaitForRivalsText : challengeDefinition == null ? "TAP LEFT / RIGHT"
                 : challengeDefinition.Kind == ChallengeKind.Learn
                     ? $"CHUỖI {rules.CorrectStreak}/{TargetCount}" : $"{TargetDistance:0} M · {TargetTime:0} S");
         protected override void TickPlay(float dt)
@@ -267,6 +272,7 @@ namespace KMA.Gameplay
             float before = rules.Snapshot.Distance;
             if (challengeRules != null) challengeRules.Tick(dt);
             else rules.Tick(dt);
+            if (rules.IsFinished) rivalWaitElapsed += dt;
             stepDistance += Mathf.Max(0f, rules.Snapshot.Distance - before);
             if (dt > 0f && stepDistance >= 1.6f)
             {
@@ -278,7 +284,7 @@ namespace KMA.Gameplay
 
         void OnTap(Side side)
         {
-            if (Lifecycle.Phase != MinigamePhase.Play)
+            if (Lifecycle.Phase != MinigamePhase.Play || rules.IsFinished)
                 return;
 
             Side expected = rules.ExpectedSide;
@@ -308,12 +314,32 @@ namespace KMA.Gameplay
             if (terminalResolved || Lifecycle.Phase != MinigamePhase.Play)
                 return;
 
+            if (rules.IsFinished)
+            {
+                if (rivalWaitElapsed >= MaxRivalWaitSeconds || rules.AllRivalsReached(TargetDistance))
+                    Resolve();
+                return;
+            }
+
             bool learn = IsLearnChallenge;
             bool finished = learn ? challengeRules.IsComplete : rules.Snapshot.Distance >= TargetDistance;
             bool timedOut = !learn && rules.Snapshot.Elapsed >= TargetTime;
             if (!finished && !timedOut)
                 return;
 
+            if (!learn && finished && rules.RivalCount > 0 && !rules.AllRivalsReached(TargetDistance))
+            {
+                // Lock the player's result and let the rivals run in before the result card opens.
+                rules.FinishRace();
+                rivalWaitElapsed = 0f;
+                return;
+            }
+
+            Resolve();
+        }
+
+        void Resolve()
+        {
             terminalResolved = true;
             Finish(BuildResult());
         }
