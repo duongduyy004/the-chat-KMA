@@ -52,7 +52,7 @@ namespace KMA.Gameplay.UI
             var scaler = gameObject.AddComponent<CanvasScaler>();
             scaler.uiScaleMode = CanvasScaler.ScaleMode.ScaleWithScreenSize;
             scaler.referenceResolution = new Vector2(1920f, 1080f);
-            scaler.matchWidthOrHeight = .5f;
+            scaler.matchWidthOrHeight = 1f; // follows the gameplay canvases (match height, 1920x1080 reference)
             gameObject.AddComponent<GraphicRaycaster>();
 
             RectTransform scrimRect = UiKit.Rect(transform, "Scrim");

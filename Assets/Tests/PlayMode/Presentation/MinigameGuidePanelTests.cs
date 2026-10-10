@@ -37,6 +37,7 @@ namespace KMA.Tests.Presentation
             Assert.That(canvas, Is.Not.Null);
             Assert.That(canvas.renderMode, Is.EqualTo(RenderMode.ScreenSpaceOverlay));
             Assert.That(canvas.sortingOrder, Is.EqualTo(950));
+            Assert.That(panel.GetComponent<UnityEngine.UI.CanvasScaler>().matchWidthOrHeight, Is.EqualTo(1f).Within(.001f), "the guide scales like the gameplay canvases");
             Assert.That(panel.IsOpen, Is.False);
             Assert.That(panel.transform.Find("Scrim").gameObject.activeSelf, Is.False);
         }
