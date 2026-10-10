@@ -150,5 +150,29 @@ namespace KMA.Tests.Presentation
             text.transform.SetParent(parent.transform, false);
             return text;
         }
+
+        [Test]
+        public void ResultActionOnlyReturnsPreviewRoute()
+        {
+            var resultRoot = new GameObject("result-panel");
+            try
+            {
+                var result = new MinigameResult(true, 1234.6f, Rank.A);
+                var panel = resultRoot.AddComponent<ResultPanel>();
+                string requestedRoute = null;
+                panel.ActionRequested += route => requestedRoute = route;
+
+                panel.Show(result, "MG_SprintPreview");
+                panel.Continue();
+
+                Assert.That(panel.CurrentResult, Is.SameAs(result));
+                Assert.That(panel.PreviewRoute, Is.EqualTo("MG_SprintPreview"));
+                Assert.That(requestedRoute, Is.EqualTo("MG_SprintPreview"));
+            }
+            finally
+            {
+                Object.DestroyImmediate(resultRoot);
+            }
+        }
     }
 }

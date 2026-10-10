@@ -1219,7 +1219,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 952a1df86eb002aff8d2af832eb8c845, type: 3}
   m_Name: 
   m_EditorClassIdentifier: KMA.Gameplay.UI::KMA.Gameplay.UI.PhaseOverlay
-  tutorialOverlay: {fileID: 4679405148162565661}
   tutorialRoot: {fileID: 6543933963222802803}
   countdownRoot: {fileID: 9072628428751218394}
   playRoot: {fileID: 8569835084798349097}
@@ -1955,7 +1954,6 @@ GameObject:
   - component: {fileID: 4675325227467972057}
   - component: {fileID: 6909399311207261542}
   - component: {fileID: 3735736704928320330}
-  - component: {fileID: 4679405148162565661}
   - component: {fileID: 5078697516169087674}
   m_Layer: 0
   m_Name: TutorialRoot
@@ -2029,27 +2027,6 @@ MonoBehaviour:
   m_FillOrigin: 0
   m_UseSpriteMesh: 0
   m_PixelsPerUnitMultiplier: 1
---- !u!114 &4679405148162565661
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 6543933963222802803}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: a9dd06a4448e575a1b7eabd7aae2abf8, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: KMA.Gameplay.UI::KMA.Gameplay.UI.TutorialOverlay
-  contentRoot: {fileID: 6543933963222802803}
-  titleLabel: {fileID: 7831643683988803119}
-  instructionLabel: {fileID: 6400539297219594228}
-  stepLabel: {fileID: 417909442889988155}
-  iconImage: {fileID: 3146882502308838819}
-  backButton: {fileID: 2427970491983341731}
-  nextButton: {fileID: 2337293660367942587}
-  skipButton: {fileID: 7064996553738116737}
-  closeButton: {fileID: 5267739935570982197}
 --- !u!114 &5078697516169087674
 MonoBehaviour:
   m_ObjectHideFlags: 0

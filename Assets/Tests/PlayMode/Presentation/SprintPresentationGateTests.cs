@@ -26,12 +26,10 @@ namespace KMA.Tests.Presentation
             var scene = SceneManager.GetActiveScene();
             var controllers = SceneObjects<SprintController>(scene);
             var sprintHuds = SceneObjects<SprintHud>(scene);
-            var overlays = SceneObjects<TutorialOverlay>(scene);
             var starts = SceneObjects<SprintStartPresentation>(scene);
             var pauses = SceneObjects<PausePanel>(scene);
             Assert.That(controllers.Length, Is.EqualTo(1));
             Assert.That(sprintHuds.Length, Is.EqualTo(1));
-            Assert.That(overlays.Length, Is.EqualTo(1));
             Assert.That(starts.Length, Is.EqualTo(1));
             Assert.That(pauses.Length, Is.EqualTo(1));
 
@@ -39,8 +37,6 @@ namespace KMA.Tests.Presentation
             Assert.That(sprintHud.HasBoundVisuals, Is.True, "SprintHud must bind all authored HUD labels/fills.");
 
             var start = starts[0];
-            Assert.That(overlays[0].ShouldShow, Is.False,
-                "Sprint must not open the shared multi-page tutorial.");
             Assert.That(start.InstructionVisible, Is.True);
             Assert.That(start.InstructionText, Is.EqualTo(SprintStartPresentation.InstructionCopy));
 

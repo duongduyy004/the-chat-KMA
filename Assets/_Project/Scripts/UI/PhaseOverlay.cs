@@ -14,7 +14,6 @@ namespace KMA.Gameplay.UI
     {
         const float CountdownDuration = 3f;
 
-        [SerializeField] TutorialOverlay tutorialOverlay;
         [SerializeField] GameObject tutorialRoot;
         [SerializeField] GameObject countdownRoot;
         [SerializeField] GameObject playRoot;
@@ -25,7 +24,6 @@ namespace KMA.Gameplay.UI
 
         MinigameBase source;
         bool subscribed;
-        bool tutorialSubscribed;
         float countdownElapsed;
 
         public MinigamePhase DisplayedPhase { get; private set; } = MinigamePhase.Tutorial;
@@ -77,7 +75,6 @@ namespace KMA.Gameplay.UI
             if (source != null && subscribed)
                 source.PhaseChanged -= ApplyPhase;
             subscribed = false;
-            UnsubscribeTutorialCompletion();
         }
 
         void ApplyPhase(MinigamePhase phase)
@@ -88,8 +85,7 @@ namespace KMA.Gameplay.UI
 
             bool sharedTutorial = source == null || source.UsesSharedTutorial;
             bool sharedCountdown = source == null || source.UsesSharedCountdown;
-            SetActive(tutorialRoot, sharedTutorial && phase == MinigamePhase.Tutorial &&
-                (tutorialOverlay == null || tutorialOverlay.ShouldShow));
+            SetActive(tutorialRoot, sharedTutorial && phase == MinigamePhase.Tutorial);
             SetActive(countdownRoot, sharedCountdown && phase == MinigamePhase.Countdown);
             SetActive(playRoot, sharedTutorial && phase == MinigamePhase.Play);
             SetActive(resolveRoot, false); // ResultPanel owns the resolve headline.
@@ -100,46 +96,18 @@ namespace KMA.Gameplay.UI
                 RefreshCountdown();
         }
 
+        // Minigames that own their start gate open it themselves; custom-tutorial minigames are released
+        // at once; shared-tutorial minigames advance on the lifecycle timer (releasing their gate would
+        // skip straight to the countdown). The how-to-play guide is MinigameGuideHost's job.
         void ConfigureTutorial()
         {
             if (source == null)
                 return;
-
-            UnsubscribeTutorialCompletion();
-
             if (source.OwnsStartGate)
                 FindSprintStartPresentation()?.Bind(source);
-
-            if (!source.UsesSharedTutorial)
-            {
-                if (!source.OwnsStartGate)
-                    source.SetTutorialGate(false);
-                return;
-            }
-
-            if (tutorialOverlay == null)
-                return;
-
-            if (tutorialOverlay.ShouldShow)
-            {
-                tutorialOverlay.Completed += ReleaseTutorialGate;
-                tutorialSubscribed = true;
-                source.SetTutorialGate(true);
-            }
-            else
-            {
+            else if (!source.UsesSharedTutorial)
                 source.SetTutorialGate(false);
-            }
         }
-
-        void UnsubscribeTutorialCompletion()
-        {
-            if (tutorialOverlay != null && tutorialSubscribed)
-                tutorialOverlay.Completed -= ReleaseTutorialGate;
-            tutorialSubscribed = false;
-        }
-
-        void ReleaseTutorialGate() => source?.SetTutorialGate(false);
 
         static ISprintStartPresentation FindSprintStartPresentation()
         {
