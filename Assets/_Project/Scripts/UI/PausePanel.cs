@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using KMA.Gameplay;
 using KMA.UI.Kit;
 using TMPro;
@@ -10,18 +11,27 @@ namespace KMA.Gameplay.UI
     public sealed class PausePanel : MonoBehaviour
     {
         const int MenuSortingOrder = 900;
+        public const string GuideButtonLabel = "HƯỚNG DẪN";
+        // The card grows by one row per visible button; 3 rows give the original 440 card.
+        const float CardChrome = 232f;
+        const float MinimumCardHeight = 270f;
+        const float HeadingInset = 65f;
+        const float FirstRowGap = 100f;
+        const float RowSpacing = 104f;
 
         [SerializeField] Button pauseButton;
         [SerializeField] GameObject menuRoot;
         [SerializeField] Button resumeButton;
         [SerializeField] Button restartButton;
         [SerializeField] Button exitButton;
+        [SerializeField] Button guideButton;
         Transform menuCard;
         bool leaveOptionsVisible = true;
 
         public event Action RestartRequested;
         public event Action ExitToMapRequested;
         public bool IsOpen { get; private set; }
+        public bool GuideAvailable => guideButton != null && MinigameGuideHost.Current != null;
 
         void Awake()
         {
@@ -83,16 +93,37 @@ namespace KMA.Gameplay.UI
                 exitButton.gameObject.SetActive(visible);
         }
 
-        // With only Tiếp tục left, shrink the card so it does not keep room for the hidden buttons.
+        public void OpenGuide()
+        {
+            if (IsOpen)
+                MinigameGuideHost.Current?.OpenReview();
+        }
+
+        // Stacks the visible buttons under the heading and sizes the card to fit them.
         void ApplyMenuLayout()
         {
+            bool guide = GuideAvailable;
+            if (guideButton != null)
+                guideButton.gameObject.SetActive(guide);
             if (menuCard == null) return;
-            bool compact = !leaveOptionsVisible;
-            ((RectTransform)menuCard).sizeDelta = new Vector2(560f, compact ? 270f : 440f);
+
+            var rows = new List<Button> { resumeButton };
+            if (guide) rows.Add(guideButton);
+            if (leaveOptionsVisible)
+            {
+                rows.Add(restartButton);
+                rows.Add(exitButton);
+            }
+
+            float height = Mathf.Max(MinimumCardHeight, CardChrome + RowSpacing * (rows.Count - 1));
+            ((RectTransform)menuCard).sizeDelta = new Vector2(560f, height);
+            float headingY = height / 2f - HeadingInset;
             Transform heading = menuCard.Find("Heading");
-            if (heading != null) ((RectTransform)heading).anchoredPosition = new Vector2(0f, compact ? 80f : 155f);
-            if (resumeButton != null)
-                ((RectTransform)resumeButton.transform).anchoredPosition = new Vector2(0f, compact ? -35f : 55f);
+            if (heading != null) ((RectTransform)heading).anchoredPosition = new Vector2(0f, headingY);
+            for (int i = 0; i < rows.Count; i++)
+                if (rows[i] != null)
+                    ((RectTransform)rows[i].transform).anchoredPosition =
+                        new Vector2(0f, headingY - FirstRowGap - RowSpacing * i);
         }
 
         void WireButtons()
@@ -105,6 +136,8 @@ namespace KMA.Gameplay.UI
                 restartButton.onClick.AddListener(Restart);
             if (exitButton != null)
                 exitButton.onClick.AddListener(ExitToMap);
+            if (guideButton != null)
+                guideButton.onClick.AddListener(OpenGuide);
         }
 
         void EnsureMenu()
@@ -139,6 +172,7 @@ namespace KMA.Gameplay.UI
             UiKit.Place(heading.rectTransform, centre, centre, new Vector2(0f, 155f), new Vector2(480f, 70f));
 
             resumeButton = CreateMenuButton("ResumeButton", "TIẾP TỤC", 55f, ButtonVariant.Primary);
+            guideButton = CreateMenuButton("GuideButton", GuideButtonLabel, 0f, ButtonVariant.Secondary);
             restartButton = CreateMenuButton("RestartButton", "CHƠI LẠI", -49f, ButtonVariant.Secondary);
             exitButton = CreateMenuButton("ExitButton", "VỀ CHỌN MÔN", -153f, ButtonVariant.Danger);
         }
