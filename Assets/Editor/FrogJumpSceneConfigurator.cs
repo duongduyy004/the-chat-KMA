@@ -69,9 +69,9 @@ namespace KMA.EditorTools
             Quad("FinishLine", pixel, new Color32(0xff, 0xfb, 0xea, 0xff), new Vector3(FinishX, GroundY - .6f, 0f), new Vector2(.2f, 1.2f), -28);
             Quad("FinishFlag", pixel, MinigameUiTheme.Accent, new Vector3(FinishX + .3f, GroundY + .9f, 0f), new Vector2(.6f, .4f), -27);
 
-            Sprite squat = CharacterArt.Load(CharacterArt.Hero, "duck");
-            Sprite jump = CharacterArt.Load(CharacterArt.Hero, "jump");
-            Sprite fall = CharacterArt.Load(CharacterArt.Hero, "fallDown");
+            Sprite squat = CharacterArt.Load(CharacterArt.Hero, "frogReadyRight");
+            Sprite jump = CharacterArt.Load(CharacterArt.Hero, "frogAirRight");
+            Sprite fall = CharacterArt.Load(CharacterArt.Hero, "fallSitRight");
             var heroObject = new GameObject("Hero");
             heroObject.transform.position = new Vector3(StartX, GroundY, 0f);
             heroObject.transform.localScale = Vector3.one * HeroScale;

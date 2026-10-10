@@ -4,6 +4,7 @@ using System.IO;
 using System.Linq;
 using KMA.EditorTools;
 using KMA.Gameplay;
+using KMA.Gameplay.FrogJump;
 using KMA.Gameplay.Volleyball;
 using NUnit.Framework;
 using UnityEditor;
@@ -62,6 +63,39 @@ namespace KMA.Tests.EditorTools
             Assert.That(Opponent(AthleteAction.Run), Is.EqualTo(new[]
                 { "FemaleAdventurer_run0", "FemaleAdventurer_run1", "FemaleAdventurer_run2", "FemaleAdventurer_run1" }));
             Assert.That(Opponent(AthleteAction.Smash), Is.EqualTo(new[] { "FemaleAdventurer_jump", "FemaleAdventurer_attack1" }));
+        }
+
+        [Test]
+        public void FrogJumpHopsAndFallsWithTheSupplementPoses()
+        {
+            EditorSceneManager.OpenScene(FrogJumpSceneConfigurator.ScenePath, OpenSceneMode.Single);
+            var view = new SerializedObject(Object.FindFirstObjectByType<FrogJumpView>());
+            Assert.That(Wired(view, "squatPose"), Is.EqualTo("MaleAdventurer_frogReadyRight"));
+            Assert.That(Wired(view, "jumpPose"), Is.EqualTo("MaleAdventurer_frogAirRight"));
+            Assert.That(Wired(view, "fallPose"), Is.EqualTo("MaleAdventurer_fallSitRight"));
+        }
+
+        [Test]
+        public void SprintHeroFallsWithTheSupplementPosesAndRivalsKeepTheirs()
+        {
+            Assert.That(ClipPoses("MaleAdventurer_Stumble"), Is.Not.Empty.And.All.EqualTo("MaleAdventurer_fallForwardRight"));
+            Assert.That(ClipPoses("MaleAdventurer_Fail"), Is.Not.Empty.And.All.EqualTo("MaleAdventurer_fallSitRight"));
+            // Idle also plays mid-race while the player stops tapping, so it keeps the standing pose.
+            Assert.That(ClipPoses("MaleAdventurer_Idle"), Is.Not.Empty.And.All.EqualTo("MaleAdventurer_idle"));
+            Assert.That(ClipPoses("FemalePerson_Fail"), Is.Not.Empty.And.All.EqualTo("FemalePerson_fallDown"));
+            Assert.That(ClipPoses("FemalePerson_Stumble"), Is.Not.Empty.And.All.EqualTo("FemalePerson_hurt"));
+        }
+
+        static string Wired(SerializedObject component, string field) =>
+            PoseName((Sprite)component.FindProperty(field).objectReferenceValue);
+
+        static string[] ClipPoses(string clipName)
+        {
+            var clip = AssetDatabase.LoadAssetAtPath<AnimationClip>("Assets/_Project/Animations/" + clipName + ".anim");
+            Assert.That(clip, Is.Not.Null, clipName);
+            return AnimationUtility.GetObjectReferenceCurveBindings(clip)
+                .SelectMany(binding => AnimationUtility.GetObjectReferenceCurve(clip, binding))
+                .Select(key => PoseName(key.value as Sprite)).ToArray();
         }
 
         internal static string PoseName(Sprite sprite) =>

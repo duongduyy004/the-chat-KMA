@@ -191,12 +191,13 @@ namespace KMA.EditorTools
         }
 
         /// <summary>One character's Sprint poses; CharacterArt.ImportAll must have run first.</summary>
+        // The hero has its own trip and sit-down falls; the rivals keep the shared poses.
         static RunnerArt LoadCharacter(string folder) => new RunnerArt
         {
             Folder = folder,
             Idle = CharacterArt.Load(folder, "idle"),
-            Hit = CharacterArt.Load(folder, "hurt"),
-            FallDown = CharacterArt.Load(folder, "fallDown"),
+            Hit = CharacterArt.Load(folder, folder == PlayerCharacter ? "fallForwardRight" : "hurt"),
+            FallDown = CharacterArt.Load(folder, folder == PlayerCharacter ? "fallSitRight" : "fallDown"),
             Run = CharacterArt.Frames(folder, "run0", "run1", "run2"),
             Cheer = CharacterArt.Frames(folder, "cheer0", "cheer1")
         };
