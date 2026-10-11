@@ -154,6 +154,19 @@ namespace KMA.Tests.Gameplay.Chess
             Assert.That(cast.StudentPose, Is.EqualTo("idle"));
         }
 
+        [UnityTest]
+        public IEnumerator TheTeacherBubbleDoesNotExpireWhileTheGameIsFrozen()
+        {
+            var cast = Object.FindFirstObjectByType<ChessCastView>();
+            cast.Say("Đọc đề nhé.", .3f);
+            Time.timeScale = 0f;
+            yield return new WaitForSecondsRealtime(.6f);
+            Assert.That(cast.BubbleVisible, Is.True, "the guide or pause menu is still open");
+            Time.timeScale = 1f;
+            yield return new WaitForSecondsRealtime(.6f);
+            Assert.That(cast.BubbleVisible, Is.False);
+        }
+
         IEnumerator Play(string uci)
         {
             ChessMove.TryParseUci(uci, out ChessMove move);

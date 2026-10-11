@@ -62,6 +62,8 @@ namespace KMA.Gameplay.Chess
             teacherSequence = StartCoroutine(Sequence(poses));
         }
 
+        public bool BubbleVisible => bubble != null && bubble.activeSelf;
+
         public void Say(string text, float seconds = 2.5f)
         {
             bubble.SetActive(true);
@@ -71,7 +73,9 @@ namespace KMA.Gameplay.Chess
 
         void Update()
         {
-            if (bubble != null && bubble.activeSelf && Time.unscaledTime > bubbleUntil) bubble.SetActive(false);
+            if (bubble == null || !bubble.activeSelf) return;
+            if (Time.timeScale == 0f) bubbleUntil += Time.unscaledDeltaTime;
+            else if (Time.unscaledTime > bubbleUntil) bubble.SetActive(false);
         }
 
         IEnumerator Sequence(string[] poses)

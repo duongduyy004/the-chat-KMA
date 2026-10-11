@@ -62,8 +62,9 @@ namespace KMA.Gameplay.Chess
 
         void Update()
         {
-            if (toast != null && toast.gameObject.activeSelf && Time.unscaledTime > toastUntil)
-                toast.gameObject.SetActive(false);
+            if (toast == null || !toast.gameObject.activeSelf) return;
+            if (Time.timeScale == 0f) toastUntil += Time.unscaledDeltaTime;
+            else if (Time.unscaledTime > toastUntil) toast.gameObject.SetActive(false);
         }
 
         public static string FormatClock(float seconds) => CelebrationSummary.FormatClock(seconds);
