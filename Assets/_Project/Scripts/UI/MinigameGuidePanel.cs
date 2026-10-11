@@ -28,12 +28,17 @@ namespace KMA.Gameplay.UI
 
         public bool IsOpen => navigator != null;
         public GuideMode Mode => navigator?.Mode ?? GuideMode.Review;
+        public int PageCount => navigator?.Count ?? 0;
         public int PageIndex => navigator?.Index ?? -1;
         public TutorialStep CurrentPage => navigator?.Current;
         public string PrimaryText => primaryLabel != null ? primaryLabel.text : string.Empty;
         public string ProgressText => progressLabel != null ? progressLabel.text : string.Empty;
         public bool SkipVisible => skipButton != null && skipButton.gameObject.activeSelf;
         public bool BackInteractable => backButton != null && backButton.interactable;
+        /// True when the wrapped body is taller than its box (the text would spill out of the card).
+        public bool BodyOverflows => bodyLabel != null &&
+            bodyLabel.textBounds.size.y > bodyLabel.rectTransform.rect.height + 1f;
+        public float BodyFontSize => bodyLabel != null ? bodyLabel.fontSize : 0f;
 
         public static MinigameGuidePanel Create(Transform parent)
         {
@@ -76,11 +81,21 @@ namespace KMA.Gameplay.UI
 
             bodyLabel = UiKit.Label(card.transform, "Body", string.Empty, MinigameUiTheme.BodyLarge,
                 MinigameUiTheme.TextPrimary, TextAlignmentOptions.TopLeft);
-            UiKit.Place(bodyLabel.rectTransform, Centre, Centre, new Vector2(0f, 20f), new Vector2(1080f, 400f));
+            UiKit.Place(bodyLabel.rectTransform, Centre, Centre, new Vector2(0f, 10f), new Vector2(1020f, 380f));
             UiKit.FitLabel(bodyLabel, MinigameUiTheme.BodyLarge);
+            bodyLabel.richText = true;
+            bodyLabel.fontStyle = FontStyles.Normal;
+            bodyLabel.paragraphSpacing = 22f;
+            bodyLabel.lineSpacing = 6f;
             // Code-built TMP labels default to NoWrap; the body must wrap inside its rect.
             bodyLabel.textWrappingMode = TextWrappingModes.Normal;
             bodyLabel.overflowMode = TextOverflowModes.Overflow;
+
+            RectTransform divider = UiKit.Rect(card.transform, "Divider");
+            UiKit.Place(divider, Centre, Centre, new Vector2(0f, 222f), new Vector2(1020f, 4f));
+            Image dividerImage = divider.gameObject.AddComponent<Image>();
+            dividerImage.color = MinigameUiTheme.WithAlpha(MinigameUiTheme.Accent, .8f);
+            dividerImage.raycastTarget = false;
 
             skipButton = CreateButton(card.transform, "SkipButton", GuideNavigator.SkipLabel, -380f,
                 ButtonVariant.Secondary).Button;
@@ -156,7 +171,8 @@ namespace KMA.Gameplay.UI
         {
             TutorialStep page = navigator.Current;
             titleLabel.text = VietText.Fix(page.Title);
-            bodyLabel.text = VietText.Fix(page.Instruction);
+            bodyLabel.text = VietText.Fix(GuideBullets.Format(page.Instruction));
+            bodyLabel.ForceMeshUpdate();
             progressLabel.text = VietText.Fix(navigator.Progress);
             primaryLabel.text = VietText.Fix(navigator.PrimaryLabel);
             backButton.interactable = navigator.CanGoBack;

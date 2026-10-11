@@ -70,6 +70,16 @@ namespace KMA.Tests.Presentation
         }
 
         [Test]
+        public void BodyIsABulletListWhoseGlyphTheFontCanDraw()
+        {
+            panel.Open(new[] { new TutorialStep("LUẬT", "Một việc. Hai việc.") }, GuideMode.Review);
+            TMP_Text body = panel.transform.Find("Scrim/Card/Body").GetComponent<TMP_Text>();
+            Assert.That(body.text, Does.Contain("•"));
+            Assert.That(body.font.HasCharacter('•', true), Is.True, "the bullet must not render as a missing-glyph box");
+            Assert.That(panel.BodyOverflows, Is.False);
+        }
+
+        [Test]
         public void SkipClosesAFirstRunGuideFromAnyPage()
         {
             panel.Open(Pages, GuideMode.FirstRun);
